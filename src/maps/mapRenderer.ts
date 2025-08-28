@@ -1,0 +1,64 @@
+import { Terrain, ResolvedTerrain } from './types';
+import { terrainPresets } from './mapDefinitions';
+
+// Resolve terrain definition to concrete values
+export function resolveTerrain(t: Terrain): ResolvedTerrain {
+  const preset = t.preset ? terrainPresets[t.preset] : null;
+  const key = t.preset || t.type || "unknown";
+  
+  return {
+    key,
+    x: t.x ?? preset?.x ?? 0,
+    y: t.y ?? preset?.y ?? 0,
+    mapWidth: t.mapWidth ?? preset?.mapWidth ?? 1,
+    mapHeight: t.mapHeight ?? preset?.mapHeight ?? 1,
+    rotation: t.rotation ?? preset?.rotation ?? 0,
+    image: t.image ?? preset?.image ?? "terrain_unknown.png",
+    height: t.height ?? preset?.height ?? 0,
+  };
+}
+
+// Generate map tiles from map definition
+export function generateMapTiles(mapDefinition: any) {
+  const tiles: string[][] = [];
+  
+  // Initialize empty tiles
+  for (let y = 0; y < mapDefinition.height; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < mapDefinition.width; x++) {
+      tiles[y][x] = "empty.jpg";
+    }
+  }
+  
+  // Fill in room tiles
+  for (const room of mapDefinition.rooms) {
+    const isRot = room.rotation === 90 || room.rotation === 270;
+    const w = isRot ? room.mapHeight : room.mapWidth;
+    const h = isRot ? room.mapWidth : room.mapHeight;
+    
+    for (let y = room.y; y < room.y + h; y++) {
+      for (let x = room.x; x < room.x + w; x++) {
+        if (y >= 0 && y < mapDefinition.height && x >= 0 && x < mapDefinition.width) {
+          tiles[y][x] = `${room.type}.jpg`;
+        }
+      }
+    }
+  }
+  
+  return { tiles };
+}
+
+// Helper: terrain height at tile
+export function terrainHeightAt(tx: number, ty: number, mapDefinition: any): number {
+  let h = 0;
+  for (const t of mapDefinition.terrain) {
+    const rt = resolveTerrain(t);
+    const isRot = rt.rotation === 90 || rt.rotation === 270;
+    const w = isRot ? rt.mapHeight : rt.mapWidth;
+    const hgt = isRot ? rt.mapWidth : rt.mapHeight;
+    if (tx >= rt.x && tx < rt.x + w && ty >= rt.y && ty < rt.y + hgt) {
+      h = Math.max(h, rt.height ?? 1);
+    }
+  }
+  return h;
+}

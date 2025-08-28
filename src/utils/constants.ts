@@ -1,0 +1,98 @@
+// --- Game Constants ---
+
+export const GAME_SETTINGS = {
+  TILE_SIZE: 50,
+  DEFAULT_NATURAL_ARMOR: 3,
+  DEFAULT_VITALITY: 10,
+  MAX_VITALITY: 20,
+  DEFAULT_MOVEMENT: 5,
+  DEFAULT_ACTIONS: 1,
+  ZONE_OF_CONTROL_RANGE: 1,
+  ATTACK_RANGE_MELEE: 1,
+  ATTACK_RANGE_RANGED: 6,
+  VISION_RANGE: 8,
+  MAX_MAP_SIZE: 100,
+  MAX_MESSAGES: 50,
+  DRAG_THRESHOLD: 3,
+} as const;
+
+export const CREATURE_SIZES = {
+  SMALL: 1,
+  MEDIUM: 2,
+  LARGE: 3,
+  HUGE: 4,
+} as const;
+
+export const DIRECTIONS = {
+  NORTH: 0,
+  NORTHEAST: 1,
+  EAST: 2,
+  SOUTHEAST: 3,
+  SOUTH: 4,
+  SOUTHWEST: 5,
+  WEST: 6,
+  NORTHWEST: 7,
+} as const;
+
+export const DIRECTION_NAMES = {
+  [DIRECTIONS.NORTH]: 'North',
+  [DIRECTIONS.NORTHEAST]: 'Northeast',
+  [DIRECTIONS.EAST]: 'East',
+  [DIRECTIONS.SOUTHEAST]: 'Southeast',
+  [DIRECTIONS.SOUTH]: 'South',
+  [DIRECTIONS.SOUTHWEST]: 'Southwest',
+  [DIRECTIONS.WEST]: 'West',
+  [DIRECTIONS.NORTHWEST]: 'Northwest',
+} as const;
+
+export const DIRECTION_SHORT_NAMES = {
+  [DIRECTIONS.NORTH]: 'N',
+  [DIRECTIONS.NORTHEAST]: 'NE',
+  [DIRECTIONS.EAST]: 'E',
+  [DIRECTIONS.SOUTHEAST]: 'SE',
+  [DIRECTIONS.SOUTH]: 'S',
+  [DIRECTIONS.SOUTHWEST]: 'SW',
+  [DIRECTIONS.WEST]: 'W',
+  [DIRECTIONS.NORTHWEST]: 'NW',
+} as const;
+
+export const DIRECTION_ARROWS = {
+  [DIRECTIONS.NORTH]: '↑',
+  [DIRECTIONS.NORTHEAST]: '↗',
+  [DIRECTIONS.EAST]: '→',
+  [DIRECTIONS.SOUTHEAST]: '↘',
+  [DIRECTIONS.SOUTH]: '↓',
+  [DIRECTIONS.SOUTHWEST]: '↙',
+  [DIRECTIONS.WEST]: '←',
+  [DIRECTIONS.NORTHWEST]: '↖',
+} as const;
+
+export const AI_BEHAVIORS = {
+  AGGRESSIVE: 'aggressive',
+  DEFENSIVE: 'defensive',
+  CAUTIOUS: 'cautious',
+  BERSERKER: 'berserker',
+  SUPPORT: 'support',
+  SCOUT: 'scout',
+  GUARD: 'guard',
+  FLEE: 'flee',
+  PATROL: 'patrol',
+  AMBUSH: 'ambush',
+} as const;
+
+export const COMBAT_CONSTANTS = {
+  BACK_ATTACK_BONUS: 1,
+  FLANKING_BONUS: 0.2,
+  SHIELD_DEFENSE_BONUS: 1,
+  AGILITY_TIEBREAKER_THRESHOLD: 0.1,
+  HEALTH_RATIO_DENOMINATOR: 10,
+  ARMOR_EFFECTIVENESS_MULTIPLIER: 0.5,
+  VULNERABILITY_MULTIPLIER: 0.3,
+} as const;
+
+export const MOVEMENT_CONSTANTS = {
+  DIAGONAL_COST: 1.4,
+  ENGAGED_MOVEMENT_LIMIT: 1,
+  ZONE_OF_CONTROL_BLOCKING: true,
+  CORNER_RULE_ENABLED: true,
+} as const;

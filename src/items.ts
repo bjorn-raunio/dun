@@ -19,6 +19,7 @@ export class Weapon extends Item {
   hands: 1 | 2;
   reach?: number; // in tiles or feet
   properties?: string[];
+  combatModifier?: number; // bonus to combat rolls
 
   constructor(params: {
     id: string;
@@ -27,6 +28,7 @@ export class Weapon extends Item {
     hands: 1 | 2;
     reach?: number;
     properties?: string[];
+    combatModifier?: number;
     weight?: number;
     value?: number;
   }) {
@@ -35,6 +37,7 @@ export class Weapon extends Item {
     this.hands = params.hands;
     this.reach = params.reach;
     this.properties = params.properties;
+    this.combatModifier = params.combatModifier;
   }
 }
 
@@ -93,34 +96,31 @@ export class Armor extends Item {
 
 export class Shield extends Item {
   kind: "shield" = "shield";
-  armor: number; // shield bonus to AC
+  block: number; // shield bonus to AC
   size: "small" | "medium" | "large"; // shield size affects coverage and weight
-  material?: string; // wood, metal, etc.
   special?: string[]; // special properties like "magical", "spiked", etc.
 
   constructor(params: {
     id: string;
     name: string;
-    armor: number;
+    block: number;
     size: "small" | "medium" | "large";
-    material?: string;
     special?: string[];
     weight?: number;
     value?: number;
   }) {
     super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
-    this.armor = params.armor;
+    this.block = params.block;
     this.size = params.size;
-    this.material = params.material;
     this.special = params.special;
   }
 }
 // --- end Items class hierarchy ---
 
 // --- Reusable item presets and factories ---
-export type WeaponPreset = { name: string; damage: number; hands: 1 | 2; reach?: number; properties?: string[]; weight?: number; value?: number };
+export type WeaponPreset = { name: string; damage: number; hands: 1 | 2; reach?: number; properties?: string[]; combatModifier?: number; weight?: number; value?: number };
 export const weaponPresets: Record<string, WeaponPreset> = {
-  dagger: { name: "Dagger", damage: 0, hands: 1, properties: ["finesse", "light", "thrown"], weight: 1, value: 2 },
+  dagger: { name: "Dagger", damage: 0, hands: 1, properties: ["finesse", "light", "thrown"], combatModifier: -1, weight: 1, value: 2 },
   scimitar: { name: "Scimitar", damage: 0, hands: 1, properties: ["finesse", "light"], weight: 3, value: 25 },
   broadsword: { name: "Broadsword", damage: 1, hands: 1, properties: ["versatile"], weight: 3, value: 15 },
 };
@@ -135,6 +135,7 @@ export function createWeapon(presetId: string, overrides?: Partial<ConstructorPa
     hands: overrides?.hands ?? p.hands,
     reach: overrides?.reach ?? p.reach,
     properties: overrides?.properties ?? p.properties,
+    combatModifier: overrides?.combatModifier ?? p.combatModifier,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,
   });
@@ -168,11 +169,10 @@ export const armorPresets: Record<string, ArmorPreset> = {
   chainMail: { name: "Chain Mail", armor: 5, armorType: "heavy", strengthRequirement: 13, stealthDisadvantage: true, weight: 55, value: 75 },
 };
 
-export type ShieldPreset = { name: string; armor: number; size: "small" | "medium" | "large"; material?: string; special?: string[]; weight?: number; value?: number };
+export type ShieldPreset = { name: string; block: number; size: "small" | "medium" | "large"; special?: string[]; weight?: number; value?: number };
 export const shieldPresets: Record<string, ShieldPreset> = {
-  buckler: { name: "Buckler", armor: 1, size: "small", material: "wood", weight: 2, value: 5 },
-  shield: { name: "Shield", armor: 2, size: "medium", material: "wood", weight: 6, value: 10 },
-  towerShield: { name: "Tower Shield", armor: 3, size: "large", material: "wood", weight: 12, value: 20 },
+  buckler: { name: "Buckler", block: 6, size: "small", weight: 2, value: 5 },
+  shield: { name: "Shield", block: 5, size: "medium", weight: 6, value: 10 },
 };
 
 export function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id: string }): Armor {
@@ -196,9 +196,8 @@ export function createShield(presetId: string, overrides?: Partial<ConstructorPa
   return new Shield({
     id,
     name: overrides?.name ?? p.name,
-    armor: overrides?.armor ?? p.armor,
+    block: overrides?.block ?? p.block,
     size: overrides?.size ?? p.size,
-    material: overrides?.material ?? p.material,
     special: overrides?.special ?? p.special,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,
