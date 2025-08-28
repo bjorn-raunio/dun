@@ -1,6 +1,8 @@
 import React from "react";
 import logo from './logo.svg';
 import './App.css';
+import { Weapon, RangedWeapon, createWeapon, createRangedWeapon, createArmor, createShield } from './items';
+import { Creature, Hero, Monster, createMonster } from './creatures';
 
 // --- Kartdefinition med olika rumstyper ---
 type RoomType = {
@@ -25,199 +27,10 @@ type Terrain = {
   height?: number; // optional vertical height/elevation of terrain
 };
 
-type CreatureBase = {
-  id: string;
-  name: string;
-  x: number; // tile-koordinat (övre vänstra hörn)
-  y: number; // tile-koordinat (övre vänstra hörn)
-  image?: string; // valfritt, t.ex. "goblin.png"
-  movement: number; // antal tiles varelse kan röra sig
-  remainingMovement?: number; // återstående rörelse för denna runda
-  attacks: number; // antal attacker per runda
-  remainingAttacks?: number; // återstående attacker för denna runda
-  mapWidth?: number; // default 1 tile bred
-  mapHeight?: number; // default 1 tile hög
-  size: "small" | "medium" | "large" | "huge";
-  inventory: Item[];
-  equipment: {
-    mainHand?: Weapon | RangedWeapon;
-    offHand?: Weapon | Armor; // shield considered Armor with armorType "shield"
-    armor?: Armor;
-    ranged?: RangedWeapon;
-  };
-  combat: number;
-  ranged: number;
-  strength: number;
-  vitality: number;
-};
 
-type Hero = CreatureBase & { kind: "hero" };
 
-type Monster = CreatureBase & { kind: "monster" };
 
-type Creature = Hero | Monster;
 
-// --- Items class hierarchy ---
-class Item {
-  id: string;
-  name: string;
-  weight?: number;
-  value?: number;
-
-  constructor(params: { id: string; name: string; weight?: number; value?: number }) {
-    this.id = params.id;
-    this.name = params.name;
-    this.weight = params.weight;
-    this.value = params.value;
-  }
-}
-
-class Weapon extends Item {
-  kind: "weapon" = "weapon";
-  damage: number; // average or fixed damage value
-  hands: 1 | 2;
-  reach?: number; // in tiles or feet
-  properties?: string[];
-
-  constructor(params: {
-    id: string;
-    name: string;
-    damage: number;
-    hands: 1 | 2;
-    reach?: number;
-    properties?: string[];
-    weight?: number;
-    value?: number;
-  }) {
-    super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
-    this.damage = params.damage;
-    this.hands = params.hands;
-    this.reach = params.reach;
-    this.properties = params.properties;
-  }
-}
-
-class RangedWeapon extends Item {
-  kind: "ranged_weapon" = "ranged_weapon";
-  damage: number;
-  range: { normal: number; long: number }; // e.g., tiles or feet
-  ammoType?: string;
-  hands: 1 | 2;
-  properties?: string[];
-
-  constructor(params: {
-    id: string;
-    name: string;
-    damage: number;
-    range: { normal: number; long: number };
-    hands: 1 | 2;
-    ammoType?: string;
-    properties?: string[];
-    weight?: number;
-    value?: number;
-  }) {
-    super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
-    this.damage = params.damage;
-    this.range = params.range;
-    this.hands = params.hands;
-    this.ammoType = params.ammoType;
-    this.properties = params.properties;
-  }
-}
-
-class Armor extends Item {
-  kind: "armor" = "armor";
-  armorClass: number; // base AC or bonus
-  armorType: "light" | "medium" | "heavy" | "shield";
-  stealthDisadvantage?: boolean;
-  strengthRequirement?: number;
-
-  constructor(params: {
-    id: string;
-    name: string;
-    armorClass: number;
-    armorType: "light" | "medium" | "heavy" | "shield";
-    stealthDisadvantage?: boolean;
-    strengthRequirement?: number;
-    weight?: number;
-    value?: number;
-  }) {
-    super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
-    this.armorClass = params.armorClass;
-    this.armorType = params.armorType;
-    this.stealthDisadvantage = params.stealthDisadvantage;
-    this.strengthRequirement = params.strengthRequirement;
-  }
-}
-// --- end Items class hierarchy ---
-
-// --- Reusable item presets and factories ---
-type WeaponPreset = { name: string; damage: number; hands: 1 | 2; reach?: number; properties?: string[]; weight?: number; value?: number };
-const weaponPresets: Record<string, WeaponPreset> = {
-  dagger: { name: "Dagger", damage: 4, hands: 1, properties: ["finesse", "light", "thrown"], weight: 1, value: 2 },
-  scimitar: { name: "Scimitar", damage: 6, hands: 1, properties: ["finesse", "light"], weight: 3, value: 25 },
-  longsword: { name: "Longsword", damage: 8, hands: 1, properties: ["versatile"], weight: 3, value: 15 },
-};
-
-function createWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof Weapon>[0]> & { id: string }): Weapon {
-  const p = weaponPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
-  return new Weapon({
-    id,
-    name: overrides?.name ?? p.name,
-    damage: overrides?.damage ?? p.damage,
-    hands: overrides?.hands ?? p.hands,
-    reach: overrides?.reach ?? p.reach,
-    properties: overrides?.properties ?? p.properties,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
-}
-
-type RangedWeaponPreset = { name: string; damage: number; range: { normal: number; long: number }; hands: 1 | 2; ammoType?: string; properties?: string[]; weight?: number; value?: number };
-const rangedPresets: Record<string, RangedWeaponPreset> = {
-  shortbow: { name: "Shortbow", damage: 6, range: { normal: 16, long: 64 }, hands: 2, properties: ["ammunition", "two-handed"], weight: 2, value: 25 },
-  longbow: { name: "Longbow", damage: 8, range: { normal: 20, long: 80 }, hands: 2, properties: ["ammunition", "heavy", "two-handed"], weight: 2, value: 50 },
-};
-
-function createRangedWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof RangedWeapon>[0]> & { id: string }): RangedWeapon {
-  const p = rangedPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
-  return new RangedWeapon({
-    id,
-    name: overrides?.name ?? p.name,
-    damage: overrides?.damage ?? p.damage,
-    range: overrides?.range ?? p.range,
-    hands: overrides?.hands ?? p.hands,
-    ammoType: overrides?.ammoType ?? p.ammoType,
-    properties: overrides?.properties ?? p.properties,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
-}
-
-type ArmorPreset = { name: string; armorClass: number; armorType: "light" | "medium" | "heavy" | "shield"; stealthDisadvantage?: boolean; strengthRequirement?: number; weight?: number; value?: number };
-const armorPresets: Record<string, ArmorPreset> = {
-  leather: { name: "Leather Armor", armorClass: 11, armorType: "light", weight: 10, value: 10 },
-  chainMail: { name: "Chain Mail", armorClass: 16, armorType: "heavy", strengthRequirement: 13, stealthDisadvantage: true, weight: 55, value: 75 },
-  shield: { name: "Shield", armorClass: 2, armorType: "shield", weight: 6, value: 10 },
-};
-
-function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id: string }): Armor {
-  const p = armorPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
-  return new Armor({
-    id,
-    name: overrides?.name ?? p.name,
-    armorClass: overrides?.armorClass ?? p.armorClass,
-    armorType: overrides?.armorType ?? p.armorType,
-    stealthDisadvantage: overrides?.stealthDisadvantage ?? p.stealthDisadvantage,
-    strengthRequirement: overrides?.strengthRequirement ?? p.strengthRequirement,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
-}
-// --- end reusable item presets ---
 
 const mapDefinition = {
   name: "Exempelkarta med rumstyper",
@@ -236,61 +49,35 @@ const mapDefinition = {
     { preset: "horse", x: 18, y: 4, rotation: 270 },
   ] as Terrain[],
   creatures: [
-    {
-      id: "c1",
-      name: "Bandit",
-      x: 5,
-      y: 5,
-      image: "creature_bandit.png",
-      movement: 6,
-      remainingMovement: 6,
-      attacks: 1,
-      remainingAttacks: 1,
-      kind: "monster",
-      mapWidth: 1,
-      mapHeight: 1,
-      size: "medium",
-      inventory: [
-        createWeapon("scimitar", { id: "w1" }),
-        createArmor("leather", { id: "a1" }),
-      ],
-      equipment: {
-        mainHand: createWeapon("dagger", { id: "w1e" }),
-        armor: createArmor("leather", { id: "a1e" }),
-      },
-      combat: 3,
-      ranged: 1,
-      strength: 2,
-      vitality: 2,
-    },
-    {
+    createMonster("bandit", { id: "c1", x: 5, y: 5 }),
+    createMonster("goblin", { id: "c3", x: 7, y: 3 }),
+    createMonster("orc", { id: "c4", x: 3, y: 7 }),
+    new Hero({
       id: "c2",
       name: "Knight",
       x: 1,
       y: 1,
       image: "creature_knight.png",
       movement: 5,
-      remainingMovement: 5,
       attacks: 2,
-      remainingAttacks: 2,
-      kind: "hero",
-      mapWidth: 1,
-      mapHeight: 1,
-      size: "medium",
+      size: 2, // medium
+      facing: 0, // North
       inventory: [
         createRangedWeapon("longbow", { id: "r1" }),
-        createArmor("shield", { id: "s1" }),
+        createShield("shield", { id: "s1" }),
       ],
       equipment: {
-        mainHand: createWeapon("longsword", { id: "sw1" }),
-        offHand: createArmor("shield", { id: "sh1" }),
+        mainHand: createWeapon("broadsword", { id: "sw1" }),
+        offHand: createShield("shield", { id: "sh1" }),
         armor: createArmor("chainMail", { id: "pl1" }),
       },
       combat: 4,
       ranged: 2,
       strength: 4,
+      agility: 3,
       vitality: 5,
-    },
+      naturalArmor: 3,
+    }),
   ] as Creature[],
 };
 
@@ -502,9 +289,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     return Math.max(dx, dy);
   }
 
-  function rollD20() {
-    return Math.floor(Math.random() * 20) + 1;
-  }
+
 
   // Räkna ut mål i räckvidd när en hjälte väljs eller listan ändras
   React.useEffect(() => {
@@ -517,22 +302,23 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     let rangeTiles = 1;
     let isRanged = false;
     const main = sel.equipment.mainHand;
-    const ranged = sel.equipment.ranged;
+    const offHand = sel.equipment.offHand;
     if (main instanceof Weapon) {
       rangeTiles = Math.max(1, main.reach ?? 1);
     } else if (main instanceof RangedWeapon) {
       isRanged = true;
       rangeTiles = Math.max(1, main.range.normal);
-    } else if (ranged instanceof RangedWeapon) {
+    } else if (offHand instanceof RangedWeapon) {
       isRanged = true;
-      rangeTiles = Math.max(1, ranged.range.normal);
+      rangeTiles = Math.max(1, offHand.range.normal);
     }
 
-    const selDims = (sel.size === "large" || sel.size === "huge") ? { w: 2, h: 2 } : { w: 1, h: 1 };
+    const selDims = (sel.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
     const inRange = new Set<string>();
     for (const m of creatures) {
       if (m.kind !== "monster") continue;
-      const mDims = (m.size === "large" || m.size === "huge") ? { w: 2, h: 2 } : { w: 1, h: 1 };
+      if (m.vitality <= 0) continue; // Skip dead creatures
+      const mDims = (m.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
       const dist = chebyshevDistanceRect(sel.x, sel.y, selDims.w, selDims.h, m.x, m.y, mDims.w, mDims.h);
       if (dist <= rangeTiles) inRange.add(m.id);
     }
@@ -547,7 +333,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
 
     const selectedDims = (() => {
       const s = selected.size;
-      if (s === "large" || s === "huge") return { w: 2, h: 2 };
+      if (s >= 3) return { w: 2, h: 2 }; // 3=large, 4=huge
       return { w: 1, h: 1 };
     })();
 
@@ -588,8 +374,9 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       if (!hasStandTile) return false;
       if (considerCreatures) {
         for (const c of creatures) {
-          if (c.id === selectedCreatureId) continue;
-          const cdims = (c.size === "large" || c.size === "huge") ? { w: 2, h: 2 } : { w: 1, h: 1 };
+                  if (c.id === selectedCreatureId) continue;
+        if (c.vitality <= 0) continue; // Skip dead creatures
+        const cdims = (c.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
           if (rectsOverlap(tx, ty, dims.w, dims.h, c.x, c.y, cdims.w, cdims.h)) return false;
         }
       }
@@ -713,6 +500,86 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     return creatures.find(c => c.id === selectedCreatureId) || null;
   }, [selectedCreatureId, creatures]);
 
+  // Handle keyboard input for facing direction
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!selectedCreature) return;
+      
+      let newFacing = selectedCreature.facing;
+      
+      switch (event.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          newFacing = 0; // North
+          break;
+        case 'ArrowRight':
+        case 'e':
+        case 'E':
+          newFacing = 2; // East
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          newFacing = 4; // South
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          newFacing = 6; // West
+          break;
+        case 'q':
+        case 'Q':
+          newFacing = 7; // Northwest
+          break;
+        case 'd':
+        case 'D':
+          newFacing = 3; // Southeast
+          break;
+        case 'z':
+        case 'Z':
+          newFacing = 1; // Northeast
+          break;
+        case 'c':
+        case 'C':
+          newFacing = 5; // Southwest
+          break;
+        default:
+          return;
+      }
+      
+      if (newFacing !== selectedCreature.facing) {
+        setCreatures(prev => prev.map(c => {
+          if (c.id === selectedCreature.id) {
+            if (c instanceof Hero) {
+              c.faceDirection(newFacing);
+              return c;
+            } else if (c instanceof Monster) {
+              c.faceDirection(newFacing);
+              return c;
+            } else {
+              // Fallback for plain objects
+              if (c.kind === "hero") {
+                const hero = new Hero(c);
+                hero.faceDirection(newFacing);
+                return hero;
+              } else {
+                const monster = new Monster(c);
+                monster.faceDirection(newFacing);
+                return monster;
+              }
+            }
+          }
+          return c;
+        }));
+        setMessages(prev => [`${selectedCreature.name} faces ${selectedCreature.getFacingShortName()}`, ...prev].slice(0, 50));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCreature, setCreatures, setMessages]);
+
   function onMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     setDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
@@ -793,7 +660,8 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       if (considerCreatures) {
         for (const c of creatures) {
           if (!selectedCreatureId || c.id === selectedCreatureId) continue;
-          const cdims = (c.size === "large" || c.size === "huge") ? { w: 2, h: 2 } : { w: 1, h: 1 };
+          if (c.vitality <= 0) continue; // Skip dead creatures
+          const cdims = (c.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
           if (rectsOverlap(tx, ty, dims.w, dims.h, c.x, c.y, cdims.w, cdims.h)) return false;
         }
       }
@@ -810,7 +678,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
           return;
         }
 
-        const dims = (selected.size === "large" || selected.size === "huge") ? { w: 2, h: 2 } : { w: 1, h: 1 };
+        const dims = (selected.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
 
         const reachableKeySet = new Set(reachable.tiles.map(t => `${t.x},${t.y}`));
         const destKey = `${pos.tileX},${pos.tileY}`;
@@ -820,11 +688,48 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
           const moveCost = (reachable.costMap.get(destKey) ?? 0);
           setCreatures(prev => prev.map(c => {
             if (c.id !== selectedCreatureId) return c;
-            const budget = c.remainingMovement ?? c.movement;
-            const newRemaining = Math.max(0, budget - moveCost);
-            moved = true;
-            return { ...c, x: pos.tileX, y: pos.tileY, remainingMovement: newRemaining } as typeof c;
+            
+            // Ensure we're working with class instances
+            if (c instanceof Hero) {
+              c.moveTo(pos.tileX, pos.tileY);
+              c.useMovement(moveCost);
+              moved = true;
+              return c;
+            } else if (c instanceof Monster) {
+              c.moveTo(pos.tileX, pos.tileY);
+              c.useMovement(moveCost);
+              moved = true;
+              return c;
+            } else {
+              // Fallback for plain objects
+              if (c.kind === "hero") {
+                const hero = new Hero(c);
+                hero.moveTo(pos.tileX, pos.tileY);
+                hero.useMovement(moveCost);
+                moved = true;
+                return hero;
+              } else {
+                const monster = new Monster(c);
+                monster.moveTo(pos.tileX, pos.tileY);
+                monster.useMovement(moveCost);
+                moved = true;
+                return monster;
+              }
+            }
           }));
+          
+          // Check if we moved onto a space where a dead creature was
+          const deadCreatureAtDestination = creatures.find(c => 
+            c.vitality <= 0 && 
+            c.x === pos.tileX && 
+            c.y === pos.tileY
+          );
+          if (deadCreatureAtDestination) {
+            setMessages(m => [
+              `${selected.name} moves over ${deadCreatureAtDestination.name}'s remains.`,
+              ...m,
+            ].slice(0, 50));
+          }
         }
         if (moved) {
           setSelectedCreatureId(null);
@@ -981,7 +886,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
               zIndex: 3,
             }}
           >
-            {creatures.map((cr) => (
+            {creatures.filter(cr => cr.vitality > 0).map((cr) => (
               <div
                 key={cr.id}
                 title={cr.name}
@@ -998,44 +903,74 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
                       ].slice(0, 50));
                       return; // keep hero selected
                     }
-                    const remainingAttacks = selected.remainingAttacks ?? selected.attacks;
-                    if (remainingAttacks <= 0) {
+                    // Perform the attack using the creature's attack method
+                    const combatResult = selected.attack(cr);
+                    
+                    // Add combat message
+                    setMessages(m => [combatResult.message, ...m].slice(0, 50));
+                    
+                    // Add defeat message if target was defeated
+                    if (combatResult.targetDefeated) {
                       setMessages(m => [
-                        `${selected.name} has no attacks remaining.`,
+                        `${cr.name} has been defeated!`,
                         ...m,
                       ].slice(0, 50));
-                      return; // keep hero selected
                     }
-                    // Determine weapon and attack bonus
-                    const main = selected.equipment.mainHand;
-                    const ranged = selected.equipment.ranged;
-                    const isRanged = main instanceof RangedWeapon || (!(main instanceof Weapon) && ranged instanceof RangedWeapon);
-                    const atkBonus = isRanged ? selected.ranged : selected.combat;
-                    const weapon = (main instanceof Weapon || main instanceof RangedWeapon) ? main : ranged;
-                    const dmg = weapon ? (weapon as any).damage as number : 1;
-                    const roll = rollD20();
-                    const total = roll + atkBonus;
-                    const defense = 10 + cr.combat; // simple defense formula
-                    const hit = total >= defense;
-                    const dmgText = hit ? ` Damage: ${dmg}.` : "";
-                    setMessages(m => [
-                      `${selected.name} attacks ${cr.name}: d20 ${roll} + ${atkBonus} = ${total} vs ${defense} → ${hit ? "HIT" : "MISS"}.${dmgText}`,
-                      ...m,
-                    ].slice(0, 50));
-                    // Spend one attack
-                    setCreatures(prev => prev.map(c => c.id === selected.id ? { ...c, remainingAttacks: (remainingAttacks - 1) } : c));
+                    
+                    // Set remaining movement to zero if the creature has already moved this turn
+                    const hasMoved = selected.hasMoved();
+                    
+                    // Spend one attack and set movement to zero if already moved
+                    setCreatures(prev => prev.map(c => {
+                      if (c.id === selected.id) {
+                        // Ensure we're working with class instances
+                        if (c instanceof Hero) {
+                          c.useAttack();
+                          if (hasMoved) {
+                            c.useMovement(c.remainingMovement);
+                          }
+                          return c;
+                        } else if (c instanceof Monster) {
+                          c.useAttack();
+                          if (hasMoved) {
+                            c.useMovement(c.remainingMovement);
+                          }
+                          return c;
+                        } else {
+                          // Fallback for plain objects
+                          if (c.kind === "hero") {
+                            const hero = new Hero(c);
+                            hero.useAttack();
+                            if (hasMoved) {
+                              hero.useMovement(hero.remainingMovement);
+                            }
+                            return hero;
+                          } else {
+                            const monster = new Monster(c);
+                            monster.useAttack();
+                            if (hasMoved) {
+                              monster.useMovement(monster.remainingMovement);
+                            }
+                            return monster;
+                          }
+                        }
+                      }
+                      return c;
+                    }));
                     return; // DO NOT fall through to selection change
                   }
 
-                  // If clicking a hero (or nothing selected), select clicked creature
-                  setSelectedCreatureId(cr.id);
+                  // If clicking a hero (or nothing selected), select clicked creature (but not dead ones)
+                  if (cr.vitality > 0) {
+                    setSelectedCreatureId(cr.id);
+                  }
                 }}
                 style={{
                   position: "absolute",
                   left: cr.x * TILE_SIZE,
                   top: cr.y * TILE_SIZE,
-                  width: ((cr.size === "large" || cr.size === "huge") ? 2 : 1) * TILE_SIZE,
-                  height: ((cr.size === "large" || cr.size === "huge") ? 2 : 1) * TILE_SIZE,
+                  width: ((cr.size >= 3) ? 2 : 1) * TILE_SIZE, // 3=large, 4=huge
+                  height: ((cr.size >= 3) ? 2 : 1) * TILE_SIZE, // 3=large, 4=huge
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1043,6 +978,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
                   boxShadow: selectedCreatureId === cr.id ? "0 0 0 3px #00e5ff inset, 0 0 8px #00e5ff" : undefined,
                   borderRadius: "50%",
                   cursor: (() => {
+                    if (cr.vitality <= 0) return "default"; // Dead creatures can't be interacted with
                     const selected = creatures.find(c => c.id === selectedCreatureId);
                     if (selected && selected.kind === "hero" && cr.kind === "monster") {
                       return targetsInRangeIds.has(cr.id) ? "crosshair" : "not-allowed";
@@ -1056,22 +992,50 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
                     src={process.env.PUBLIC_URL + "/" + cr.image}
                     alt={cr.name}
                     draggable={false}
-                    style={{ width: "80%", height: "80%", objectFit: "contain", pointerEvents: "none", borderRadius: "50%", border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.kind === "hero" ? "2px solid #4caf50" : "2px solid #e53935"), boxSizing: "border-box" }}
+                    style={{ 
+                      width: "80%", 
+                      height: "80%", 
+                      objectFit: "contain", 
+                      pointerEvents: "none", 
+                      borderRadius: "50%", 
+                      border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.kind === "hero" ? "2px solid #4caf50" : "2px solid #e53935"), 
+                      boxSizing: "border-box",
+                      opacity: cr.vitality <= 0 ? 0.3 : 1,
+                      filter: cr.vitality <= 0 ? "grayscale(100%)" : "none"
+                    }}
                     onError={(e) => ((e.currentTarget.style.display = "none"))}
                   />
                 ) : (
                   <div
                     style={{
-                      width: Math.floor(TILE_SIZE * 0.8 * ((cr.size === "large" || cr.size === "huge") ? 2 : 1)),
-                      height: Math.floor(TILE_SIZE * 0.8 * ((cr.size === "large" || cr.size === "huge") ? 2 : 1)),
+                      width: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)), // 3=large, 4=huge
+                      height: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)), // 3=large, 4=huge
                       borderRadius: "50%",
-                      background: cr.kind === "hero" ? "#4caf50" : "#e53935",
+                      background: cr.vitality <= 0 ? "#666" : (cr.kind === "hero" ? "#4caf50" : "#e53935"),
                       border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : "2px solid #fff",
                       boxSizing: "border-box",
                       pointerEvents: "none",
+                      opacity: cr.vitality <= 0 ? 0.3 : 1,
                     }}
                   />
                 )}
+                {/* Facing direction arrow */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${Math.floor(TILE_SIZE * 0.4 * ((cr.size >= 3) ? 2 : 1))}px)`,
+                    fontSize: "12px",
+                    color: cr.kind === "hero" ? "#4caf50" : "#e53935",
+                    fontWeight: "bold",
+                    textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                    pointerEvents: "none",
+                    zIndex: 1,
+                  }}
+                >
+                  ▲
+                </div>
               </div>
             ))}
           </div>
@@ -1088,7 +1052,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
           left: 0,
           right: 0,
           bottom: 0,
-          height: 100,
+          height: 130,
           background: "rgba(0,0,0,0.7)",
           color: "#fff",
           display: "flex",
@@ -1104,7 +1068,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         onMouseMove={(e) => e.stopPropagation()}
         onMouseUp={(e) => e.stopPropagation()}
       >
-        <div style={{ flex: 1, overflow: "auto", background: "rgba(255,255,255,0.06)", border: "1px solid #444", borderRadius: 6, padding: 8 }}>
+        <div style={{ flex: 1, overflow: "auto", background: "rgba(255,255,255,0.06)", border: "1px solid #444", borderRadius: 6, padding: 8, maxHeight: "108px" }}>
           {messages.length === 0 ? (
             <div style={{ opacity: 0.8 }}>No messages</div>
           ) : (
@@ -1114,10 +1078,31 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
               ))}
             </ul>
           )}
+
         </div>
         <button
           onClick={() => {
-            setCreatures(prev => prev.map(c => ({ ...c, remainingMovement: c.movement, remainingAttacks: c.attacks })));
+            setCreatures(prev => prev.map(c => {
+              // Ensure we're working with class instances
+              if (c instanceof Hero) {
+                c.resetTurn();
+                return c;
+              } else if (c instanceof Monster) {
+                c.resetTurn();
+                return c;
+              } else {
+                // Fallback for plain objects - recreate as proper class instance
+                if (c.kind === "hero") {
+                  const hero = new Hero(c);
+                  hero.resetTurn();
+                  return hero;
+                } else {
+                  const monster = new Monster(c);
+                  monster.resetTurn();
+                  return monster;
+                }
+              }
+            }));
             setMessages(m => ["Turn ended. Movement reset.", ...m].slice(0, 50));
           }}
           style={{
@@ -1139,8 +1124,8 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
           position: "absolute",
           top: 0,
           right: 0,
-          height: "calc(100vh - 100px)",
-          bottom: 100,
+          height: "calc(100vh - 130px)",
+          bottom: 130,
           width: 280,
           background: "rgba(0,0,0,0.75)",
           color: "#fff",
@@ -1178,16 +1163,18 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
             </div>
             <div style={{ marginTop: 4, borderTop: "1px solid #444", paddingTop: 12 }}>
               <div>Movement: <strong>{selectedCreature.movement}</strong></div>
-              <div>Remaining: <strong>{selectedCreature.remainingMovement ?? selectedCreature.movement}</strong></div>
+              <div>Remaining: <strong style={{ color: selectedCreature.remainingMovement === 0 ? "#ff4444" : "#fff" }}>{selectedCreature.remainingMovement ?? selectedCreature.movement}</strong></div>
               <div>Attacks: <strong>{selectedCreature.attacks}</strong></div>
               <div>Remaining attacks: <strong>{selectedCreature.remainingAttacks ?? selectedCreature.attacks}</strong></div>
               <div>Position: <strong>({selectedCreature.x}, {selectedCreature.y})</strong></div>
               <div>Size: <strong>{selectedCreature.size}</strong></div>
+              <div>Facing: <strong>{selectedCreature.getFacingShortName()} {selectedCreature.getFacingArrow()}</strong></div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 8 }}>
                 <div>Combat: <strong>{selectedCreature.combat}</strong></div>
                 <div>Ranged: <strong>{selectedCreature.ranged}</strong></div>
                 <div>Strength: <strong>{selectedCreature.strength}</strong></div>
-                <div>Vitality: <strong>{selectedCreature.vitality}</strong></div>
+                <div>Agility: <strong>{selectedCreature.agility}</strong></div>
+                <div>Vitality: <strong style={{ color: selectedCreature.vitality <= 0 ? "#ff4444" : selectedCreature.vitality <= 1 ? "#ffaa00" : "#fff" }}>{selectedCreature.vitality}</strong></div>
               </div>
             </div>
             <div style={{ marginTop: 12, borderTop: "1px solid #444", paddingTop: 12 }}>
@@ -1195,7 +1182,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
               <div>Main hand: <strong>{selectedCreature.equipment.mainHand?.name ?? "-"}</strong></div>
               <div>Off hand: <strong>{selectedCreature.equipment.offHand?.name ?? "-"}</strong></div>
               <div>Armor: <strong>{selectedCreature.equipment.armor?.name ?? "-"}</strong></div>
-              <div>Ranged: <strong>{selectedCreature.equipment.ranged?.name ?? "-"}</strong></div>
+
             </div>
             <div style={{ marginTop: 12, borderTop: "1px solid #444", paddingTop: 12 }}>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>Inventory ({selectedCreature.inventory.length})</div>
