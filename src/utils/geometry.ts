@@ -143,10 +143,10 @@ export function areCreaturesOverlapping(
   const dims1 = creature1.getDimensions();
   const dims2 = creature2.getDimensions();
   
-  return creature1.x < creature2.x + dims2.w &&
-         creature1.x + dims1.w > creature2.x &&
-         creature1.y < creature2.y + dims2.h &&
-         creature1.y + dims1.h > creature2.y;
+  return rectsOverlap(
+    creature1.x, creature1.y, dims1.w, dims1.h,
+    creature2.x, creature2.y, dims2.w, dims2.h
+  );
 }
 
 /**

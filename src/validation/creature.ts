@@ -134,12 +134,12 @@ export function getDeadCreatures(creatures: Creature[]): Creature[] {
  * Get IDs of all living creatures
  */
 export function getLivingCreatureIds(creatures: Creature[]): string[] {
-  return creatures.filter(c => c.isAlive()).map(c => c.id);
+  return getLivingCreatures(creatures).map(c => c.id);
 }
 
 /**
  * Get IDs of all dead creatures
  */
 export function getDeadCreatureIds(creatures: Creature[]): string[] {
-  return creatures.filter(c => c.isDead()).map(c => c.id);
+  return getDeadCreatures(creatures).map(c => c.id);
 }

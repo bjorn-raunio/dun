@@ -9,50 +9,9 @@ import { validateCombat } from '../validation/combat';
 import { executeMovement } from '../game/movement';
 import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
+import { createAIDecision, validateAIAction } from './helpers';
 
-// --- Helper Functions for Common Patterns ---
-
-/**
- * Create a wait decision with the given reason
- */
-function createWaitDecision(reason: string): AIDecision {
-  return {
-    type: 'wait',
-    priority: 1,
-    reason
-  };
-}
-
-/**
- * Create a successful AI action result
- */
-function createSuccessfulActionResult(
-  action: AIDecision,
-  message: string,
-  newState: AIState
-): AIActionResult {
-  return {
-    success: true,
-    action,
-    message,
-    newState
-  };
-}
-
-/**
- * Create a failed AI action result
- */
-function createFailedActionResult(
-  message: string,
-  newState: AIState
-): AIActionResult {
-  return {
-    success: false,
-    action: createWaitDecision('Action failed'),
-    message,
-    newState
-  };
-}
+// --- AI Decision Making Logic ---
 
 // --- AI Decision Making Logic ---
 
@@ -88,11 +47,12 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   // Check if creature should flee
   if (shouldFlee(updatedAI, creature, allCreatures)) {
     const fleeDecision = createFleeDecision(updatedAI, creature, allCreatures);
-    return createSuccessfulActionResult(
-      fleeDecision,
-      AI_MESSAGES.flee(creature.name),
-      updatedAI
-    );
+    return {
+      success: true,
+      action: fleeDecision,
+      message: AI_MESSAGES.flee(creature.name),
+      newState: updatedAI
+    };
   }
   
   // Check if current target is still valid
@@ -112,13 +72,14 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   
   if (!target) {
     // No target available, wait
-    const waitDecision = createWaitDecision('No targets available');
+    const waitDecision = createAIDecision('wait', { reason: 'No targets available' });
     
-    return createSuccessfulActionResult(
-      waitDecision,
-      AI_MESSAGES.wait(creature.name, 'no targets'),
-      updatedAI
-    );
+    return {
+      success: true,
+      action: waitDecision,
+      message: AI_MESSAGES.wait(creature.name, 'no targets'),
+      newState: updatedAI
+    };
   }
   
   // Check if we can attack the target from current position
@@ -128,29 +89,30 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   // If we can attack now, prioritize attacking over movement
   if (canAttackNow && attackValidation.isValid) {
     // Attack from current position - no movement when already in attack range
-    const attackDecision: AIDecision = {
-      type: 'attack',
+    const attackDecision = createAIDecision('attack', {
       target,
-      priority: 8, // High priority for attacking
+      priority: 8,
       reason: `Attacking ${target.name}`
-    };
+    });
     
-    return createSuccessfulActionResult(
-      attackDecision,
-      AI_MESSAGES.attack(creature.name, target.name),
-      updatedAI
-    );
+    return {
+      success: true,
+      action: attackDecision,
+      message: AI_MESSAGES.attack(creature.name, target.name),
+      newState: updatedAI
+    };
   }
   
   // If target is in range but we can't attack (e.g., no actions remaining), wait
   if (canAttackNow) {
-    const waitDecision = createWaitDecision('Target in range but cannot attack');
+    const waitDecision = createAIDecision('wait', { reason: 'Target in range but cannot attack' });
     
-    return createSuccessfulActionResult(
-      waitDecision,
-      AI_MESSAGES.waitEngaged(creature.name, target.name),
-      updatedAI
-    );
+    return {
+      success: true,
+      action: waitDecision,
+      message: AI_MESSAGES.waitEngaged(creature.name, target.name),
+      newState: updatedAI
+    };
   }
   
   // Can't attack now, but we have a target - try to move toward it
@@ -160,22 +122,24 @@ export function makeAIDecision(context: AIContext): AIActionResult {
     if (movementDecision) {
       const message = createMovementMessage(creature.name, target.name, updatedAI.currentTarget === null);
       
-      return createSuccessfulActionResult(
-        movementDecision,
+      return {
+        success: true,
+        action: movementDecision,
         message,
-        updatedAI
-      );
+        newState: updatedAI
+      };
     }
   }
   
   // If no good action is available, wait
-  const waitDecision = createWaitDecision('No advantageous action available');
+  const waitDecision = createAIDecision('wait', { reason: 'No advantageous action available' });
   
-  return createSuccessfulActionResult(
-    waitDecision,
-    AI_MESSAGES.wait(creature.name),
-    updatedAI
-  );
+  return {
+    success: true,
+    action: waitDecision,
+    message: AI_MESSAGES.wait(creature.name),
+    newState: updatedAI
+  };
 }
 
 /**
@@ -389,12 +353,11 @@ export function getAllPossibleDecisions(context: AIContext): AIDecision[] {
     if (canAttackNow) {
       const attackValidation = validateCombat(creature, target, allCreatures, mapDefinition);
       if (attackValidation.isValid) {
-        decisions.push({
-          type: 'attack',
-          target,
-          priority: 8, // High priority for attacking
-          reason: `Attacking ${target.name}`
-        });
+              decisions.push(createAIDecision('attack', {
+        target,
+        priority: 8,
+        reason: `Attacking ${target.name}`
+      }));
       }
     }
   }
@@ -409,7 +372,7 @@ export function getAllPossibleDecisions(context: AIContext): AIDecision[] {
   }
   
   // Always add wait as an option
-  decisions.push(createWaitDecision('No advantageous action available'));
+  decisions.push(createAIDecision('wait', { reason: 'No advantageous action available' }));
   
   // Sort by priority (highest first)
   return decisions.sort((a, b) => b.priority - a.priority);

@@ -7,8 +7,18 @@ import { calculateTargetsInRange } from '../utils/combatUtils';
 import { addMessage } from './messageSystem';
 import { getLivingCreatures } from '../validation/creature';
 import { findCreatureById } from '../utils/pathfinding';
+import { AIBehaviorType } from '../ai/types';
 
 // --- Turn Management Logic ---
+
+/**
+ * Turn Order Rules:
+ * 1. Player-controlled creatures always act first (order among them doesn't matter)
+ * 2. AI-controlled creatures are ordered by behavior:
+ *    - Ranged creatures act before melee creatures
+ *    - Within the same behavior type, creatures are ordered by agility (highest first)
+ * 3. This ensures ranged AI creatures can position themselves before melee creatures engage
+ */
 
 export interface AITurnState {
   isAITurnActive: boolean;
@@ -19,11 +29,61 @@ export interface AITurnState {
 }
 
 /**
+ * Get AI behavior type for a creature
+ */
+function getAIBehaviorType(creature: Creature): AIBehaviorType | null {
+  if (!creature.isAIControlled()) {
+    return null;
+  }
+  
+  // Get AI state from the creature (assuming it's a Monster)
+  const aiState = (creature as any).getAIState?.();
+  return aiState?.behavior || AIBehaviorType.MELEE;
+}
+
+/**
+ * Compare AI creatures by behavior (ranged before melee) then by agility
+ */
+function compareAICreaturesByBehavior(a: Creature, b: Creature): number {
+  const aBehavior = getAIBehaviorType(a);
+  const bBehavior = getAIBehaviorType(b);
+  
+  // Ranged creatures act before melee creatures
+  if (aBehavior === AIBehaviorType.RANGED && bBehavior !== AIBehaviorType.RANGED) return -1;
+  if (aBehavior !== AIBehaviorType.RANGED && bBehavior === AIBehaviorType.RANGED) return 1;
+  
+  // Same behavior type - use agility as tiebreaker
+  return b.agility - a.agility;
+}
+
+/**
+ * Compare creatures for turn order
+ * Player-controlled creatures come first (order doesn't matter)
+ * AI-controlled creatures are ordered by behavior (ranged before melee) then by agility
+ */
+function compareCreaturesForTurnOrder(a: Creature, b: Creature): number {
+  const aIsPlayer = a.isPlayerControlled();
+  const bIsPlayer = b.isPlayerControlled();
+  
+  // Player-controlled creatures come first
+  if (aIsPlayer && !bIsPlayer) return -1;
+  if (!aIsPlayer && bIsPlayer) return 1;
+  
+  // If both are player-controlled, order doesn't matter (use agility as tiebreaker)
+  if (aIsPlayer && bIsPlayer) {
+    return b.agility - a.agility;
+  }
+  
+  // Both are AI-controlled - use behavior-based comparison
+  return compareAICreaturesByBehavior(a, b);
+}
+
+/**
  * Initialize turn state for a new game
  */
 export function initializeTurnState(creatures: Creature[]): TurnState {
   const turnOrder = getLivingCreatures(creatures)
-    .sort((a, b) => b.agility - a.agility) // Sort by agility (highest first)
+    .sort(compareCreaturesForTurnOrder)
     .map(c => c.id);
   
   return {
@@ -191,8 +251,8 @@ export function executeAITurnsForGroup(
 ): void {
   const groupCreatures = getAICreaturesInGroup(creatures, group);
   
-  // Sort by agility (highest first) for turn order within group
-  groupCreatures.sort((a, b) => b.agility - a.agility);
+  // Sort by behavior (ranged before melee) then by agility for turn order within group
+  groupCreatures.sort(compareAICreaturesByBehavior);
   
   // Execute turns for each creature in the group
   groupCreatures.forEach(creature => {
@@ -320,7 +380,7 @@ export function advanceTurn(
   
   // Recalculate turn order (in case creatures died)
   const newTurnOrder = getLivingCreatures(creatures)
-    .sort((a, b) => b.agility - a.agility)
+    .sort(compareCreaturesForTurnOrder)
     .map(c => c.id);
   
   return {

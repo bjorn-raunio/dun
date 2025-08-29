@@ -1,6 +1,7 @@
 import { Creature } from '../creatures/index';
 import { AIState, AIMovementOption, AIDecision } from './types';
 import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/pathfinding';
+import { createAIDecision, updateAIStateWithAction } from './helpers';
 
 // --- AI Movement Logic ---
 
@@ -308,12 +309,11 @@ export function createMovementDecision(
     reason += ` to reposition`;
   }
   
-  return {
-    type: 'move',
+  return createAIDecision('move', {
     destination: { x: bestMove.x, y: bestMove.y },
     priority: bestMove.score,
     reason
-  };
+  });
 }
 
 /**
@@ -325,13 +325,10 @@ export function updateAIStateAfterMovement(
   newX: number,
   newY: number
 ): AIState {
-  return {
-    ...ai,
-    tacticalMemory: {
-      ...ai.tacticalMemory,
-      lastMove: { x: newX, y: newY }
-    }
-  };
+  return updateAIStateWithAction(ai, {
+    type: 'move',
+    destination: { x: newX, y: newY }
+  });
 }
 
 

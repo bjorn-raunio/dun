@@ -105,7 +105,7 @@ export function createMouseHandlers(
              console.log(`  Skipping duplicate movement to (${pos.tileX},${pos.tileY})`);
              return prev;
            }
-           const targetCreature = prev.find(c => c.id === selectedCreatureId);
+           const targetCreature = findCreatureById(prev, selectedCreatureId);
            if (!targetCreature) return prev;
            
                        // Execute movement using extracted logic

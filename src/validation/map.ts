@@ -1,8 +1,9 @@
 import { Creature } from '../creatures/index';
 import { ValidationResult, validateArrayNotEmpty, validateArrayNoDuplicates } from './core';
 import { VALIDATION_MESSAGES } from './messages';
-import { rectsOverlap } from '../utils/geometry';
+import { rectsOverlap, areCreaturesOverlapping } from '../utils/geometry';
 import { terrainHeightAt } from '../maps/mapRenderer';
+import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
 
 /**
  * Validate map dimensions
@@ -58,10 +59,7 @@ export function validateCreaturesNoOverlap(creatures: Creature[]): ValidationRes
       
       if (creature1.isDead() || creature2.isDead()) continue; // Dead creatures don't block
       
-      if (rectsOverlap(
-        creature1.x, creature1.y, creature1.mapWidth, creature1.mapHeight,
-        creature2.x, creature2.y, creature2.mapWidth, creature2.mapHeight
-      )) {
+      if (areCreaturesOverlapping(creature1, creature2)) {
         return {
           isValid: false,
           reason: VALIDATION_MESSAGES.CREATURES_OVERLAPPING(creature1.name, creature2.name)
@@ -95,7 +93,7 @@ export function validateCreatureIdsUnique(creatures: Creature[]): ValidationResu
  * Validate that turn order includes all living creatures
  */
 export function validateTurnOrderComplete(creatures: Creature[], turnOrder: string[]): ValidationResult {
-  const livingIds = creatures.filter(c => c.isAlive()).map(c => c.id);
+  const livingIds = getLivingCreatureIds(creatures);
   const missing = livingIds.filter(id => !turnOrder.includes(id));
   
   if (missing.length > 0) {
@@ -112,7 +110,7 @@ export function validateTurnOrderComplete(creatures: Creature[], turnOrder: stri
  * Validate that turn order doesn't include dead creatures
  */
 export function validateTurnOrderNoDeadCreatures(creatures: Creature[], turnOrder: string[]): ValidationResult {
-  const deadIds = creatures.filter(c => c.isDead()).map(c => c.id);
+  const deadIds = getDeadCreatureIds(creatures);
   const deadInOrder = deadIds.filter(id => turnOrder.includes(id));
   
   if (deadInOrder.length > 0) {
@@ -161,9 +159,10 @@ export function validatePositionStandable(
       if (creature.isDead()) continue; // Dead creatures don't block
       if (creatureId && creature.id === creatureId) continue; // Don't check against self
       
+      const creatureDimensions = creature.getDimensions();
       if (rectsOverlap(
         x, y, dimensions.w, dimensions.h,
-        creature.x, creature.y, creature.mapWidth, creature.mapHeight
+        creature.x, creature.y, creatureDimensions.w, creatureDimensions.h
       )) {
         return false;
       }

@@ -1,6 +1,7 @@
 import { Creature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
+import { filterValidTargets, evaluateTargetWithScoring } from './helpers';
 
 // --- AI Targeting Logic ---
 
@@ -16,76 +17,11 @@ export function evaluateTargets(
   rows?: number,
   mapDefinition?: any
 ): AITarget[] {
-  const targets: AITarget[] = [];
-
-  for (const target of allCreatures) {
-    // Skip dead creatures and self
-    if (target.isDead() || target.id === creature.id) {
-      continue;
-    }
-
-    // Skip allies (creatures from the same group)
-    if (creature.isFriendlyTo(target)) {
-      continue;
-    }
-
-    const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
-      usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
-      mapData,
-      cols,
-      rows,
-      mapDefinition,
-      allCreatures
-    });
-    const movementRange = creature.remainingMovement;
-
-    // Check if target can be reached and attacked this round
-    const canReachAndAttackThisTurn = canReachAndAttack(creature, target, allCreatures, mapData, cols, rows, mapDefinition);
-    const canAttackNow = canAttackImmediately(creature, target);
-
-    // If we can't reach and attack this round, give very low priority
-    if (!canReachAndAttackThisTurn) {
-      targets.push({
-        creature: target,
-        distance,
-        priority: 0.1 // Very low priority for unreachable targets
-      });
-      continue;
-    }
-
-    // Calculate base priority based on reachability and attackability
-    let priority = 0;
-
-    if (canAttackNow) {
-      // Can attack immediately - high priority
-      priority += 100;
-    } else if (canReachAndAttackThisTurn) {
-      // Can reach and attack this round - medium priority
-      priority += 50;
-    }
-
-    // Prioritize easier-to-hit targets when multiple are reachable
-    // Calculate hit difficulty based on attacker's combat/ranged vs defender's combat
-    let defenderCombatValue: number;
-
-    if (ai.behavior === AIBehaviorType.RANGED) {
-      defenderCombatValue = 0;
-    } else {
-      // Melee and animal behaviors use combat
-      defenderCombatValue = target.combat;
-    }
-
-    // Hit ease: lower defender combat value = easier to hit = higher priority
-    // We want to prioritize targets with lower combat values
-    const hitEase = Math.max(0, 10 - defenderCombatValue); // Higher value = easier to hit
-    priority += hitEase * 2; // Give significant weight to hit ease
-
-    targets.push({
-      creature: target,
-      distance,
-      priority: Math.max(0, priority)
-    });
-  }
+  const validTargets = filterValidTargets(creature, allCreatures);
+  
+  const targets = validTargets.map(target => 
+    evaluateTargetWithScoring(target, creature, ai, allCreatures, mapData, cols, rows, mapDefinition)
+  );
 
   // Sort by priority (highest first)
   return targets.sort((a, b) => b.priority - a.priority);
