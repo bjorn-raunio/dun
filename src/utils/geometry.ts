@@ -1,11 +1,31 @@
+import { DIRECTIONS } from './constants';
+
 // --- Geometry Utilities ---
 
 /**
- * Calculate Chebyshev distance between two points
- * This is used for simple distance calculations
+ * Calculate distance between two points using the specified metric
+ * This is the main distance calculation function - use this instead of individual metric functions
  */
-export function chebyshevDistance(x1: number, y1: number, x2: number, y2: number): number {
-  return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+export function calculateDistance(
+  x1: number, 
+  y1: number, 
+  x2: number, 
+  y2: number, 
+  metric: 'chebyshev' | 'manhattan' | 'euclidean' = 'chebyshev'
+): number {
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  
+  switch (metric) {
+    case 'chebyshev':
+      return Math.max(dx, dy);
+    case 'manhattan':
+      return dx + dy;
+    case 'euclidean':
+      return Math.sqrt(dx * dx + dy * dy);
+    default:
+      return Math.max(dx, dy);
+  }
 }
 
 /**
@@ -33,16 +53,16 @@ export function getDirectionFromTo(fromX: number, fromY: number, toX: number, to
   const dx = toX - fromX;
   const dy = toY - fromY;
   
-  if (dx === 0 && dy < 0) return 0; // North
-  if (dx > 0 && dy < 0) return 1;   // Northeast
-  if (dx > 0 && dy === 0) return 2; // East
-  if (dx > 0 && dy > 0) return 3;   // Southeast
-  if (dx === 0 && dy > 0) return 4; // South
-  if (dx < 0 && dy > 0) return 5;   // Southwest
-  if (dx < 0 && dy === 0) return 6; // West
-  if (dx < 0 && dy < 0) return 7;   // Northwest
+  if (dx === 0 && dy < 0) return DIRECTIONS.NORTH;
+  if (dx > 0 && dy < 0) return DIRECTIONS.NORTHEAST;
+  if (dx > 0 && dy === 0) return DIRECTIONS.EAST;
+  if (dx > 0 && dy > 0) return DIRECTIONS.SOUTHEAST;
+  if (dx === 0 && dy > 0) return DIRECTIONS.SOUTH;
+  if (dx < 0 && dy > 0) return DIRECTIONS.SOUTHWEST;
+  if (dx < 0 && dy === 0) return DIRECTIONS.WEST;
+  if (dx < 0 && dy < 0) return DIRECTIONS.NORTHWEST;
   
-  return 0; // Default to North
+  return DIRECTIONS.NORTH; // Default to North
 }
 
 /**
@@ -84,4 +104,78 @@ export function rectsOverlap(
   bx: number, by: number, bw: number, bh: number
 ): boolean {
   return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+/**
+ * Check if a point is within map bounds
+ */
+export function isWithinMapBounds(x: number, y: number, mapData: { tiles: string[][] }): boolean {
+  if (x < 0 || y < 0) return false;
+  if (y >= mapData.tiles.length) return false;
+  if (x >= mapData.tiles[0].length) return false;
+  return true;
+}
+
+/**
+ * Check if a creature is within map bounds
+ */
+export function isCreatureInBounds(
+  creature: { x: number; y: number; getDimensions: () => { w: number; h: number } },
+  mapData: { tiles: string[][] }
+): boolean {
+  const dimensions = creature.getDimensions();
+  
+  // Check if the creature's area is within bounds
+  if (creature.x < 0 || creature.y < 0) return false;
+  if (creature.x + dimensions.w > mapData.tiles[0].length) return false;
+  if (creature.y + dimensions.h > mapData.tiles.length) return false;
+  
+  return true;
+}
+
+/**
+ * Check if two creatures are overlapping
+ */
+export function areCreaturesOverlapping(
+  creature1: { x: number; y: number; getDimensions: () => { w: number; h: number } },
+  creature2: { x: number; y: number; getDimensions: () => { w: number; h: number } }
+): boolean {
+  const dims1 = creature1.getDimensions();
+  const dims2 = creature2.getDimensions();
+  
+  return creature1.x < creature2.x + dims2.w &&
+         creature1.x + dims1.w > creature2.x &&
+         creature1.y < creature2.y + dims2.h &&
+         creature1.y + dims1.h > creature2.y;
+}
+
+/**
+ * Check if an attacker is positioned in the back arc of a target
+ * The back arc consists of the 3 positions behind the target (opposite and adjacent)
+ * @param targetX Target's X position
+ * @param targetY Target's Y position
+ * @param targetFacing Target's facing direction (0-7)
+ * @param attackerX Attacker's X position
+ * @param attackerY Attacker's Y position
+ * @returns true if attacker is in target's back arc
+ */
+export function isInBackArc(
+  targetX: number, 
+  targetY: number, 
+  targetFacing: number, 
+  attackerX: number, 
+  attackerY: number
+): boolean {
+  // Get direction from target to attacker
+  const attackerPositionRelativeToTarget = getDirectionFromTo(targetX, targetY, attackerX, attackerY);
+  
+  // Calculate the back arc directions (opposite and adjacent)
+  const oppositeDirection = (targetFacing + 4) % 8;
+  const backArcLeft = (oppositeDirection + 7) % 8;  // One direction left of opposite
+  const backArcRight = (oppositeDirection + 1) % 8; // One direction right of opposite
+  
+  // Check if attacker is positioned in the back arc
+  return attackerPositionRelativeToTarget === oppositeDirection || 
+         attackerPositionRelativeToTarget === backArcLeft || 
+         attackerPositionRelativeToTarget === backArcRight;
 }

@@ -1,11 +1,20 @@
 import { Creature } from '../creatures/index';
-import { AIState, AIMovementOption, AIDecision, AIBehaviorType } from './types';
-import { chebyshevDistance } from '../utils/geometry';
+import { AIState, AIMovementOption, AIDecision } from './types';
+import { isPositionAccessibleWithBounds } from '../utils/positioning/accessibility';
+import { calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/positioning/distance';
 
 // --- AI Movement Logic ---
 
+
+
+
+
+
+
+
+
 /**
- * Evaluate a movement option for tactical benefits and risks
+ * Evaluate a movement option based solely on the movement cost to reach the target
  */
 export function evaluateMovementOption(
   x: number,
@@ -14,13 +23,20 @@ export function evaluateMovementOption(
   ai: AIState,
   creature: Creature,
   allCreatures: Creature[],
-  target?: Creature
+  costMap: Map<string, number>,
+  target?: Creature,
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): AIMovementOption {
   const benefits = {
     closerToTarget: false,
     betterPosition: false,
     saferPosition: false,
-    tacticalAdvantage: false
+    tacticalAdvantage: false,
+    inAttackRange: false,
+    combatBonus: false
   };
   
   const risks = {
@@ -31,102 +47,36 @@ export function evaluateMovementOption(
   
   let score = 0;
   
-  // Check if this position gets us closer to target
+  // Only consider the movement cost to reach the target
   if (target) {
-    const currentDistance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-    const newDistance = chebyshevDistance(x, y, target.x, target.y);
+    const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    const newPathDistance = calculateDistanceToAttackablePosition(x, y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    const attackRange = creature.getAttackRange();
     
-    if (newDistance < currentDistance) {
+    // Check if this position puts us in attack range
+    if (newPathDistance <= 0) {
+      benefits.inAttackRange = true;
+      score += 100; // High priority for getting into attack range
+    }
+    
+    // Check if this position gets us closer to target
+    if (newPathDistance < currentPathDistance) {
       benefits.closerToTarget = true;
-      score += (currentDistance - newDistance) * 2;
+      const distanceImprovement = currentPathDistance - newPathDistance;
+      score += distanceImprovement * 100; // Much higher weight for getting closer to target
     }
-  }
-  
-  // Check tactical positioning
-  const enemiesNearby = allCreatures.filter(c => 
-    c.isAlive() && 
-    c.id !== creature.id && 
-    creature.isHostileTo(c) &&
-    chebyshevDistance(x, y, c.x, c.y) <= 3
-  );
-  
-  const alliesNearby = allCreatures.filter(c => 
-    c.isAlive() && 
-    c.id !== creature.id && 
-    creature.isFriendlyTo(c) &&
-    chebyshevDistance(x, y, c.x, c.y) <= 3
-  );
-  
-  // Evaluate safety
-  if (enemiesNearby.length === 0) {
-    benefits.saferPosition = true;
-    score += 3;
-  } else if (enemiesNearby.length === 1) {
-    // One enemy nearby might be manageable
-    score += 1;
-  } else {
-    // Multiple enemies nearby is risky
-    risks.exposedToAttack = true;
-    score -= enemiesNearby.length * 2;
-  }
-  
-  // Check for tactical advantages
-  if (target && chebyshevDistance(x, y, target.x, target.y) <= creature.getAttackRange()) {
-    benefits.tacticalAdvantage = true;
-    score += 5;
-  }
-  
-  // Check for flanking opportunities
-  if (target && alliesNearby.length > 0) {
-    const allyDistances = alliesNearby.map(a => chebyshevDistance(a.x, a.y, target!.x, target!.y));
-    const myDistance = chebyshevDistance(x, y, target.x, target.y);
     
-    if (allyDistances.some(d => d <= 2) && myDistance <= 2) {
-      benefits.tacticalAdvantage = true;
-      score += 3; // Flanking bonus
+      // Don't penalize movement cost if we're getting closer to target
+  // The goal is to reach the target with minimal total movement, not minimal immediate movement
+  
+  // Add a small penalty for positions that are dead ends (limited future movement options)
+  if (benefits.closerToTarget && mapData && cols !== undefined && rows !== undefined) {
+    const accessibleNeighbors = countAccessibleNeighbors(x, y, allCreatures, mapData, cols, rows, mapDefinition);
+    if (accessibleNeighbors <= 2) {
+      score -= 10; // Penalty for positions with very limited movement options
     }
   }
-  
-  // Check for isolation
-  if (alliesNearby.length === 0 && enemiesNearby.length > 1) {
-    risks.isolated = true;
-    score -= 4;
   }
-  
-  // Check for being trapped
-  const escapeRoutes = allCreatures.filter(c => 
-    c.isAlive() && 
-    chebyshevDistance(x, y, c.x, c.y) <= 1
-  ).length;
-  
-  if (escapeRoutes <= 1) {
-    risks.trapped = true;
-    score -= 3;
-  }
-  
-  // Adjust score based on behavior
-  switch (ai.behavior) {
-    case AIBehaviorType.MELEE:
-      if (benefits.closerToTarget) score += 3;
-      if (benefits.tacticalAdvantage) score += 2;
-      if (risks.exposedToAttack) score -= 1; // Less concerned about exposure
-      break;
-    case AIBehaviorType.RANGED:
-      if (benefits.saferPosition) score += 4;
-      if (benefits.tacticalAdvantage) score += 2;
-      if (risks.exposedToAttack) score -= 3;
-      if (risks.isolated) score -= 1;
-      break;
-    case AIBehaviorType.ANIMAL:
-      if (benefits.closerToTarget) score += 2;
-      if (benefits.tacticalAdvantage) score += 1;
-      if (risks.exposedToAttack) score -= 2;
-      // Animals are less concerned about isolation
-      break;
-  }
-  
-  // Consider movement cost
-  score -= cost * 0.5;
   
   return {
     x,
@@ -139,6 +89,42 @@ export function evaluateMovementOption(
 }
 
 /**
+ * Validate that a movement destination is actually the closest to the target
+ * when considering terrain movement costs
+ */
+function validateClosestDestination(
+  destination: AIMovementOption,
+  target: Creature,
+  creature: Creature,
+  reachableTiles: Array<{ x: number; y: number }>,
+  costMap: Map<string, number>,
+  allCreatures: Creature[],
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
+): boolean {
+      const destinationPathDistance = calculateDistanceToAttackablePosition(destination.x, destination.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+  
+  // Check if any other reachable tile is closer to the target
+  for (const tile of reachableTiles) {
+    // Skip the destination itself
+    if (tile.x === destination.x && tile.y === destination.y) {
+      continue;
+    }
+    
+          const tilePathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    
+    // If we find a tile that's significantly closer (with some tolerance for equal distances)
+    if (tilePathDistance < destinationPathDistance - 0.5) {
+      return false; // This destination is not the closest
+    }
+  }
+  
+  return true; // This destination is the closest (or tied for closest)
+}
+
+/**
  * Find the best movement option for an AI creature
  */
 export function findBestMovement(
@@ -146,10 +132,20 @@ export function findBestMovement(
   creature: Creature,
   allCreatures: Creature[],
   reachableTiles: Array<{ x: number; y: number }>,
-  target?: Creature
+  costMap: Map<string, number>,
+  target?: Creature,
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): AIMovementOption | null {
   if (reachableTiles.length === 0) {
     return null;
+  }
+  
+  console.log(`\n=== AI Movement Decision for ${creature.name} at (${creature.x}, ${creature.y}) ===`);
+  if (target) {
+    console.log(`Target: ${target.name} at (${target.x}, ${target.y})`);
   }
   
   const options: AIMovementOption[] = [];
@@ -160,8 +156,8 @@ export function findBestMovement(
       continue;
     }
     
-    // Calculate movement cost (simplified)
-    const cost = chebyshevDistance(creature.x, creature.y, tile.x, tile.y);
+    // Get the actual movement cost from the cost map
+    const cost = costMap.get(`${tile.x},${tile.y}`) ?? Infinity;
     
     const option = evaluateMovementOption(
       tile.x,
@@ -170,8 +166,17 @@ export function findBestMovement(
       ai,
       creature,
       allCreatures,
-      target
+      costMap,
+      target,
+      mapData,
+      cols,
+      rows,
+      mapDefinition
     );
+    
+         const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
+     const newPathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    console.log(`Option (${tile.x}, ${tile.y}): cost=${cost}, score=${option.score}, closerToTarget=${option.benefits.closerToTarget}, pathDistance=${newPathDistance} (current=${currentPathDistance})`);
     
     options.push(option);
   }
@@ -179,7 +184,60 @@ export function findBestMovement(
   // Sort by score (highest first)
   options.sort((a, b) => b.score - a.score);
   
-  return options.length > 0 ? options[0] : null;
+  console.log(`\nTop 3 options:`);
+  for (let i = 0; i < Math.min(3, options.length); i++) {
+    const option = options[i];
+    console.log(`${i+1}. (${option.x}, ${option.y}): score=${option.score}, closerToTarget=${option.benefits.closerToTarget}`);
+  }
+  
+  // If we have a target, validate that the best option is actually the closest
+  if (target && options.length > 0) {
+    const bestOption = options[0];
+    
+    // If the best option claims to get us closer to target, validate it
+    if (bestOption.benefits.closerToTarget) {
+             const isValidClosest = validateClosestDestination(bestOption, target, creature, reachableTiles, costMap, allCreatures, mapData, cols, rows, mapDefinition);
+      
+      if (!isValidClosest) {
+        console.log(`WARNING: Best option is not actually closest to target!`);
+        // Find the actual closest option
+        let actualClosestOption: AIMovementOption | null = null;
+        let closestDistance = Infinity;
+        
+        for (const option of options) {
+                             const pathDistance = calculateDistanceToAttackablePosition(option.x, option.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+          if (pathDistance < closestDistance) {
+            closestDistance = pathDistance;
+            actualClosestOption = option;
+          }
+        }
+        
+        // If we found a closer option, use it instead
+        if (actualClosestOption && actualClosestOption !== bestOption) {
+          console.log(`Correcting: Using actually closest option (${actualClosestOption.x}, ${actualClosestOption.y}) instead of (${bestOption.x}, ${bestOption.y})`);
+          // Re-evaluate the closest option with a bonus for being actually closest
+          const reEvaluatedOption = {
+            ...actualClosestOption,
+            score: actualClosestOption.score + 25, // Bonus for being actually closest
+            benefits: {
+              ...actualClosestOption.benefits,
+              closerToTarget: true
+            }
+          };
+          
+          // Replace the best option with the validated closest option
+          options[0] = reEvaluatedOption;
+        }
+      }
+    }
+  }
+  
+  const finalChoice = options.length > 0 ? options[0] : null;
+  if (finalChoice) {
+    console.log(`\nFinal choice: (${finalChoice.x}, ${finalChoice.y}) with score ${finalChoice.score}`);
+  }
+  
+  return finalChoice;
 }
 
 /**
@@ -190,24 +248,28 @@ export function shouldMove(
   creature: Creature,
   allCreatures: Creature[],
   reachableTiles: Array<{ x: number; y: number }>,
-  target?: Creature
+  costMap: Map<string, number>,
+  target?: Creature,
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): boolean {
   // If no target, movement is less important
   if (!target) {
-    return Math.random() < 0.3; // 30% chance to move randomly
+    return false;
   }
   
-  // Check if we're already in a good position
-  const currentDistance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-  const inRange = currentDistance <= creature.getAttackRange();
+     // Check if we can attack immediately from current position
+  const canAttackNow = canAttackImmediately(creature, target);
   
-  // If we're not in range, we should definitely try to move
-  if (!inRange) {
-    return true;
+  // If we can attack now, we should NOT move
+  if (canAttackNow) {
+    return false;
   }
   
-  // If we are in range, movement might not be necessary
-  return Math.random() < 0.2; // 20% chance to reposition
+  // If we can't attack now, we should try to move to get into attack range
+  return true;
 }
 
 /**
@@ -218,13 +280,18 @@ export function createMovementDecision(
   creature: Creature,
   allCreatures: Creature[],
   reachableTiles: Array<{ x: number; y: number }>,
-  target?: Creature
+  costMap: Map<string, number>,
+  target?: Creature,
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): AIDecision | null {
-  if (!shouldMove(ai, creature, allCreatures, reachableTiles, target)) {
+  if (!shouldMove(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition)) {
     return null;
   }
   
-  const bestMove = findBestMovement(ai, creature, allCreatures, reachableTiles, target);
+  const bestMove = findBestMovement(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition);
   
   if (!bestMove) {
     return null;
@@ -267,3 +334,41 @@ export function updateAIStateAfterMovement(
     }
   };
 }
+
+
+
+/**
+ * Count accessible neighboring tiles for a position
+ */
+function countAccessibleNeighbors(
+  x: number,
+  y: number,
+  allCreatures: Creature[],
+  mapData: { tiles: string[][] },
+  cols: number,
+  rows: number,
+  mapDefinition?: any
+): number {
+  let count = 0;
+  
+  // Check all 8 adjacent tiles using direction constants
+  // [dx, dy] for each direction: South, East, North, West, Southeast, Southwest, Northwest, Northeast
+  const directions = [
+    [0, 1], [1, 0], [0, -1], [-1, 0], // Cardinal directions
+    [1, 1], [1, -1], [-1, 1], [-1, -1] // Diagonal directions
+  ];
+  
+  for (const [dx, dy] of directions) {
+    const neighborX = x + dx;
+    const neighborY = y + dy;
+    
+    if (isPositionAccessibleWithBounds(neighborX, neighborY, allCreatures, mapData, cols, rows, mapDefinition)) {
+      count++;
+    }
+  }
+  
+  return count;
+}
+
+
+

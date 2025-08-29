@@ -1,4 +1,7 @@
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
+import { EquipmentSystem } from '../items/equipment';
+import { calculateDistance, isInBackArc } from '../utils/geometry';
+import { DIRECTION_ARROWS, DIRECTION_NAMES, DIRECTION_SHORT_NAMES } from '../utils/constants';
 
 // --- Group System ---
 export type CreatureGroup = "hero" | "enemy" | "neutral";
@@ -42,10 +45,21 @@ export abstract class Creature {
   ranged: number;
   strength: number;
   agility: number;
+  vitality: number;
+  courage: number;
+  intelligence: number;
+  mana: number;
+  remainingMana: number;
+  fortune: number;
   remainingVitality: number;
   naturalArmor: number;
   hasMovedWhileEngaged: boolean; // Track if creature has moved while engaged this turn
   group: CreatureGroup; // Which group this creature belongs to
+
+  // New properties for turn start position tracking
+  turnStartX: number;
+  turnStartY: number;
+  turnStartFacing: number;
 
   constructor(params: {
     id?: string;
@@ -70,7 +84,11 @@ export abstract class Creature {
     ranged: number;
     strength: number;
     agility: number;
-    remainingVitality: number;
+    vitality: number;
+    courage: number;
+    intelligence: number;
+    mana: number;
+    fortune: number;
     naturalArmor?: number;
     group: CreatureGroup;
   }) {
@@ -95,10 +113,21 @@ export abstract class Creature {
     this.ranged = params.ranged;
     this.strength = params.strength;
     this.agility = params.agility;
-    this.remainingVitality = params.remainingVitality;
+    this.vitality = params.vitality;
+    this.courage = params.courage;
+    this.intelligence = params.intelligence;
+    this.mana = params.mana;
+    this.remainingMana = params.mana; // Initialize remainingMana to full mana
+    this.fortune = params.fortune;
+    this.remainingVitality = params.vitality; // Initialize remainingVitality to full vitality
     this.naturalArmor = params.naturalArmor ?? 3;
     this.hasMovedWhileEngaged = false;
     this.group = params.group;
+
+    // Initialize new properties
+    this.turnStartX = this.x;
+    this.turnStartY = this.y;
+    this.turnStartFacing = this.facing;
   }
 
   // Get the creature's kind (implemented by subclasses)
@@ -126,44 +155,49 @@ export abstract class Creature {
 
   // Get current armor value (equipped armor or natural armor)
   getArmorValue(): number {
-    const { getEffectiveArmor } = require('../utils/equipment');
-    return getEffectiveArmor(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getEffectiveArmor(this.naturalArmor);
   }
 
   // Get main weapon (prioritizes main hand, then off hand)
   getMainWeapon(): Weapon | RangedWeapon | undefined {
-    const { getMainWeapon } = require('../utils/equipment');
-    return getMainWeapon(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getMainWeapon();
   }
 
   // Check if creature has a ranged weapon equipped
   hasRangedWeapon(): boolean {
-    const { hasRangedWeapon } = require('../utils/equipment');
-    return hasRangedWeapon(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.hasRangedWeapon();
   }
 
   // Check if creature has a shield equipped
   hasShield(): boolean {
-    const { hasShield } = require('../utils/equipment');
-    return hasShield(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.hasShield();
   }
 
   // Get attack bonus based on weapon type
   getAttackBonus(): number {
-    const { getAttackBonus } = require('../utils/equipment');
-    return getAttackBonus(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getAttackBonus(this.combat, this.ranged);
   }
 
   // Get weapon damage
   getWeaponDamage(): number {
-    const { getWeaponDamage } = require('../utils/equipment');
-    return getWeaponDamage(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getWeaponDamage();
   }
 
   // Get attack range
   getAttackRange(): number {
-    const { getAttackRange } = require('../utils/equipment');
-    return getAttackRange(this);
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getAttackRange();
+  }
+
+  getMaxAttackRange(): number {
+    const equipment = new EquipmentSystem(this.equipment);
+    return equipment.getMaxAttackRange();
   }
 
   // Get zone of control range (default is 1 tile around the creature)
@@ -173,7 +207,7 @@ export abstract class Creature {
 
   // Check if a position is within this creature's zone of control
   isInZoneOfControl(x: number, y: number): boolean {
-    const distance = Math.max(Math.abs(x - this.x), Math.abs(y - this.y));
+    const distance = calculateDistance(this.x, this.y, x, y, 'chebyshev');
     return distance <= this.getZoneOfControlRange();
   }
 
@@ -299,7 +333,24 @@ export abstract class Creature {
     this.remainingMovement = this.movement;
     this.remainingActions = this.actions;
     this.remainingQuickActions = this.quickActions;
+    this.remainingMana = this.mana; // Reset mana to full
     this.hasMovedWhileEngaged = false;
+    
+    // Record the position at the start of this turn
+    this.recordTurnStartPosition();
+  }
+  
+  // Record the current position as the turn start position
+  recordTurnStartPosition(): void {
+    this.turnStartX = this.x;
+    this.turnStartY = this.y;
+    this.turnStartFacing = this.facing;
+  }
+  
+  // Check if this creature was behind the target at the start of their turn
+  wasBehindTargetAtTurnStart(target: Creature): boolean {
+    // Check if this creature was positioned in the back arc at turn start
+    return isInBackArc(target.x, target.y, target.turnStartFacing, this.turnStartX, this.turnStartY);
   }
 
   // Use movement points
@@ -319,6 +370,20 @@ export abstract class Creature {
     if (this.remainingQuickActions > 0) {
       this.remainingQuickActions--;
     }
+  }
+
+  // Use mana
+  useMana(amount: number): boolean {
+    if (this.remainingMana >= amount) {
+      this.remainingMana -= amount;
+      return true;
+    }
+    return false;
+  }
+
+  // Check if creature has enough mana
+  hasMana(amount: number): boolean {
+    return this.remainingMana >= amount;
   }
 
   // Check if creature has taken any actions this turn (moved or used actions)
@@ -360,20 +425,17 @@ export abstract class Creature {
 
   // Get facing direction as arrow character
   getFacingArrow(): string {
-    const { DIRECTION_ARROWS } = require('../utils/constants');
-    return DIRECTION_ARROWS[this.facing];
+    return DIRECTION_ARROWS[this.facing as keyof typeof DIRECTION_ARROWS];
   }
 
   // Get facing direction as name
   getFacingName(): string {
-    const { DIRECTION_NAMES } = require('../utils/constants');
-    return DIRECTION_NAMES[this.facing];
+    return DIRECTION_NAMES[this.facing as keyof typeof DIRECTION_NAMES];
   }
 
   // Get facing direction as short name
   getFacingShortName(): string {
-    const { DIRECTION_SHORT_NAMES } = require('../utils/constants');
-    return DIRECTION_SHORT_NAMES[this.facing];
+    return DIRECTION_SHORT_NAMES[this.facing as keyof typeof DIRECTION_SHORT_NAMES];
   }
 
   // Change facing direction
@@ -414,6 +476,11 @@ export abstract class Creature {
       ranged: this.ranged,
       strength: this.strength,
       agility: this.agility,
+      vitality: this.vitality,
+      courage: this.courage,
+      intelligence: this.intelligence,
+      mana: this.mana,
+      fortune: this.fortune,
       remainingVitality: this.remainingVitality,
       naturalArmor: this.naturalArmor,
       hasMovedWhileEngaged: this.hasMovedWhileEngaged,
@@ -449,9 +516,18 @@ export abstract class Creature {
     return CreatureMovement.moveTo(this, x, y, allCreatures);
   }
 
-  // Attack target (delegates to CreatureCombat)
-  attack(target: Creature, allCreatures: Creature[] = []): { hit: boolean; damage: number; message: string; targetDefeated: boolean; toHitMessage?: string; damageMessage?: string } {
-    const { CreatureCombat } = require('./combat');
-    return CreatureCombat.attack(this, target, allCreatures);
+  // Attack target (delegates to executeCombat)
+  attack(target: Creature, allCreatures: Creature[] = [], mapDefinition?: any): { hit: boolean; damage: number; message: string; targetDefeated: boolean; toHitMessage?: string; damageMessage?: string } {
+    const { executeCombat } = require('../utils/combatUtils');
+    const result = executeCombat(this, target, allCreatures, mapDefinition);
+    
+    return {
+      hit: result.success,
+      damage: result.damage,
+      message: result.message,
+      targetDefeated: result.targetDefeated,
+      toHitMessage: result.toHitMessage,
+      damageMessage: result.damageMessage
+    };
   }
 }

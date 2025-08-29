@@ -6,11 +6,10 @@ import { Mercenary } from './mercenary';
 // Export all creature-related modules
 export { Creature, CREATURE_GROUPS, type CreatureGroup } from './base';
 export { Hero } from './hero';
-export { Monster } from './monster';
+export { Monster, MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS, type MonsterFaction, type MonsterFactionInfo } from './monster';
 export { Mercenary } from './mercenary';
 export { CreatureMovement } from './movement';
-export { CreatureCombat } from './combat';
-export { createMonster, monsterPresets, type MonsterPreset, createMercenary, mercenaryPresets, type MercenaryPreset } from './presets';
+export { createMonster, monsterPresets, monsterPresetsByFaction, type MonsterPreset, createMercenary, mercenaryPresets, type MercenaryPreset } from './presets';
 
 // Type alias for union type
 export type CreatureInstance = Hero | Monster | Mercenary;

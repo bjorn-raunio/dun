@@ -3,13 +3,14 @@ import { Mercenary } from './mercenary';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
 import { CREATURE_GROUPS } from './base';
 import { AIBehaviorType } from '../ai/types';
+import { MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS } from './monster';
 
 // --- Monster Presets and Factory Functions ---
 export type MonsterPreset = {
   name: string;
   image: string;
   movement: number;
-  actions: number;
+  actions?: number; // Optional - defaults to 1
   mapWidth?: number;
   mapHeight?: number;
   size: number; // 1=small, 2=medium, 3=large, 4=huge
@@ -24,37 +25,100 @@ export type MonsterPreset = {
   ranged: number;
   strength: number;
   agility: number;
-  remainingVitality: number;
+  vitality: number;
+  courage: number;
+  intelligence: number;
+  mana: number;
+  fortune: number;
   naturalArmor?: number;
   aiBehavior?: AIBehaviorType; // AI behavior type (melee, ranged, animal)
   group?: string; // Which group this monster belongs to
+  faction?: string; // Which faction this monster belongs to
 };
 
-export const monsterPresets: Record<string, MonsterPreset> = {
-  bandit: {
-    name: "Bandit",
-    image: "creatures/bandit.png",
-    movement: 6,
-    actions: 1,
-    size: 2, // medium
-    facing: 0, // North
-    inventory: [
-      { type: "weapon", preset: "scimitar" },
-      { type: "armor", preset: "leather" }
-    ],
-    equipment: {
-      mainHand: { type: "weapon", preset: "dagger" },
-      armor: { type: "armor", preset: "leather" }
+// Monster presets organized by faction
+export const monsterPresetsByFaction: Record<string, Record<string, MonsterPreset>> = {
+  bandits: {
+    bandit: {
+      name: "Bandit",
+      image: "creatures/bandit.png",
+      movement: 2,
+      size: 2, // medium
+      facing: 0, // North
+      inventory: [
+      ],
+      equipment: {
+        mainHand: { type: "weapon", preset: "dagger" },
+        armor: { type: "armor", preset: "leather" }
+      },
+      combat: 3,
+      ranged: 1,
+      strength: 2,
+      agility: 3,
+      vitality: 4,
+      courage: 2,
+      intelligence: 1,
+      mana: 0,
+      fortune: 1,
+      aiBehavior: AIBehaviorType.MELEE,
+      faction: MONSTER_FACTIONS.bandits.id,
     },
-    combat: 3,
-    ranged: 1,
-    strength: 2,
-    agility: 3,
-    remainingVitality: 4,
-    naturalArmor: 3,
-    aiBehavior: AIBehaviorType.MELEE,
+    bandit_archer: {
+      name: "Bandit Archer",
+      image: "creatures/bandit.png",
+      movement: 3,
+      size: 2,
+      facing: 0,
+      inventory: [
+        { type: "ranged_weapon", preset: "longbow" },
+      ],
+      equipment: {
+        mainHand: { type: "ranged_weapon", preset: "longbow" },
+        armor: { type: "armor", preset: "leather" }
+      },
+      combat: 2,
+      ranged: 4,
+      strength: 2,
+      agility: 4,
+      vitality: 3,
+      courage: 2,
+      intelligence: 2,
+      mana: 0,
+      fortune: 1,
+      aiBehavior: AIBehaviorType.RANGED,
+      faction: MONSTER_FACTIONS.bandits.id,
+    },
+    bandit_leader: {
+      name: "Bandit Leader",
+      image: "creatures/bandit.png",
+      movement: 2,
+      size: 2,
+      facing: 0,
+      inventory: [
+        { type: "weapon", preset: "sword" },
+      ],
+      equipment: {
+        mainHand: { type: "weapon", preset: "sword" },
+        armor: { type: "armor", preset: "chainMail" }
+      },
+      combat: 4,
+      ranged: 1,
+      strength: 3,
+      agility: 3,
+      vitality: 6,
+      courage: 3,
+      intelligence: 2,
+      mana: 0,
+      fortune: 2,
+      aiBehavior: AIBehaviorType.MELEE,
+      faction: MONSTER_FACTIONS.bandits.id,
+    },
   },
 };
+
+// Flattened monster presets for backward compatibility
+export const monsterPresets: Record<string, MonsterPreset> = Object.values(monsterPresetsByFaction)
+  .reduce((acc, factionPresets) => ({ ...acc, ...factionPresets }), {});
 
 export function createMonster(presetId: string, overrides?: Partial<Monster> & { id?: string; x: number; y: number }): Monster {
   const p = monsterPresets[presetId];
@@ -113,7 +177,7 @@ export function createMonster(presetId: string, overrides?: Partial<Monster> & {
     y: overrides?.y ?? 0,
     image: overrides?.image ?? p.image,
     movement: overrides?.movement ?? p.movement,
-    actions: overrides?.actions ?? p.actions,
+    actions: overrides?.actions ?? p.actions ?? 1,
     mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
     mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
     size: overrides?.size ?? p.size,
@@ -124,9 +188,14 @@ export function createMonster(presetId: string, overrides?: Partial<Monster> & {
     ranged: overrides?.ranged ?? p.ranged,
     strength: overrides?.strength ?? p.strength,
     agility: overrides?.agility ?? p.agility,
-    remainingVitality: overrides?.remainingVitality ?? p.remainingVitality,
+    vitality: overrides?.vitality ?? p.vitality,
+    courage: overrides?.courage ?? p.courage,
+    intelligence: overrides?.intelligence ?? p.intelligence,
+    mana: overrides?.mana ?? p.mana,
+    fortune: overrides?.fortune ?? p.fortune,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.ENEMY,
+    faction: overrides?.faction ?? p.faction ?? MONSTER_FACTIONS.bandits.id,
   });
 }
 
@@ -135,7 +204,7 @@ export type MercenaryPreset = {
   name: string;
   image: string;
   movement: number;
-  actions: number;
+  actions?: number; // Optional - defaults to 1
   mapWidth?: number;
   mapHeight?: number;
   size: number;
@@ -150,7 +219,11 @@ export type MercenaryPreset = {
   ranged: number;
   strength: number;
   agility: number;
-  remainingVitality: number;
+  vitality: number;
+  courage: number;
+  intelligence: number;
+  mana: number;
+  fortune: number;
   naturalArmor?: number;
   hireCost: number;
   group?: string;
@@ -161,7 +234,6 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     name: "Civilian",
     image: "creatures/civilian.png",
     movement: 6,
-    actions: 2,
     size: 2,
     facing: 0,
     inventory: [],
@@ -170,9 +242,62 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     ranged: 5,
     strength: 2,
     agility: 4,
-    remainingVitality: 4,
-    naturalArmor: 2,
+    vitality: 4,
+    courage: 1,
+    intelligence: 2,
+    mana: 0,
+    fortune: 1,
     hireCost: 75,
+  },
+  archer: {
+    name: "Archer",
+    image: "creatures/civilian.png",
+    movement: 5,
+    size: 2,
+    facing: 0,
+    inventory: [
+      { type: "ranged_weapon", preset: "longbow" },
+    ],
+    equipment: {
+      mainHand: { type: "ranged_weapon", preset: "longbow" },
+      armor: { type: "armor", preset: "leather" }
+    },
+    combat: 2,
+    ranged: 5,
+    strength: 2,
+    agility: 4,
+    vitality: 4,
+    courage: 2,
+    intelligence: 2,
+    mana: 0,
+    fortune: 1,
+    hireCost: 100,
+  },
+  guard: {
+    name: "Guard",
+    image: "creatures/civilian.png",
+    movement: 4,
+    size: 2,
+    facing: 0,
+    inventory: [
+      { type: "weapon", preset: "sword" },
+      { type: "shield", preset: "shield" },
+    ],
+    equipment: {
+      mainHand: { type: "weapon", preset: "sword" },
+      offHand: { type: "shield", preset: "shield" },
+      armor: { type: "armor", preset: "chainMail" }
+    },
+    combat: 4,
+    ranged: 1,
+    strength: 3,
+    agility: 3,
+    vitality: 6,
+    courage: 3,
+    intelligence: 2,
+    mana: 0,
+    fortune: 2,
+    hireCost: 125,
   },
 };
 
@@ -233,7 +358,7 @@ export function createMercenary(presetId: string, overrides?: Partial<Mercenary>
     y: overrides?.y ?? 0,
     image: overrides?.image ?? p.image,
     movement: overrides?.movement ?? p.movement,
-    actions: overrides?.actions ?? p.actions,
+    actions: overrides?.actions ?? p.actions ?? 1,
     mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
     mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
     size: overrides?.size ?? p.size,
@@ -244,7 +369,11 @@ export function createMercenary(presetId: string, overrides?: Partial<Mercenary>
     ranged: overrides?.ranged ?? p.ranged,
     strength: overrides?.strength ?? p.strength,
     agility: overrides?.agility ?? p.agility,
-    remainingVitality: overrides?.remainingVitality ?? p.remainingVitality,
+    vitality: overrides?.vitality ?? p.vitality,
+    courage: overrides?.courage ?? p.courage,
+    intelligence: overrides?.intelligence ?? p.intelligence,
+    mana: overrides?.mana ?? p.mana,
+    fortune: overrides?.fortune ?? p.fortune,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.HERO,
     // Mercenary-specific properties

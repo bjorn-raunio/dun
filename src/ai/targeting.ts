@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
-import { chebyshevDistance } from '../utils/geometry';
+import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/positioning/distance';
 
 // --- AI Targeting Logic ---
 
@@ -10,7 +10,11 @@ import { chebyshevDistance } from '../utils/geometry';
 export function evaluateTargets(
   ai: AIState,
   creature: Creature,
-  allCreatures: Creature[]
+  allCreatures: Creature[],
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): AITarget[] {
   const targets: AITarget[] = [];
 
@@ -25,16 +29,22 @@ export function evaluateTargets(
       continue;
     }
 
-    const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-    const attackRange = creature.getAttackRange();
+    const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
+      usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
+      mapData,
+      cols,
+      rows,
+      mapDefinition,
+      allCreatures
+    });
     const movementRange = creature.remainingMovement;
 
     // Check if target can be reached and attacked this round
-    const canReachAndAttack = distance <= (movementRange + attackRange);
-    const canAttackNow = distance <= attackRange;
+    const canReachAndAttackThisTurn = canReachAndAttack(creature, target, allCreatures, mapData, cols, rows, mapDefinition);
+    const canAttackNow = canAttackImmediately(creature, target);
 
     // If we can't reach and attack this round, give very low priority
-    if (!canReachAndAttack) {
+    if (!canReachAndAttackThisTurn) {
       targets.push({
         creature: target,
         distance,
@@ -49,7 +59,7 @@ export function evaluateTargets(
     if (canAttackNow) {
       // Can attack immediately - high priority
       priority += 100;
-    } else if (canReachAndAttack) {
+    } else if (canReachAndAttackThisTurn) {
       // Can reach and attack this round - medium priority
       priority += 50;
     }
@@ -70,32 +80,6 @@ export function evaluateTargets(
     const hitEase = Math.max(0, 10 - defenderCombatValue); // Higher value = easier to hit
     priority += hitEase * 2; // Give significant weight to hit ease
 
-    // Adjust based on behavior
-    switch (ai.behavior) {
-      case AIBehaviorType.MELEE:
-        // Melee fighters prefer close targets they can reach
-        if (distance <= movementRange + 1) {
-          priority += 3;
-        }
-
-        break;
-      case AIBehaviorType.RANGED:
-        // Ranged fighters prefer targets at optimal range
-        if (distance >= 2 && distance <= 6) {
-          priority += 4;
-        } else if (distance <= 1) {
-          priority -= 2; // Penalty for too close
-        }
-
-        break;
-      case AIBehaviorType.ANIMAL:
-        // Animals prefer close targets
-        if (distance <= movementRange + 1) {
-          priority += 2;
-        }
-        break;
-    }
-
     targets.push({
       creature: target,
       distance,
@@ -113,9 +97,13 @@ export function evaluateTargets(
 export function selectBestTarget(
   ai: AIState,
   creature: Creature,
-  allCreatures: Creature[]
+  allCreatures: Creature[],
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): Creature | null {
-  const targets = evaluateTargets(ai, creature, allCreatures);
+  const targets = evaluateTargets(ai, creature, allCreatures, mapData, cols, rows, mapDefinition);
 
   if (targets.length === 0) {
     return null;
@@ -143,7 +131,11 @@ export function selectBestTarget(
 export function updateTargetInformation(
   ai: AIState,
   creature: Creature,
-  allCreatures: Creature[]
+  allCreatures: Creature[],
+  mapData?: { tiles: string[][] },
+  cols?: number,
+  rows?: number,
+  mapDefinition?: any
 ): AIState {
   const newState = { ...ai };
 
@@ -154,20 +146,23 @@ export function updateTargetInformation(
     }
 
     if (creature.isHostileTo(target)) {
-      const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
+      const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
+        usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
+        mapData,
+        cols,
+        rows,
+        mapDefinition,
+        allCreatures
+      });
 
-      // Assume creatures can "see" within 8 tiles
-      if (distance <= 8) {
-        newState.lastKnownPlayerPositions.set(target.id, {
-          x: target.x,
-          y: target.y,
-          turn: Date.now() // Use timestamp as turn number for now
-        });
-      }
+      // Enemies have unlimited sight range - they can see all targets
+      newState.lastKnownPlayerPositions.set(target.id, {
+        x: target.x,
+        y: target.y,
+        turn: Date.now() // Use timestamp as turn number for now
+      });
     }
   }
-
-
 
   return newState;
 }

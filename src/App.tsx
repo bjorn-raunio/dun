@@ -2,9 +2,9 @@ import React from "react";
 import './App.css';
 import { mapDefinition, generateMapTiles } from './maps';
 import { useGameState, endTurnWithAI } from './game';
-import { MapView, GameUI, CreaturePanel } from './components';
+import { MapView, GameUI, CreaturePanel, TurnTracker } from './components';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers } from './hooks';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement } from './hooks';
 
 // Map and game state are now imported from extracted modules
 
@@ -16,15 +16,18 @@ const tileMapData = {
 
 function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   // Game state management (extracted)
-  const [gameState, gameRefs, gameActions] = useGameState(mapDefinition.creatures);
-  const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState } = gameState;
-  const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState } = gameActions;
+  const [gameState, gameRefs, gameActions] = useGameState(mapDefinition.creatures, mapDefinition);
+  const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState } = gameState;
+  const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState, setTurnState } = gameActions;
   const { panRef, viewportRef, lastMovement } = gameRefs;
   
   // Custom hooks for game logic
   const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey);
   const reachable = useReachableTiles(creatures, selectedCreatureId, mapData, reachableKey, mapDefinition);
   const selectedCreature = useSelectedCreature(creatures, selectedCreatureId);
+
+  // Turn advancement hook
+  useTurnAdvancement(turnState, creatures, setTurnState);
 
   // Event handlers (extracted)
   const { mouseHandlers } = useEventHandlers(
@@ -61,14 +64,18 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       <GameUI
         messages={messages}
         onEndTurn={() => {
-          endTurnWithAI(creatures, tileMapData, setCreatures, setMessages, setAITurnState, lastMovement);
+          endTurnWithAI(creatures, tileMapData, setCreatures, setMessages, setAITurnState, setTurnState, lastMovement, turnState, mapDefinition);
         }}
         isAITurnActive={aiTurnState.isAITurnActive}
+        turnState={turnState}
+        creatures={creatures}
+        onCreatureClick={(creature) => setSelectedCreatureId(creature.id)}
       />
       <CreaturePanel
         selectedCreature={selectedCreature}
         creatures={creatures}
         onDeselect={() => setSelectedCreatureId(null)}
+        onSelectCreature={(creature) => setSelectedCreatureId(creature.id)}
       />
     </div>
   );

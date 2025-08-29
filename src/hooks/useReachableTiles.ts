@@ -1,5 +1,6 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Reachable Tiles Hook ---
 
@@ -13,7 +14,7 @@ export function useReachableTiles(
   // Calculate possible squares for selected creature
   const reachable = React.useMemo(() => {
     if (!selectedCreatureId) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
-    const selected = creatures.find(c => c.id === selectedCreatureId);
+    const selected = findCreatureById(creatures, selectedCreatureId);
     if (!selected || !selected.isPlayerControlled()) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
 
     // Use the creature's built-in pathfinding method

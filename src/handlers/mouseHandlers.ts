@@ -1,7 +1,11 @@
 import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { tileFromPointer, GAME_SETTINGS } from '../utils';
-import { calculateStepCost, executeMovement } from '../gameLogic/movement';
+import { executeMovement } from '../gameLogic/movement';
+import { calculateCostDifference } from '../utils/movementCost';
+import { VALIDATION_MESSAGES } from '../validation/messages';
+import { addMessage } from '../game/messageSystem';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Mouse Event Handlers ---
 
@@ -67,7 +71,7 @@ export function createMouseHandlers(
 
     // Handle tile click for movement
     if (selectedCreatureId) {
-      const selected = creatures.find(c => c.id === selectedCreatureId);
+      const selected = findCreatureById(creatures, selectedCreatureId);
       if (!selected || !selected.isPlayerControlled()) {
         // keep current selection
         return;
@@ -79,13 +83,13 @@ export function createMouseHandlers(
       let moved = false;
       if (reachableKeySet.has(destKey)) {
         // Get the current creature state to avoid stale closures
-        const currentCreature = creatures.find(c => c.id === selectedCreatureId);
+        const currentCreature = findCreatureById(creatures, selectedCreatureId);
         if (!currentCreature) return;
         
         // Calculate the step cost from current position to destination
         const currentCost = reachable.costMap.get(`${currentCreature.x},${currentCreature.y}`) ?? 0;
         const destCost = reachable.costMap.get(destKey) ?? 0;
-        const stepCost = calculateStepCost(currentCost, destCost);
+        const stepCost = calculateCostDifference(currentCost, destCost);
         
         // Debug logging for movement cost
         console.log(`Movement cost debug: Hero at (${currentCreature.x},${currentCreature.y}) moving to (${pos.tileX},${pos.tileY})`);
@@ -124,42 +128,33 @@ export function createMouseHandlers(
              // Force targets in range recalculation
              setTargetsInRangeKey(prev => prev + 1);
              
-             // Check engagement status after movement
-             const isEngaged = targetCreature.isEngagedWithAll(prev);
-             if (isEngaged) {
-               setMessages(m => [
-                 `${targetCreature.name} is now engaged! Movement set to zero.`,
-                 ...m,
-               ].slice(0, GAME_SETTINGS.MAX_MESSAGES));
-             }
+                           // Check engagement status after movement
+              const isEngaged = targetCreature.isEngagedWithAll(prev);
+              if (isEngaged) {
+                addMessage(VALIDATION_MESSAGES.NOW_ENGAGED(targetCreature.name), setMessages);
+              }
              
              return prev.map(c => {
                if (c.id !== selectedCreatureId) return c;
                // Create a new object reference to ensure React detects the change
                return targetCreature.clone();
              });
-           } else {
-             // Movement failed - show message
-             setMessages(m => [
-               moveResult.message || `${targetCreature.name} cannot move there.`,
-               ...m,
-             ].slice(0, GAME_SETTINGS.MAX_MESSAGES));
-             return prev;
-           }
+                       } else {
+              // Movement failed - show message
+              addMessage(moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name), setMessages);
+              return prev;
+            }
          });
         
-        // Check if we moved onto a space where a dead creature was
-        const deadCreatureAtDestination = creatures.find(c => 
-          c.isDead() && 
-          c.x === pos.tileX && 
-          c.y === pos.tileY
-        );
-        if (deadCreatureAtDestination) {
-          setMessages(m => [
-            `${selected.name} moves over ${deadCreatureAtDestination.name}'s remains.`,
-            ...m,
-          ].slice(0, 50));
-        }
+                 // Check if we moved onto a space where a dead creature was
+         const deadCreatureAtDestination = creatures.find(c => 
+           c.isDead() && 
+           c.x === pos.tileX && 
+           c.y === pos.tileY
+         );
+         if (deadCreatureAtDestination) {
+                       addMessage(VALIDATION_MESSAGES.MOVES_OVER_REMAINS(selected.name), setMessages);
+         }
       }
       if (moved) {
         // Deselect after successful movement
@@ -172,42 +167,36 @@ export function createMouseHandlers(
   // Creature click handler
   function onCreatureClick(creature: Creature, e: React.MouseEvent) {
     e.stopPropagation();
-    const selected = creatures.find(c => c.id === selectedCreatureId);
+    const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
 
-    // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
-    if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
-      if (!targetsInRangeIds.has(creature.id)) {
-        setMessages(m => [
-          `${selected.name} cannot reach ${creature.name}.`,
-          ...m,
-        ].slice(0, 50));
-        return; // keep hero selected
-      }
+         // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
+     if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
+       if (!targetsInRangeIds.has(creature.id)) {
+         addMessage(VALIDATION_MESSAGES.CANNOT_REACH_TARGET(selected.name, creature.name), setMessages);
+         return; // keep hero selected
+       }
       
       // Get the current creature state to avoid stale closures
-      const currentCreature = creatures.find(c => c.id === selectedCreatureId);
+      const currentCreature = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
       if (!currentCreature) return;
       
              // Perform the attack using the creature's attack method
-       const combatResult = currentCreature.attack(creature, creatures);
+       const combatResult = currentCreature.attack(creature, creatures, mapDefinition);
       
       // Add to-hit message
       if (combatResult.toHitMessage) {
-        setMessages(m => [combatResult.toHitMessage!, ...m].slice(0, 50));
+        addMessage(combatResult.toHitMessage!, setMessages);
       }
       
       // Add damage message if hit
       if (combatResult.damageMessage) {
-        setMessages(m => [combatResult.damageMessage!, ...m].slice(0, 50));
+        addMessage(combatResult.damageMessage!, setMessages);
       }
       
-      // Add defeat message if target was defeated
-      if (combatResult.targetDefeated) {
-        setMessages(m => [
-          `${creature.name} has been defeated!`,
-          ...m,
-        ].slice(0, 50));
-      }
+             // Add defeat message if target was defeated
+       if (combatResult.targetDefeated) {
+         addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
+       }
       
       // Set remaining movement to zero if the creature has already moved this turn
       const hasMoved = currentCreature.hasMoved();

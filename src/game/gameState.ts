@@ -1,11 +1,12 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
-import { GameState, GameRefs, GameActions, ViewportState, PanState } from './types';
-import { initializeAITurnState } from '../gameLogic/turnManagement';
+import { GameState, GameRefs, GameActions, ViewportState, PanState, TurnState } from './types';
+import { initializeAITurnState, initializeTurnState } from '../gameLogic/turnManagement';
+import { GAME_SETTINGS } from '../utils/constants';
 
 // --- Game State Management ---
 
-export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs, GameActions] {
+export function useGameState(initialCreatures: Creature[], mapDefinition?: any): [GameState, GameRefs, GameActions] {
   // --- VIEWPORT SIZE ---
   const [viewport, setViewport] = React.useState<ViewportState>({ 
     width: window.innerWidth, 
@@ -21,9 +22,40 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
   }, []);
 
   // --- PANNING LOGIC ---
-  const [pan, setPan] = React.useState<PanState>({ x: 0, y: 0 });
+  // Calculate initial pan position to center over a starting tile
+  const mapWidth = mapDefinition?.width ?? 40;
+  const mapHeight = mapDefinition?.height ?? 30;
+  const mapPixelWidth = mapWidth * GAME_SETTINGS.TILE_SIZE;
+  const mapPixelHeight = mapHeight * GAME_SETTINGS.TILE_SIZE;
+  
+  // Get the first starting tile to center over (or default to map center)
+  const startingTile = mapDefinition?.startingTiles?.[0] ?? { x: Math.floor(mapWidth / 2), y: Math.floor(mapHeight / 2) };
+  const startingTilePixelX = startingTile.x * GAME_SETTINGS.TILE_SIZE;
+  const startingTilePixelY = startingTile.y * GAME_SETTINGS.TILE_SIZE;
+  
+  // Account for bottom bar height (130px) in vertical centering
+  const bottomBarHeight = 130;
+  const availableHeight = window.innerHeight - bottomBarHeight;
+  
+  // Center the starting tile in the viewport
+  const initialPanX = (window.innerWidth / 2) - startingTilePixelX - (GAME_SETTINGS.TILE_SIZE / 2);
+  const initialPanY = (availableHeight / 2) - startingTilePixelY - (GAME_SETTINGS.TILE_SIZE / 2);
+  
+  const [pan, setPan] = React.useState<PanState>({ x: initialPanX, y: initialPanY });
   const [dragging, setDragging] = React.useState(false);
   
+  // Recalculate center when viewport changes
+  React.useEffect(() => {
+    const bottomBarHeight = 130;
+    const availableHeight = viewport.height - bottomBarHeight;
+    
+    // Recalculate center over starting tile when viewport changes
+    const newPanX = (viewport.width / 2) - startingTilePixelX - (GAME_SETTINGS.TILE_SIZE / 2);
+    const newPanY = (availableHeight / 2) - startingTilePixelY - (GAME_SETTINGS.TILE_SIZE / 2);
+    
+    setPan({ x: newPanX, y: newPanY });
+  }, [viewport.width, viewport.height, startingTilePixelX, startingTilePixelY]);
+
   // --- GAME STATE ---
   const [creatures, setCreatures] = React.useState<Creature[]>(initialCreatures);
   const [selectedCreatureId, setSelectedCreatureId] = React.useState<string | null>(null);
@@ -31,6 +63,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
   const [reachableKey, setReachableKey] = React.useState<number>(0);
   const [targetsInRangeKey, setTargetsInRangeKey] = React.useState<number>(0);
   const [aiTurnState, setAITurnState] = React.useState(initializeAITurnState());
+  const [turnState, setTurnState] = React.useState<TurnState>(() => initializeTurnState(initialCreatures));
 
   // --- REFS ---
   const dragStart = React.useRef<{ x: number; y: number } | null>(null);
@@ -60,6 +93,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
     reachableKey,
     targetsInRangeKey,
     aiTurnState,
+    turnState,
   };
 
   const gameRefs: GameRefs = {
@@ -83,6 +117,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
     setReachableKey,
     setTargetsInRangeKey,
     setAITurnState,
+    setTurnState,
   };
 
   return [gameState, gameRefs, gameActions];

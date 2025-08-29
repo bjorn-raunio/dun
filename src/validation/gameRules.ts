@@ -1,5 +1,9 @@
 import { Creature } from '../creatures/index';
 import { BaseValidationResult } from '../utils/types';
+import { isCreatureInBounds, areCreaturesOverlapping } from '../utils/geometry';
+import { VALIDATION_MESSAGES } from './messages';
+import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
+import { validateNonNegative, validateNotExceeding, validateRange } from './core';
 
 // --- Game Rules Validation Logic ---
 
@@ -12,14 +16,14 @@ export function validateGameState(
   creatures: Creature[],
   mapData: { tiles: string[][] }
 ): GameRuleValidationResult {
-  // Check for duplicate creature IDs
+  // Check for duplicate creature IDs using centralized utility
   const creatureIds = creatures.map(c => c.id);
   const duplicateIds = creatureIds.filter((id, index) => creatureIds.indexOf(id) !== index);
   
   if (duplicateIds.length > 0) {
     return {
       isValid: false,
-      reason: `Duplicate creature IDs found: ${duplicateIds.join(', ')}`
+      reason: VALIDATION_MESSAGES.DUPLICATE_IDS(duplicateIds)
     };
   }
 
@@ -28,7 +32,7 @@ export function validateGameState(
     if (!isCreatureInBounds(creature, mapData)) {
       return {
         isValid: false,
-        reason: `${creature.name} is outside the map boundaries.`
+        reason: VALIDATION_MESSAGES.CREATURE_OUTSIDE_BOUNDS(creature.name)
       };
     }
   }
@@ -44,7 +48,7 @@ export function validateGameState(
       if (areCreaturesOverlapping(creature1, creature2)) {
         return {
           isValid: false,
-          reason: `${creature1.name} and ${creature2.name} are overlapping.`
+          reason: VALIDATION_MESSAGES.CREATURES_OVERLAPPING(creature1.name, creature2.name)
         };
       }
     }
@@ -53,35 +57,7 @@ export function validateGameState(
   return { isValid: true };
 }
 
-/**
- * Check if a creature is within map bounds
- */
-export function isCreatureInBounds(
-  creature: Creature,
-  mapData: { tiles: string[][] }
-): boolean {
-  const dimensions = creature.getDimensions();
-  
-  // Check if the creature's area is within bounds
-  if (creature.x < 0 || creature.y < 0) return false;
-  if (creature.x + dimensions.w > mapData.tiles[0].length) return false;
-  if (creature.y + dimensions.h > mapData.tiles.length) return false;
-  
-  return true;
-}
 
-/**
- * Check if two creatures are overlapping
- */
-export function areCreaturesOverlapping(creature1: Creature, creature2: Creature): boolean {
-  const dims1 = creature1.getDimensions();
-  const dims2 = creature2.getDimensions();
-  
-  return creature1.x < creature2.x + dims2.w &&
-         creature1.x + dims1.w > creature2.x &&
-         creature1.y < creature2.y + dims2.h &&
-         creature1.y + dims1.h > creature2.y;
-}
 
 /**
  * Validate turn order rules
@@ -91,28 +67,24 @@ export function validateTurnOrder(
   turnOrder: string[]
 ): GameRuleValidationResult {
   // Check if all living creatures are in turn order
-  const livingCreatureIds = creatures
-    .filter(c => c.isAlive())
-    .map(c => c.id);
+  const livingCreatureIds = getLivingCreatureIds(creatures);
   
   const missingCreatures = livingCreatureIds.filter(id => !turnOrder.includes(id));
   if (missingCreatures.length > 0) {
     return {
       isValid: false,
-      reason: `Living creatures missing from turn order: ${missingCreatures.join(', ')}`
+      reason: VALIDATION_MESSAGES.LIVING_CREATURES_MISSING(missingCreatures)
     };
   }
 
   // Check if dead creatures are in turn order
-  const deadCreatureIds = creatures
-    .filter(c => c.isDead())
-    .map(c => c.id);
+  const deadCreatureIds = getDeadCreatureIds(creatures);
   
   const deadInTurnOrder = deadCreatureIds.filter(id => turnOrder.includes(id));
   if (deadInTurnOrder.length > 0) {
     return {
       isValid: false,
-      reason: `Dead creatures in turn order: ${deadInTurnOrder.join(', ')}`
+      reason: VALIDATION_MESSAGES.DEAD_CREATURES_IN_TURN_ORDER(deadInTurnOrder)
     };
   }
 
@@ -123,59 +95,33 @@ export function validateTurnOrder(
  * Validate creature statistics
  */
 export function validateCreatureStats(creature: Creature): GameRuleValidationResult {
-  // Check if vitality is within valid range
-  if (creature.remainingVitality < 0) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has negative vitality.`
-    };
-  }
+  // Use centralized validation utilities instead of duplicating logic
+  
+  // Check if vitality is not negative
+  const vitalityCheck = validateNonNegative(creature.remainingVitality, creature.name, 'vitality');
+  if (!vitalityCheck.isValid) return vitalityCheck;
 
   // Check if movement points are within valid range
-  if (creature.remainingMovement < 0) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has negative movement points.`
-    };
-  }
+  const movementNegativeCheck = validateNonNegative(creature.remainingMovement, creature.name, 'movement points');
+  if (!movementNegativeCheck.isValid) return movementNegativeCheck;
 
-  if (creature.remainingMovement > creature.movement) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has more movement points than maximum.`
-    };
-  }
+  const movementExcessCheck = validateNotExceeding(creature.remainingMovement, creature.movement, creature.name, 'movement points');
+  if (!movementExcessCheck.isValid) return movementExcessCheck;
 
   // Check if action points are within valid range
-  if (creature.remainingActions < 0) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has negative action points.`
-    };
-  }
+  const actionsNegativeCheck = validateNonNegative(creature.remainingActions, creature.name, 'action points');
+  if (!actionsNegativeCheck.isValid) return actionsNegativeCheck;
 
-  if (creature.remainingActions > creature.actions) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has more action points than maximum.`
-    };
-  }
+  const actionsExcessCheck = validateNotExceeding(creature.remainingActions, creature.actions, creature.name, 'action points');
+  if (!actionsExcessCheck.isValid) return actionsExcessCheck;
 
-  // Check if size is within valid range
-  if (creature.size < 1 || creature.size > 4) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has invalid size: ${creature.size}`
-    };
-  }
+  // Check if size is within valid range (1-4)
+  const sizeCheck = validateRange(creature.size, 1, 4, creature.name, 'size');
+  if (!sizeCheck.isValid) return sizeCheck;
 
-  // Check if facing direction is within valid range
-  if (creature.facing < 0 || creature.facing > 7) {
-    return {
-      isValid: false,
-      reason: `${creature.name} has invalid facing direction: ${creature.facing}`
-    };
-  }
+  // Check if facing direction is within valid range (0-7)
+  const facingCheck = validateRange(creature.facing, 0, 7, creature.name, 'facing direction');
+  if (!facingCheck.isValid) return facingCheck;
 
   return { isValid: true };
 }
@@ -188,21 +134,21 @@ export function validateEquipmentRules(creature: Creature): GameRuleValidationRe
   if (creature.equipment.mainHand && !isValidWeapon(creature.equipment.mainHand)) {
     return {
       isValid: false,
-      reason: `${creature.name} has invalid main hand equipment.`
+      reason: VALIDATION_MESSAGES.INVALID_MAIN_HAND(creature.name)
     };
   }
 
   if (creature.equipment.offHand && !isValidOffHand(creature.equipment.offHand)) {
     return {
       isValid: false,
-      reason: `${creature.name} has invalid off hand equipment.`
+      reason: VALIDATION_MESSAGES.INVALID_OFF_HAND(creature.name)
     };
   }
 
   if (creature.equipment.armor && !isValidArmor(creature.equipment.armor)) {
     return {
       isValid: false,
-      reason: `${creature.name} has invalid armor.`
+      reason: VALIDATION_MESSAGES.INVALID_ARMOR(creature.name)
     };
   }
 
@@ -237,7 +183,7 @@ export function validateMapConsistency(
   if (mapData.tiles.length === 0 || mapData.tiles[0].length === 0) {
     return {
       isValid: false,
-      reason: "Map has invalid dimensions."
+      reason: VALIDATION_MESSAGES.MAP_INVALID_DIMENSIONS(0, 0)
     };
   }
 
@@ -247,7 +193,7 @@ export function validateMapConsistency(
     if (mapData.tiles[i].length !== expectedLength) {
       return {
         isValid: false,
-        reason: `Map row ${i} has inconsistent length.`
+        reason: VALIDATION_MESSAGES.MAP_INCONSISTENT_ROWS(expectedLength, mapData.tiles[i].length)
       };
     }
   }
@@ -265,7 +211,7 @@ export function validateMapConsistency(
         if (tileY >= mapData.tiles.length || tileX >= mapData.tiles[0].length) {
           return {
             isValid: false,
-            reason: `${creature.name} is on an invalid tile position.`
+            reason: VALIDATION_MESSAGES.CREATURE_INVALID_TILE(creature.name, tileX, tileY)
           };
         }
         
@@ -273,7 +219,7 @@ export function validateMapConsistency(
         if (!tile || tile === "empty.jpg") {
           return {
             isValid: false,
-            reason: `${creature.name} is on an empty tile.`
+            reason: VALIDATION_MESSAGES.CREATURE_EMPTY_TILE(creature.name, tileX, tileY)
           };
         }
       }

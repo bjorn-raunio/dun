@@ -2,6 +2,7 @@ import React from 'react';
 import { TILE_SIZE, COLORS } from './styles';
 import { typeToImage, resolveTerrain } from '../maps';
 import { Creature } from '../creatures/index';
+import { getLivingCreatures } from '../validation/creature';
 
 // --- Map View Component ---
 
@@ -298,7 +299,7 @@ export function MapView({
             zIndex: 3,
           }}
         >
-          {creatures.filter(cr => cr.isAlive()).map((cr) => (
+          {getLivingCreatures(creatures).map((cr) => (
             <div
               key={cr.id}
               title={cr.name}

@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { Weapon, RangedWeapon, Armor, Shield } from '../items';
+import { Weapon, RangedWeapon, Armor, Shield, createWeapon } from '../items';
 import { GAME_SETTINGS } from './constants';
 
 // --- Equipment Utilities ---
@@ -48,7 +48,6 @@ export function getMainWeapon(creature: Creature): Weapon | RangedWeapon {
     return creature.equipment.offHand;
   }
   // Return unarmed weapon if no weapon is equipped
-  const { createWeapon } = require('../items');
   return createWeapon('unarmed');
 }
 
@@ -82,22 +81,51 @@ export function getWeaponDamage(creature: Creature): number {
 }
 
 /**
- * Get attack range based on equipped weapons
+ * Get weapon range information for a creature
+ * @param creature The creature to check
+ * @param rangeType The type of range to return ('normal', 'long', or 'info')
+ * @returns Range value or range info object
  */
-export function getAttackRange(creature: Creature): number {
+export function getWeaponRange(
+  creature: Creature, 
+  rangeType: 'normal' | 'long' | 'info' = 'normal'
+): number | { rangeTiles: number; isRanged: boolean } {
   const main = creature.equipment.mainHand;
   const offHand = creature.equipment.offHand;
   
+  let rangeTiles = 1;
+  let isRanged = false;
+  
   if (main instanceof Weapon) {
-    return Math.max(1, main.reach ?? 1);
+    rangeTiles = Math.max(1, main.reach ?? 1);
   } else if (main instanceof RangedWeapon) {
-    return Math.max(1, main.range.normal);
+    isRanged = true;
+    rangeTiles = Math.max(1, rangeType === 'long' ? main.range.long : main.range.normal);
   } else if (offHand instanceof RangedWeapon) {
-    return Math.max(1, offHand.range.normal);
+    isRanged = true;
+    rangeTiles = Math.max(1, rangeType === 'long' ? offHand.range.long : offHand.range.normal);
   }
   
   // If no weapon equipped, return unarmed range (1)
-  return 1;
+  if (rangeType === 'info') {
+    return { rangeTiles, isRanged };
+  }
+  
+  return rangeTiles;
+}
+
+/**
+ * Get attack range based on equipped weapons (normal range)
+ */
+export function getAttackRange(creature: Creature): number {
+  return getWeaponRange(creature, 'normal') as number;
+}
+
+/**
+ * Get maximum attack range (long range for ranged weapons, normal range for melee)
+ */
+export function getMaxAttackRange(creature: Creature): number {
+  return getWeaponRange(creature, 'long') as number;
 }
 
 /**

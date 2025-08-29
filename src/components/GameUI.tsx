@@ -1,5 +1,8 @@
 import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
+import { TurnTracker } from './TurnTracker';
+import { TurnState } from '../game/types';
+import { Creature } from '../creatures/index';
 
 // --- Game UI Component ---
 
@@ -7,9 +10,12 @@ interface GameUIProps {
   messages: string[];
   onEndTurn: () => void;
   isAITurnActive?: boolean;
+  turnState: TurnState;
+  creatures: Creature[];
+  onCreatureClick?: (creature: Creature) => void;
 }
 
-export function GameUI({ messages, onEndTurn, isAITurnActive = false }: GameUIProps) {
+export function GameUI({ messages, onEndTurn, isAITurnActive = false, turnState, creatures, onCreatureClick }: GameUIProps) {
   return (
     <div
       style={{
@@ -17,7 +23,7 @@ export function GameUI({ messages, onEndTurn, isAITurnActive = false }: GameUIPr
         left: 0,
         right: 0,
         bottom: 0,
-        height: 130,
+        height: 162.5,
         background: COLORS.backgroundLight,
         color: COLORS.text,
         display: "flex",
@@ -34,10 +40,11 @@ export function GameUI({ messages, onEndTurn, isAITurnActive = false }: GameUIPr
       onMouseUp={(e) => e.stopPropagation()}
     >
       <div style={{ 
-        flex: 1, 
+        flex: "0 0 50%", 
         overflow: "auto", 
+        textAlign: "left",
         ...COMMON_STYLES.messageBox,
-        maxHeight: "108px" 
+        maxHeight: "140px" 
       }}>
         {messages.length === 0 ? (
           <div style={{ opacity: 0.8 }}>No messages</div>
@@ -48,6 +55,17 @@ export function GameUI({ messages, onEndTurn, isAITurnActive = false }: GameUIPr
             ))}
           </ul>
         )}
+      </div>
+      
+      <div style={{
+        flex: "0 0 30%",
+        ...COMMON_STYLES.messageBox,
+        maxHeight: "140px",
+        overflow: "auto"
+      }}>
+        <TurnTracker
+          turnState={turnState}
+        />
       </div>
       
       <button

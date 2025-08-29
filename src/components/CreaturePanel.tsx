@@ -1,6 +1,7 @@
 import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { Creature } from '../creatures/index';
+import { getLivingCreatures } from '../validation/creature';
 
 // --- Creature Panel Component ---
 
@@ -8,17 +9,21 @@ interface CreaturePanelProps {
   selectedCreature: Creature | null;
   creatures: Creature[];
   onDeselect: () => void;
+  onSelectCreature?: (creature: Creature) => void;
 }
 
-export function CreaturePanel({ selectedCreature, creatures, onDeselect }: CreaturePanelProps) {
+export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelectCreature }: CreaturePanelProps) {
+  // Get all heroes when no creature is selected
+  const heroes = getLivingCreatures(creatures).filter(creature => creature.isHeroGroup());
+
   return (
     <div
       style={{
         position: "absolute",
         top: 0,
         right: 0,
-        height: "calc(100vh - 130px)",
-        bottom: 130,
+        height: "calc(100vh - 162.5px)",
+        bottom: 162.5,
         width: 280,
         ...COMMON_STYLES.panel,
         padding: 16,
@@ -65,18 +70,8 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
           </div>
           
           <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
-            <div>Movement: <strong>{selectedCreature.movement}</strong></div>
-            <div>Remaining: <strong style={{ color: selectedCreature.remainingMovement === 0 ? COLORS.error : COLORS.text }}>
-              {selectedCreature.remainingMovement ?? selectedCreature.movement}
-            </strong></div>
-            <div>Actions: <strong>{selectedCreature.actions}</strong></div>
-            <div>Remaining actions: <strong>{selectedCreature.remainingActions ?? selectedCreature.actions}</strong></div>
-            <div>Position: <strong>({selectedCreature.x}, {selectedCreature.y})</strong></div>
-            <div>Size: <strong>{selectedCreature.size}</strong></div>
-            <div>Facing: <strong>{selectedCreature.getFacingShortName()} {selectedCreature.getFacingArrow()}</strong></div>
-            <div>Engaged: <strong style={{ color: selectedCreature.isEngagedWithAll(creatures) ? COLORS.error : COLORS.success }}>
-              {selectedCreature.isEngagedWithAll(creatures) ? "Yes" : "No"}
-            </strong></div>
+            <div>Movement: <strong>{selectedCreature.remainingMovement}/{selectedCreature.movement}</strong></div>
+            <div>Actions: <strong>{selectedCreature.remainingActions}/{selectedCreature.actions}</strong></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 8 }}>
               <div>Combat: <strong>{selectedCreature.combat}</strong></div>
               <div>Ranged: <strong>{selectedCreature.ranged}</strong></div>
@@ -86,7 +81,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
                         color: selectedCreature.isDead() ? COLORS.error :
                selectedCreature.remainingVitality <= 1 ? COLORS.warning : COLORS.text
               }}>
-                {selectedCreature.remainingVitality}
+                {selectedCreature.remainingVitality}/{selectedCreature.vitality}
               </strong></div>
             </div>
           </div>
@@ -119,9 +114,96 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
           </button>
         </>
       ) : (
-        <div style={{ opacity: 0.8 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>No creature selected</div>
-          <div>Click a creature token to see its stats here.</div>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Heroes ({heroes.length})</div>
+          {heroes.length === 0 ? (
+            <div style={{ opacity: 0.8 }}>No heroes available</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "calc(100vh - 300px)", overflow: "auto" }}>
+              {heroes.map((hero) => (
+                <div
+                  key={hero.id}
+                  onClick={() => onSelectCreature?.(hero)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 8,
+                    borderRadius: 8,
+                    border: `1px solid ${COLORS.border}`,
+                    background: COLORS.backgroundLight,
+                    cursor: onSelectCreature ? "pointer" : "default",
+                    transition: "all 0.2s ease",
+                    ...(onSelectCreature && {
+                      "&:hover": {
+                        background: COLORS.background,
+                        borderColor: COLORS.borderDark,
+                      }
+                    })
+                  }}
+                  onMouseEnter={(e) => {
+                    if (onSelectCreature) {
+                      e.currentTarget.style.background = COLORS.background;
+                      e.currentTarget.style.borderColor = COLORS.borderDark;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (onSelectCreature) {
+                      e.currentTarget.style.background = COLORS.backgroundLight;
+                      e.currentTarget.style.borderColor = COLORS.border;
+                    }
+                  }}
+                >
+                  {hero.image ? (
+                    <img
+                      src={process.env.PUBLIC_URL + "/" + hero.image}
+                      alt={hero.name}
+                      draggable={false}
+                      style={{ 
+                        width: 40, 
+                        height: 40, 
+                        objectFit: "cover", 
+                        borderRadius: "50%", 
+                        border: "2px solid #00ff00" 
+                      }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: "50%", 
+                      background: COLORS.hero, 
+                      border: "2px solid #fff" 
+                    }} />
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{hero.name}</div>
+                    <div style={{ fontSize: 12, opacity: 0.8 }}>
+                      Vitality: <strong style={{ 
+                        color: hero.isDead() ? COLORS.error :
+                               hero.remainingVitality <= 1 ? COLORS.warning : COLORS.text
+                      }}>
+                        {hero.remainingVitality}
+                      </strong> | 
+                      Actions: <strong>{hero.remainingActions ?? hero.actions}</strong> | 
+                      Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong>
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.7 }}>
+                      Position: ({hero.x}, {hero.y}) | 
+                      {(() => {
+                        const isEngaged = hero.isEngagedWithAll(creatures);
+                        return (
+                          <>Engaged: <strong style={{ color: isEngaged ? COLORS.error : COLORS.success }}>
+                            {isEngaged ? "Yes" : "No"}
+                          </strong></>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

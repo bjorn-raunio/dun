@@ -1,4 +1,5 @@
 import { GameActions } from './types';
+import { VALIDATION_MESSAGES } from '../validation/messages';
 
 // --- Message System ---
 
@@ -19,7 +20,7 @@ export function addCombatMessage(
   
   // Add defeat message if target was defeated
   if (combatResult.targetDefeated) {
-    addMessage(`${targetName} has been defeated!`, setMessages);
+    addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(targetName), setMessages);
   }
 }
 

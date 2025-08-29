@@ -1,8 +1,11 @@
 import { Creature } from '../creatures/index';
 import { resetAllTurns } from './movement';
-import { makeAIDecision, executeAIDecision, shouldAITakeTurn } from '../ai/decisionMaking';
+import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../ai/decisionMaking';
 import { CreatureMovement } from '../creatures/movement';
-import { getTargetsInRangeForCreature } from '../utils/combat';
+import { calculateTargetsInRange } from '../utils/combatUtils';
+import { addMessage } from '../game/messageSystem';
+import { getLivingCreatures } from '../validation/creature';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Turn Management Logic ---
 
@@ -25,8 +28,7 @@ export interface AITurnState {
  * Initialize turn state for a new game
  */
 export function initializeTurnState(creatures: Creature[]): TurnState {
-  const turnOrder = creatures
-    .filter(c => c.isAlive()) // Only living creatures
+  const turnOrder = getLivingCreatures(creatures)
     .sort((a, b) => b.agility - a.agility) // Sort by agility (highest first)
     .map(c => c.id);
   
@@ -72,7 +74,7 @@ export function getAICreaturesInGroup(creatures: Creature[], group: string): Cre
     creature.isAIControlled() && 
     creature.group === group && 
     creature.isAlive() && 
-    shouldAITakeTurn(creature)
+    shouldAITakeTurn(creature, creatures)
   );
 }
 
@@ -84,7 +86,8 @@ export function executeAITurnForCreature(
   allCreatures: Creature[],
   mapData: { tiles: string[][] },
   setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void
+  setMessages: (updater: (prev: string[]) => string[]) => void,
+  mapDefinition?: any
 ): boolean {
   // Get AI state from the creature (assuming it's a Monster)
   const aiState = (creature as any).getAIState?.() || null;
@@ -93,15 +96,16 @@ export function executeAITurnForCreature(
     return false;
   }
 
-  let actionsTaken = 0;
-  const maxActions = creature.remainingActions;
   let success = false;
+  let previousActions = creature.remainingActions;
+  let previousMovement = creature.remainingMovement;
+  let previousQuickActions = creature.remainingQuickActions;
 
-  // Continue taking actions until we run out of actions or can't do anything more
-  while (actionsTaken < maxActions && creature.hasActionsRemaining()) {
+  // Continue taking actions until no progress is made (remaining actions/movement/quick actions don't change)
+  while (true) {
     // Get updated reachable tiles and targets in range (may have changed after movement)
-    const { tiles: reachableTiles } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length);
-    const targetsInRangeIds = getTargetsInRangeForCreature(creature, allCreatures);
+    const { tiles: reachableTiles, costMap: reachableTilesCostMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+    const targetsInRangeIds = calculateTargetsInRange(creature, allCreatures);
     const targetsInRange = allCreatures.filter(c => targetsInRangeIds.has(c.id));
 
     // Create AI context
@@ -110,8 +114,10 @@ export function executeAITurnForCreature(
       creature,
       allCreatures,
       mapData,
+      mapDefinition,
       currentTurn: 1, // TODO: Get actual turn number
       reachableTiles,
+      reachableTilesCostMap,
       targetsInRange
     };
 
@@ -128,19 +134,51 @@ export function executeAITurnForCreature(
       }
       
       // Add message
-      setMessages(prev => [...prev, executionResult.message]);
+      addMessage(executionResult.message, setMessages);
       
-      actionsTaken++;
       success = true;
       
-      // If we attacked, we're done (attacking uses an action)
+      // If we attacked, check if we should continue the turn
       if (decisionResult.action.type === 'attack') {
-        break;
+        // Check if the target was actually killed
+        const targetWasKilled = executionResult.targetDefeated;
+        
+        if (targetWasKilled) {
+          // Target was killed, check if we should continue the turn
+          if (!shouldContinueTurnAfterKill(creature, allCreatures)) {
+            break;
+          }
+          
+          // If we have remaining movement and other targets, continue the turn
+          // The AI will automatically select a new target and move towards it
+          console.log(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
+        } else {
+          // Target was not killed, end the turn
+          console.log(`${creature.name} attacked but did not kill the target. Ending turn.`);
+          break;
+        }
       }
     } else {
       // No valid decision found, break out of the loop
       break;
     }
+
+    // Check if any progress was made (remaining actions, movement, or quick actions changed)
+    const currentActions = creature.remainingActions;
+    const currentMovement = creature.remainingMovement;
+    const currentQuickActions = creature.remainingQuickActions;
+    
+    if (currentActions === previousActions && 
+        currentMovement === previousMovement && 
+        currentQuickActions === previousQuickActions) {
+      // No progress made, break out of the loop
+      break;
+    }
+    
+    // Update previous values for next iteration
+    previousActions = currentActions;
+    previousMovement = currentMovement;
+    previousQuickActions = currentQuickActions;
   }
   
   return success;
@@ -154,7 +192,8 @@ export function executeAITurnsForGroup(
   creatures: Creature[],
   mapData: { tiles: string[][] },
   setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void
+  setMessages: (updater: (prev: string[]) => string[]) => void,
+  mapDefinition?: any
 ): void {
   const groupCreatures = getAICreaturesInGroup(creatures, group);
   
@@ -163,8 +202,8 @@ export function executeAITurnsForGroup(
   
   // Execute turns for each creature in the group
   groupCreatures.forEach(creature => {
-    if (shouldAITakeTurn(creature)) {
-      executeAITurnForCreature(creature, creatures, mapData, setCreatures, setMessages);
+    if (shouldAITakeTurn(creature, creatures)) {
+      executeAITurnForCreature(creature, creatures, mapData, setCreatures, setMessages, mapDefinition);
     }
   });
 }
@@ -176,7 +215,8 @@ export function startAITurnPhase(
   creatures: Creature[],
   mapData: { tiles: string[][] },
   setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void
+  setMessages: (updater: (prev: string[]) => string[]) => void,
+  mapDefinition?: any
 ): AITurnState {
   const aiGroups = getAIControlledGroups(creatures);
   
@@ -208,7 +248,8 @@ export function continueAITurnPhase(
   creatures: Creature[],
   mapData: { tiles: string[][] },
   setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void
+  setMessages: (updater: (prev: string[]) => string[]) => void,
+  mapDefinition?: any
 ): AITurnState {
   if (!aiTurnState.isAITurnActive || !aiTurnState.currentGroup) {
     return aiTurnState;
@@ -220,7 +261,8 @@ export function continueAITurnPhase(
     creatures,
     mapData,
     setCreatures,
-    setMessages
+    setMessages,
+    mapDefinition
   );
   
   // Move to next group
@@ -253,7 +295,7 @@ export function getNextCreature(
   turnState: TurnState,
   creatures: Creature[]
 ): Creature | null {
-  const livingCreatures = creatures.filter(c => c.isAlive());
+  const livingCreatures = getLivingCreatures(creatures);
   
   if (livingCreatures.length === 0) {
     return null; // No living creatures
@@ -266,7 +308,7 @@ export function getNextCreature(
   }
   
   const nextCreatureId = turnState.turnOrder[nextIndex];
-  return creatures.find(c => c.id === nextCreatureId) || null;
+  return findCreatureById(creatures, nextCreatureId);
 }
 
 /**
@@ -283,8 +325,7 @@ export function advanceTurn(
   resetAllTurns(creatures, setCreatures, setMessages, lastMovement);
   
   // Recalculate turn order (in case creatures died)
-  const newTurnOrder = creatures
-    .filter(c => c.isAlive())
+  const newTurnOrder = getLivingCreatures(creatures)
     .sort((a, b) => b.agility - a.agility)
     .map(c => c.id);
   
@@ -308,8 +349,7 @@ export function canTakeActions(creature: Creature): boolean {
  * Check if all creatures have finished their turns
  */
 export function allCreaturesFinished(creatures: Creature[]): boolean {
-  return creatures
-    .filter(c => c.isAlive())
+  return getLivingCreatures(creatures)
     .every(c => !canTakeActions(c));
 }
 
@@ -321,7 +361,7 @@ export function getActiveCreature(
   creatures: Creature[]
 ): Creature | null {
   if (!turnState.activeCreatureId) return null;
-  return creatures.find(c => c.id === turnState.activeCreatureId) || null;
+  return findCreatureById(creatures, turnState.activeCreatureId);
 }
 
 /**
@@ -335,4 +375,65 @@ export function setActiveCreature(
     ...turnState,
     activeCreatureId: creatureId
   };
+}
+
+/**
+ * Advance to the next creature in turn order
+ */
+export function advanceToNextCreature(
+  turnState: TurnState,
+  creatures: Creature[]
+): TurnState {
+  const livingCreatures = getLivingCreatures(creatures);
+  
+  if (livingCreatures.length === 0) {
+    return {
+      ...turnState,
+      activeCreatureId: null
+    };
+  }
+  
+  // Find current creature index
+  const currentIndex = turnState.turnOrder.findIndex(id => id === turnState.activeCreatureId);
+  
+  // Find next creature that can take actions
+  let nextIndex = currentIndex + 1;
+  if (nextIndex >= turnState.turnOrder.length) {
+    nextIndex = 0; // Wrap around to first creature
+  }
+  
+  // Look for the next creature that can take actions
+  let checkedCount = 0;
+  while (checkedCount < turnState.turnOrder.length) {
+    const nextCreatureId = turnState.turnOrder[nextIndex];
+    const nextCreature = findCreatureById(creatures, nextCreatureId);
+    
+    if (nextCreature && canTakeActions(nextCreature)) {
+      return {
+        ...turnState,
+        activeCreatureId: nextCreatureId,
+        turnIndex: nextIndex
+      };
+    }
+    
+    nextIndex = (nextIndex + 1) % turnState.turnOrder.length;
+    checkedCount++;
+  }
+  
+  // If no creature can take actions, end the turn
+  return {
+    ...turnState,
+    activeCreatureId: null
+  };
+}
+
+/**
+ * Check if the current turn should end (no creatures can take actions)
+ */
+export function shouldEndTurn(
+  turnState: TurnState,
+  creatures: Creature[]
+): boolean {
+  const livingCreatures = getLivingCreatures(creatures);
+  return livingCreatures.every(c => !canTakeActions(c));
 }

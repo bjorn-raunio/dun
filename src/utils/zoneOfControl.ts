@@ -1,0 +1,138 @@
+import { Creature } from '../creatures/index';
+import { calculateDistance } from './geometry';
+
+// --- Zone of Control Utilities ---
+
+/**
+ * Check if a position is within a creature's zone of control
+ */
+export function isInZoneOfControl(x: number, y: number, creature: Creature): boolean {
+  const distance = calculateDistance(creature.x, creature.y, x, y, 'chebyshev');
+  return distance <= creature.getZoneOfControlRange();
+}
+
+/**
+ * Check if a position is within a creature's zone of control using a custom range
+ */
+export function isInZoneOfControlWithRange(x: number, y: number, creature: Creature, zoneRange: number): boolean {
+  const distance = calculateDistance(creature.x, creature.y, x, y, 'chebyshev');
+  return distance <= zoneRange;
+}
+
+/**
+ * Check if a path passes through a creature's zone of control
+ * This is used to validate movement paths that shouldn't pass through hostile zones
+ */
+export function pathPassesThroughZoneOfControl(
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  creature: Creature
+): boolean {
+  const zoneRange = creature.getZoneOfControlRange();
+  
+  // Check if start or end point is in the zone
+  const startInZone = isInZoneOfControlWithRange(fromX, fromY, creature, zoneRange);
+  const endInZone = isInZoneOfControlWithRange(toX, toY, creature, zoneRange);
+  
+  // If the destination is in the zone, allow the movement (this will trigger engagement)
+  if (endInZone) {
+    return false; // Allow movement into the zone
+  }
+  
+  // If the start is in the zone, this is movement within engagement - allow it
+  if (startInZone) {
+    return false; // Allow movement within the zone
+  }
+  
+  // Check if the path passes through the zone without ending in it
+  const steps = Math.max(Math.abs(toX - fromX), Math.abs(toY - fromY));
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const checkX = Math.floor(fromX + (toX - fromX) * t);
+    const checkY = Math.floor(fromY + (toY - fromY) * t);
+    
+    const pointInZone = isInZoneOfControlWithRange(checkX, checkY, creature, zoneRange);
+    if (pointInZone) {
+      return true; // Path passes through zone
+    }
+  }
+  
+  return false; // Path does not pass through zone
+}
+
+/**
+ * Check if a path passes through any hostile creature's zone of control
+ */
+export function pathPassesThroughHostileZones(
+  creature: Creature,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  allCreatures: Creature[]
+): { blocked: boolean; blocker?: Creature } {
+  const hostileCreatures = creature.getHostileCreatures(allCreatures);
+  
+  for (const hostile of hostileCreatures) {
+    if (pathPassesThroughZoneOfControl(fromX, fromY, toX, toY, hostile)) {
+      return { blocked: true, blocker: hostile };
+    }
+  }
+  
+  return { blocked: false };
+}
+
+/**
+ * Get all creatures that are engaging a given creature
+ */
+export function getEngagingCreatures(creature: Creature, allCreatures: Creature[]): Creature[] {
+  return allCreatures.filter(other => 
+    other !== creature && 
+    other.isAlive() && 
+    creature.isHostileTo(other) && // Must be hostile
+    isInZoneOfControl(creature.x, creature.y, other) // They are in our zone
+  );
+}
+
+/**
+ * Check if a creature is engaged by any hostile creatures
+ */
+export function isEngaged(creature: Creature, allCreatures: Creature[]): boolean {
+  return getEngagingCreatures(creature, allCreatures).length > 0;
+}
+
+/**
+ * Check if a movement is allowed for an engaged creature
+ */
+export function canMoveToWhenEngaged(
+  creature: Creature,
+  newX: number,
+  newY: number,
+  engagingCreatures: Creature[]
+): boolean {
+  // If not engaged, movement is unrestricted
+  if (engagingCreatures.length === 0) {
+    return true;
+  }
+  
+  // When engaged, can only move to positions that remain within zone of control of at least one engager
+  return engagingCreatures.some(engager => 
+    isInZoneOfControl(newX, newY, engager)
+  );
+}
+
+/**
+ * Check if a position is adjacent to a creature
+ */
+export function isAdjacentToCreature(x: number, y: number, creature: Creature): boolean {
+  return calculateDistance(x, y, creature.x, creature.y, 'chebyshev') <= 1;
+}
+
+/**
+ * Get the zone of control range for a creature
+ */
+export function getZoneOfControlRange(creature: Creature): number {
+  return creature.getZoneOfControlRange();
+}

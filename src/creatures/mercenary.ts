@@ -22,32 +22,12 @@ export class Mercenary extends Creature {
 
   // Clone mercenary with all properties
   clone(overrides?: Partial<Mercenary>): Mercenary {
-    const params = {
-      name: this.name,
-      x: this.x,
-      y: this.y,
-      image: this.image,
-      movement: this.movement,
-      actions: this.actions,
-      quickActions: this.quickActions,
-      mapWidth: this.mapWidth,
-      mapHeight: this.mapHeight,
-      size: this.size,
-      facing: this.facing,
-      inventory: [...this.inventory],
-      equipment: { ...this.equipment },
-      combat: this.combat,
-      ranged: this.ranged,
-      strength: this.strength,
-      agility: this.agility,
-      remainingVitality: this.remainingVitality,
-      naturalArmor: this.naturalArmor,
-      group: this.group,
-      // Mercenary-specific properties
-      hireCost: this.hireCost,
-      ...overrides
-    };
-
-    return new Mercenary(params);
+    // Use parent class clone method for common properties
+    const clonedCreature = super.clone(overrides) as Mercenary;
+    
+    // Ensure mercenary-specific properties are preserved
+    clonedCreature.hireCost = overrides?.hireCost ?? this.hireCost;
+    
+    return clonedCreature;
   }
 }

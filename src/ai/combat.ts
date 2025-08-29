@@ -1,107 +1,13 @@
 import { Creature } from '../creatures/index';
 import { AIState, AIDecision, AIBehaviorType } from './types';
-import { chebyshevDistance, getDirectionFromTo } from '../utils/geometry';
+import { calculateDistance } from '../utils/geometry';
+import { isBackAttack } from '../utils/combatUtils';
 
 // --- AI Combat Logic ---
 
-/**
- * Calculate tactical bonus for attacking
- */
-export function calculateTacticalBonus(
-  ai: AIState,
-  creature: Creature,
-  target: Creature,
-  allCreatures: Creature[]
-): number {
-  let bonus = 0;
-  
-  // Check for flanking bonus
-  const alliesNearby = allCreatures.filter(c => 
-    c.isAlive() && 
-    c.id !== creature.id && 
-    creature.isFriendlyTo(c) &&
-    chebyshevDistance(c.x, c.y, target.x, target.y) <= 2
-  );
-  
-  if (alliesNearby.length > 0) {
-    bonus += 0.2; // Flanking bonus
-  }
-  
-  // Check for back attack opportunity
-  const attackDirection = getDirectionFromTo(creature.x, creature.y, target.x, target.y);
-  const targetFacing = target.facing;
-  const isBackAttack = Math.abs(attackDirection - targetFacing) >= 6 || 
-                      Math.abs(attackDirection - targetFacing) <= 2;
-  
-  if (isBackAttack) {
-    bonus += 0.3; // Back attack bonus
-  }
-  
-  // Check if target is engaged with others
-  if (target.isEngagedWithAll(allCreatures)) {
-    bonus += 0.1; // Target is distracted
-  }
-  
-  // Check if we're in a good position
-  const enemiesNearby = allCreatures.filter(c => 
-    c.isAlive() && 
-    c.id !== creature.id && 
-    creature.isHostileTo(c) &&
-    chebyshevDistance(c.x, c.y, creature.x, creature.y) <= 2
-  );
-  
-  if (enemiesNearby.length === 0) {
-    bonus += 0.1; // Safe position
-  } else if (enemiesNearby.length === 1 && enemiesNearby[0].id === target.id) {
-    bonus += 0.05; // Only target nearby
-  } else {
-    bonus -= 0.1; // Multiple enemies nearby
-  }
-  
-  return bonus;
-}
 
-/**
- * Create an attack decision
- */
-export function createAttackDecision(
-  ai: AIState,
-  creature: Creature,
-  target: Creature,
-  allCreatures: Creature[]
-): AIDecision {
-  const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-  const tacticalBonus = calculateTacticalBonus(ai, creature, target, allCreatures);
-  
-  let priority = 5; // Base priority
-  priority += tacticalBonus * 10;
-  
-  // Adjust priority based on behavior
-  switch (ai.behavior) {
-    case AIBehaviorType.MELEE:
-      priority += 3;
-      break;
-    case AIBehaviorType.RANGED:
-      priority += 2;
-      break;
-    case AIBehaviorType.ANIMAL:
-      priority += 2;
-      break;
-  }
-  
-  let reason = `Attacking ${target.name}`;
-  
-  if (tacticalBonus > 0.2) {
-    reason += ` (tactical advantage)`;
-  }
-  
-  return {
-    type: 'attack',
-    target,
-    priority: Math.max(0, priority),
-    reason
-  };
-}
+
+
 
 /**
  * Update AI state after attack
@@ -113,9 +19,12 @@ export function updateAIStateAfterAttack(
   success: boolean,
   damage: number
 ): AIState {
+  // Check if the target is still alive after the attack
+  const targetStillAlive = target.isAlive();
+  
   return {
     ...ai,
-    currentTarget: success ? target : null, // Keep target if attack was successful
+    currentTarget: (success && targetStillAlive) ? target : null, // Clear target if dead
     tacticalMemory: {
       ...ai.tacticalMemory,
       lastAttack: {
@@ -124,6 +33,13 @@ export function updateAIStateAfterAttack(
       }
     }
   };
+}
+
+/**
+ * Check if a target is still valid (alive and hostile)
+ */
+export function isTargetValid(target: Creature, creature: Creature): boolean {
+  return target.isAlive() && creature.isHostileTo(target);
 }
 
 /**
@@ -146,7 +62,7 @@ export function shouldFlee(
     c.isAlive() && 
     c.id !== creature.id && 
     creature.isHostileTo(c) &&
-    chebyshevDistance(c.x, c.y, creature.x, creature.y) <= 3
+    calculateDistance(c.x, c.y, creature.x, creature.y, 'chebyshev') <= 3
   );
   
   // Flee if outnumbered or very low health

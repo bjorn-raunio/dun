@@ -1,5 +1,7 @@
 import { Creature } from '../creatures/index';
 import { GameActions } from '../game/types';
+import { DIRECTIONS } from '../utils/constants';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Keyboard Event Handlers ---
 
@@ -21,7 +23,7 @@ export function createKeyboardHandlers(
     keyboardHandler = (e: KeyboardEvent) => {
       if (!selectedCreatureId) return;
       
-      const currentCreature = creatures.find(c => c.id === selectedCreatureId);
+      const currentCreature = findCreatureById(creatures, selectedCreatureId);
       if (!currentCreature) return;
       
       let newFacing = currentCreature.facing;
@@ -30,38 +32,38 @@ export function createKeyboardHandlers(
         case 'ArrowUp':
         case 'w':
         case 'W':
-          newFacing = 0; // North
+          newFacing = DIRECTIONS.NORTH;
           break;
         case 'ArrowRight':
         case 'd':
         case 'D':
-          newFacing = 2; // East
+          newFacing = DIRECTIONS.EAST;
           break;
         case 'ArrowDown':
         case 's':
         case 'S':
-          newFacing = 4; // South
+          newFacing = DIRECTIONS.SOUTH;
           break;
         case 'ArrowLeft':
         case 'a':
         case 'A':
-          newFacing = 6; // West
+          newFacing = DIRECTIONS.WEST;
           break;
         case 'q':
         case 'Q':
-          newFacing = 7; // Northwest
+          newFacing = DIRECTIONS.NORTHWEST;
           break;
         case 'e':
         case 'E':
-          newFacing = 1; // Northeast
+          newFacing = DIRECTIONS.NORTHEAST;
           break;
         case 'z':
         case 'Z':
-          newFacing = 5; // Southwest
+          newFacing = DIRECTIONS.SOUTHWEST;
           break;
         case 'c':
         case 'C':
-          newFacing = 3; // Southeast
+          newFacing = DIRECTIONS.SOUTHEAST;
           break;
         default:
           return;

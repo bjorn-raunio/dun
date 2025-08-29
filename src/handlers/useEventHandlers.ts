@@ -3,6 +3,7 @@ import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 
 // --- Event Handlers Custom Hook ---
@@ -39,7 +40,7 @@ export function useEventHandlers(
     // Wrap the creature click handler to handle selection
     const originalOnCreatureClick = handlers.onCreatureClick;
     handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
-      const selected = creatures.find(c => c.id === selectedCreatureId);
+      const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
 
           // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
     if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {

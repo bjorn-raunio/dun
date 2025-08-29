@@ -31,6 +31,8 @@ export interface AIMovementOption {
     betterPosition?: boolean;
     saferPosition?: boolean;
     tacticalAdvantage?: boolean;
+    inAttackRange?: boolean;
+    combatBonus?: boolean;
   };
   risks: {
     exposedToAttack?: boolean;
@@ -64,7 +66,9 @@ export interface AIContext {
   creature: Creature;
   allCreatures: Creature[];
   mapData: { tiles: string[][] };
+  mapDefinition?: any;
   currentTurn: number;
   reachableTiles: Array<{ x: number; y: number }>;
+  reachableTilesCostMap: Map<string, number>;
   targetsInRange: Creature[];
 }

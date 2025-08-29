@@ -1,23 +1,15 @@
 import { Creature } from '../creatures/index';
-import { GameActions } from './types';
-import { resetAllTurns as resetAllTurnsLogic } from '../gameLogic/movement';
+import { GameActions, TurnState } from './types';
+import { resetAllTurns } from '../gameLogic/movement';
 import { 
   startAITurnPhase, 
-  continueAITurnPhase, 
-  isAITurnPhaseComplete,
-  initializeAITurnState 
+  continueAITurnPhase,
+  advanceTurn as advanceTurnLogic,
+  getNextCreature,
+  setActiveCreature as setActiveCreatureLogic
 } from '../gameLogic/turnManagement';
 
-// --- Turn Management ---
-
-export function resetAllTurns(
-  creatures: Creature[], 
-  setCreatures: GameActions['setCreatures'],
-  setMessages: GameActions['setMessages'],
-  lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>
-) {
-  resetAllTurnsLogic(creatures, setCreatures, setMessages, lastMovement);
-}
+// --- Game-Specific Turn Management ---
 
 /**
  * End turn and start AI turn phase
@@ -28,18 +20,25 @@ export function endTurnWithAI(
   setCreatures: GameActions['setCreatures'],
   setMessages: GameActions['setMessages'],
   setAITurnState: GameActions['setAITurnState'],
-  lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>
+  setTurnState: GameActions['setTurnState'],
+  lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
+  currentTurnState: TurnState,
+  mapDefinition?: any
 ) {
   // Reset all turns first
   resetAllTurns(creatures, setCreatures, setMessages, lastMovement);
   
+  // Advance to next turn
+  const newTurnState = advanceTurnLogic(currentTurnState, creatures, setCreatures, setMessages, lastMovement);
+  setTurnState(() => newTurnState);
+  
   // Start AI turn phase
-  const newAITurnState = startAITurnPhase(creatures, mapData, setCreatures, setMessages);
+  const newAITurnState = startAITurnPhase(creatures, mapData, setCreatures, setMessages, mapDefinition);
   setAITurnState(() => newAITurnState);
   
   // If there are AI creatures, execute their first group's turns
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
-    executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState);
+    executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState, mapDefinition);
   }
 }
 
@@ -52,23 +51,39 @@ export function executeNextAIGroup(
   mapData: { tiles: string[][] },
   setCreatures: GameActions['setCreatures'],
   setMessages: GameActions['setMessages'],
-  setAITurnState: GameActions['setAITurnState']
+  setAITurnState: GameActions['setAITurnState'],
+  mapDefinition?: any
 ) {
   // Continue AI turn phase
-  const newAITurnState = continueAITurnPhase(aiTurnState, creatures, mapData, setCreatures, setMessages);
+  const newAITurnState = continueAITurnPhase(aiTurnState, creatures, mapData, setCreatures, setMessages, mapDefinition);
   setAITurnState(() => newAITurnState);
   
   // If there are more groups to process, continue after a short delay
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
     setTimeout(() => {
-      executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState);
+      executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState, mapDefinition);
     }, 1000); // 1 second delay between groups
   }
 }
 
 /**
- * Check if AI turn phase is active
+ * Set the active creature
  */
-export function isAITurnActive(aiTurnState: any): boolean {
-  return aiTurnState.isAITurnActive;
+export function setActiveCreature(
+  turnState: TurnState,
+  creatureId: string | null,
+  setTurnState: GameActions['setTurnState']
+) {
+  const newTurnState = setActiveCreatureLogic(turnState, creatureId);
+  setTurnState(() => newTurnState);
+}
+
+/**
+ * Get the next creature in turn order
+ */
+export function getNextCreatureInOrder(
+  turnState: TurnState,
+  creatures: Creature[]
+): Creature | null {
+  return getNextCreature(turnState, creatures);
 }

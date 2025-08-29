@@ -30,6 +30,7 @@ export type MapDefinition = {
   rooms: RoomType[];
   terrain: Terrain[];
   creatures: any[]; // Will be properly typed when we import Creature
+  startingTiles: Array<{ x: number; y: number; name?: string }>; // Designated starting positions for heroes
 };
 
 export type ResolvedTerrain = {

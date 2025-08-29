@@ -1,5 +1,6 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Selected Creature Hook ---
 
@@ -8,7 +9,7 @@ export function useSelectedCreature(
   selectedCreatureId: string | null
 ) {
   const selectedCreature = React.useMemo(() => {
-    return creatures.find(c => c.id === selectedCreatureId) || null;
+    return selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
   }, [creatures, selectedCreatureId]);
 
   return selectedCreature;

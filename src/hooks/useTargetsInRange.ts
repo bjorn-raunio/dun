@@ -1,6 +1,7 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
-import { getTargetsInRangeForCreature } from '../utils';
+import { calculateTargetsInRange } from '../utils/combatUtils';
+import { findCreatureById } from '../utils/positioning/accessibility';
 
 // --- Targets in Range Hook ---
 
@@ -13,7 +14,7 @@ export function useTargetsInRange(
 
   // Calculate targets in range when a player-controlled creature is selected or the list changes
   React.useEffect(() => {
-    const sel = creatures.find(c => c.id === selectedCreatureId);
+    const sel = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
     if (!sel || !sel.isPlayerControlled()) {
       setTargetsInRangeIds(new Set());
       return;
@@ -21,7 +22,7 @@ export function useTargetsInRange(
     
     console.log(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
     
-    const inRange = getTargetsInRangeForCreature(sel, creatures);
+    const inRange = calculateTargetsInRange(sel, creatures);
     console.log(`  Targets in range: ${Array.from(inRange).join(', ')}`);
     setTargetsInRangeIds(inRange);
   }, [selectedCreatureId, creatures, targetsInRangeKey]);

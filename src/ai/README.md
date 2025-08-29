@@ -1,103 +1,33 @@
-# AI System Documentation
+# AI System
 
-This module contains the AI logic for controlling monster behavior in the game.
-
-## Overview
-
-The AI system is designed to be modular and extensible, with separate components for:
-- **Targeting**: Evaluating and selecting targets
-- **Movement**: Calculating tactical movement options
-- **Combat**: Making attack decisions
-- **Decision Making**: Coordinating all AI decisions
+The AI system provides intelligent behavior for non-player-controlled creatures in the game. It includes decision-making, targeting, movement, and combat logic.
 
 ## Core Components
 
-### Types (`types.ts`)
-Defines the core interfaces and types used throughout the AI system:
-- `AIBehaviorType`: Enum for different behavior patterns (MELEE, RANGED, ANIMAL)
-- `AIDecision`: Represents a decision made by the AI
-- `AIState`: Tracks the AI's current state and memory
-- `AIContext`: Provides context for AI decision making
+### AI State Management
+- **AIState**: Tracks current target, threat assessment, and tactical memory
+- **AIBehaviorType**: Defines different behavior patterns (MELEE, RANGED, ANIMAL)
+- **AIDecision**: Represents a single decision (move, attack, wait, flee, special)
 
-### Targeting (`targeting.ts`)
-Handles target evaluation and selection:
-- `evaluateTargets()`: Evaluates all potential targets based on reachability and attackability
-- `selectBestTarget()`: Chooses the best target prioritizing those that can be reached and attacked this round
+### Decision Making
+- **makeAIDecision()**: Main decision-making function that evaluates all possible actions
+- **executeAIDecision()**: Executes the chosen decision and updates AI state
+- **shouldContinueTurnAfterKill()**: Determines if an AI creature should continue its turn after killing a target
 
-**Targeting Priority System:**
-1. **Reachability**: Targets that can be reached and attacked in the current round get highest priority
-2. **Attackability**: Targets already in attack range get bonus priority
-3. **Hit Ease**: Based on combat attribute comparison (attacker combat/ranged vs defender combat)
-4. **Behavior-specific adjustments**: Each AI behavior type has specific targeting preferences
+### Targeting
+- **selectBestTarget()**: Chooses the most suitable target based on distance, behavior, and combat effectiveness
+- **evaluateTargets()**: Ranks all potential targets by priority
+- **isTargetValid()**: Checks if a target is still alive and hostile
 
-**Note**: AI focuses on which enemies are easiest to hit rather than considering threat levels.
+### Movement
+- **findBestMovement()**: Calculates optimal movement path to reach target
+- **evaluateMovementOption()**: Scores different movement options
+- **createMovementDecision()**: Creates movement decisions with reasoning
 
-**Hit Ease Calculation:**
-- **Melee AI**: Uses defender's combat value (lower = easier to hit)
-- **Ranged AI**: Uses defender's combat value (lower = easier to hit)
-- **Animal AI**: Uses defender's combat value (lower = easier to hit)
-- Lower defender combat value = easier to hit = higher priority
+### Combat
 
-### Movement (`movement.ts`)
-Manages tactical movement decisions:
-- `evaluateMovementOption()`: Scores a potential movement location
-- `findBestMovement()`: Finds the best movement option
-- `shouldMove()`: Determines if movement is beneficial
-- `createMovementDecision()`: Creates a movement decision
-
-### Combat (`combat.ts`)
-Handles combat-related decisions:
-- `createAttackDecision()`: Creates an attack decision
-- `shouldFlee()`: Determines if the creature should flee
-- `calculateTacticalBonus()`: Calculates tactical advantages
-
-**Note**: Attack validation is handled by the shared `validateAttack()` function from the validation module.
-
-### Decision Making (`decisionMaking.ts`)
-Coordinates all AI decisions:
-- `makeAIDecision()`: Main function that makes the final decision
-- `executeAIDecision()`: Executes a decision
-- `createAIStateForCreature()`: Creates AI state for a creature
-
-## Usage Example
-
-```typescript
-import { 
-  makeAIDecision, 
-  executeAIDecision, 
-  createAIStateForCreature,
-  AIContext 
-} from './ai';
-
-// Create AI state for a monster
-const aiState = createAIStateForCreature(monster, monsterPreset);
-
-// Create context for decision making
-const context: AIContext = {
-  ai: aiState,
-  creature: monster,
-  allCreatures: creatures,
-  mapData: mapData,
-  currentTurn: 1,
-  reachableTiles: reachableTiles,
-  targetsInRange: targetsInRange
-};
-
-// Make a decision
-const decision = makeAIDecision(context);
-
-// Execute the decision
-const result = executeAIDecision(decision.action, context);
-
-// Update AI state
-aiState = result.newState;
-```
-
-## Behavior Types
-
-- **MELEE**: Close combat focused, aggressive melee attacks, prefers to engage in hand-to-hand combat
-- **RANGED**: Prefer ranged attacks, maintain distance, avoid close combat situations
-- **ANIMAL**: Instinctive behavior, pack tactics, territorial, unpredictable but generally aggressive
+- **shouldFlee()**: Determines if creature should flee based on health and threats
+- **updateAIStateAfterAttack()**: Updates AI state after combat actions
 
 ## AI Turn System
 
@@ -127,6 +57,31 @@ AI creatures can now perform multiple actions in a single turn:
 - **Action Management**: The AI will continue taking actions until it runs out of actions or can't perform any more
 - **Dynamic Context**: After each action, the AI recalculates reachable tiles and targets in range
 - **Smart Sequencing**: The AI prioritizes attacking if it can, but will move first if needed to get in range
+
+### Target Switching After Kills
+
+A key feature of the AI system is the ability for AI creatures to continue their turn after killing a target:
+
+- **Automatic Target Selection**: When an AI creature kills its current target, it automatically selects a new target if available
+- **Movement Continuation**: If the creature has remaining movement after killing a target, it will move toward the new target
+- **Smart Decision Making**: The AI evaluates whether to continue its turn based on remaining movement and available targets
+- **Clear Messaging**: The system provides clear feedback when an AI creature switches targets
+
+#### Movement Rules:
+- **No Unnecessary Movement**: AI creatures will not move when they are already in attack range of their target
+- **Attack Priority**: When in attack range, AI creatures will attack immediately rather than moving
+- **Target Switching**: Only when a target is killed and the creature has remaining movement will it move to engage a new target
+- **Tactical Movement**: Movement is only allowed when not in attack range or when switching to a new target after killing the current one
+
+#### How It Works:
+1. **Attack Execution**: AI creature attacks and kills its target
+2. **Target Validation**: System checks if the killed target is still valid (alive and hostile)
+3. **Target Clearing**: If target is dead, the AI state clears the current target
+4. **New Target Selection**: AI automatically selects the best available target
+5. **Movement Decision**: If the creature has remaining movement, it moves toward the new target
+6. **Turn Continuation**: The AI continues its turn until it runs out of actions or movement
+
+This behavior makes AI creatures much more dynamic and effective in combat, as they can eliminate multiple targets in a single turn when possible, while avoiding unnecessary movement when already in position to attack.
 
 ### Integration
 
