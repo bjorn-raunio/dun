@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { AITurnState } from '../gameLogic/turnManagement';
+import { AITurnState } from './turnManagement';
 
 // --- Turn State Types ---
 

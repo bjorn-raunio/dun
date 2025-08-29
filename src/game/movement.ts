@@ -2,7 +2,6 @@ import { Creature } from '../creatures/index';
 import { validateMovement } from '../validation/movement';
 import { VALIDATION_MESSAGES } from '../validation/messages';
 
-
 // --- Movement Logic ---
 
 export interface MovementResult {
@@ -10,12 +9,6 @@ export interface MovementResult {
   message?: string;
   cost: number;
 }
-
-
-
-
-
-
 
 /**
  * Execute movement for a creature
@@ -69,8 +62,6 @@ export function executeMovement(
     cost: stepCost
   };
 }
-
-
 
 /**
  * Reset all creatures' turns

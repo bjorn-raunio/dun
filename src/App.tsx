@@ -4,7 +4,7 @@ import { mapDefinition, generateMapTiles } from './maps';
 import { useGameState, endTurnWithAI } from './game';
 import { MapView, GameUI, CreaturePanel, TurnTracker } from './components';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement } from './hooks';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement } from './game/hooks';
 
 // Map and game state are now imported from extracted modules
 

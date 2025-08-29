@@ -1,7 +1,7 @@
 import { Creature } from '../creatures/index';
 import { GameActions } from '../game/types';
 import { DIRECTIONS } from '../utils/constants';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { findCreatureById } from '../utils/pathfinding';
 
 // --- Keyboard Event Handlers ---
 

@@ -1,13 +1,13 @@
 import { Creature } from '../creatures/index';
 import { GameActions, TurnState } from './types';
-import { resetAllTurns } from '../gameLogic/movement';
+import { resetAllTurns } from './movement';
 import { 
   startAITurnPhase, 
   continueAITurnPhase,
   advanceTurn as advanceTurnLogic,
   getNextCreature,
   setActiveCreature as setActiveCreatureLogic
-} from '../gameLogic/turnManagement';
+} from './turnManagement';
 
 // --- Game-Specific Turn Management ---
 
@@ -67,9 +67,9 @@ export function executeNextAIGroup(
 }
 
 /**
- * Set the active creature
+ * Set the active creature (game-specific wrapper)
  */
-export function setActiveCreature(
+export function setActiveCreatureInGame(
   turnState: TurnState,
   creatureId: string | null,
   setTurnState: GameActions['setTurnState']

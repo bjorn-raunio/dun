@@ -3,7 +3,7 @@ import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { findCreatureById } from '../utils/pathfinding';
 
 
 // --- Event Handlers Custom Hook ---

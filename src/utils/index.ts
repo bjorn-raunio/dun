@@ -6,5 +6,4 @@ export * from './combatUtils';
 export * from './equipment';
 export * from './pathfinding';
 export * from './messageUtils';
-export * from './positioning';
 export * from './zoneOfControl';

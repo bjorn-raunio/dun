@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { Creature } from '../creatures/index';
-import { TurnState } from '../game/types';
-import { GameActions } from '../game/types';
-import { advanceToNextCreature, shouldEndTurn } from '../gameLogic/turnManagement';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { Creature } from '../../creatures/index';
+import { TurnState, GameActions } from '../types';
+import { advanceToNextCreature, shouldEndTurn } from '../turnManagement';
+import { findCreatureById } from '../../utils/pathfinding';
 
 // --- Turn Advancement Hook ---
 

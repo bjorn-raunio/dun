@@ -1,7 +1,7 @@
 import React from 'react';
-import { Creature } from '../creatures/index';
-import { calculateTargetsInRange } from '../utils/combatUtils';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { Creature } from '../../creatures/index';
+import { calculateTargetsInRange } from '../../utils/combatUtils';
+import { findCreatureById } from '../../utils/pathfinding';
 
 // --- Targets in Range Hook ---
 

@@ -1,20 +1,14 @@
 import { Creature } from '../creatures/index';
+import { TurnState } from './types';
 import { resetAllTurns } from './movement';
 import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../ai/decisionMaking';
 import { CreatureMovement } from '../creatures/movement';
 import { calculateTargetsInRange } from '../utils/combatUtils';
-import { addMessage } from '../game/messageSystem';
+import { addMessage } from './messageSystem';
 import { getLivingCreatures } from '../validation/creature';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { findCreatureById } from '../utils/pathfinding';
 
 // --- Turn Management Logic ---
-
-export interface TurnState {
-  currentTurn: number;
-  activeCreatureId: string | null;
-  turnOrder: string[];
-  turnIndex: number;
-}
 
 export interface AITurnState {
   isAITurnActive: boolean;

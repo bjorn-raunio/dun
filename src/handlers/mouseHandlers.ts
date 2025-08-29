@@ -1,11 +1,11 @@
 import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { tileFromPointer, GAME_SETTINGS } from '../utils';
-import { executeMovement } from '../gameLogic/movement';
+import { executeMovement } from '../game/movement';
 import { calculateCostDifference } from '../utils/movementCost';
 import { VALIDATION_MESSAGES } from '../validation/messages';
 import { addMessage } from '../game/messageSystem';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { findCreatureById } from '../utils/pathfinding';
 
 // --- Mouse Event Handlers ---
 

@@ -4,9 +4,9 @@ import { selectBestTarget, updateTargetInformation } from './targeting';
 import { createMovementDecision, updateAIStateAfterMovement } from './movement';
 import { shouldFlee, createFleeDecision, updateAIStateAfterAttack, isTargetValid } from './combat';
 import { calculateTargetsInRange } from '../utils/combatUtils';
-import { canAttackImmediately } from '../utils/positioning/distance';
+import { canAttackImmediately } from '../utils/pathfinding';
 import { validateCombat } from '../validation/combat';
-import { executeMovement } from '../gameLogic/movement';
+import { executeMovement } from '../game/movement';
 import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 

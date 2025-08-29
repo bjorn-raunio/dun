@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
-import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/positioning/distance';
+import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
 
 // --- AI Targeting Logic ---
 

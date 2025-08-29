@@ -1,7 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AIState, AIMovementOption, AIDecision } from './types';
-import { isPositionAccessibleWithBounds } from '../utils/positioning/accessibility';
-import { calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/positioning/distance';
+import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/pathfinding';
 
 // --- AI Movement Logic ---
 

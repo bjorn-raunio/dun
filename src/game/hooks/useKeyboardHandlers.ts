@@ -1,7 +1,7 @@
 import React from 'react';
-import { createKeyboardHandlers } from '../handlers/keyboardHandlers';
-import { GameActions } from '../game/types';
-import { Creature } from '../creatures/index';
+import { createKeyboardHandlers } from '../../handlers/keyboardHandlers';
+import { GameActions } from '../types';
+import { Creature } from '../../creatures/index';
 
 // --- Keyboard Handlers Hook ---
 

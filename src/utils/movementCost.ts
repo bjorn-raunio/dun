@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
-import { isCreatureAtPosition } from './positioning/accessibility';
+import { isCreatureAtPosition } from './pathfinding';
 
 // --- Centralized Movement Cost Calculation Service ---
 

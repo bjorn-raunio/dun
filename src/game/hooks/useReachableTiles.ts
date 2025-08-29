@@ -1,6 +1,6 @@
 import React from 'react';
-import { Creature } from '../creatures/index';
-import { findCreatureById } from '../utils/positioning/accessibility';
+import { Creature } from '../../creatures/index';
+import { findCreatureById } from '../../utils/pathfinding';
 
 // --- Reachable Tiles Hook ---
 
