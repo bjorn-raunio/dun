@@ -1,6 +1,6 @@
 import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 
 // --- Creature Panel Component ---
 
@@ -46,7 +46,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
                   height: 56, 
                   objectFit: "cover", 
                   borderRadius: "50%", 
-                  border: selectedCreature.kind === "hero" ? `2px solid ${COLORS.hero}` : `2px solid ${COLORS.monster}` 
+                  border: selectedCreature.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000" 
                 }}
               />
             ) : (
@@ -54,13 +54,13 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
                 width: 56, 
                 height: 56, 
                 borderRadius: "50%", 
-                background: selectedCreature.kind === "hero" ? COLORS.hero : COLORS.monster, 
+                                 background: selectedCreature.isHeroGroup() ? COLORS.hero : COLORS.monster, 
                 border: "2px solid #fff" 
               }} />
             )}
             <div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{selectedCreature.name}</div>
-              <div style={{ opacity: 0.8, textTransform: "capitalize" }}>{selectedCreature.kind}</div>
+                             <div style={{ opacity: 0.8, textTransform: "capitalize" }}>{selectedCreature.group}</div>
             </div>
           </div>
           
@@ -82,11 +82,11 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect }: Creat
               <div>Ranged: <strong>{selectedCreature.ranged}</strong></div>
               <div>Strength: <strong>{selectedCreature.strength}</strong></div>
               <div>Agility: <strong>{selectedCreature.agility}</strong></div>
-              <div>Vitality: <strong style={{ 
-                color: selectedCreature.vitality <= 0 ? COLORS.error : 
-                       selectedCreature.vitality <= 1 ? COLORS.warning : COLORS.text 
+                            <div>Vitality: <strong style={{ 
+                        color: selectedCreature.isDead() ? COLORS.error :
+               selectedCreature.remainingVitality <= 1 ? COLORS.warning : COLORS.text
               }}>
-                {selectedCreature.vitality}
+                {selectedCreature.remainingVitality}
               </strong></div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { tileFromPointer, GAME_SETTINGS } from '../utils';
 import { calculateStepCost, executeMovement } from '../gameLogic/movement';
@@ -68,7 +68,7 @@ export function createMouseHandlers(
     // Handle tile click for movement
     if (selectedCreatureId) {
       const selected = creatures.find(c => c.id === selectedCreatureId);
-      if (!selected || selected.kind !== "hero") {
+      if (!selected || !selected.isPlayerControlled()) {
         // keep current selection
         return;
       }
@@ -150,7 +150,7 @@ export function createMouseHandlers(
         
         // Check if we moved onto a space where a dead creature was
         const deadCreatureAtDestination = creatures.find(c => 
-          c.vitality <= 0 && 
+          c.isDead() && 
           c.x === pos.tileX && 
           c.y === pos.tileY
         );
@@ -174,8 +174,8 @@ export function createMouseHandlers(
     e.stopPropagation();
     const selected = creatures.find(c => c.id === selectedCreatureId);
 
-    // If a hero is selected and the clicked creature is a monster, handle attack
-    if (selected && selected.kind === "hero" && creature.kind === "monster") {
+    // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
+    if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
       if (!targetsInRangeIds.has(creature.id)) {
         setMessages(m => [
           `${selected.name} cannot reach ${creature.name}.`,

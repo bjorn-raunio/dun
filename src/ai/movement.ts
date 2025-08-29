@@ -1,5 +1,5 @@
-import { Creature } from '../creatures';
-import { AIState, AIMovementOption, AIDecision } from './types';
+import { Creature } from '../creatures/index';
+import { AIState, AIMovementOption, AIDecision, AIBehaviorType } from './types';
 import { chebyshevDistance } from '../utils/geometry';
 
 // --- AI Movement Logic ---
@@ -44,16 +44,16 @@ export function evaluateMovementOption(
   
   // Check tactical positioning
   const enemiesNearby = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     c.id !== creature.id && 
-    c.constructor.name !== creature.constructor.name &&
+    creature.isHostileTo(c) &&
     chebyshevDistance(x, y, c.x, c.y) <= 3
   );
   
   const alliesNearby = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     c.id !== creature.id && 
-    c.constructor.name === creature.constructor.name &&
+    creature.isFriendlyTo(c) &&
     chebyshevDistance(x, y, c.x, c.y) <= 3
   );
   
@@ -95,7 +95,7 @@ export function evaluateMovementOption(
   
   // Check for being trapped
   const escapeRoutes = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     chebyshevDistance(x, y, c.x, c.y) <= 1
   ).length;
   
@@ -106,31 +106,22 @@ export function evaluateMovementOption(
   
   // Adjust score based on behavior
   switch (ai.behavior) {
-    case 'aggressive':
-      if (benefits.closerToTarget) score += 2;
-      if (benefits.tacticalAdvantage) score += 3;
+    case AIBehaviorType.MELEE:
+      if (benefits.closerToTarget) score += 3;
+      if (benefits.tacticalAdvantage) score += 2;
       if (risks.exposedToAttack) score -= 1; // Less concerned about exposure
       break;
-    case 'defensive':
+    case AIBehaviorType.RANGED:
       if (benefits.saferPosition) score += 4;
-      if (risks.exposedToAttack) score -= 3;
-      if (risks.isolated) score -= 2;
-      break;
-    case 'cautious':
-      if (benefits.saferPosition) score += 3;
       if (benefits.tacticalAdvantage) score += 2;
+      if (risks.exposedToAttack) score -= 3;
+      if (risks.isolated) score -= 1;
+      break;
+    case AIBehaviorType.ANIMAL:
+      if (benefits.closerToTarget) score += 2;
+      if (benefits.tacticalAdvantage) score += 1;
       if (risks.exposedToAttack) score -= 2;
-      break;
-    case 'berserker':
-      if (benefits.closerToTarget) score += 4;
-      if (benefits.tacticalAdvantage) score += 5;
-      // Ignore most risks
-      break;
-    case 'guard':
-      // Prefer to stay near current position
-      const distanceFromCurrent = chebyshevDistance(x, y, creature.x, creature.y);
-      if (distanceFromCurrent <= 2) score += 2;
-      if (distanceFromCurrent > 4) score -= 3;
+      // Animals are less concerned about isolation
       break;
   }
   
@@ -210,20 +201,13 @@ export function shouldMove(
   const currentDistance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
   const inRange = currentDistance <= creature.getAttackRange();
   
-  if (inRange) {
-    // Already in range, movement might not be necessary
-    return Math.random() < 0.2; // 20% chance to reposition
+  // If we're not in range, we should definitely try to move
+  if (!inRange) {
+    return true;
   }
   
-  // Check if movement would significantly improve our position
-  const bestMove = findBestMovement(ai, creature, allCreatures, reachableTiles, target);
-  
-  if (!bestMove) {
-    return false; // No good movement options
-  }
-  
-  // Move if the score is high enough
-  return bestMove.score > 3;
+  // If we are in range, movement might not be necessary
+  return Math.random() < 0.2; // 20% chance to reposition
 }
 
 /**

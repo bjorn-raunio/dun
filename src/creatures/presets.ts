@@ -1,0 +1,253 @@
+import { Monster } from './monster';
+import { Mercenary } from './mercenary';
+import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
+import { CREATURE_GROUPS } from './base';
+import { AIBehaviorType } from '../ai/types';
+
+// --- Monster Presets and Factory Functions ---
+export type MonsterPreset = {
+  name: string;
+  image: string;
+  movement: number;
+  actions: number;
+  mapWidth?: number;
+  mapHeight?: number;
+  size: number; // 1=small, 2=medium, 3=large, 4=huge
+  facing?: number; // 0-7: 0=North, 1=NE, 2=East, 3=SE, 4=South, 5=SW, 6=West, 7=NW
+  inventory?: Array<{ type: "weapon" | "ranged_weapon" | "armor" | "shield"; preset: string; id?: string }>;
+  equipment?: {
+    mainHand?: { type: "weapon" | "ranged_weapon"; preset: string; id?: string };
+    offHand?: { type: "weapon" | "ranged_weapon" | "shield"; preset: string; id?: string };
+    armor?: { type: "armor"; preset: string; id?: string };
+  };
+  combat: number;
+  ranged: number;
+  strength: number;
+  agility: number;
+  remainingVitality: number;
+  naturalArmor?: number;
+  aiBehavior?: AIBehaviorType; // AI behavior type (melee, ranged, animal)
+  group?: string; // Which group this monster belongs to
+};
+
+export const monsterPresets: Record<string, MonsterPreset> = {
+  bandit: {
+    name: "Bandit",
+    image: "creatures/bandit.png",
+    movement: 6,
+    actions: 1,
+    size: 2, // medium
+    facing: 0, // North
+    inventory: [
+      { type: "weapon", preset: "scimitar" },
+      { type: "armor", preset: "leather" }
+    ],
+    equipment: {
+      mainHand: { type: "weapon", preset: "dagger" },
+      armor: { type: "armor", preset: "leather" }
+    },
+    combat: 3,
+    ranged: 1,
+    strength: 2,
+    agility: 3,
+    remainingVitality: 4,
+    naturalArmor: 3,
+    aiBehavior: AIBehaviorType.MELEE,
+  },
+};
+
+export function createMonster(presetId: string, overrides?: Partial<Monster> & { id?: string; x: number; y: number }): Monster {
+  const p = monsterPresets[presetId];
+  if (!p) {
+    throw new Error(`Monster preset "${presetId}" not found`);
+  }
+
+  // Create inventory items
+  const inventory: any[] = [];
+  if (p.inventory) {
+    for (const itemDef of p.inventory) {
+      switch (itemDef.type) {
+        case "weapon":
+          inventory.push(createWeapon(itemDef.preset));
+          break;
+        case "ranged_weapon":
+          inventory.push(createRangedWeapon(itemDef.preset));
+          break;
+        case "armor":
+          inventory.push(createArmor(itemDef.preset));
+          break;
+        case "shield":
+          inventory.push(createShield(itemDef.preset));
+          break;
+      }
+    }
+  }
+
+  // Create equipment
+  const equipment: Monster["equipment"] = {};
+  if (p.equipment) {
+    if (p.equipment.mainHand) {
+      if (p.equipment.mainHand.type === "weapon") {
+        equipment.mainHand = createWeapon(p.equipment.mainHand.preset);
+      } else if (p.equipment.mainHand.type === "ranged_weapon") {
+        equipment.mainHand = createRangedWeapon(p.equipment.mainHand.preset);
+      }
+    }
+    if (p.equipment.offHand) {
+      if (p.equipment.offHand.type === "weapon") {
+        equipment.offHand = createWeapon(p.equipment.offHand.preset);
+      } else if (p.equipment.offHand.type === "ranged_weapon") {
+        equipment.offHand = createRangedWeapon(p.equipment.offHand.preset);
+      } else if (p.equipment.offHand.type === "shield") {
+        equipment.offHand = createShield(p.equipment.offHand.preset);
+      }
+    }
+    if (p.equipment.armor) {
+      equipment.armor = createArmor(p.equipment.armor.preset);
+    }
+  }
+
+  return new Monster({
+    name: overrides?.name ?? p.name,
+    x: overrides?.x ?? 0,
+    y: overrides?.y ?? 0,
+    image: overrides?.image ?? p.image,
+    movement: overrides?.movement ?? p.movement,
+    actions: overrides?.actions ?? p.actions,
+    mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
+    mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
+    size: overrides?.size ?? p.size,
+    facing: overrides?.facing ?? p.facing ?? 0,
+    inventory: overrides?.inventory ?? inventory,
+    equipment: overrides?.equipment ?? equipment,
+    combat: overrides?.combat ?? p.combat,
+    ranged: overrides?.ranged ?? p.ranged,
+    strength: overrides?.strength ?? p.strength,
+    agility: overrides?.agility ?? p.agility,
+    remainingVitality: overrides?.remainingVitality ?? p.remainingVitality,
+    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
+    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.ENEMY,
+  });
+}
+
+// --- Mercenary Presets and Factory Functions ---
+export type MercenaryPreset = {
+  name: string;
+  image: string;
+  movement: number;
+  actions: number;
+  mapWidth?: number;
+  mapHeight?: number;
+  size: number;
+  facing?: number;
+  inventory?: Array<{ type: "weapon" | "ranged_weapon" | "armor" | "shield"; preset: string; id?: string }>;
+  equipment?: {
+    mainHand?: { type: "weapon" | "ranged_weapon"; preset: string; id?: string };
+    offHand?: { type: "weapon" | "ranged_weapon" | "shield"; preset: string; id?: string };
+    armor?: { type: "armor"; preset: string; id?: string };
+  };
+  combat: number;
+  ranged: number;
+  strength: number;
+  agility: number;
+  remainingVitality: number;
+  naturalArmor?: number;
+  hireCost: number;
+  group?: string;
+};
+
+export const mercenaryPresets: Record<string, MercenaryPreset> = {
+  civilian: {
+    name: "Civilian",
+    image: "creatures/civilian.png",
+    movement: 6,
+    actions: 2,
+    size: 2,
+    facing: 0,
+    inventory: [],
+    equipment: {},
+    combat: 3,
+    ranged: 5,
+    strength: 2,
+    agility: 4,
+    remainingVitality: 4,
+    naturalArmor: 2,
+    hireCost: 75,
+  },
+};
+
+export function createMercenary(presetId: string, overrides?: Partial<Mercenary> & { id?: string; x: number; y: number }): Mercenary {
+  const p = mercenaryPresets[presetId];
+  if (!p) {
+    throw new Error(`Mercenary preset "${presetId}" not found`);
+  }
+
+  // Create inventory items
+  const inventory: any[] = [];
+  if (p.inventory) {
+    for (const itemDef of p.inventory) {
+      switch (itemDef.type) {
+        case "weapon":
+          inventory.push(createWeapon(itemDef.preset));
+          break;
+        case "ranged_weapon":
+          inventory.push(createRangedWeapon(itemDef.preset));
+          break;
+        case "armor":
+          inventory.push(createArmor(itemDef.preset));
+          break;
+        case "shield":
+          inventory.push(createShield(itemDef.preset));
+          break;
+      }
+    }
+  }
+
+  // Create equipment
+  const equipment: Mercenary["equipment"] = {};
+  if (p.equipment) {
+    if (p.equipment.mainHand) {
+      if (p.equipment.mainHand.type === "weapon") {
+        equipment.mainHand = createWeapon(p.equipment.mainHand.preset);
+      } else if (p.equipment.mainHand.type === "ranged_weapon") {
+        equipment.mainHand = createRangedWeapon(p.equipment.mainHand.preset);
+      }
+    }
+    if (p.equipment.offHand) {
+      if (p.equipment.offHand.type === "weapon") {
+        equipment.offHand = createWeapon(p.equipment.offHand.preset);
+      } else if (p.equipment.offHand.type === "ranged_weapon") {
+        equipment.offHand = createRangedWeapon(p.equipment.offHand.preset);
+      } else if (p.equipment.offHand.type === "shield") {
+        equipment.offHand = createShield(p.equipment.offHand.preset);
+      }
+    }
+    if (p.equipment.armor) {
+      equipment.armor = createArmor(p.equipment.armor.preset);
+    }
+  }
+
+  return new Mercenary({
+    name: overrides?.name ?? p.name,
+    x: overrides?.x ?? 0,
+    y: overrides?.y ?? 0,
+    image: overrides?.image ?? p.image,
+    movement: overrides?.movement ?? p.movement,
+    actions: overrides?.actions ?? p.actions,
+    mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
+    mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
+    size: overrides?.size ?? p.size,
+    facing: overrides?.facing ?? p.facing ?? 0,
+    inventory: overrides?.inventory ?? inventory,
+    equipment: overrides?.equipment ?? equipment,
+    combat: overrides?.combat ?? p.combat,
+    ranged: overrides?.ranged ?? p.ranged,
+    strength: overrides?.strength ?? p.strength,
+    agility: overrides?.agility ?? p.agility,
+    remainingVitality: overrides?.remainingVitality ?? p.remainingVitality,
+    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
+    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.HERO,
+    // Mercenary-specific properties
+    hireCost: overrides?.hireCost ?? p.hireCost,
+  });
+}

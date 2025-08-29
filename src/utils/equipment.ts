@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { Weapon, RangedWeapon, Armor, Shield } from '../items';
 import { GAME_SETTINGS } from './constants';
 
@@ -28,23 +28,28 @@ export function hasArmor(creature: Creature): boolean {
 
 /**
  * Check if a creature has a melee weapon equipped
+ * Always returns true since unarmed is considered a melee weapon
  */
 export function hasMeleeWeapon(creature: Creature): boolean {
   return creature.equipment.mainHand instanceof Weapon || 
-         creature.equipment.offHand instanceof Weapon;
+         creature.equipment.offHand instanceof Weapon ||
+         (!creature.equipment.mainHand && !creature.equipment.offHand); // Unarmed
 }
 
 /**
  * Get the main weapon (prioritizes main hand, then off hand)
+ * Returns an unarmed weapon if no weapon is equipped
  */
-export function getMainWeapon(creature: Creature): Weapon | RangedWeapon | undefined {
+export function getMainWeapon(creature: Creature): Weapon | RangedWeapon {
   if (creature.equipment.mainHand instanceof Weapon || creature.equipment.mainHand instanceof RangedWeapon) {
     return creature.equipment.mainHand;
   }
   if (creature.equipment.offHand instanceof Weapon || creature.equipment.offHand instanceof RangedWeapon) {
     return creature.equipment.offHand;
   }
-  return undefined;
+  // Return unarmed weapon if no weapon is equipped
+  const { createWeapon } = require('../items');
+  return createWeapon('unarmed');
 }
 
 /**
@@ -73,7 +78,7 @@ export function getEffectiveArmor(creature: Creature): number {
  */
 export function getWeaponDamage(creature: Creature): number {
   const weapon = getMainWeapon(creature);
-  return weapon ? (weapon as any).damage as number : 1;
+  return (weapon as any).damage as number;
 }
 
 /**
@@ -91,14 +96,18 @@ export function getAttackRange(creature: Creature): number {
     return Math.max(1, offHand.range.normal);
   }
   
-  return 1; // Default melee range
+  // If no weapon equipped, return unarmed range (1)
+  return 1;
 }
 
 /**
- * Get attack bonus based on weapon type
+ * Get attack bonus based on weapon type and weapon modifiers
  */
 export function getAttackBonus(creature: Creature): number {
-  return hasRangedWeapon(creature) ? creature.ranged : creature.combat;
+  const weapon = getMainWeapon(creature);
+  const baseBonus = hasRangedWeapon(creature) ? creature.ranged : creature.combat;
+  const weaponModifier = weapon instanceof Weapon ? (weapon.combatModifier ?? 0) : 0;
+  return baseBonus + weaponModifier;
 }
 
 /**

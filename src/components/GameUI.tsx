@@ -6,9 +6,10 @@ import { COLORS, COMMON_STYLES } from './styles';
 interface GameUIProps {
   messages: string[];
   onEndTurn: () => void;
+  isAITurnActive?: boolean;
 }
 
-export function GameUI({ messages, onEndTurn }: GameUIProps) {
+export function GameUI({ messages, onEndTurn, isAITurnActive = false }: GameUIProps) {
   return (
     <div
       style={{
@@ -51,14 +52,17 @@ export function GameUI({ messages, onEndTurn }: GameUIProps) {
       
       <button
         onClick={onEndTurn}
+        disabled={isAITurnActive}
         style={{
           minWidth: 140,
           height: "100%",
           ...COMMON_STYLES.button,
           fontWeight: 800,
+          opacity: isAITurnActive ? 0.5 : 1,
+          cursor: isAITurnActive ? 'not-allowed' : 'pointer',
         }}
       >
-        End Turn
+        {isAITurnActive ? 'AI Turn...' : 'End Turn'}
       </button>
     </div>
   );

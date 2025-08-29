@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 
 // --- Reachable Tiles Hook ---
 
@@ -14,7 +14,7 @@ export function useReachableTiles(
   const reachable = React.useMemo(() => {
     if (!selectedCreatureId) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
     const selected = creatures.find(c => c.id === selectedCreatureId);
-    if (!selected || selected.kind !== "hero") return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
+    if (!selected || !selected.isPlayerControlled()) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
 
     // Use the creature's built-in pathfinding method
     return selected.getReachableTiles(creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);

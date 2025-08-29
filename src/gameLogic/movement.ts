@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { validateMovement } from '../validation/movement';
 
 // --- Movement Logic ---
@@ -101,6 +101,9 @@ export function executeMovement(
   // Apply movement cost
   applyMovementCost(creature, stepCost);
   
+  // Reset actions for other creatures in the same group that have already acted
+  creature.resetGroupActions(allCreatures);
+  
   // Check if movement resulted in engagement
   const isEngaged = creature.isEngagedWithAll(allCreatures);
   if (isEngaged) {
@@ -127,6 +130,7 @@ export function hasMovedFromStart(creature: Creature): boolean {
 export function resetMovement(creature: Creature): void {
   creature.remainingMovement = creature.movement;
   creature.remainingActions = creature.actions;
+  creature.remainingQuickActions = creature.quickActions;
   creature.hasMovedWhileEngaged = false;
 }
 

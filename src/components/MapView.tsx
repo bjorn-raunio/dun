@@ -1,7 +1,7 @@
 import React from 'react';
 import { TILE_SIZE, COLORS } from './styles';
 import { typeToImage, resolveTerrain } from '../maps';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 
 // --- Map View Component ---
 
@@ -298,7 +298,7 @@ export function MapView({
             zIndex: 3,
           }}
         >
-          {creatures.filter(cr => cr.vitality > 0).map((cr) => (
+          {creatures.filter(cr => cr.isAlive()).map((cr) => (
             <div
               key={cr.id}
               title={cr.name}
@@ -324,10 +324,10 @@ export function MapView({
                     height: "100%",
                     objectFit: "cover",
                     borderRadius: "50%",
-                    border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : "2px solid #fff",
+                    border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
                     boxSizing: "border-box",
                     pointerEvents: "none",
-                    opacity: cr.vitality <= 0 ? 0.3 : 1,
+                    opacity: cr.isDead() ? 0.3 : 1,
                   }}
                 />
               ) : (
@@ -336,11 +336,11 @@ export function MapView({
                     width: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
                     height: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
                     borderRadius: "50%",
-                    background: cr.vitality <= 0 ? "#666" : (cr.kind === "hero" ? COLORS.hero : COLORS.monster),
-                    border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : "2px solid #fff",
+                                         background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
+                    border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
                     boxSizing: "border-box",
                     pointerEvents: "none",
-                    opacity: cr.vitality <= 0 ? 0.3 : 1,
+                    opacity: cr.isDead() ? 0.3 : 1,
                   }}
                 />
               )}
@@ -352,7 +352,7 @@ export function MapView({
                   left: "50%",
                   transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${Math.floor(TILE_SIZE * 0.4 * ((cr.size >= 3) ? 2 : 1))}px)`,
                   fontSize: "12px",
-                  color: cr.kind === "hero" ? COLORS.hero : COLORS.monster,
+                                     color: cr.isHeroGroup() ? COLORS.hero : COLORS.monster,
                   fontWeight: "bold",
                   textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
                   pointerEvents: "none",
@@ -366,11 +366,7 @@ export function MapView({
         </div>
       </div>
       
-      {/* Map info overlay */}
-      <div style={{ position: "absolute", top: 0, left: 0, color: COLORS.text, background: "rgba(0,0,0,0.5)", padding: 8, zIndex: 10 }}>
-        <h2 style={{ margin: 0 }}>{mapData.name}</h2>
-        <p style={{ margin: 0 }}>{mapData.description}</p>
-      </div>
+
     </div>
   );
 }

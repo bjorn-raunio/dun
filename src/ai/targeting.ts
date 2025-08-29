@@ -1,15 +1,8 @@
-import { Creature } from '../creatures';
-import { AITarget, AIState } from './types';
+import { Creature } from '../creatures/index';
+import { AITarget, AIState, AIBehaviorType } from './types';
 import { chebyshevDistance } from '../utils/geometry';
-import { calculateThreatLevel, calculateVulnerability, calculateDistancePriority } from '../utils/creatureAnalysis';
 
 // --- AI Targeting Logic ---
-
-
-
-
-
-
 
 /**
  * Evaluate all potential targets for an AI creature
@@ -20,65 +13,96 @@ export function evaluateTargets(
   allCreatures: Creature[]
 ): AITarget[] {
   const targets: AITarget[] = [];
-  
+
   for (const target of allCreatures) {
     // Skip dead creatures and self
-    if (target.vitality <= 0 || target.id === creature.id) {
+    if (target.isDead() || target.id === creature.id) {
       continue;
     }
-    
-    // Skip allies (assuming different creature types are enemies)
-    if (target.constructor.name === creature.constructor.name) {
+
+    // Skip allies (creatures from the same group)
+    if (creature.isFriendlyTo(target)) {
       continue;
     }
-    
+
     const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-    const threat = calculateThreatLevel(target);
-    const vulnerability = calculateVulnerability(target);
-    const distancePriority = calculateDistancePriority(distance, ai.behavior);
-    
-    // Calculate overall priority
-    let priority = distancePriority;
-    
+    const attackRange = creature.getAttackRange();
+    const movementRange = creature.remainingMovement;
+
+    // Check if target can be reached and attacked this round
+    const canReachAndAttack = distance <= (movementRange + attackRange);
+    const canAttackNow = distance <= attackRange;
+
+    // If we can't reach and attack this round, give very low priority
+    if (!canReachAndAttack) {
+      targets.push({
+        creature: target,
+        distance,
+        priority: 0.1 // Very low priority for unreachable targets
+      });
+      continue;
+    }
+
+    // Calculate base priority based on reachability and attackability
+    let priority = 0;
+
+    if (canAttackNow) {
+      // Can attack immediately - high priority
+      priority += 100;
+    } else if (canReachAndAttack) {
+      // Can reach and attack this round - medium priority
+      priority += 50;
+    }
+
+    // Prioritize easier-to-hit targets when multiple are reachable
+    // Calculate hit difficulty based on attacker's combat/ranged vs defender's combat
+    let defenderCombatValue: number;
+
+    if (ai.behavior === AIBehaviorType.RANGED) {
+      defenderCombatValue = 0;
+    } else {
+      // Melee and animal behaviors use combat
+      defenderCombatValue = target.combat;
+    }
+
+    // Hit ease: lower defender combat value = easier to hit = higher priority
+    // We want to prioritize targets with lower combat values
+    const hitEase = Math.max(0, 10 - defenderCombatValue); // Higher value = easier to hit
+    priority += hitEase * 2; // Give significant weight to hit ease
+
     // Adjust based on behavior
     switch (ai.behavior) {
-      case 'aggressive':
-        priority += threat * 0.5; // Prefer dangerous targets
+      case AIBehaviorType.MELEE:
+        // Melee fighters prefer close targets they can reach
+        if (distance <= movementRange + 1) {
+          priority += 3;
+        }
+
         break;
-      case 'cautious':
-        priority += vulnerability * 2; // Prefer vulnerable targets
-        priority -= threat * 0.3; // Avoid dangerous targets
+      case AIBehaviorType.RANGED:
+        // Ranged fighters prefer targets at optimal range
+        if (distance >= 2 && distance <= 6) {
+          priority += 4;
+        } else if (distance <= 1) {
+          priority -= 2; // Penalty for too close
+        }
+
         break;
-      case 'defensive':
-        priority += vulnerability * 1.5; // Prefer vulnerable targets
-        priority -= threat * 0.5; // Avoid dangerous targets
-        break;
-      case 'berserker':
-        priority += threat * 1; // Strongly prefer dangerous targets
-        break;
-      case 'ambush':
-        priority += vulnerability * 3; // Strongly prefer vulnerable targets
+      case AIBehaviorType.ANIMAL:
+        // Animals prefer close targets
+        if (distance <= movementRange + 1) {
+          priority += 2;
+        }
         break;
     }
-    
-    // Consider tactical memory
-    if (ai.tacticalMemory.lastAttack?.targetId === target.id) {
-      if (ai.tacticalMemory.lastAttack.success) {
-        priority += 1; // Prefer targets we've successfully hit
-      } else {
-        priority -= 1; // Avoid targets we've missed
-      }
-    }
-    
+
     targets.push({
       creature: target,
       distance,
-      threat,
-      vulnerability,
       priority: Math.max(0, priority)
     });
   }
-  
+
   // Sort by priority (highest first)
   return targets.sort((a, b) => b.priority - a.priority);
 }
@@ -92,22 +116,25 @@ export function selectBestTarget(
   allCreatures: Creature[]
 ): Creature | null {
   const targets = evaluateTargets(ai, creature, allCreatures);
-  
+
   if (targets.length === 0) {
     return null;
   }
-  
-  // For some behaviors, we might want to consider multiple targets
-  if (ai.behavior === 'cautious' || ai.behavior === 'defensive') {
-    // Look for the most vulnerable target within reasonable distance
-    const closeTargets = targets.filter(t => t.distance <= 6);
-    if (closeTargets.length > 0) {
-      return closeTargets.sort((a, b) => b.vulnerability - a.vulnerability)[0].creature;
-    }
+
+  // Filter for targets that can be reached and attacked this round
+  const reachableTargets = targets.filter(t => t.priority > 1);
+
+  if (reachableTargets.length === 0) {
+    // If no reachable targets, return the highest priority unreachable target
+    // (for movement planning)
+    return targets[0].creature;
   }
-  
-  // Return the highest priority target
-  return targets[0].creature;
+
+  // Among reachable targets, prioritize by ease of hitting
+  // Sort by priority (which now includes hit ease)
+  reachableTargets.sort((a, b) => b.priority - a.priority);
+
+  return reachableTargets[0].creature;
 }
 
 /**
@@ -119,16 +146,16 @@ export function updateTargetInformation(
   allCreatures: Creature[]
 ): AIState {
   const newState = { ...ai };
-  
+
   // Update last known positions of enemies
   for (const target of allCreatures) {
-    if (target.vitality <= 0 || target.id === creature.id) {
+    if (target.isDead() || target.id === creature.id) {
       continue;
     }
-    
-    if (target.constructor.name !== creature.constructor.name) {
+
+    if (creature.isHostileTo(target)) {
       const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-      
+
       // Assume creatures can "see" within 8 tiles
       if (distance <= 8) {
         newState.lastKnownPlayerPositions.set(target.id, {
@@ -139,19 +166,8 @@ export function updateTargetInformation(
       }
     }
   }
-  
-  // Update threat assessment
-  newState.threatAssessment.clear();
-  for (const target of allCreatures) {
-    if (target.vitality <= 0 || target.id === creature.id) {
-      continue;
-    }
-    
-    if (target.constructor.name !== creature.constructor.name) {
-      const threat = calculateThreatLevel(target);
-      newState.threatAssessment.set(target.id, threat);
-    }
-  }
-  
+
+
+
   return newState;
 }

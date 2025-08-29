@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { GAME_SETTINGS } from '../utils/constants';
 import { validateAttack } from '../validation/combat';
 
@@ -121,18 +121,18 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
   }
   
   // Calculate combat bonuses
-  let attackerBonus = attacker.combat;
+  const { getAttackBonus, getMainWeapon } = require('../utils/equipment');
+  let attackerBonus = getAttackBonus(attacker);
   let defenderBonus = target.combat;
   
   // Track modifiers for display
   const attackerModifiers: string[] = [];
   const defenderModifiers: string[] = [];
   
-  // Add weapon combat modifier (only for melee weapons)
-  const mainHandWeapon = attacker.equipment.mainHand;
-  const weaponCombatModifier = (mainHandWeapon?.kind === "weapon" && mainHandWeapon.combatModifier) || 0;
+  // Add weapon combat modifier display
+  const mainWeapon = getMainWeapon(attacker);
+  const weaponCombatModifier = mainWeapon.combatModifier || 0;
   if (weaponCombatModifier !== 0) {
-    attackerBonus += weaponCombatModifier;
     const modifierText = weaponCombatModifier > 0 ? `+${weaponCombatModifier}` : `${weaponCombatModifier}`;
     attackerModifiers.push(`weapon ${modifierText}`);
   }
@@ -169,6 +169,9 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
   // Consume action (regardless of hit or miss)
   attacker.remainingActions -= 1;
   
+  // Reset actions for other creatures in the same group that have already acted
+  attacker.resetGroupActions(allCreatures);
+  
   if (!hit) {
     return {
       success: true,
@@ -180,19 +183,27 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
   }
   
   // Calculate damage
-  const weaponDamage = attacker.equipment.mainHand?.damage || 0;
+  const { getWeaponDamage } = require('../utils/equipment');
+  const weaponDamage = getWeaponDamage(attacker);
   const diceRolls = calculateDamageRoll(attacker.strength, weaponDamage);
   
   // Determine armor value
-  const armorValue = target.equipment.armor?.armor || target.naturalArmor || GAME_SETTINGS.DEFAULT_NATURAL_ARMOR;
+  const { getEffectiveArmor } = require('../utils/equipment');
+  const baseArmorValue = getEffectiveArmor(target);
+  
+  // Apply attacker's weapon armor modifier to target's armor
+  // Negative values reduce target armor (armor-piercing), positive values increase it
+  const attackerWeapon = getMainWeapon(attacker);
+  const weaponArmorModifier = attackerWeapon.armorModifier || 0;
+  const armorValue = baseArmorValue + weaponArmorModifier;
   
   const damage = calculateDamage(diceRolls, armorValue);
   
   // Apply damage
-  target.vitality -= damage;
+  target.remainingVitality -= damage;
   
   // Check if target is defeated
-  const targetDefeated = target.vitality <= 0;
+  const targetDefeated = target.isDead();
   
   // Generate damage message
   const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}`;

@@ -1,95 +1,8 @@
-import { Creature } from '../creatures';
-import { AIState, AIDecision } from './types';
+import { Creature } from '../creatures/index';
+import { AIState, AIDecision, AIBehaviorType } from './types';
 import { chebyshevDistance, getDirectionFromTo } from '../utils/geometry';
-import { calculateVulnerability, calculateHealthRatio } from '../utils/creatureAnalysis';
-import { hasShield } from '../utils/equipment';
 
 // --- AI Combat Logic ---
-
-/**
- * Evaluate whether an AI creature should attack a target
- */
-export function shouldAttack(
-  ai: AIState,
-  creature: Creature,
-  target: Creature,
-  allCreatures: Creature[]
-): boolean {
-  // Check if we have actions remaining
-  if (!creature.hasActionsRemaining()) {
-    return false;
-  }
-  
-  // Check if target is in range
-  const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
-  const attackRange = creature.getAttackRange();
-  
-  if (distance > attackRange) {
-    return false;
-  }
-  
-  // Check if target is alive
-  if (target.vitality <= 0) {
-    return false;
-  }
-  
-  // Base attack probability based on behavior
-  let attackProbability = 0.5; // Default 50% chance
-  
-  switch (ai.behavior) {
-    case 'aggressive':
-      attackProbability = 0.9; // 90% chance to attack
-      break;
-    case 'berserker':
-      attackProbability = 1.0; // Always attack if possible
-      break;
-    case 'defensive':
-      attackProbability = 0.7; // 70% chance to attack
-      break;
-    case 'cautious':
-      attackProbability = 0.6; // 60% chance to attack
-      break;
-    case 'ambush':
-      // Only attack if we have a significant advantage
-      if (distance <= 1 && target.vitality < creature.vitality) {
-        attackProbability = 0.8;
-      } else {
-        attackProbability = 0.2;
-      }
-      break;
-    case 'guard':
-      // Attack if target is close
-      if (distance <= 2) {
-        attackProbability = 0.8;
-      } else {
-        attackProbability = 0.3;
-      }
-      break;
-  }
-  
-  // Adjust based on tactical considerations
-  const tacticalBonus = calculateTacticalBonus(ai, creature, target, allCreatures);
-  attackProbability += tacticalBonus;
-  
-  // Adjust based on health status
-  const healthRatio = calculateHealthRatio(creature);
-  if (healthRatio < 0.3) {
-    // Low health - more cautious
-    attackProbability *= 0.7;
-  } else if (healthRatio > 0.8) {
-    // High health - more aggressive
-    attackProbability *= 1.2;
-  }
-  
-  // Adjust based on target vulnerability
-  const targetVulnerability = calculateVulnerability(target);
-  attackProbability += targetVulnerability * 0.1;
-  
-  // Cap probability between 0 and 1
-  attackProbability = Math.max(0, Math.min(1, attackProbability));
-  
-  return Math.random() < attackProbability;
-}
 
 /**
  * Calculate tactical bonus for attacking
@@ -104,9 +17,9 @@ export function calculateTacticalBonus(
   
   // Check for flanking bonus
   const alliesNearby = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     c.id !== creature.id && 
-    c.constructor.name === creature.constructor.name &&
+    creature.isFriendlyTo(c) &&
     chebyshevDistance(c.x, c.y, target.x, target.y) <= 2
   );
   
@@ -131,9 +44,9 @@ export function calculateTacticalBonus(
   
   // Check if we're in a good position
   const enemiesNearby = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     c.id !== creature.id && 
-    c.constructor.name !== creature.constructor.name &&
+    creature.isHostileTo(c) &&
     chebyshevDistance(c.x, c.y, creature.x, creature.y) <= 2
   );
   
@@ -148,10 +61,6 @@ export function calculateTacticalBonus(
   return bonus;
 }
 
-
-
-
-
 /**
  * Create an attack decision
  */
@@ -163,22 +72,19 @@ export function createAttackDecision(
 ): AIDecision {
   const distance = chebyshevDistance(creature.x, creature.y, target.x, target.y);
   const tacticalBonus = calculateTacticalBonus(ai, creature, target, allCreatures);
-  const targetVulnerability = calculateVulnerability(target);
   
   let priority = 5; // Base priority
   priority += tacticalBonus * 10;
-  priority += targetVulnerability * 2;
   
   // Adjust priority based on behavior
   switch (ai.behavior) {
-    case 'aggressive':
-    case 'berserker':
+    case AIBehaviorType.MELEE:
       priority += 3;
       break;
-    case 'cautious':
-      priority += 1;
+    case AIBehaviorType.RANGED:
+      priority += 2;
       break;
-    case 'defensive':
+    case AIBehaviorType.ANIMAL:
       priority += 2;
       break;
   }
@@ -187,8 +93,6 @@ export function createAttackDecision(
   
   if (tacticalBonus > 0.2) {
     reason += ` (tactical advantage)`;
-  } else if (targetVulnerability > 1) {
-    reason += ` (vulnerable target)`;
   }
   
   return {
@@ -231,7 +135,7 @@ export function shouldFlee(
   allCreatures: Creature[]
 ): boolean {
   // Only consider fleeing if health is low
-  const healthRatio = creature.vitality / (creature.vitality + 10);
+  const healthRatio = creature.remainingVitality / (creature.remainingVitality + 10);
   
   if (healthRatio > 0.4) {
     return false; // Health is good, no need to flee
@@ -239,9 +143,9 @@ export function shouldFlee(
   
   // Count nearby enemies
   const enemiesNearby = allCreatures.filter(c => 
-    c.vitality > 0 && 
+    c.isAlive() && 
     c.id !== creature.id && 
-    c.constructor.name !== creature.constructor.name &&
+    creature.isHostileTo(c) &&
     chebyshevDistance(c.x, c.y, creature.x, creature.y) <= 3
   );
   
@@ -252,14 +156,12 @@ export function shouldFlee(
   
   // Some behaviors are more likely to flee
   switch (ai.behavior) {
-    case 'cautious':
+    case AIBehaviorType.RANGED:
       return healthRatio < 0.5 && enemiesNearby.length > 1;
-    case 'defensive':
-      return healthRatio < 0.6 && enemiesNearby.length > 1;
-    case 'berserker':
-      return false; // Berserkers never flee
-    case 'aggressive':
+    case AIBehaviorType.ANIMAL:
       return healthRatio < 0.3 && enemiesNearby.length > 2;
+    case AIBehaviorType.MELEE:
+      return healthRatio < 0.2 && enemiesNearby.length > 3; // Melee fighters are more stubborn
     default:
       return healthRatio < 0.4 && enemiesNearby.length > 2;
   }
@@ -276,6 +178,6 @@ export function createFleeDecision(
   return {
     type: 'flee',
     priority: 10, // High priority when fleeing
-    reason: `Fleeing from combat (low health: ${creature.vitality})`
+    reason: `Fleeing from combat (low health: ${creature.remainingVitality})`
   };
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import './App.css';
 import { mapDefinition, generateMapTiles } from './maps';
-import { useGameState, resetAllTurns } from './game';
+import { useGameState, endTurnWithAI } from './game';
 import { MapView, GameUI, CreaturePanel } from './components';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers } from './hooks';
@@ -17,8 +17,8 @@ const tileMapData = {
 function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   // Game state management (extracted)
   const [gameState, gameRefs, gameActions] = useGameState(mapDefinition.creatures);
-  const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey } = gameState;
-  const { setCreatures, setSelectedCreatureId, setMessages } = gameActions;
+  const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState } = gameState;
+  const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState } = gameActions;
   const { panRef, viewportRef, lastMovement } = gameRefs;
   
   // Custom hooks for game logic
@@ -61,8 +61,9 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       <GameUI
         messages={messages}
         onEndTurn={() => {
-          resetAllTurns(creatures, setCreatures, setMessages, lastMovement);
+          endTurnWithAI(creatures, tileMapData, setCreatures, setMessages, setAITurnState, lastMovement);
         }}
+        isAITurnActive={aiTurnState.isAITurnActive}
       />
       <CreaturePanel
         selectedCreature={selectedCreature}

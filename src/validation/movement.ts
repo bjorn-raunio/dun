@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { BaseValidationResult } from '../utils/types';
 
 // --- Movement Validation Logic ---

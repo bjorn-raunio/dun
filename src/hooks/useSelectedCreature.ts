@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 
 // --- Selected Creature Hook ---
 

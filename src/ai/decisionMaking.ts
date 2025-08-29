@@ -1,8 +1,9 @@
-import { Creature } from '../creatures';
-import { AIState, AIDecision, AIContext, AIActionResult } from './types';
+import { Creature } from '../creatures/index';
+import { AIState, AIDecision, AIContext, AIActionResult, AIBehaviorType } from './types';
 import { selectBestTarget, updateTargetInformation } from './targeting';
 import { createMovementDecision, updateAIStateAfterMovement } from './movement';
-import { shouldAttack, createAttackDecision, shouldFlee, createFleeDecision, updateAIStateAfterAttack } from './combat';
+import { createAttackDecision, shouldFlee, createFleeDecision, updateAIStateAfterAttack } from './combat';
+import { validateAttack } from '../validation/combat';
 
 // --- AI Decision Making Logic ---
 
@@ -30,14 +31,17 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   const target = selectBestTarget(updatedAI, creature, allCreatures);
   
   // If we have a target in range and can attack, consider attacking
-  if (target && targetsInRange.includes(target) && shouldAttack(updatedAI, creature, target, allCreatures)) {
-    const attackDecision = createAttackDecision(updatedAI, creature, target, allCreatures);
-    return {
-      success: true,
-      action: attackDecision,
-      message: `${creature.name} decides to attack ${target.name}.`,
-      newState: updatedAI
-    };
+  if (target && targetsInRange.includes(target)) {
+    const attackValidation = validateAttack(creature, target, allCreatures);
+    if (attackValidation.isValid) {
+      const attackDecision = createAttackDecision(updatedAI, creature, target, allCreatures);
+      return {
+        success: true,
+        action: attackDecision,
+        message: `${creature.name} decides to attack ${target.name}.`,
+        newState: updatedAI
+      };
+    }
   }
   
   // If we have a target but can't attack, consider moving
@@ -170,9 +174,9 @@ export function executeAIDecision(
 /**
  * Create a default AI state for a creature
  */
-export function createDefaultAIState(behavior: string = 'aggressive'): AIState {
+export function createDefaultAIState(behavior: AIBehaviorType = AIBehaviorType.MELEE): AIState {
   return {
-    behavior: behavior as any,
+    behavior,
     currentTarget: null,
     lastKnownPlayerPositions: new Map(),
     threatAssessment: new Map(),
@@ -180,12 +184,6 @@ export function createDefaultAIState(behavior: string = 'aggressive'): AIState {
       lastMove: null,
       lastAttack: null,
       preferredPositions: []
-    },
-    personality: {
-      aggression: 0.7,
-      caution: 0.3,
-      intelligence: 0.5,
-      adaptability: 0.6
     }
   };
 }
@@ -195,36 +193,16 @@ export function createDefaultAIState(behavior: string = 'aggressive'): AIState {
  */
 export function createAIStateForCreature(creature: Creature, preset?: any): AIState {
   // Determine behavior based on creature type or preset
-  let behavior = 'aggressive';
+  let behavior: AIBehaviorType = AIBehaviorType.MELEE;
   
   if (preset?.aiBehavior) {
-    behavior = preset.aiBehavior;
-  } else if (creature.constructor.name === 'Monster') {
-    // Default monster behaviors based on stats
-    if (creature.agility > 4) {
-      behavior = 'cautious';
-    } else if (creature.strength > 4) {
-      behavior = 'berserker';
-    } else if (creature.combat > 4) {
-      behavior = 'aggressive';
-    } else {
-      behavior = 'defensive';
-    }
+    behavior = preset.aiBehavior as AIBehaviorType;
   }
   
   const baseState = createDefaultAIState(behavior);
   
-  // Customize personality based on creature stats
-  const personality = {
-    aggression: Math.min(1, creature.combat / 5),
-    caution: Math.min(1, creature.agility / 5),
-    intelligence: Math.min(1, (creature.combat + creature.agility) / 10),
-    adaptability: 0.6
-  };
-  
   return {
-    ...baseState,
-    personality
+    ...baseState
   };
 }
 
@@ -232,7 +210,7 @@ export function createAIStateForCreature(creature: Creature, preset?: any): AISt
  * Check if an AI creature should take its turn
  */
 export function shouldAITakeTurn(creature: Creature): boolean {
-  return creature.vitality > 0 && 
+  return creature.isAlive() && 
          (creature.remainingMovement > 0 || creature.remainingActions > 0);
 }
 
@@ -250,7 +228,8 @@ export function getAllPossibleDecisions(context: AIContext): AIDecision[] {
   
   // Check for attack decisions
   for (const target of targetsInRange) {
-    if (shouldAttack(ai, creature, target, allCreatures)) {
+    const attackValidation = validateAttack(creature, target, allCreatures);
+    if (attackValidation.isValid) {
       decisions.push(createAttackDecision(ai, creature, target, allCreatures));
     }
   }

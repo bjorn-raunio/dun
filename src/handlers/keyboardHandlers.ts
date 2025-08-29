@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { GameActions } from '../game/types';
 
 // --- Keyboard Event Handlers ---
@@ -76,10 +76,22 @@ export function createKeyboardHandlers(
               return c.clone(); // Ensure React detects the change
             } else {
               // Fallback for plain objects
-              if (c.kind === "hero") {
-                const hero = new (require('../creatures').Hero)(c);
-                hero.faceDirection(newFacing);
-                return hero;
+              if (c.isPlayerControlled()) {
+                // Handle player-controlled creatures (Hero, Mercenary, etc.)
+                if (c.kind === "hero") {
+                  const hero = new (require('../creatures').Hero)(c);
+                  hero.faceDirection(newFacing);
+                  return hero;
+                } else if (c.kind === "mercenary") {
+                  const mercenary = new (require('../creatures').Mercenary)(c);
+                  mercenary.faceDirection(newFacing);
+                  return mercenary;
+                } else {
+                  // Default to Hero for other player-controlled creatures
+                  const hero = new (require('../creatures').Hero)(c);
+                  hero.faceDirection(newFacing);
+                  return hero;
+                }
               } else {
                 const monster = new (require('../creatures').Monster)(c);
                 monster.faceDirection(newFacing);

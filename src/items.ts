@@ -1,3 +1,9 @@
+// --- ID Generation ---
+let itemIdCounter = 0;
+export function generateItemId(): string {
+  return `item-${++itemIdCounter}`;
+}
+
 // --- Items class hierarchy ---
 export class Item {
   id: string;
@@ -5,8 +11,8 @@ export class Item {
   weight?: number;
   value?: number;
 
-  constructor(params: { id: string; name: string; weight?: number; value?: number }) {
-    this.id = params.id;
+  constructor(params: { id?: string; name: string; weight?: number; value?: number }) {
+    this.id = params.id ?? generateItemId();
     this.name = params.name;
     this.weight = params.weight;
     this.value = params.value;
@@ -20,15 +26,17 @@ export class Weapon extends Item {
   reach?: number; // in tiles or feet
   properties?: string[];
   combatModifier?: number; // bonus to combat rolls
+  armorModifier?: number; // bonus/penalty to armor value
 
   constructor(params: {
-    id: string;
+    id?: string;
     name: string;
     damage: number;
     hands: 1 | 2;
     reach?: number;
     properties?: string[];
     combatModifier?: number;
+    armorModifier?: number;
     weight?: number;
     value?: number;
   }) {
@@ -38,6 +46,7 @@ export class Weapon extends Item {
     this.reach = params.reach;
     this.properties = params.properties;
     this.combatModifier = params.combatModifier;
+    this.armorModifier = params.armorModifier;
   }
 }
 
@@ -48,15 +57,17 @@ export class RangedWeapon extends Item {
   ammoType?: string;
   hands: 1 | 2;
   properties?: string[];
+  armorModifier?: number; // bonus/penalty to armor value
 
   constructor(params: {
-    id: string;
+    id?: string;
     name: string;
     damage: number;
     range: { normal: number; long: number };
     hands: 1 | 2;
     ammoType?: string;
     properties?: string[];
+    armorModifier?: number;
     weight?: number;
     value?: number;
   }) {
@@ -66,6 +77,7 @@ export class RangedWeapon extends Item {
     this.hands = params.hands;
     this.ammoType = params.ammoType;
     this.properties = params.properties;
+    this.armorModifier = params.armorModifier;
   }
 }
 
@@ -77,7 +89,7 @@ export class Armor extends Item {
   strengthRequirement?: number;
 
   constructor(params: {
-    id: string;
+    id?: string;
     name: string;
     armor: number;
     armorType: "light" | "medium" | "heavy";
@@ -101,7 +113,7 @@ export class Shield extends Item {
   special?: string[]; // special properties like "magical", "spiked", etc.
 
   constructor(params: {
-    id: string;
+    id?: string;
     name: string;
     block: number;
     size: "small" | "medium" | "large";
@@ -118,46 +130,45 @@ export class Shield extends Item {
 // --- end Items class hierarchy ---
 
 // --- Reusable item presets and factories ---
-export type WeaponPreset = { name: string; damage: number; hands: 1 | 2; reach?: number; properties?: string[]; combatModifier?: number; weight?: number; value?: number };
+export type WeaponPreset = { name: string; damage: number; hands: 1 | 2; reach?: number; properties?: string[]; combatModifier?: number; armorModifier?: number; weight?: number; value?: number };
 export const weaponPresets: Record<string, WeaponPreset> = {
-  dagger: { name: "Dagger", damage: 0, hands: 1, properties: ["finesse", "light", "thrown"], combatModifier: -1, weight: 1, value: 2 },
-  scimitar: { name: "Scimitar", damage: 0, hands: 1, properties: ["finesse", "light"], weight: 3, value: 25 },
-  broadsword: { name: "Broadsword", damage: 1, hands: 1, properties: ["versatile"], weight: 3, value: 15 },
+  unarmed: { name: "Unarmed", damage: 0, hands: 1, properties: ["light"], combatModifier: -1, armorModifier: 1, weight: 0, value: 0 },
+  dagger: { name: "Dagger", damage: 0, hands: 1, properties: ["finesse", "light", "thrown"], combatModifier: -1, armorModifier: 0, weight: 1, value: 2 },
+  scimitar: { name: "Scimitar", damage: 0, hands: 1, properties: ["finesse", "light"], armorModifier: 0, weight: 3, value: 25 },
+  broadsword: { name: "Broadsword", damage: 1, hands: 1, properties: ["versatile"], armorModifier: 0, weight: 3, value: 15 },
 };
 
-export function createWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof Weapon>[0]> & { id: string }): Weapon {
+export function createWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof Weapon>[0]> & { id?: string }): Weapon {
   const p = weaponPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
   return new Weapon({
-    id,
     name: overrides?.name ?? p.name,
     damage: overrides?.damage ?? p.damage,
     hands: overrides?.hands ?? p.hands,
     reach: overrides?.reach ?? p.reach,
     properties: overrides?.properties ?? p.properties,
     combatModifier: overrides?.combatModifier ?? p.combatModifier,
+    armorModifier: overrides?.armorModifier ?? p.armorModifier,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,
   });
 }
 
-export type RangedWeaponPreset = { name: string; damage: number; range: { normal: number; long: number }; hands: 1 | 2; ammoType?: string; properties?: string[]; weight?: number; value?: number };
+export type RangedWeaponPreset = { name: string; damage: number; range: { normal: number; long: number }; hands: 1 | 2; ammoType?: string; properties?: string[]; armorModifier?: number; weight?: number; value?: number };
 export const rangedPresets: Record<string, RangedWeaponPreset> = {
-  shortbow: { name: "Shortbow", damage: 6, range: { normal: 16, long: 64 }, hands: 2, properties: ["ammunition", "two-handed"], weight: 2, value: 25 },
-  longbow: { name: "Longbow", damage: 8, range: { normal: 20, long: 80 }, hands: 2, properties: ["ammunition", "heavy", "two-handed"], weight: 2, value: 50 },
+  shortbow: { name: "Shortbow", damage: 6, range: { normal: 16, long: 64 }, hands: 2, properties: ["ammunition", "two-handed"], armorModifier: 0, weight: 2, value: 25 },
+  longbow: { name: "Longbow", damage: 8, range: { normal: 20, long: 80 }, hands: 2, properties: ["ammunition", "heavy", "two-handed"], armorModifier: 0, weight: 2, value: 50 },
 };
 
-export function createRangedWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof RangedWeapon>[0]> & { id: string }): RangedWeapon {
+export function createRangedWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof RangedWeapon>[0]> & { id?: string }): RangedWeapon {
   const p = rangedPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
   return new RangedWeapon({
-    id,
     name: overrides?.name ?? p.name,
     damage: overrides?.damage ?? p.damage,
     range: overrides?.range ?? p.range,
     hands: overrides?.hands ?? p.hands,
     ammoType: overrides?.ammoType ?? p.ammoType,
     properties: overrides?.properties ?? p.properties,
+    armorModifier: overrides?.armorModifier ?? p.armorModifier,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,
   });
@@ -175,11 +186,9 @@ export const shieldPresets: Record<string, ShieldPreset> = {
   shield: { name: "Shield", block: 5, size: "medium", weight: 6, value: 10 },
 };
 
-export function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id: string }): Armor {
+export function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id?: string }): Armor {
   const p = armorPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
   return new Armor({
-    id,
     name: overrides?.name ?? p.name,
     armor: overrides?.armor ?? p.armor,
     armorType: overrides?.armorType ?? p.armorType,
@@ -190,11 +199,9 @@ export function createArmor(presetId: string, overrides?: Partial<ConstructorPar
   });
 }
 
-export function createShield(presetId: string, overrides?: Partial<ConstructorParameters<typeof Shield>[0]> & { id: string }): Shield {
+export function createShield(presetId: string, overrides?: Partial<ConstructorParameters<typeof Shield>[0]> & { id?: string }): Shield {
   const p = shieldPresets[presetId];
-  const id = overrides?.id ?? `${presetId}-${Math.random().toString(36).slice(2, 8)}`;
   return new Shield({
-    id,
     name: overrides?.name ?? p.name,
     block: overrides?.block ?? p.block,
     size: overrides?.size ?? p.size,

@@ -1,3 +1,5 @@
+import { AIBehaviorType } from '../ai/types';
+
 // --- Game Constants ---
 
 export const GAME_SETTINGS = {
@@ -68,16 +70,9 @@ export const DIRECTION_ARROWS = {
 } as const;
 
 export const AI_BEHAVIORS = {
-  AGGRESSIVE: 'aggressive',
-  DEFENSIVE: 'defensive',
-  CAUTIOUS: 'cautious',
-  BERSERKER: 'berserker',
-  SUPPORT: 'support',
-  SCOUT: 'scout',
-  GUARD: 'guard',
-  FLEE: 'flee',
-  PATROL: 'patrol',
-  AMBUSH: 'ambush',
+  MELEE: AIBehaviorType.MELEE,
+  RANGED: AIBehaviorType.RANGED,
+  ANIMAL: AIBehaviorType.ANIMAL,
 } as const;
 
 export const COMBAT_CONSTANTS = {

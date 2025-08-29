@@ -1,5 +1,5 @@
 import { Weapon, RangedWeapon } from '../items';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { chebyshevDistanceRect, getCreatureDimensions } from './geometry';
 
 // --- Combat Utilities ---
@@ -24,6 +24,7 @@ export function calculateWeaponRange(creature: Creature): { rangeTiles: number; 
     rangeTiles = Math.max(1, offHand.range.normal);
   }
   
+  // If no weapon equipped, return unarmed range (1)
   return { rangeTiles, isRanged };
 }
 
@@ -34,13 +35,14 @@ export function calculateTargetsInRange(
   attacker: Creature,
   allCreatures: Creature[]
 ): Set<string> {
-  const { rangeTiles } = calculateWeaponRange(attacker);
+  const { getAttackRange } = require('./equipment');
+  const rangeTiles = getAttackRange(attacker);
   const attackerDims = getCreatureDimensions(attacker.size);
   const inRange = new Set<string>();
   
   for (const target of allCreatures) {
-    if (target.kind === attacker.kind) continue; // Same faction
-    if (target.vitality <= 0) continue; // Skip dead creatures
+    if (attacker.isFriendlyTo(target)) continue; // Same faction
+    if (target.isDead()) continue; // Skip dead creatures
     
     const targetDims = getCreatureDimensions(target.size);
     const dist = chebyshevDistanceRect(
@@ -57,7 +59,17 @@ export function calculateTargetsInRange(
 }
 
 /**
- * Get all targets in range for a hero
+ * Get all targets in range for a creature
+ */
+export function getTargetsInRangeForCreature(
+  creature: Creature,
+  allCreatures: Creature[]
+): Set<string> {
+  return calculateTargetsInRange(creature, allCreatures);
+}
+
+/**
+ * Get all targets in range for a hero (deprecated, use getTargetsInRangeForCreature)
  */
 export function getTargetsInRangeForHero(
   hero: Creature,

@@ -1,4 +1,5 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
+import { AITurnState } from '../gameLogic/turnManagement';
 
 // --- Game State Types ---
 
@@ -11,6 +12,7 @@ export type GameState = {
   dragging: boolean;
   reachableKey: number;
   targetsInRangeKey: number;
+  aiTurnState: AITurnState;
 };
 
 export type ViewportState = {
@@ -43,4 +45,5 @@ export type GameActions = {
   setDragging: (dragging: boolean) => void;
   setReachableKey: (updater: (prev: number) => number) => void;
   setTargetsInRangeKey: (updater: (prev: number) => number) => void;
+  setAITurnState: (updater: (prev: AITurnState) => AITurnState) => void;
 };

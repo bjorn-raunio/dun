@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
@@ -41,8 +41,8 @@ export function useEventHandlers(
     handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
       const selected = creatures.find(c => c.id === selectedCreatureId);
 
-      // If a hero is selected and the clicked creature is a monster, handle attack
-      if (selected && selected.kind === "hero" && creature.kind === "monster") {
+          // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
+    if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
         originalOnCreatureClick(creature, e);
         return;
       }

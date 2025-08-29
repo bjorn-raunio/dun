@@ -1,4 +1,4 @@
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { BaseValidationResult } from '../utils/types';
 
 // --- Game Rules Validation Logic ---
@@ -124,7 +124,7 @@ export function validateTurnOrder(
  */
 export function validateCreatureStats(creature: Creature): GameRuleValidationResult {
   // Check if vitality is within valid range
-  if (creature.vitality < 0) {
+  if (creature.remainingVitality < 0) {
     return {
       isValid: false,
       reason: `${creature.name} has negative vitality.`

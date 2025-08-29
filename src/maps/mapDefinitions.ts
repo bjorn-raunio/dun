@@ -1,6 +1,6 @@
 import { MapDefinition, Terrain } from './types';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
-import { Hero, createMonster } from '../creatures';
+import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
 
 // --- Generate tiles from map definition ---
 export const typeToImage: Record<string, string> = {
@@ -35,34 +35,33 @@ export const mapDefinition: MapDefinition = {
     { preset: "horse", x: 18, y: 4, rotation: 270 },
   ],
   creatures: [
-    createMonster("bandit", { id: "c1", x: 5, y: 5 }),
-    createMonster("goblin", { id: "c3", x: 7, y: 3 }),
-    createMonster("orc", { id: "c4", x: 3, y: 7 }),
+    createMonster("bandit", { x: 5, y: 5 }),
+    createMercenary("civilian", { x: 2, y: 2, group: CREATURE_GROUPS.HERO }),
     new Hero({
-      id: "c2",
       name: "Knight",
       x: 1,
       y: 1,
-      image: "creature_knight.png",
+      image: "creatures/knight.png",
       movement: 5,
       actions: 2,
       size: 2, // medium
       facing: 0, // North
       inventory: [
-        createRangedWeapon("longbow", { id: "r1" }),
-        createShield("shield", { id: "s1" }),
+        createRangedWeapon("longbow"),
+        createShield("shield"),
       ],
       equipment: {
-        mainHand: createWeapon("dagger", { id: "sw1" }),
-        offHand: createShield("shield", { id: "sh1" }),
-        armor: createArmor("chainMail", { id: "pl1" }),
+        mainHand: createWeapon("dagger"),
+        offHand: createShield("shield"),
+        armor: createArmor("chainMail"),
       },
       combat: 4,
       ranged: 2,
       strength: 4,
       agility: 3,
-      vitality: 5,
+      remainingVitality: 5,
       naturalArmor: 3,
+      group: CREATURE_GROUPS.HERO,
     }),
   ],
 };

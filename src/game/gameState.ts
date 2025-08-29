@@ -1,6 +1,7 @@
 import React from 'react';
-import { Creature } from '../creatures';
+import { Creature } from '../creatures/index';
 import { GameState, GameRefs, GameActions, ViewportState, PanState } from './types';
+import { initializeAITurnState } from '../gameLogic/turnManagement';
 
 // --- Game State Management ---
 
@@ -29,6 +30,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
   const [messages, setMessages] = React.useState<string[]>([]);
   const [reachableKey, setReachableKey] = React.useState<number>(0);
   const [targetsInRangeKey, setTargetsInRangeKey] = React.useState<number>(0);
+  const [aiTurnState, setAITurnState] = React.useState(initializeAITurnState());
 
   // --- REFS ---
   const dragStart = React.useRef<{ x: number; y: number } | null>(null);
@@ -57,6 +59,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
     dragging,
     reachableKey,
     targetsInRangeKey,
+    aiTurnState,
   };
 
   const gameRefs: GameRefs = {
@@ -79,6 +82,7 @@ export function useGameState(initialCreatures: Creature[]): [GameState, GameRefs
     setDragging,
     setReachableKey,
     setTargetsInRangeKey,
+    setAITurnState,
   };
 
   return [gameState, gameRefs, gameActions];
