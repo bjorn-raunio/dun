@@ -76,6 +76,10 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         creatures={creatures}
         onDeselect={() => setSelectedCreatureId(null)}
         onSelectCreature={(creature) => setSelectedCreatureId(creature.id)}
+        onCreatureUpdate={(creature) => {
+          // Update the creature in the creatures array
+          setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
+        }}
       />
     </div>
   );

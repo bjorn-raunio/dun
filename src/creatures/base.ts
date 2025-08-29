@@ -124,13 +124,13 @@ export abstract class Creature {
   }
 
   // Getter methods for backward compatibility
-  get movement(): number { return this.attributes.movement; }
-  get combat(): number { return this.attributes.combat; }
-  get ranged(): number { return this.attributes.ranged; }
-  get strength(): number { return this.attributes.strength; }
-  get agility(): number { return this.attributes.agility; }
-  get courage(): number { return this.attributes.courage; }
-  get intelligence(): number { return this.attributes.intelligence; }
+  get movement(): number { return this.getEffectiveAttribute(this.attributes.movement); }
+  get combat(): number { return this.getEffectiveAttribute(this.attributes.combat); }
+  get ranged(): number { return this.getEffectiveAttribute(this.attributes.ranged); }
+  get strength(): number { return this.getEffectiveAttribute(this.attributes.strength); }
+  get agility(): number { return this.getEffectiveAttribute(this.attributes.agility); }
+  get courage(): number { return this.getEffectiveAttribute(this.attributes.courage); }
+  get intelligence(): number { return this.getEffectiveAttribute(this.attributes.intelligence); }
 
   // Setter methods for backward compatibility
   set movement(value: number) { this.attributes.movement = value; }
@@ -154,9 +154,25 @@ export abstract class Creature {
     return this.remainingVitality <= 0;
   }
 
+  // Check if creature is wounded based on size and vitality
+  isWounded(): boolean {
+    if (this.size < 4) {
+      // Creatures with size less than 4 are wounded when they have 1 or less remaining vitality
+      return this.remainingVitality <= 1;
+    } else {
+      // Creatures with size 4 are wounded when they have 5 or less remaining vitality
+      return this.remainingVitality <= 5;
+    }
+  }
+
+  // Get effective attribute value considering wounded status
+  private getEffectiveAttribute(baseValue: number): number {
+    return this.isWounded() ? Math.max(1, baseValue - 1) : baseValue;
+  }
+
   // Check if creature has moved this turn
   hasMoved(): boolean {
-    return this.remainingMovement !== this.attributes.movement;
+    return this.remainingMovement !== this.movement;
   }
 
   // Check if creature has actions remaining
@@ -341,7 +357,7 @@ export abstract class Creature {
 
   // Reset movement and actions for new turn
   resetTurn(): void {
-    this.remainingMovement = this.attributes.movement;
+    this.remainingMovement = this.movement;
     this.remainingActions = this.actions;
     this.remainingQuickActions = this.quickActions;
     this.remainingMana = this.mana; // Reset mana to full

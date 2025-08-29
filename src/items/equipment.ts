@@ -109,6 +109,7 @@ export class EquipmentSystem {
    * Validate if an item can be equipped to a specific slot
    */
   validateEquip(item: Item, slot: EquipmentSlot): EquipmentValidation {
+    // First check if the item type is valid for the slot
     switch (slot) {
       case 'mainHand':
         if (!(item instanceof Weapon || item instanceof RangedWeapon)) {
@@ -119,6 +120,13 @@ export class EquipmentSystem {
       case 'offHand':
         if (!(item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield)) {
           return { isValid: false, reason: 'Off hand can only equip weapons or shields', slot };
+        }
+        // Two-handed weapons can only be equipped to main hand
+        if (item instanceof Weapon && item.hands === 2) {
+          return { isValid: false, reason: 'Two-handed weapons can only be equipped to main hand', slot };
+        }
+        if (item instanceof RangedWeapon && item.hands === 2) {
+          return { isValid: false, reason: 'Two-handed weapons can only be equipped to main hand', slot };
         }
         break;
 
@@ -131,6 +139,13 @@ export class EquipmentSystem {
       default:
         return { isValid: false, reason: 'Invalid equipment slot', slot };
     }
+
+    // Then check for conflicts with existing equipment
+    const mainHand = this.slots.mainHand;
+    const offHand = this.slots.offHand;
+
+    // Two-handed weapons can be equipped to main hand even when off-hand is occupied
+    // The equipment logic will handle unequipping the off-hand item
 
     return { isValid: true };
   }

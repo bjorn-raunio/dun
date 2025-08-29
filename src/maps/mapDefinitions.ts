@@ -43,7 +43,19 @@ export const mapDefinition: MapDefinition = {
   creatures: [
     createMonster("bandit", { x: 12, y: 7, facing: 1 }),
     createMonster("bandit", { x: 10, y: 1, facing: 3 }),
-    createMercenary("civilian", { x: 16, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
+    createMercenary("civilian", { 
+      x: 16, 
+      y: 4, 
+      group: CREATURE_GROUPS.HERO, 
+      facing: 6,
+      inventory: [
+        createWeapon("dagger"),
+        createWeapon("broadsword"),
+        createWeapon("greatsword"),
+        createShield("buckler"),
+        createArmor("leather"),
+      ]
+    }),
     //createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
     new Hero({
       name: "Knight",
@@ -65,6 +77,13 @@ export const mapDefinition: MapDefinition = {
       inventory: [
         createRangedWeapon("longbow"),
         createShield("shield"),
+        createWeapon("broadsword"),
+        createWeapon("scimitar"),
+        createWeapon("greatsword"),
+        createWeapon("battleaxe"),
+        createShield("buckler"),
+        createShield("roundShield"),
+        createArmor("leather"),
       ],
       equipment: {
         mainHand: createWeapon("dagger"),

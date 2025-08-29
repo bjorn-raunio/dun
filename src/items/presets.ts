@@ -16,6 +16,8 @@ export const weaponPresets: Record<string, WeaponPreset> = {
   dagger: { name: "Dagger", damage: 0, hands: 1, properties: ["finesse", "light", "thrown"], combatModifier: -1, armorModifier: 0, weight: 1, value: 2 },
   scimitar: { name: "Scimitar", damage: 0, hands: 1, properties: ["finesse", "light"], armorModifier: 0, weight: 3, value: 25 },
   broadsword: { name: "Broadsword", damage: 1, hands: 1, properties: ["versatile"], armorModifier: 0, weight: 3, value: 15 },
+  greatsword: { name: "Greatsword", damage: 2, hands: 2, properties: ["heavy", "two-handed"], armorModifier: -1, weight: 6, value: 50 },
+  battleaxe: { name: "Battleaxe", damage: 1, hands: 2, properties: ["heavy", "two-handed"], armorModifier: 0, weight: 4, value: 30 },
 };
 
 export type RangedWeaponPreset = { 
