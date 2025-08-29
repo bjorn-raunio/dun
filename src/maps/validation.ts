@@ -1,5 +1,6 @@
 import { MapDefinition } from './types';
 import { Hero, CREATURE_GROUPS } from '../creatures/index';
+import { getRandomElement } from '../utils/dice';
 
 // --- Map Validation and Utility Functions ---
 
@@ -28,10 +29,7 @@ export function getAvailableStartingTiles(mapDefinition: MapDefinition): Array<{
  */
 export function getRandomStartingPosition(mapDefinition: MapDefinition): { x: number; y: number; name?: string } | null {
   const available = getAvailableStartingTiles(mapDefinition);
-  if (available.length === 0) return null;
-  
-  const randomIndex = Math.floor(Math.random() * available.length);
-  return available[randomIndex];
+  return getRandomElement(available) || null;
 }
 
 /**

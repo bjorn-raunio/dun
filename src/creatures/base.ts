@@ -3,6 +3,17 @@ import { EquipmentSystem } from '../items/equipment';
 import { calculateDistance, isInBackArc } from '../utils/geometry';
 import { DIRECTION_ARROWS, DIRECTION_NAMES, DIRECTION_SHORT_NAMES } from '../utils/constants';
 
+// --- Attributes System ---
+export interface Attributes {
+  movement: number;
+  combat: number;
+  ranged: number;
+  strength: number;
+  agility: number;
+  courage: number;
+  intelligence: number;
+}
+
 // --- Group System ---
 export type CreatureGroup = "hero" | "enemy" | "neutral";
 
@@ -25,7 +36,7 @@ export abstract class Creature {
   x: number;
   y: number;
   image?: string;
-  movement: number;
+  attributes: Attributes;
   remainingMovement: number;
   actions: number;
   remainingActions: number;
@@ -41,13 +52,7 @@ export abstract class Creature {
     offHand?: Weapon | RangedWeapon | Shield;
     armor?: Armor;
   };
-  combat: number;
-  ranged: number;
-  strength: number;
-  agility: number;
   vitality: number;
-  courage: number;
-  intelligence: number;
   mana: number;
   remainingMana: number;
   fortune: number;
@@ -67,7 +72,7 @@ export abstract class Creature {
     x: number;
     y: number;
     image?: string;
-    movement: number;
+    attributes: Attributes;
     actions: number;
     quickActions?: number;
     mapWidth?: number;
@@ -80,13 +85,7 @@ export abstract class Creature {
       offHand?: Weapon | RangedWeapon | Shield;
       armor?: Armor;
     };
-    combat: number;
-    ranged: number;
-    strength: number;
-    agility: number;
     vitality: number;
-    courage: number;
-    intelligence: number;
     mana: number;
     fortune: number;
     naturalArmor?: number;
@@ -97,8 +96,8 @@ export abstract class Creature {
     this.x = params.x;
     this.y = params.y;
     this.image = params.image;
-    this.movement = params.movement;
-    this.remainingMovement = params.movement;
+    this.attributes = params.attributes;
+    this.remainingMovement = params.attributes.movement;
     this.actions = params.actions;
     this.remainingActions = params.actions;
     this.quickActions = params.quickActions ?? 0;
@@ -109,13 +108,7 @@ export abstract class Creature {
     this.facing = params.facing ?? 0; // Default facing North
     this.inventory = params.inventory ?? [];
     this.equipment = params.equipment ?? {};
-    this.combat = params.combat;
-    this.ranged = params.ranged;
-    this.strength = params.strength;
-    this.agility = params.agility;
     this.vitality = params.vitality;
-    this.courage = params.courage;
-    this.intelligence = params.intelligence;
     this.mana = params.mana;
     this.remainingMana = params.mana; // Initialize remainingMana to full mana
     this.fortune = params.fortune;
@@ -129,6 +122,24 @@ export abstract class Creature {
     this.turnStartY = this.y;
     this.turnStartFacing = this.facing;
   }
+
+  // Getter methods for backward compatibility
+  get movement(): number { return this.attributes.movement; }
+  get combat(): number { return this.attributes.combat; }
+  get ranged(): number { return this.attributes.ranged; }
+  get strength(): number { return this.attributes.strength; }
+  get agility(): number { return this.attributes.agility; }
+  get courage(): number { return this.attributes.courage; }
+  get intelligence(): number { return this.attributes.intelligence; }
+
+  // Setter methods for backward compatibility
+  set movement(value: number) { this.attributes.movement = value; }
+  set combat(value: number) { this.attributes.combat = value; }
+  set ranged(value: number) { this.attributes.ranged = value; }
+  set strength(value: number) { this.attributes.strength = value; }
+  set agility(value: number) { this.attributes.agility = value; }
+  set courage(value: number) { this.attributes.courage = value; }
+  set intelligence(value: number) { this.attributes.intelligence = value; }
 
   // Get the creature's kind (implemented by subclasses)
   abstract get kind(): "hero" | "monster" | "mercenary";
@@ -145,7 +156,7 @@ export abstract class Creature {
 
   // Check if creature has moved this turn
   hasMoved(): boolean {
-    return this.remainingMovement !== this.movement;
+    return this.remainingMovement !== this.attributes.movement;
   }
 
   // Check if creature has actions remaining
@@ -330,7 +341,7 @@ export abstract class Creature {
 
   // Reset movement and actions for new turn
   resetTurn(): void {
-    this.remainingMovement = this.movement;
+    this.remainingMovement = this.attributes.movement;
     this.remainingActions = this.actions;
     this.remainingQuickActions = this.quickActions;
     this.remainingMana = this.mana; // Reset mana to full
@@ -463,7 +474,7 @@ export abstract class Creature {
       x: this.x,
       y: this.y,
       image: this.image,
-      movement: this.movement,
+      attributes: { ...this.attributes },
       actions: this.actions,
       quickActions: this.quickActions,
       mapWidth: this.mapWidth,
@@ -472,13 +483,7 @@ export abstract class Creature {
       facing: this.facing,
       inventory: [...this.inventory],
       equipment: { ...this.equipment },
-      combat: this.combat,
-      ranged: this.ranged,
-      strength: this.strength,
-      agility: this.agility,
       vitality: this.vitality,
-      courage: this.courage,
-      intelligence: this.intelligence,
       mana: this.mana,
       fortune: this.fortune,
       remainingVitality: this.remainingVitality,

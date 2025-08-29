@@ -1,7 +1,7 @@
 import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { chebyshevDistanceRect, getCreatureDimensions, isInBackArc } from './geometry';
-import { calculateCombatRoll, calculateDamageRoll, calculateRangedDamageRoll, rollShieldBlock } from './dice';
+import { calculateCombatRoll, calculateMeleeDamageRoll, calculateRangedDamageRoll, rollD6, isCriticalHit, isDoubleCritical } from './dice';
 import { BaseValidationResult } from './types';
 import { validateCombat } from '../validation/combat';
 // Import equipment system
@@ -109,7 +109,7 @@ export function isBackAttack(attacker: Creature, target: Creature): boolean {
  * @returns Object with block result and message
  */
 export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; message: string } {
-  const roll = rollShieldBlock();
+  const roll = rollD6();
   const blocked = roll >= shieldBlockValue;
   
   const message = blocked 
@@ -156,10 +156,14 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   const targetEquipment = new EquipmentSystem(target.equipment);
   
   // Calculate ranged attack roll (2d6 + ranged attribute)
-  const rangedRoll = calculateCombatRoll(attacker.ranged);
+  const rangedRollResult = calculateCombatRoll(attacker.ranged);
+  const rangedRoll = rangedRollResult.total;
   
-  // Ranged attacks hit on 10 or greater
-  const hit = rangedRoll >= 10;
+  // Check for double critical (ranged attacks can't have defender double criticals)
+  const attackerDoubleCritical = isDoubleCritical(rangedRollResult.dice);
+  
+  // Ranged attacks hit on 10 or greater, but double criticals always hit
+  const hit = attackerDoubleCritical || rangedRoll >= 10;
   
   // Consume action (regardless of hit or miss)
   attacker.remainingActions -= 1;
@@ -167,7 +171,9 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   // Reset actions for other creatures in the same group that have already acted
   attacker.resetGroupActions(allCreatures);
   
-  const toHitMessage = `${attacker.name} makes a ranged attack at ${target.name}: ${rangedRoll} (2d6 + ${attacker.ranged} ranged)`;
+  const toHitMessage = attackerDoubleCritical 
+    ? `${attacker.name} makes a ranged attack at ${target.name}: ${rangedRoll} (2d6 + ${attacker.ranged} ranged) (DOUBLE CRITICAL!) - AUTOMATIC HIT!`
+    : `${attacker.name} makes a ranged attack at ${target.name}: ${rangedRoll} (2d6 + ${attacker.ranged} ranged)`;
   
   if (!hit) {
     return {
@@ -179,6 +185,10 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
     };
   }
   
+  // Check for critical hit (any die rolled a 6 on the attack roll)
+  const criticalHit = isCriticalHit(rangedRollResult.dice);
+  const doubleCritical = attackerDoubleCritical; // Use the already determined value
+  
   // Check for shield blocking
   let shieldBlockMessage = '';
   let damage = 0;
@@ -187,10 +197,18 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   // Check if this is a back attack (shields can't block back attacks)
   const isBackAttackFromAttacker = isBackAttack(attacker, target);
   
-  if (targetEquipment.hasShield(isBackAttackFromAttacker)) {
-    const shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttackFromAttacker);
+  // Double criticals are unblockable
+  if (!doubleCritical && targetEquipment.hasShield(isBackAttackFromAttacker)) {
+    let shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttackFromAttacker);
+    
+    // Critical hits make shields harder to use (increase block value by 1)
+    if (criticalHit) {
+      shieldBlockValue += 1;
+    }
+    
     const shieldResult = checkShieldBlock(shieldBlockValue);
-    shieldBlockMessage = ` ${target.name}'s shield: ${shieldResult.message}`;
+    const criticalShieldText = criticalHit ? " (critical hit +1)" : "";
+    shieldBlockMessage = ` ${target.name}'s shield: ${shieldResult.message}${criticalShieldText}`;
     
     if (shieldResult.blocked) {
       // Shield blocked the attack - no damage
@@ -203,11 +221,20 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
         targetDefeated: false
       };
     }
+  } else if (doubleCritical) {
+    shieldBlockMessage = ` ${target.name}'s shield: Cannot block double critical!`;
   }
   
   // Calculate damage (weapon damage only, no strength)
-  const weaponDamage = attackerEquipment.getWeaponDamage();
+  let weaponDamage = attackerEquipment.getWeaponDamage();
+  // Add damage for critical hits
+  if (doubleCritical) {
+    weaponDamage += 2;
+  } else if (criticalHit) {
+    weaponDamage += 1;
+  }
   const diceRolls = calculateRangedDamageRoll(weaponDamage);
+
   
   // Determine armor value
   const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
@@ -225,7 +252,8 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   targetDefeated = target.isDead();
   
   // Generate damage message
-  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}`;
+  const criticalHitText = doubleCritical ? " (DOUBLE CRITICAL!)" : (criticalHit ? " (CRITICAL HIT!)" : "");
+  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}${criticalHitText}`;
   
   return {
     success: true,
@@ -299,27 +327,61 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
   }
   
   // Roll for combat
-  const attackerRoll = calculateCombatRoll(attackerBonus);
-  const defenderRoll = calculateCombatRoll(defenderBonus);
+  const attackerRollResult = calculateCombatRoll(attackerBonus);
+  const defenderRollResult = calculateCombatRoll(defenderBonus);
+  const attackerRoll = attackerRollResult.total;
+  const defenderRoll = defenderRollResult.total;
+  
+  // Check for double criticals (both attacker and defender)
+  const attackerDoubleCritical = isDoubleCritical(attackerRollResult.dice);
+  const defenderDoubleCritical = isDoubleCritical(defenderRollResult.dice);
   
   // Check if attack hits
   const isBackAttackForHit = isBackAttack(attacker, target);
   const attackerHasShield = attackerEquipment.hasShield();
   const defenderHasShield = targetEquipment.hasShield(isBackAttackForHit);
   
-  const hit = determineHit(
-    attackerRoll,
-    defenderRoll,
-    attacker.agility,
-    target.agility,
-    attackerHasShield,
-    defenderHasShield
-  );
+  // Double criticals always hit unless defender also rolls double 6
+  let hit: boolean;
+  if (attackerDoubleCritical && defenderDoubleCritical) {
+    // Epic tie - both rolled double 6s, use normal hit determination
+    hit = determineHit(
+      attackerRoll,
+      defenderRoll,
+      attacker.agility,
+      target.agility,
+      attackerHasShield,
+      defenderHasShield
+    );
+  } else if (attackerDoubleCritical) {
+    // Attacker double critical - automatic hit
+    hit = true;
+  } else {
+    // Normal hit determination
+    hit = determineHit(
+      attackerRoll,
+      defenderRoll,
+      attacker.agility,
+      target.agility,
+      attackerHasShield,
+      defenderHasShield
+    );
+  }
   
   // Generate to-hit message with modifiers
   const attackerModifierText = attackerModifiers.length > 0 ? ` (${attackerModifiers.join(', ')})` : '';
   const defenderModifierText = defenderModifiers.length > 0 ? ` (${defenderModifiers.join(', ')})` : '';
-  const toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} vs ${defenderRoll}${defenderModifierText}`;
+  
+  let toHitMessage: string;
+  if (attackerDoubleCritical && defenderDoubleCritical) {
+    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} (DOUBLE CRITICAL!) vs ${defenderRoll}${defenderModifierText} (DOUBLE CRITICAL!) - EPIC CLASH!`;
+  } else if (attackerDoubleCritical) {
+    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} (DOUBLE CRITICAL!) vs ${defenderRoll}${defenderModifierText} - AUTOMATIC HIT!`;
+  } else if (defenderDoubleCritical) {
+    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} vs ${defenderRoll}${defenderModifierText} (DOUBLE CRITICAL!)`;
+  } else {
+    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} vs ${defenderRoll}${defenderModifierText}`;
+  }
   
   // Consume action (regardless of hit or miss)
   attacker.remainingActions -= 1;
@@ -337,6 +399,10 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
     };
   }
   
+  // Check for critical hit (any die rolled a 6 on the attack roll)
+  const criticalHit = isCriticalHit(attackerRollResult.dice);
+  const doubleCritical = attackerDoubleCritical; // Use the already determined value
+  
   // Check for shield blocking
   let shieldBlockMessage = '';
   let damage = 0;
@@ -345,10 +411,18 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
   // Check if this is a back attack (shields can't block back attacks)
   const isBackAttackFromAttacker = isBackAttack(attacker, target);
   
-  if (targetEquipment.hasShield(isBackAttackFromAttacker)) {
-    const shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttackFromAttacker);
+  // Double criticals are unblockable
+  if (!doubleCritical && targetEquipment.hasShield(isBackAttackFromAttacker)) {
+    let shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttackFromAttacker);
+    
+    // Critical hits make shields harder to use (increase block value by 1)
+    if (criticalHit) {
+      shieldBlockValue += 1;
+    }
+    
     const shieldResult = checkShieldBlock(shieldBlockValue);
-    shieldBlockMessage = ` ${target.name}'s shield: ${shieldResult.message}`;
+    const criticalShieldText = criticalHit ? " (critical hit +1)" : "";
+    shieldBlockMessage = ` ${target.name}'s shield: ${shieldResult.message}${criticalShieldText}`;
     
     if (shieldResult.blocked) {
       // Shield blocked the attack - no damage
@@ -361,13 +435,22 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
         targetDefeated: false
       };
     }
+  } else if (doubleCritical) {
+    shieldBlockMessage = ` ${target.name}'s shield: Cannot block double critical!`;
   } else if (targetEquipment.hasShield(false) && isBackAttackFromAttacker) {
     shieldBlockMessage = ` ${target.name}'s shield: Cannot block back attack!`;
   }
   
   // Calculate damage
-  const weaponDamage = attackerEquipment.getWeaponDamage();
-  const diceRolls = calculateDamageRoll(attacker.strength, weaponDamage);
+  let weaponDamage = attackerEquipment.getWeaponDamage();
+  // Add damage for critical hits
+  if (doubleCritical) {
+    weaponDamage += 2;
+  } else if (criticalHit) {
+    weaponDamage += 1;
+  }
+  const diceRolls = calculateMeleeDamageRoll(attacker.strength, weaponDamage);
+  
   
   // Determine armor value
   const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
@@ -386,7 +469,8 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
   targetDefeated = target.isDead();
   
   // Generate damage message
-  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}`;
+  const criticalHitText = doubleCritical ? " (DOUBLE CRITICAL!)" : (criticalHit ? " (CRITICAL HIT!)" : "");
+  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}${criticalHitText}`;
   
   return {
     success: true,

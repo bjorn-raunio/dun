@@ -167,15 +167,21 @@ const hero = new Hero({
   name: 'Adventurer',
   x: 5,
   y: 5,
-  movement: 6,
+  attributes: {
+    movement: 6,
+    combat: 4,
+    ranged: 2,
+    strength: 3,
+    agility: 3,
+    courage: 3,
+    intelligence: 3,
+  },
   actions: 2,
   quickActions: 1,  // Optional: defaults to 0 if not specified
   size: 2,
-  combat: 4,
-  ranged: 2,
-  strength: 3,
-  agility: 3,
-  remainingVitality: 6,
+  vitality: 6,
+  mana: 3,
+  fortune: 3,
   group: 'hero'  // Automatically set for Hero class
 });
 
@@ -223,14 +229,20 @@ const customMercenary = new Mercenary({
   name: 'Veteran Fighter',
   x: 12,
   y: 12,
-  movement: 6,
+  attributes: {
+    movement: 6,
+    combat: 5,
+    ranged: 1,
+    strength: 4,
+    agility: 3,
+    courage: 3,
+    intelligence: 3,
+  },
   actions: 2,
   size: 2,
-  combat: 5,
-  ranged: 1,
-  strength: 4,
-  agility: 3,
-  remainingVitality: 6,
+  vitality: 6,
+  mana: 3,
+  fortune: 3,
   hireCost: 150,
   group: 'hero'
 });
@@ -342,8 +354,24 @@ This ensures that all creatures can engage in combat, even without weapons. The 
 // Creature without weapons
 const unarmedCreature = new Hero({
   name: "Bare Fists",
-  // ... other properties
+  x: 0,
+  y: 0,
+  attributes: {
+    movement: 5,
+    combat: 3,
+    ranged: 2,
+    strength: 3,
+    agility: 3,
+    courage: 3,
+    intelligence: 3,
+  },
+  actions: 1,
+  size: 2,
+  vitality: 5,
+  mana: 3,
+  fortune: 3,
   equipment: {}, // No weapons
+  group: 'hero',
 });
 
 // Will automatically use unarmed weapon
@@ -370,10 +398,26 @@ Weapons and ranged weapons can modify the armor of targets they attack. This all
 // Creature with armor-piercing weapon
 const armorPiercer = new Hero({
   name: "Armor Piercer",
-  // ... other properties
+  x: 0,
+  y: 0,
+  attributes: {
+    movement: 5,
+    combat: 4,
+    ranged: 2,
+    strength: 4,
+    agility: 3,
+    courage: 3,
+    intelligence: 3,
+  },
+  actions: 1,
+  size: 2,
+  vitality: 5,
+  mana: 3,
+  fortune: 3,
   equipment: {
     mainHand: createWeapon("armorPiercingSword"), // -1 armor modifier
   },
+  group: 'hero',
 });
 
 // When attacking a target with 5 armor
