@@ -75,6 +75,11 @@ export class Monster extends Creature {
     this.aiState = createAIStateForCreature(this, params.preset);
   }
 
+  // --- Abstract Method Implementation ---
+  protected createInstance(params: any): Creature {
+    return new Monster(params);
+  }
+
   /**
    * Get the current AI state
    */

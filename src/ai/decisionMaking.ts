@@ -10,6 +10,7 @@ import { executeMovement } from '../game/movement';
 import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 import { createAIDecision, validateAIAction } from './helpers';
+import creatureServices from '../creatures/services';
 
 // --- AI Decision Making Logic ---
 
@@ -178,7 +179,7 @@ export function executeAIDecision(
     case 'move':
       if (decision.destination) {
         // Get the actual movement cost and path from the reachable tiles calculation
-        const { costMap, pathMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+        const { costMap, pathMap } = creatureServices.getMovementService().getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
         const destKey = `${decision.destination.x},${decision.destination.y}`;
         const cost = costMap.get(destKey) ?? Infinity;
         const path = pathMap.get(destKey);

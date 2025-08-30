@@ -9,6 +9,7 @@ import { getLivingCreatures } from '../validation/creature';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { AIBehaviorType } from '../ai/types';
 import { logTurn, logAI } from '../utils/logging';
+import creatureServices from '../creatures/services';
 
 // --- Turn Management Logic ---
 
@@ -181,7 +182,7 @@ export function executeAITurnForCreature(
   // Continue taking actions until no progress is made (remaining actions/movement/quick actions don't change)
   while (true) {
     // Get updated reachable tiles and targets in range (may have changed after movement)
-    const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+    const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = creatureServices.getMovementService().getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
     const targetsInRangeIds = calculateTargetsInRange(creature, allCreatures);
     const targetsInRange = allCreatures.filter(c => targetsInRangeIds.has(c.id));
 

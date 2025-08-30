@@ -1,4 +1,5 @@
 import { Creature } from './base';
+import { ICreatureMovement } from './interfaces';
 import { PathfindingSystem } from '../utils/pathfinding';
 import { 
   isInZoneOfControl, 
@@ -8,9 +9,9 @@ import {
 import { updateCombatStates } from '../utils/combatStateUtils';
 
 // Movement and pathfinding logic for creatures
-export class CreatureMovement {
+export class CreatureMovement implements ICreatureMovement {
   // Calculate reachable tiles for this creature
-  static getReachableTiles(
+  getReachableTiles(
     creature: Creature, 
     allCreatures: Creature[], 
     mapData: { tiles: string[][] }, 
@@ -29,12 +30,8 @@ export class CreatureMovement {
     );
   }
 
-
-
-
-
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
-  static moveTo(creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []): { success: boolean; message?: string } {
+  moveTo(creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []): { success: boolean; message?: string } {
     if (path.length === 0) {
       return { success: false, message: "No path provided for movement." };
     }
@@ -99,14 +96,27 @@ export class CreatureMovement {
       // Face the direction of movement
       creature.faceTowards(nextTile.x, nextTile.y);
       
-      // Update position to the next tile
+      // Update combat states for all creatures
+      updateCombatStates(allCreatures);
+      
+      // Move to the next position
       creature.x = nextTile.x;
       creature.y = nextTile.y;
     }
     
-    // Update combat states for all creatures after movement
-    updateCombatStates(allCreatures);
-    
     return { success: true };
   }
 }
+
+// --- Static Methods for Backward Compatibility ---
+// These are kept for existing code that uses the static methods
+
+export const getReachableTiles = (creature: Creature, allCreatures: Creature[], mapData: any, cols: number, rows: number, mapDefinition?: any) => {
+  const movement = new CreatureMovement();
+  return movement.getReachableTiles(creature, allCreatures, mapData, cols, rows, mapDefinition);
+};
+
+export const moveTo = (creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []) => {
+  const movement = new CreatureMovement();
+  return movement.moveTo(creature, path, allCreatures);
+};

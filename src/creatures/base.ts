@@ -11,12 +11,14 @@ import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
 import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
+import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
 import { Item } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
+import creatureServices from './services';
 
 // --- Refactored Base Creature Class ---
-export abstract class Creature {
+export abstract class Creature implements ICreature {
   // Core properties
   id: string;
   name: string;
@@ -39,11 +41,11 @@ export abstract class Creature {
   naturalArmor: number;
   group: CreatureGroup;
 
-  // Manager instances
-  private stateManager: CreatureStateManager;
-  private positionManager: CreaturePositionManager;
-  private combatManager: CreatureCombatManager;
-  private relationshipsManager: CreatureRelationshipsManager;
+  // Manager instances - now using interfaces
+  private stateManager: ICreatureStateManager;
+  private positionManager: ICreaturePositionManager;
+  private combatManager: ICreatureCombatManager;
+  private relationshipsManager: ICreatureRelationshipsManager;
 
   constructor(params: CreatureConstructorParams) {
     this.id = params.id ?? generateCreatureId();
@@ -206,8 +208,6 @@ export abstract class Creature {
     });
   }
 
-
-
   // --- Position Methods ---
   getFacingDegrees(): number { return this.positionManager.getFacingDegrees(); }
   getFacingArrow(): string { return this.positionManager.getFacingArrow(); }
@@ -284,18 +284,15 @@ export abstract class Creature {
 
   // --- Movement and Combat Delegation ---
   getReachableTiles(allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any {
-    const { CreatureMovement } = require('./movement');
-    return CreatureMovement.getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
+    return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
   moveTo(path: Array<{x: number; y: number}>, allCreatures: any[] = []): { success: boolean; message?: string } {
-    const { CreatureMovement } = require('./movement');
-    return CreatureMovement.moveTo(this, path, allCreatures);
+    return creatureServices.getMovementService().moveTo(this, path, allCreatures);
   }
 
   attack(target: any, allCreatures: any[] = [], mapDefinition?: any): any {
-    const { executeCombat } = require('../utils/combatUtils');
-    const result = executeCombat(this, target, allCreatures, mapDefinition);
+    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition);
     
     return {
       hit: result.success,
@@ -334,19 +331,10 @@ export abstract class Creature {
       ...overrides
     };
 
-    // Import dynamically to avoid circular dependencies
-    const { Hero } = require('./hero');
-    const { Monster } = require('./monster');
-    const { Mercenary } = require('./mercenary');
-
-    if (this instanceof Hero) {
-      return new Hero(params);
-    } else if (this instanceof Monster) {
-      return new Monster(params);
-    } else if (this instanceof Mercenary) {
-      return new Mercenary(params);
-    }
-    
-    throw new Error("Unknown creature type");
+    // Use abstract method to create the appropriate instance
+    return this.createInstance(params);
   }
+
+  // --- Abstract Factory Method ---
+  protected abstract createInstance(params: any): Creature;
 }

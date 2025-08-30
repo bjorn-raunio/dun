@@ -21,6 +21,11 @@ export class Mercenary extends Creature {
     this.hireCost = params.hireCost || 50;
   }
 
+  // --- Abstract Method Implementation ---
+  protected createInstance(params: any): Creature {
+    return new Mercenary(params);
+  }
+
   // Clone mercenary with all properties
   clone(overrides?: Partial<Mercenary>): Mercenary {
     // Use parent class clone method for common properties
