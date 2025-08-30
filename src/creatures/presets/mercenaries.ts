@@ -11,7 +11,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
       combat: 3,
       ranged: 5,
       strength: 2,
-      agility: 4,
+      agility: 3,
       courage: 1,
       intelligence: 2,
     },

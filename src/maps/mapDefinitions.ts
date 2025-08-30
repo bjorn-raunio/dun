@@ -42,7 +42,7 @@ export const mapDefinition: MapDefinition = {
   ],
   creatures: [
     // Bandits with different loadouts
-    createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
+    //createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
     createMonster("shooter", "bandits", { x: 10, y: 1, facing: 3, weaponLoadout: "shortbow" }),
     
     createMercenary("civilian", { 

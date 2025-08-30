@@ -4,7 +4,7 @@ import { selectBestTarget, updateTargetInformation } from './targeting';
 import { createMovementDecision, updateAIStateAfterMovement } from './movement';
 import { shouldFlee, createFleeDecision, updateAIStateAfterAttack, isTargetValid } from './combat';
 import { calculateTargetsInRange } from '../utils/combat';
-import { canAttackImmediately } from '../utils/pathfinding';
+import { canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { validateCombat } from '../validation/combat';
 import { executeMovement } from '../game/movement';
 import { CreatureMovement } from '../creatures/movement';
@@ -87,9 +87,57 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   const canAttackNow = canAttackImmediately(creature, target);
   const attackValidation = canAttackNow ? validateCombat(creature, target, allCreatures, mapDefinition) : { isValid: false };
   
-  // If we can attack now, prioritize attacking over movement
+  // For ranged creatures, check if we have line of sight before attacking
+  const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
+  const isRangedBehavior = updatedAI.behavior === AIBehaviorType.RANGED;
+  
   if (canAttackNow && attackValidation.isValid) {
-    // Attack from current position - no movement when already in attack range
+    // For ranged creatures, check line of sight
+    if ((hasRangedWeapon || isRangedBehavior) && context.mapData && context.mapDefinition) {
+      const hasLineOfSight = isCreatureVisible(
+        creature.x, 
+        creature.y, 
+        target, 
+        context.mapData, 
+        context.mapData.tiles[0].length, 
+        context.mapData.tiles.length, 
+        context.mapDefinition, 
+        {}, 
+        creature, 
+        allCreatures
+      );
+      
+      // If we don't have line of sight, try to move instead of attacking
+      if (!hasLineOfSight) {
+        if (context.reachableTiles.length > 0) {
+          const movementDecision = createMovementDecision(
+            updatedAI, 
+            creature, 
+            allCreatures, 
+            context.reachableTiles, 
+            context.reachableTilesCostMap, 
+            target, 
+            context.mapData, 
+            context.mapData.tiles[0].length, 
+            context.mapData.tiles.length, 
+            context.mapDefinition
+          );
+          
+          if (movementDecision) {
+            const message = createMovementMessage(creature.name, target.name, updatedAI.currentTarget === null);
+            
+            return {
+              success: true,
+              action: movementDecision,
+              message,
+              newState: updatedAI
+            };
+          }
+        }
+      }
+    }
+    
+    // Attack from current position - no movement when already in attack range and have line of sight
     const attackDecision = createAIDecision('attack', {
       target,
       priority: 8,
@@ -310,7 +358,9 @@ export function shouldMoveBeforeAttack(
   creature: Creature, 
   target: Creature, 
   movementDecision: AIDecision, 
-  allCreatures: Creature[]
+  allCreatures: Creature[],
+  mapData?: { tiles: string[][] },
+  mapDefinition?: any
 ): boolean {
   if (movementDecision.type !== 'move' || !movementDecision.destination) {
     return false;
@@ -332,6 +382,47 @@ export function shouldMoveBeforeAttack(
   const attackRange = creature.getAttackRange();
   const currentlyInRange = currentDistance <= attackRange;
   const wouldBeInRange = newDistance <= attackRange;
+  
+  // For ranged creatures, also check line of sight
+  const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
+  
+  if (hasRangedWeapon && mapData && mapDefinition) {
+    const currentHasLOS = isCreatureVisible(
+      creature.x, 
+      creature.y, 
+      target, 
+      mapData, 
+      mapData.tiles[0].length, 
+      mapData.tiles.length, 
+      mapDefinition, 
+      {}, 
+      creature, 
+      allCreatures
+    );
+    
+    const newHasLOS = isCreatureVisible(
+      movementDecision.destination.x, 
+      movementDecision.destination.y, 
+      target, 
+      mapData, 
+      mapData.tiles[0].length, 
+      mapData.tiles.length, 
+      mapDefinition, 
+      {}, 
+      creature, 
+      allCreatures
+    );
+    
+    // If we don't have line of sight now but would have it after movement, definitely move
+    if (!currentHasLOS && newHasLOS) {
+      return true;
+    }
+    
+    // If we have line of sight now but would lose it after movement, don't move
+    if (currentHasLOS && !newHasLOS) {
+      return false;
+    }
+  }
   
   // If we're not in range and movement would get us in range, definitely move
   if (!currentlyInRange && wouldBeInRange) {

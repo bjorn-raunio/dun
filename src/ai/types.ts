@@ -33,6 +33,7 @@ export interface AIMovementOption {
     tacticalAdvantage?: boolean;
     inAttackRange?: boolean;
     combatBonus?: boolean;
+    hasLineOfSight?: boolean;
   };
   risks: {
     exposedToAttack?: boolean;

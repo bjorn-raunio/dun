@@ -169,12 +169,44 @@ export function executeToHitRollRanged(
     criticalHit = false;
   }
 
-  // Ranged attacks hit on 10 or greater, but double criticals always hit
-  const hit = attackerDoubleCritical || toHitRoll >= 10;
+  // Apply range penalty: -1 over 3, -2 over 6, -3 over 9
+  let rangePenalty = 0;
+  if (distance > 9) {
+    rangePenalty = -3;
+  } else if (distance > 6) {
+    rangePenalty = -2;
+  } else if (distance > 3) {
+    rangePenalty = -1;
+  }
+
+  // Apply agility penalty: -1 to hit if target has higher agility
+  let agilityPenalty = 0;
+  if (target.agility > attacker.agility) {
+    agilityPenalty = -1;
+  }
+
+  // Apply movement penalty: -1 if moved up to half movement, -2 if moved more than half
+  let movementPenalty = 0;
+  const maxMovement = attacker.movement;
+  const movementUsed = maxMovement - attacker.remainingMovement;
+  
+  if (movementUsed > 0) {
+    const halfMovement = Math.ceil(maxMovement / 2);
+    
+    if (movementUsed <= halfMovement) {
+      movementPenalty = -1;
+    } else {
+      movementPenalty = -2;
+    }
+  }
+  
+  // Ranged attacks hit on 10 or greater (with all penalties), but double criticals always hit
+  const totalPenalty = agilityPenalty + movementPenalty + rangePenalty;
+  const hit = attackerDoubleCritical || (toHitRoll + totalPenalty) >= 10;
 
   const toHitMessage = attackerDoubleCritical
     ? `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged) (DOUBLE CRITICAL!) - AUTOMATIC HIT!`
-    : `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged)`;
+    : `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged)${totalPenalty < 0 ? ` (total penalty ${totalPenalty})` : ''}`;
 
   return {
     hit,
