@@ -60,6 +60,7 @@ export abstract class Creature {
   naturalArmor: number;
   hasMovedWhileEngaged: boolean; // Track if creature has moved while engaged this turn
   group: CreatureGroup; // Which group this creature belongs to
+  isInCombat: boolean; // Track if creature is in combat (enemy within 12 tiles)
 
   // New properties for turn start position tracking
   turnStartX: number;
@@ -116,6 +117,7 @@ export abstract class Creature {
     this.naturalArmor = params.naturalArmor ?? 3;
     this.hasMovedWhileEngaged = false;
     this.group = params.group;
+    this.isInCombat = false; // Initialize combat state
 
     // Initialize new properties
     this.turnStartX = this.x;
@@ -297,6 +299,44 @@ export abstract class Creature {
       this.isHostileTo(creature)
     );
   }
+
+  // --- Combat State Management ---
+
+  // Check if this creature is currently in combat (enemy within 12 tiles)
+  checkCombatState(allCreatures: Creature[]): boolean {
+    const hostileCreatures = this.getHostileCreaturesByGroup(allCreatures);
+    
+    for (const enemy of hostileCreatures) {
+      const distance = calculateDistance(this.x, this.y, enemy.x, enemy.y, 'chebyshev');
+      if (distance <= 12) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Update combat state based on current position and enemies
+  updateCombatState(allCreatures: Creature[]): void {
+    this.isInCombat = this.checkCombatState(allCreatures);
+  }
+
+  // Get whether this creature is currently in combat
+  getCombatState(): boolean {
+    return this.isInCombat;
+  }
+
+  // Get all enemies within combat range (12 tiles)
+  getEnemiesInCombatRange(allCreatures: Creature[]): Creature[] {
+    const hostileCreatures = this.getHostileCreaturesByGroup(allCreatures);
+    
+    return hostileCreatures.filter(enemy => {
+      const distance = calculateDistance(this.x, this.y, enemy.x, enemy.y, 'chebyshev');
+      return distance <= 12;
+    });
+  }
+
+  // --- Engagement Logic ---
 
   // Get all friendly creatures (from same group)
   getFriendlyCreaturesByGroup(allCreatures: Creature[]): Creature[] {
@@ -537,6 +577,7 @@ export abstract class Creature {
       naturalArmor: this.naturalArmor,
       hasMovedWhileEngaged: this.hasMovedWhileEngaged,
       group: this.group,
+      isInCombat: this.isInCombat,
       ...overrides
     };
 

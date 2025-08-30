@@ -5,6 +5,7 @@ import {
   getEngagingCreatures,
   canMoveToWhenEngaged
 } from '../utils/zoneOfControl';
+import { updateCombatStates } from '../utils/combatStateUtils';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement {
@@ -102,6 +103,9 @@ export class CreatureMovement {
       creature.x = nextTile.x;
       creature.y = nextTile.y;
     }
+    
+    // Update combat states for all creatures after movement
+    updateCombatStates(allCreatures);
     
     return { success: true };
   }

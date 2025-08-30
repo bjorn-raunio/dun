@@ -375,7 +375,7 @@ export function MapView({
                     width: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
                     height: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
                     borderRadius: "50%",
-                                         background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
+                    background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
                     border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
                     boxSizing: "border-box",
                     pointerEvents: "none",

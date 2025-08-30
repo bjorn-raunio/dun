@@ -7,6 +7,7 @@ import { validateCombat } from '../validation/combat';
 // Import equipment system
 import { EquipmentSystem } from '../items/equipment';
 import { Weapon } from '../items/types';
+import { updateCombatStates } from './combatStateUtils';
 
 // --- Combat Utilities Module ---
 
@@ -441,11 +442,18 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
 
   // Check if this is a ranged attack
   const equipment = new EquipmentSystem(attacker.equipment);
+  let result: CombatResult;
+  
   if (equipment.hasRangedWeapon()) {
-    return executeRangedCombat(attacker, target, allCreatures);
+    result = executeRangedCombat(attacker, target, allCreatures);
+  } else {
+    result = executeMeleeCombat(attacker, target, allCreatures, mapDefinition);
   }
   
-  return executeMeleeCombat(attacker, target, allCreatures, mapDefinition);
+  // Update combat states for all creatures after combat
+  updateCombatStates(allCreatures);
+  
+  return result;
 }
 
 /**

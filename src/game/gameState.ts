@@ -3,6 +3,7 @@ import { Creature } from '../creatures/index';
 import { GameState, GameRefs, GameActions, ViewportState, PanState, TurnState } from './types';
 import { initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
+import { updateCombatStates } from '../utils/combatStateUtils';
 
 // --- Game State Management ---
 
@@ -64,6 +65,11 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
   const [targetsInRangeKey, setTargetsInRangeKey] = React.useState<number>(0);
   const [aiTurnState, setAITurnState] = React.useState(initializeAITurnState());
   const [turnState, setTurnState] = React.useState<TurnState>(() => initializeTurnState(initialCreatures));
+
+  // Initialize combat states when creatures are first loaded
+  React.useEffect(() => {
+    updateCombatStates(creatures);
+  }, []); // Only run once on mount
 
   // --- REFS ---
   const dragStart = React.useRef<{ x: number; y: number } | null>(null);
