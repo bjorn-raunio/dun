@@ -20,6 +20,12 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
   const heroes = creatures.filter(creature => creature.isHeroGroup());
 
   const handleEquip = (creature: Creature, item: Item, slot: EquipmentSlot) => {
+    // Prevent equipment changes for AI-controlled creatures
+    if (creature.isAIControlled()) {
+      alert(`Cannot equip ${item.name}: Equipment cannot be changed for AI-controlled creatures`);
+      return;
+    }
+
     // Check if this is a weapon/shield switch (equipping a weapon or shield to mainHand or offHand)
     const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') &&
       (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
@@ -116,6 +122,13 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
   };
 
   const handleUnequip = (creature: Creature, slot: EquipmentSlot) => {
+    // Prevent equipment changes for AI-controlled creatures
+    if (creature.isAIControlled()) {
+      const item = creature.equipment[slot];
+      alert(`Cannot unequip ${item ? item.name : 'item'}: Equipment cannot be changed for AI-controlled creatures`);
+      return;
+    }
+
     // Check if this is unequipping a weapon or shield from mainHand or offHand
     const item = creature.equipment[slot];
     const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') &&
@@ -245,6 +258,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
 
     const item = selectedCreature.equipment[slot];
     const canUnequip = canUnequipWeaponOrShield(slot);
+    const isAIControlled = selectedCreature.isAIControlled();
 
     return (
       <div key={slot} style={{ marginBottom: 8 }}>
@@ -272,7 +286,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
             )}
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
-            {item && (
+            {item && !isAIControlled && (
               <button
                 onClick={() => handleUnequip(selectedCreature, slot)}
                 disabled={!canUnequip}
@@ -310,6 +324,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
 
     const canSwitchMainHand = canSwitchWeaponOrShield(item, 'mainHand');
     const canSwitchOffHand = canSwitchWeaponOrShield(item, 'offHand');
+    const isAIControlled = selectedCreature.isAIControlled();
 
     return (
       <div key={item.id} style={{
@@ -332,7 +347,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
           </div>
         </div>
         <div style={{ display: 'flex', gap: 2 }}>
-          {canEquipMainHand && (
+          {canEquipMainHand && !isAIControlled && (
             <button
               onClick={() => handleEquip(selectedCreature, item, 'mainHand')}
               disabled={!canSwitchMainHand}
@@ -349,7 +364,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
               MH
             </button>
           )}
-          {canEquipOffHand && (
+          {canEquipOffHand && !isAIControlled && (
             <button
               onClick={() => handleEquip(selectedCreature, item, 'offHand')}
               disabled={!canSwitchOffHand}
@@ -366,7 +381,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
               OH
             </button>
           )}
-          {canEquipArmor && (
+          {canEquipArmor && !isAIControlled && (
             <button
               onClick={() => handleEquip(selectedCreature, item, 'armor')}
               disabled={!canSwitchWeaponOrShield(item, 'armor')}
@@ -477,7 +492,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
             <div>Quick Actions: <strong>{selectedCreature.remainingQuickActions}/{selectedCreature.quickActions}</strong></div>
           </div>
 
-          {selectedCreature.isHeroGroup() && (
+          {true && (
             <div style={{ marginTop: 12, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
               <div style={{ fontWeight: 700, marginBottom: 8 }}>Equipment</div>
               {renderEquipmentItem('mainHand', 'Main Hand')}

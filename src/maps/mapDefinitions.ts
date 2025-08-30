@@ -41,8 +41,17 @@ export const mapDefinition: MapDefinition = {
     { x: 1, y: 2, name: "Hero Starting Position 4" },
   ],
   creatures: [
-    createMonster("bandit", { x: 12, y: 7, facing: 1 }),
-    createMonster("bandit", { x: 10, y: 1, facing: 3 }),
+    // Bandits with different loadouts
+    createMonster("bandit", { x: 12, y: 7, facing: 1, loadout: "aggressive" }),
+    createMonster("bandit", { x: 10, y: 1, facing: 3, loadout: "defensive" }),
+    createMonster("bandit_archer", { x: 15, y: 8, facing: 2, loadout: "crossbowman" }),
+    createMonster("bandit_leader", { x: 14, y: 6, facing: 0, loadout: "berserker" }),
+    
+    // Undead monsters using the same loadouts
+    createMonster("skeleton", { x: 20, y: 10, facing: 2, loadout: "aggressive" }),
+    createMonster("skeleton_archer", { x: 22, y: 12, facing: 4, loadout: "crossbowman" }),
+    createMonster("skeleton_warrior", { x: 24, y: 10, facing: 6, loadout: "tactician" }),
+    
     createMercenary("civilian", { 
       x: 16, 
       y: 4, 
@@ -76,7 +85,7 @@ export const mapDefinition: MapDefinition = {
         armor: createArmor("chainMail"),
       },
       vitality: 5,
-      mana: 3,
+      mana: 0,
       fortune: 3,
       naturalArmor: 3,
       group: CREATURE_GROUPS.HERO,

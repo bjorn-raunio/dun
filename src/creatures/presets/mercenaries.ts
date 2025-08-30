@@ -16,12 +16,9 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
       intelligence: 2,
     },
     size: 2,
-    facing: 0,
     inventory: [],
     equipment: {},
     vitality: 4,
-    mana: 0,
-    fortune: 1,
     hireCost: 75,
   },
   archer: {
@@ -37,7 +34,6 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
       intelligence: 2,
     },
     size: 2,
-    facing: 0,
     inventory: [
       { type: "ranged_weapon", preset: "longbow" },
     ],
@@ -46,8 +42,6 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
       armor: { type: "armor", preset: "leather" }
     },
     vitality: 4,
-    mana: 0,
-    fortune: 1,
     hireCost: 100,
   },
 };

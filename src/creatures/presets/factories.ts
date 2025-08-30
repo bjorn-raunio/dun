@@ -1,9 +1,10 @@
 import { Monster, Mercenary, CREATURE_GROUPS } from '../index';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../../items';
 import { MONSTER_FACTIONS } from '../monster';
-import { monsterPresets } from './monsters';
+import { monsterPresets, monsterPresetsByFaction } from './monsters';
 import { mercenaryPresets } from './mercenaries';
 import { MonsterPreset, MercenaryPreset } from './types';
+import { getLoadoutById } from './loadouts';
 
 // --- Factory Functions ---
 
@@ -67,15 +68,41 @@ function createEquipmentFromPreset(preset: MonsterPreset | MercenaryPreset): any
  */
 export function createMonster(
   presetId: string, 
-  overrides?: Partial<Monster> & { id?: string; x: number; y: number }
+  overrides?: Partial<Monster> & { id?: string; x: number; y: number; loadout?: string }
 ): Monster {
   const p = monsterPresets[presetId];
   if (!p) {
     throw new Error(`Monster preset "${presetId}" not found`);
   }
 
-  const inventory = createInventoryFromPreset(p);
-  const equipment = createEquipmentFromPreset(p);
+  // Determine faction from preset location in monsterPresetsByFaction
+  let faction: string = MONSTER_FACTIONS.bandits.id; // default
+  for (const [factionId, factionPresets] of Object.entries(monsterPresetsByFaction)) {
+    if (presetId in factionPresets) {
+      faction = factionId as string;
+      break;
+    }
+  }
+
+  // Handle weapon loadouts
+  let loadoutToUse = overrides?.loadout || p.defaultLoadout;
+  let loadoutData = null;
+  
+  if (loadoutToUse && p.weaponLoadouts && p.weaponLoadouts[loadoutToUse]) {
+    const loadoutId = p.weaponLoadouts[loadoutToUse];
+    loadoutData = getLoadoutById(loadoutId);
+  }
+
+  // Use loadout data if available, otherwise fall back to base preset
+  const effectivePreset = loadoutData ? {
+    ...p,
+    equipment: loadoutData.equipment || p.equipment,
+    inventory: loadoutData.inventory || p.inventory,
+    aiBehavior: loadoutData.aiBehavior || p.aiBehavior,
+  } : p;
+
+  const inventory = createInventoryFromPreset(effectivePreset);
+  const equipment = createEquipmentFromPreset(effectivePreset);
 
   const attributes = {
     movement: overrides?.movement ?? p.attributes.movement,
@@ -101,11 +128,11 @@ export function createMonster(
     inventory: overrides?.inventory ?? inventory,
     equipment: overrides?.equipment ?? equipment,
     vitality: overrides?.vitality ?? p.vitality,
-    mana: overrides?.mana ?? p.mana,
-    fortune: overrides?.fortune ?? p.fortune,
+    mana: overrides?.mana ?? p.mana ?? 0,
+    fortune: overrides?.fortune ?? p.fortune ?? 0,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.ENEMY,
-    faction: overrides?.faction ?? p.faction ?? MONSTER_FACTIONS.bandits.id,
+    faction: faction,
   });
 }
 
@@ -148,8 +175,8 @@ export function createMercenary(
     inventory: overrides?.inventory ?? inventory,
     equipment: overrides?.equipment ?? equipment,
     vitality: overrides?.vitality ?? p.vitality,
-    mana: overrides?.mana ?? p.mana,
-    fortune: overrides?.fortune ?? p.fortune,
+    mana: overrides?.mana ?? p.mana ?? 0,
+    fortune: overrides?.fortune ?? p.fortune ?? 0,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.HERO,
     // Mercenary-specific properties

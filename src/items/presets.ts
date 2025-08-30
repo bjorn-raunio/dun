@@ -35,6 +35,8 @@ export type RangedWeaponPreset = {
 export const rangedPresets: Record<string, RangedWeaponPreset> = {
   shortbow: { name: "Shortbow", damage: 6, range: { normal: 16, long: 64 }, hands: 2, properties: ["ammunition", "two-handed"], armorModifier: 0, weight: 2, value: 25 },
   longbow: { name: "Longbow", damage: 8, range: { normal: 20, long: 80 }, hands: 2, properties: ["ammunition", "heavy", "two-handed"], armorModifier: 0, weight: 2, value: 50 },
+  crossbow: { name: "Crossbow", damage: 10, range: { normal: 18, long: 72 }, hands: 2, properties: ["ammunition", "heavy", "two-handed", "loading"], armorModifier: 0, weight: 5, value: 75 },
+  sling: { name: "Sling", damage: 4, range: { normal: 12, long: 48 }, hands: 1, properties: ["ammunition"], armorModifier: 0, weight: 0, value: 1 },
 };
 
 export type ArmorPreset = {

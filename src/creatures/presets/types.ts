@@ -1,5 +1,6 @@
 import { Attributes } from '../index';
 import { AIBehaviorType } from '../../ai/types';
+import { WeaponLoadout } from './loadouts';
 
 // --- Shared Preset Types ---
 
@@ -20,15 +21,20 @@ export type BasePreset = {
     armor?: { type: "armor"; preset: string; id?: string };
   };
   vitality: number;
-  mana: number;
-  fortune: number;
+  mana?: number; // Optional - defaults to 0
+  fortune?: number;// Optional - defaults to 0
   naturalArmor?: number;
   group?: string;
 };
 
 export type MonsterPreset = BasePreset & {
   aiBehavior?: AIBehaviorType; // AI behavior type (melee, ranged, animal)
-  faction?: string; // Which faction this monster belongs to
+  // Weapon loadout system for different variants
+  weaponLoadouts?: {
+    [loadoutName: string]: string; // Reference to loadout ID from centralized loadouts
+  };
+  // Default weapon loadout to use if none specified
+  defaultLoadout?: string;
 };
 
 export type MercenaryPreset = BasePreset & {
