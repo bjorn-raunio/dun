@@ -41,8 +41,7 @@ export const mapDefinition: MapDefinition = {
     { x: 1, y: 2, name: "Hero Starting Position 4" },
   ],
   creatures: [
-    // Bandits with different loadouts
-    //createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
+    createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
     createMonster("shooter", "bandits", { x: 10, y: 1, facing: 3, weaponLoadout: "shortbow" }),
     
     createMercenary("civilian", { 
@@ -51,7 +50,7 @@ export const mapDefinition: MapDefinition = {
       group: CREATURE_GROUPS.HERO, 
       facing: 6
     }),
-    //createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
+    createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
     new Hero({
       name: "Knight",
       x: 0,

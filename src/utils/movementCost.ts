@@ -1,6 +1,8 @@
 import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
+import { validateEngagementMovement } from '../validation/movement';
 import { isCreatureAtPosition } from './pathfinding';
+import { getEngagingCreaturesAtPosition } from './zoneOfControl';
 
 // --- Centralized Movement Cost Calculation Service ---
 // 
@@ -49,6 +51,7 @@ export function calculateMovementCost(
   mapData: { tiles: string[][] },
   mapDefinition?: any,
   options: MovementCostOptions = {},
+  movingCreature?: Creature,
 ): number {
   const {
     checkDiagonalCornerRule = true,
@@ -73,30 +76,30 @@ export function calculateMovementCost(
   // For single-tile movement, check diagonal corner rule if enabled
   if (!isMultiTile && checkDiagonalCornerRule) {
     const isDiagonal = (fromX !== toX) && (fromY !== toY);
-    
+
     if (isDiagonal) {
       const horizontalX = toX;
       const horizontalY = fromY;
       const verticalX = fromX;
       const verticalY = toY;
-      
+
       // Check if horizontal adjacent tile is passable
       const horizontalTerrainCost = getTerrainCost(horizontalX, horizontalY, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference,
         climbingCostPenalty,
         returnInfinityForBlocked
       });
-      
+
       // Check if vertical adjacent tile is passable
       const verticalTerrainCost = getTerrainCost(verticalX, verticalY, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference,
         climbingCostPenalty,
         returnInfinityForBlocked
       });
-      
+
       // If either adjacent tile is impassable, diagonal movement is blocked
-      if (horizontalTerrainCost === Infinity || 
-          verticalTerrainCost === Infinity) {
+      if (horizontalTerrainCost === Infinity ||
+        verticalTerrainCost === Infinity) {
         return returnInfinityForBlocked ? Infinity : 0;
       }
     }
@@ -111,26 +114,26 @@ export function calculateMovementCost(
     for (let ox = 0; ox < areaDimensions.w; ox++) {
       const cx = toX + ox;
       const cy = toY + oy;
-      
+
       // Check terrain cost
       const terrainCost = getTerrainCost(cx, cy, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference,
         climbingCostPenalty: 0, // Don't apply climbing cost here, handle it separately
         returnInfinityForBlocked
       });
-      
+
       if (terrainCost === Infinity) {
         return returnInfinityForBlocked ? Infinity : 0;
       }
-      
+
       totalCost += terrainCost;
-      
+
       // Track elevation and standing tile for multi-tile creatures
       if (isMultiTile && mapDefinition) {
         const tile = mapData.tiles[cy]?.[cx];
         const nonEmpty = tile && tile !== "empty.jpg";
         const th = terrainHeightAt(cx, cy, mapDefinition);
-        
+
         if (nonEmpty) hasStandTile = true;
         if (th > maxHeight) maxHeight = th;
       }
@@ -166,11 +169,11 @@ export function calculateMovementCost(
   // Handle elevation differences and climbing costs
   if (mapDefinition && (fromX !== undefined && fromY !== undefined)) {
     let elevationCost = 0;
-    
+
     if (isMultiTile) {
       // For multi-tile creatures, use the maximum height in the area
       const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
-      
+
       if (maxHeight > fromHeight + maxElevationDifference) {
         return returnInfinityForBlocked ? Infinity : 0;
       }
@@ -181,7 +184,7 @@ export function calculateMovementCost(
       // For single tiles, check the destination tile height
       const toHeight = terrainHeightAt(toX, toY, mapDefinition);
       const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
-      
+
       if (toHeight > fromHeight + maxElevationDifference) {
         return returnInfinityForBlocked ? Infinity : 0;
       }
@@ -189,7 +192,7 @@ export function calculateMovementCost(
         elevationCost = climbingCostPenalty;
       }
     }
-    
+
     totalCost += elevationCost;
   } else if (isMultiTile && mapDefinition) {
     // Fallback elevation check for multi-tile creatures without starting coordinates
@@ -201,6 +204,20 @@ export function calculateMovementCost(
     }
   }
 
+  if (movingCreature && mapDefinition) {
+    const engagingCreatures = getEngagingCreaturesAtPosition(movingCreature, allCreatures, fromX, fromY);
+    if (engagingCreatures.length > 0) {
+      if (movingCreature.x === fromX && movingCreature.y === fromY) {
+        const engagementValidation = validateEngagementMovement(movingCreature, toX, toY, allCreatures);
+        if (!engagementValidation.isValid) {
+          return returnInfinityForBlocked ? Infinity : 0;
+        }
+      } else {
+        return returnInfinityForBlocked ? Infinity : 0;
+      }
+    }
+  }
+
   return baseCost + totalCost;
 }
 
@@ -208,11 +225,11 @@ export function calculateMovementCost(
  * Get terrain movement cost for a tile with flexible options
  */
 export function getTerrainCost(
-  x: number, 
-  y: number, 
-  mapData: { tiles: string[][] }, 
-  mapDefinition?: any, 
-  fromX?: number, 
+  x: number,
+  y: number,
+  mapData: { tiles: string[][] },
+  mapDefinition?: any,
+  fromX?: number,
   fromY?: number,
   options: { maxElevationDifference?: number; climbingCostPenalty?: number; returnInfinityForBlocked?: boolean } = {}
 ): number {
@@ -225,20 +242,20 @@ export function getTerrainCost(
   if (x < 0 || y < 0 || x >= mapData.tiles[0]?.length || y >= mapData.tiles.length) {
     return returnInfinityForBlocked ? Infinity : 0;
   }
-  
+
   const tile = mapData.tiles[y]?.[x];
   if (!tile || tile === "empty.jpg") {
     return returnInfinityForBlocked ? Infinity : 0; // Empty space blocks movement
   }
-  
+
   // Check terrain height and other properties
   if (mapDefinition) {
     const height = terrainHeightAt(x, y, mapDefinition);
-    
+
     if (fromX !== undefined && fromY !== undefined) {
       // We have starting coordinates, so we can calculate elevation differences
       const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
-      
+
       // Allow movement to terrain that is within max elevation difference, but with extra cost
       if (height > fromHeight + maxElevationDifference) {
         return returnInfinityForBlocked ? Infinity : 0;
@@ -257,7 +274,7 @@ export function getTerrainCost(
       }
     }
   }
-  
+
   // Default terrain cost
   return 0;
 }

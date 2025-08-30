@@ -88,11 +88,15 @@ export function pathPassesThroughHostileZones(
  * Get all creatures that are engaging a given creature
  */
 export function getEngagingCreatures(creature: Creature, allCreatures: Creature[]): Creature[] {
+  return getEngagingCreaturesAtPosition(creature, allCreatures, creature.x, creature.y);
+}
+
+export function getEngagingCreaturesAtPosition(creature: Creature, allCreatures: Creature[], x: number, y: number): Creature[] {
   return allCreatures.filter(other => 
     other !== creature && 
     other.isAlive() && 
     creature.isHostileTo(other) && // Must be hostile
-    isInZoneOfControl(creature.x, creature.y, other) // They are in our zone
+    isInZoneOfControl(x, y, other) // They are in our zone
   );
 }
 

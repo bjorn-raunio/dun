@@ -94,7 +94,8 @@ export class CreatureMovement implements ICreatureMovement {
           {
             areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
             mapDimensions: { cols: mapData.tiles[0]?.length || 0, rows: mapData.tiles.length || 0 }
-          }
+          },
+          creature
         );
 
         // If movement is blocked, stop here

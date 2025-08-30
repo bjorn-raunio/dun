@@ -61,7 +61,7 @@ export class PathfindingSystem {
         }
 
         // Cost and passability
-        const stepCost = calculateMoveCostInto(nx, ny, selectedDims, mapData, cols, rows, mapDefinition, current.x, current.y);
+        const stepCost = calculateMoveCostInto(nx, ny, selectedDims, mapData, cols, rows, allCreatures, mapDefinition, current.x, current.y, creature);
         if (!isFinite(stepCost)) continue;
         if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition)) continue;
 
@@ -191,7 +191,7 @@ export class PathfindingSystem {
     mapDefinition?: any,
     creature?: Creature
   ): number {
-    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS);
+    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
   }
 
   /**

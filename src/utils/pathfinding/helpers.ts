@@ -1,3 +1,4 @@
+import { Creature } from '../../creatures/index';
 import { terrainHeightAt } from '../../maps/mapRenderer';
 import { validatePositionStandable } from '../../validation/map';
 import { calculateMovementCost } from '../movementCost';
@@ -66,9 +67,11 @@ export function calculateMoveCostInto(
   mapData: { tiles: string[][] }, 
   cols: number, 
   rows: number, 
+  allCreatures: Creature[],
   mapDefinition?: any, 
   fromX?: number, 
-  fromY?: number
+  fromY?: number,
+  creature?: Creature
 ): number {
   // Use the consolidated movement cost calculation
   return calculateMovementCost(
@@ -76,7 +79,7 @@ export function calculateMoveCostInto(
     fromY || 0, 
     tx, 
     ty, 
-    [], // No creatures to check in this context
+    allCreatures,
     mapData, 
     mapDefinition,
     {
@@ -84,7 +87,8 @@ export function calculateMoveCostInto(
       considerCreatures: false, // Don't check creatures in this context
       areaDimensions: dims,
       mapDimensions: { cols, rows }
-    }
+    },
+    creature
   );
 }
 

@@ -140,7 +140,6 @@ export function createMouseHandlers(
 
           // Execute movement using the path
           const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
-          console.log(moveResult);
           if (moveResult.status === 'success' || moveResult.status === 'partial') {
             const statusText = moveResult.status === 'partial' ? 'partial' : 'complete';
             logMovement(`${statusText} movement: cost ${moveResult.cost}, moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles, remaining: ${targetCreature.remainingMovement}`);
