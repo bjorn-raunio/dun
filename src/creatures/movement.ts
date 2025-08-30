@@ -1,24 +1,25 @@
 import { Creature } from './base';
 import { ICreatureMovement } from './interfaces';
 import { PathfindingSystem } from '../utils/pathfinding';
-import { 
-  isInZoneOfControl, 
-  getEngagingCreatures,
-  canMoveToWhenEngaged
+import {
+  isInZoneOfControl,
+  getEngagingCreatures
 } from '../utils/zoneOfControl';
 import { updateCombatStates } from '../utils/combatStateUtils';
+import { calculateMovementCost } from '../utils/movementCost';
+import { MovementResult, MovementStatus } from '../game/movement';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement implements ICreatureMovement {
   // Calculate reachable tiles for this creature
   getReachableTiles(
-    creature: Creature, 
-    allCreatures: Creature[], 
-    mapData: { tiles: string[][] }, 
-    cols: number, 
-    rows: number, 
+    creature: Creature,
+    allCreatures: Creature[],
+    mapData: { tiles: string[][] },
+    cols: number,
+    rows: number,
     mapDefinition?: any
-  ): { tiles: Array<{x: number; y: number}>; costMap: Map<string, number>; pathMap: Map<string, Array<{x: number; y: number}>> } {
+  ): { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> } {
     return PathfindingSystem.getReachableTiles(
       creature,
       allCreatures,
@@ -31,80 +32,138 @@ export class CreatureMovement implements ICreatureMovement {
   }
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
-  moveTo(creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []): { success: boolean; message?: string } {
+  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: any): MovementResult {
     if (path.length === 0) {
-      return { success: false, message: "No path provided for movement." };
+      return {
+        status: 'failed',
+        message: "No path provided for movement.",
+        cost: 0,
+        tilesMoved: 0,
+        totalPathLength: 0
+      };
     }
 
     // Validate that the path starts from the creature's current position
     const startTile = path[0];
     if (startTile.x !== creature.x || startTile.y !== creature.y) {
-      return { 
-        success: false, 
-        message: `Path must start from creature's current position (${creature.x}, ${creature.y}), but starts at (${startTile.x}, ${startTile.y})` 
+      return {
+        status: 'failed',
+        message: `Path must start from creature's current position (${creature.x}, ${creature.y}), but starts at (${startTile.x}, ${startTile.y})`,
+        cost: 0,
+        tilesMoved: 0,
+        totalPathLength: path.length - 1
       };
     }
+
+    let totalCost = 0;
+    let currentX = creature.x;
+    let currentY = creature.y;
+    let tilesMoved = 0;
 
     // Move through each tile in the path sequentially
     for (let i = 1; i < path.length; i++) {
       const currentTile = path[i - 1];
       const nextTile = path[i];
-      
+
       // Validate that tiles are adjacent (including diagonal)
       const dx = Math.abs(nextTile.x - currentTile.x);
       const dy = Math.abs(nextTile.y - currentTile.y);
       if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
         // Valid adjacent movement (orthogonal or diagonal)
       } else {
-        return { 
-          success: false, 
-          message: `Invalid path: tiles (${currentTile.x}, ${currentTile.y}) and (${nextTile.x}, ${nextTile.y}) are not adjacent` 
+        return {
+          status: 'failed',
+          message: `Invalid path: tiles (${currentTile.x}, ${currentTile.y}) and (${nextTile.x}, ${nextTile.y}) are not adjacent`,
+          cost: totalCost,
+          tilesMoved,
+          totalPathLength: path.length - 1
         };
+      }
+
+      // Calculate movement cost for this step if map data is available
+      let stepCost = 1; // Default cost
+      if (mapData && mapDefinition) {
+        stepCost = calculateMovementCost(
+          currentX,
+          currentY,
+          nextTile.x,
+          nextTile.y,
+          allCreatures,
+          mapData,
+          mapDefinition,
+          {
+            areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
+            mapDimensions: { cols: mapData.tiles[0]?.length || 0, rows: mapData.tiles.length || 0 }
+          }
+        );
+
+        // If movement is blocked, stop here
+        if (stepCost === Infinity) {
+          break;
+        }
+      }
+
+      // Check if creature has enough movement points for this step
+      if (creature.remainingMovement < stepCost) {
+        break;
       }
 
       // Check if we're currently engaged
       const engagingCreatures = getEngagingCreatures(creature, allCreatures);
       const currentlyEngaged = engagingCreatures.length > 0;
-      
       if (currentlyEngaged) {
         // We're engaged - check if we can move to the next position
-        if (!canMoveToWhenEngaged(creature, nextTile.x, nextTile.y, engagingCreatures)) {
-          return {
-            success: false,
-            message: `${creature.name} is engaged and cannot move outside the zone of control of engaging creatures.`
-          };
-        }
-        
-        // Mark that we've moved while engaged
-        creature.setMovedWhileEngaged(true);
-      } else {
-        // Check if moving to this position would put us in engagement
-        const wouldBeEngaged = allCreatures.some(c => 
-          c !== creature && 
-          c.isAlive() && 
-          creature.isHostileTo(c) && 
-          isInZoneOfControl(nextTile.x, nextTile.y, c)
-        );
-        
-        if (wouldBeEngaged) {
-          // We would become engaged at this position
-          // Mark that we've moved while engaged (since we're becoming engaged)
-          creature.setMovedWhileEngaged(true);
+        if (startTile.x !== creature.x || startTile.y !== creature.y) {
+          break;
         }
       }
-      
+
       // Face the direction of movement
       creature.faceTowards(nextTile.x, nextTile.y);
-      
+
       // Update combat states for all creatures
       updateCombatStates(allCreatures);
-      
+
       // Move to the next position
       creature.x = nextTile.x;
       creature.y = nextTile.y;
+
+      // Update current position for next iteration
+      currentX = nextTile.x;
+      currentY = nextTile.y;
+
+      // Apply movement cost
+      creature.useMovement(stepCost);
+      totalCost += stepCost;
+      tilesMoved++;
+
+      // Check if creature has run out of movement points
+      if (creature.remainingMovement <= 0) {
+        break;
+      }
     }
-    
-    return { success: true };
+
+    // Determine if movement was complete or partial
+    const totalPathLength = path.length - 1; // Exclude starting position
+    let status: MovementStatus = 'success';
+    let message: string | undefined;
+    if (tilesMoved === 0) {
+      status = 'failed';
+      message = `${creature.name} couldn't move at all along the path (${totalPathLength} tiles)`;
+    } else if (tilesMoved < totalPathLength) {
+      status = 'partial';
+      message = `${creature.name} moved ${tilesMoved} tiles but couldn't complete the full path (${totalPathLength} tiles)`;
+    }
+
+    return {
+      status,
+      message,
+      cost: totalCost,
+      finalPosition: { x: creature.x, y: creature.y },
+      intendedDestination: path[path.length - 1],
+      tilesMoved,
+      totalPathLength
+    };
   }
 }
 
@@ -116,7 +175,7 @@ export const getReachableTiles = (creature: Creature, allCreatures: Creature[], 
   return movement.getReachableTiles(creature, allCreatures, mapData, cols, rows, mapDefinition);
 };
 
-export const moveTo = (creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []) => {
+export const moveTo = (creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: any) => {
   const movement = new CreatureMovement();
-  return movement.moveTo(creature, path, allCreatures);
+  return movement.moveTo(creature, path, allCreatures, mapData, mapDefinition);
 };

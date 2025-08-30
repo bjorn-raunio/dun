@@ -244,18 +244,24 @@ export function executeAIDecision(
         // Use the same movement validation and execution as heroes
         const moveResult = executeMovement(creature, path, allCreatures, cost, mapData, mapDefinition);
         
-        if (moveResult.success) {
-          // Update AI state
+        if (moveResult.status === 'success' || moveResult.status === 'partial') {
+          // Update AI state with final position (either destination or where they stopped)
+          const finalPosition = moveResult.finalPosition || { x: creature.x, y: creature.y };
           const newState = updateAIStateAfterMovement(
             ai,
             creature,
-            decision.destination.x,
-            decision.destination.y
+            finalPosition.x,
+            finalPosition.y
           );
+          
+          let message = AI_MESSAGES.moveToPosition(creature.name, finalPosition.x, finalPosition.y);
+          if (moveResult.status === 'partial') {
+            message = `${message} (partial: moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles)`;
+          }
           
           return {
             success: true,
-            message: AI_MESSAGES.moveToPosition(creature.name, decision.destination.x, decision.destination.y),
+            message,
             newState,
             targetDefeated: false
           };

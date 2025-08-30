@@ -74,32 +74,6 @@ export class CreatureRelationshipsManager {
     return distance <= zoneOfControlRange;
   }
 
-  // --- Movement Restrictions ---
-
-  canMoveToWhenEngaged(
-    newX: number, 
-    newY: number, 
-    engagingCreatures: any[], 
-    hasMovedWhileEngaged: boolean
-  ): boolean {
-    // If not engaged, movement is unrestricted
-    if (engagingCreatures.length === 0) {
-      return true;
-    }
-
-    // If engaged, can only move within the zone of control of engaging creatures
-    const withinZoneOfControl = engagingCreatures.every(engager => 
-      this.isInZoneOfControl(newX, newY, engager, engager.getZoneOfControlRange())
-    );
-    
-    if (!withinZoneOfControl) {
-      return false;
-    }
-    
-    // If engaged, can only move one tile per round
-    return !hasMovedWhileEngaged;
-  }
-
   // --- Group Action Management ---
 
   resetGroupActions(allCreatures: any[]): void {

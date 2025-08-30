@@ -1,6 +1,6 @@
 import { terrainHeightAt } from '../../maps/mapRenderer';
 import { validatePositionStandable } from '../../validation/map';
-import { calculateAreaMovementCost } from '../movementCost';
+import { calculateMovementCost } from '../movementCost';
 import { DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { AreaStats } from './types';
 
@@ -70,21 +70,20 @@ export function calculateMoveCostInto(
   fromX?: number, 
   fromY?: number
 ): number {
-  // Use the consolidated area movement cost calculation
-  return calculateAreaMovementCost(
+  // Use the consolidated movement cost calculation
+  return calculateMovementCost(
     fromX || 0, 
     fromY || 0, 
     tx, 
     ty, 
-    dims, 
     [], // No creatures to check in this context
     mapData, 
-    cols, 
-    rows, 
     mapDefinition,
     {
       ...DEFAULT_MOVEMENT_OPTIONS,
-      considerCreatures: false // Don't check creatures in this context
+      considerCreatures: false, // Don't check creatures in this context
+      areaDimensions: dims,
+      mapDimensions: { cols, rows }
     }
   );
 }

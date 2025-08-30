@@ -104,26 +104,6 @@ export function isEngaged(creature: Creature, allCreatures: Creature[]): boolean
 }
 
 /**
- * Check if a movement is allowed for an engaged creature
- */
-export function canMoveToWhenEngaged(
-  creature: Creature,
-  newX: number,
-  newY: number,
-  engagingCreatures: Creature[]
-): boolean {
-  // If not engaged, movement is unrestricted
-  if (engagingCreatures.length === 0) {
-    return true;
-  }
-  
-  // When engaged, can only move to positions that remain within zone of control of at least one engager
-  return engagingCreatures.some(engager => 
-    isInZoneOfControl(newX, newY, engager)
-  );
-}
-
-/**
  * Check if a position is adjacent to a creature
  */
 export function isAdjacentToCreature(x: number, y: number, creature: Creature): boolean {

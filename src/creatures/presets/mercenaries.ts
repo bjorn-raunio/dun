@@ -7,7 +7,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     name: "Civilian",
     image: "creatures/civilian.png",
     attributes: {
-      movement: 6,
+      movement: 8,
       combat: 3,
       ranged: 5,
       strength: 2,

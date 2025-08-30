@@ -3,6 +3,7 @@
 // without creating circular dependencies
 
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
+import { MovementResult } from '../game/movement';
 
 // --- Core Creature Interfaces ---
 
@@ -49,7 +50,7 @@ export interface ICreature {
   
   // Movement
   getReachableTiles(allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any;
-  moveTo(path: Array<{x: number; y: number}>, allCreatures?: any[]): { success: boolean; message?: string };
+  moveTo(path: Array<{x: number; y: number}>, allCreatures?: any[], mapData?: any, mapDefinition?: any): MovementResult;
   
   // Combat
   attack(target: any, allCreatures?: any[], mapDefinition?: any, mapData?: any): any;
@@ -74,7 +75,6 @@ export interface ICreature {
   // Engagement
   isEngaged(hostileCreatures: any[]): boolean;
   getEngagingCreatures(allCreatures: any[]): any[];
-  canMoveToWhenEngaged(newX: number, newY: number, engagingCreatures: any[]): boolean;
   
   // Turn start position
   get turnStartX(): number;
@@ -166,7 +166,6 @@ export interface ICreatureRelationshipsManager {
   getFriendlyCreatures(allCreatures: any[]): any[];
   isEngaged(hostileCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): boolean;
   getEngagingCreatures(allCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): any[];
-  canMoveToWhenEngaged(newX: number, newY: number, engagingCreatures: any[], hasMovedWhileEngaged: boolean): boolean;
   resetGroupActions(allCreatures: any[]): void;
 }
 
@@ -174,7 +173,7 @@ export interface ICreatureRelationshipsManager {
 
 export interface ICreatureMovement {
   getReachableTiles(creature: any, allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any;
-  moveTo(creature: any, path: Array<{x: number; y: number}>, allCreatures?: any[]): { success: boolean; message?: string };
+  moveTo(creature: any, path: Array<{x: number; y: number}>, allCreatures?: any[], mapData?: any, mapDefinition?: any): MovementResult;
 }
 
 // --- Combat Interface ---

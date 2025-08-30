@@ -14,7 +14,6 @@ Successfully consolidated all zone of control calculations into a single utility
 - `pathPassesThroughHostileZones(creature, fromX, fromY, toX, toY, allCreatures)` - Check if path passes through any hostile zones
 - `getEngagingCreatures(creature, allCreatures)` - Get all creatures engaging a given creature
 - `isEngaged(creature, allCreatures)` - Check if creature is engaged
-- `canMoveToWhenEngaged(creature, newX, newY, engagingCreatures)` - Check if engaged creature can move
 - `isAdjacentToCreature(x, y, creature)` - Check if position is adjacent to creature
 - `getZoneOfControlRange(creature)` - Get creature's zone of control range
 
@@ -94,7 +93,7 @@ Successfully consolidated all zone of control calculations into a single utility
 
 ## Future Improvements
 
-1. **Consider updating base creature class** - The `Creature` base class still has its own `getEngagingCreatures()` and `canMoveToWhenEngaged()` methods. These could potentially be refactored to use the centralized utilities, but care must be taken to avoid circular dependencies.
+1. **Consider updating base creature class** - The `Creature` base class still has its own `getEngagingCreatures()` method. These could potentially be refactored to use the centralized utilities, but care must be taken to avoid circular dependencies.
 
 2. **Add unit tests** - The new centralized module should have comprehensive unit tests to ensure all zone of control logic works correctly.
 

@@ -86,37 +86,37 @@ export function createMouseHandlers(
         // Get the current creature state to avoid stale closures
         const currentCreature = findCreatureById(creatures, selectedCreatureId);
         if (!currentCreature) return;
-        
+
         // Get the path to the destination from the pathMap
         const path = reachable.pathMap.get(destKey);
         if (!path) {
           console.error(`No path found for destination (${pos.tileX}, ${pos.tileY})`);
           return;
         }
-        
+
         // Validate that the path is still valid for the current creature position
         if (path.length > 0 && (path[0].x !== currentCreature.x || path[0].y !== currentCreature.y)) {
           console.warn(`Path is stale - creature moved from (${path[0].x}, ${path[0].y}) to (${currentCreature.x}, ${currentCreature.y}). Recalculating path.`);
-          
+
           // Recalculate the path for the current position
           const freshReachable = currentCreature.getReachableTiles(creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
           const freshPath = freshReachable.pathMap.get(destKey);
-          
+
           if (!freshPath) {
             console.error(`No fresh path found for destination (${pos.tileX}, ${pos.tileY}) from current position (${currentCreature.x}, ${currentCreature.y})`);
             return;
           }
-          
+
           // Use the fresh path
           path.length = 0;
           path.push(...freshPath);
         }
-        
+
         // Calculate the step cost from current position to destination
         const currentCost = reachable.costMap.get(`${currentCreature.x},${currentCreature.y}`) ?? 0;
         const destCost = reachable.costMap.get(destKey) ?? 0;
         const stepCost = calculateCostDifference(currentCost, destCost);
-        
+
         // Debug logging for movement cost
         logMovement(`Hero at (${currentCreature.x},${currentCreature.y}) moving to (${pos.tileX},${pos.tileY})`, {
           path,
@@ -125,66 +125,67 @@ export function createMouseHandlers(
           stepCost,
           remainingMovement: currentCreature.remainingMovement
         });
-        
-                 setCreatures(prev => {
-           // Check if this is a duplicate movement (React Strict Mode can cause double execution)
-           if (lastMovement.current && 
-               lastMovement.current.creatureId === selectedCreatureId &&
-               lastMovement.current.x === pos.tileX &&
-               lastMovement.current.y === pos.tileY) {
-             logMovement(`Skipping duplicate movement to (${pos.tileX},${pos.tileY})`);
-             return prev;
-           }
-           const targetCreature = findCreatureById(prev, selectedCreatureId);
-           if (!targetCreature) return prev;
-           
-                                               // Execute movement using the path
-                           const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
-           
-           if (moveResult.success) {
-             logMovement(`Movement cost applied: ${moveResult.cost}, Remaining after: ${targetCreature.remainingMovement}`);
-             
-             // Update last movement to prevent duplicate processing
-             lastMovement.current = {
-               creatureId: selectedCreatureId,
-               x: pos.tileX,
-               y: pos.tileY
-             };
-             
-             moved = true;
-             
-             // Force reachable tiles recalculation
-             setReachableKey(prev => prev + 1);
-             // Force targets in range recalculation
-             setTargetsInRangeKey(prev => prev + 1);
-             
-                           // Check engagement status after movement
-              const isEngaged = targetCreature.isEngagedWithAll(prev);
-              if (isEngaged) {
-                logGame(`${targetCreature.name} is now engaged`);
-              }
-             
-             return prev.map(c => {
-               if (c.id !== selectedCreatureId) return c;
-               // Create a new object reference to ensure React detects the change
-               return targetCreature.clone();
-             });
-                       } else {
-              // Movement failed - log to console
-              logMovement(`Movement failed: ${moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name)}`);
-              return prev;
+
+        setCreatures(prev => {
+          // Check if this is a duplicate movement (React Strict Mode can cause double execution)
+          if (lastMovement.current &&
+            lastMovement.current.creatureId === selectedCreatureId &&
+            lastMovement.current.x === pos.tileX &&
+            lastMovement.current.y === pos.tileY) {
+            logMovement(`Skipping duplicate movement to (${pos.tileX},${pos.tileY})`);
+            return prev;
+          }
+          const targetCreature = findCreatureById(prev, selectedCreatureId);
+          if (!targetCreature) return prev;
+
+          // Execute movement using the path
+          const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
+          console.log(moveResult);
+          if (moveResult.status === 'success' || moveResult.status === 'partial') {
+            const statusText = moveResult.status === 'partial' ? 'partial' : 'complete';
+            logMovement(`${statusText} movement: cost ${moveResult.cost}, moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles, remaining: ${targetCreature.remainingMovement}`);
+
+            // Update last movement to prevent duplicate processing
+            lastMovement.current = {
+              creatureId: selectedCreatureId,
+              x: pos.tileX,
+              y: pos.tileY
+            };
+
+            moved = true;
+
+            // Force reachable tiles recalculation
+            setReachableKey(prev => prev + 1);
+            // Force targets in range recalculation
+            setTargetsInRangeKey(prev => prev + 1);
+
+            // Check engagement status after movement
+            const isEngaged = targetCreature.isEngagedWithAll(prev);
+            if (isEngaged) {
+              logGame(`${targetCreature.name} is now engaged`);
             }
-         });
-        
-                 // Check if we moved onto a space where a dead creature was
-         const deadCreatureAtDestination = creatures.find(c => 
-           c.isDead() && 
-           c.x === pos.tileX && 
-           c.y === pos.tileY
-         );
-                  if (deadCreatureAtDestination) {
-           logGame(`${selected.name} moves over remains`);
-         }
+
+            return prev.map(c => {
+              if (c.id !== selectedCreatureId) return c;
+              // Create a new object reference to ensure React detects the change
+              return targetCreature.clone();
+            });
+          } else {
+            // Movement failed - log to console
+            logMovement(`Movement failed: ${moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name)}`);
+            return prev;
+          }
+        });
+
+        // Check if we moved onto a space where a dead creature was
+        const deadCreatureAtDestination = creatures.find(c =>
+          c.isDead() &&
+          c.x === pos.tileX &&
+          c.y === pos.tileY
+        );
+        if (deadCreatureAtDestination) {
+          logGame(`${selected.name} moves over remains`);
+        }
       }
       if (moved) {
         // Deselect after successful movement
@@ -199,55 +200,55 @@ export function createMouseHandlers(
     e.stopPropagation();
     const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
 
-         // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
-     if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
-              if (!targetsInRangeIds.has(creature.id)) {
-          logGame(`Cannot reach target: ${selected.name} cannot reach ${creature.name}`);
-          return; // keep hero selected
-        }
-      
+    // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
+    if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
+      if (!targetsInRangeIds.has(creature.id)) {
+        logGame(`Cannot reach target: ${selected.name} cannot reach ${creature.name}`);
+        return; // keep hero selected
+      }
+
       // Get the current creature state to avoid stale closures
       const currentCreature = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
       if (!currentCreature) return;
-      
-             // Perform the attack using the creature's attack method
-       const combatResult = currentCreature.attack(creature, creatures, mapDefinition, mapData);
-      
+
+      // Perform the attack using the creature's attack method
+      const combatResult = currentCreature.attack(creature, creatures, mapDefinition, mapData);
+
       // Add to-hit message
       if (combatResult.toHitMessage) {
         addMessage(combatResult.toHitMessage!, setMessages);
       }
-      
+
       // Add block message if present
       if (combatResult.blockMessage) {
         addMessage(combatResult.blockMessage!, setMessages);
       }
-      
+
       // Add damage message if hit
       if (combatResult.damageMessage) {
         addMessage(combatResult.damageMessage!, setMessages);
       }
-      
-             // Add defeat message if target was defeated
-       if (combatResult.targetDefeated) {
-         addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
-       }
-      
+
+      // Add defeat message if target was defeated
+      if (combatResult.targetDefeated) {
+        addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
+      }
+
       // Set remaining movement to zero if the creature has already moved this turn
       const hasMoved = currentCreature.hasMoved();
-      
-             // Set remaining movement to zero if already moved (action already consumed in attack method)
-       setCreatures(prev => prev.map(c => {
-         if (c.id === selectedCreatureId) {
-           // Ensure we're working with class instances
-           if (hasMoved) {
-             c.useMovement(c.remainingMovement);
-           }
-           return c;
-         }
-         return c;
-       }));
-      
+
+      // Set remaining movement to zero if already moved (action already consumed in attack method)
+      setCreatures(prev => prev.map(c => {
+        if (c.id === selectedCreatureId) {
+          // Ensure we're working with class instances
+          if (hasMoved) {
+            c.useMovement(c.remainingMovement);
+          }
+          return c;
+        }
+        return c;
+      }));
+
       // Force targets in range recalculation
       setTargetsInRangeKey(prev => prev + 1);
       return;

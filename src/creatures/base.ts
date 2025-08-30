@@ -17,6 +17,7 @@ import { Weapon, RangedWeapon } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
+import { MovementResult } from '../game/movement';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -262,10 +263,6 @@ export abstract class Creature implements ICreature {
     return this.relationshipsManager.getEngagingCreatures(allCreatures, this.x, this.y, this.getZoneOfControlRange());
   }
 
-  canMoveToWhenEngaged(newX: number, newY: number, engagingCreatures: any[]): boolean {
-    return this.relationshipsManager.canMoveToWhenEngaged(newX, newY, engagingCreatures, this.hasMovedWhileEngaged);
-  }
-
   // Convenience method to check engagement status with all creatures
   isEngagedWithAll(allCreatures: any[]): boolean {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
@@ -291,8 +288,8 @@ export abstract class Creature implements ICreature {
     return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
-  moveTo(path: Array<{x: number; y: number}>, allCreatures: any[] = []): { success: boolean; message?: string } {
-    return creatureServices.getMovementService().moveTo(this, path, allCreatures);
+  moveTo(path: Array<{x: number; y: number}>, allCreatures: any[] = [], mapData?: any, mapDefinition?: any): MovementResult {
+    return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
   }
 
   attack(target: any, allCreatures: any[] = [], mapDefinition?: any, mapData?: any): any {

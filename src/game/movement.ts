@@ -4,10 +4,16 @@ import { VALIDATION_MESSAGES } from '../validation/messages';
 
 // --- Movement Logic ---
 
+export type MovementStatus = 'success' | 'partial' | 'failed';
+
 export interface MovementResult {
-  success: boolean;
+  status: MovementStatus;
   message?: string;
   cost: number;
+  finalPosition?: { x: number; y: number };
+  intendedDestination?: { x: number; y: number };
+  tilesMoved: number;
+  totalPathLength: number;
 }
 
 /**
@@ -23,9 +29,11 @@ export function executeMovement(
 ): MovementResult {
   if (path.length === 0) {
     return {
-      success: false,
+      status: 'failed',
       message: "No path provided for movement.",
-      cost: 0
+      cost: 0,
+      tilesMoved: 0,
+      totalPathLength: 0
     };
   }
 
@@ -37,26 +45,28 @@ export function executeMovement(
   
   if (!validation.isValid) {
     return {
-      success: false,
+      status: 'failed',
       message: validation.reason || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(creature.name),
-      cost: 0
+      cost: 0,
+      tilesMoved: 0,
+      totalPathLength: path.length - 1
     };
   }
   
   // Try to move through the path with zone of control checks
-  const moveResult = creature.moveTo(path, allCreatures);
+  const moveResult = creature.moveTo(path, allCreatures, mapData, mapDefinition);
   
-  if (!moveResult.success) {
+  if (moveResult.status === 'failed') {
     return {
-      success: false,
+      status: 'failed',
       message: moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(creature.name),
-      cost: 0
+      cost: moveResult.cost || 0,
+      tilesMoved: 0,
+      totalPathLength: path.length - 1
     };
   }
   
-  // Apply movement cost
-  creature.useMovement(stepCost);
-  
+  // Movement cost is already applied by moveTo function
   // Don't reset group actions during movement - this should only happen when turns actually end
   // creature.resetGroupActions(allCreatures);
   
@@ -67,9 +77,15 @@ export function executeMovement(
     creature.setRemainingMovement(0);
   }
   
+  // Use the result from moveTo directly since it now returns MovementResult
   return {
-    success: true,
-    cost: stepCost
+    status: moveResult.status,
+    message: moveResult.message,
+    cost: moveResult.cost,
+    finalPosition: moveResult.finalPosition,
+    intendedDestination: destination,
+    tilesMoved: moveResult.tilesMoved,
+    totalPathLength: moveResult.totalPathLength
   };
 }
 

@@ -68,13 +68,6 @@ export class PathfindingSystem {
         // Create the new path for this tile
         const newPath = [...current.path, { x: nx, y: ny }];
 
-        // Check engagement restrictions if enabled
-        if (options.considerEngagement !== false) {
-          if (!this.canMoveToPositionWhenEngaged(creature, allCreatures, nx, ny, current, newPath)) {
-            continue;
-          }
-        }
-
         const newCost = current.cost + stepCost;
         if (newCost > maxBudget) continue;
         
@@ -232,76 +225,6 @@ export class PathfindingSystem {
       currentStats.maxH < Math.max(sideA.maxH, sideB.maxH) &&
       destStats.maxH <= currentStats.maxH) {
       return false; // Block diagonal movement
-    }
-
-    return true;
-  }
-
-  /**
-   * Check if a creature can move to a position when engaged
-   */
-  private static canMoveToPositionWhenEngaged(
-    creature: Creature,
-    allCreatures: Creature[],
-    nx: number,
-    ny: number,
-    current: PathfindingNode,
-    newPath: Array<{ x: number; y: number }>
-  ): boolean {
-    const engagingCreatures = getEngagingCreatures(creature, allCreatures);
-    const wouldBecomeEngaged = allCreatures.some(c =>
-      c !== creature &&
-      c.isAlive() &&
-      creature.isHostileTo(c) &&
-      isInZoneOfControl(nx, ny, c)
-    );
-
-    if (engagingCreatures.length > 0 || wouldBecomeEngaged) {
-      if (engagingCreatures.length > 0) {
-        const canMoveToWhenEngaged = engagingCreatures.every(engager =>
-          isInZoneOfControl(nx, ny, engager)
-        );
-        if (!canMoveToWhenEngaged) return false;
-
-        const isAdjacent = isAdjacentToCreature(nx, ny, { x: current.x, y: current.y } as Creature);
-        if (!isAdjacent) return false;
-
-        if (creature.hasMovedWhileEngaged) return false;
-
-        if (current.cost > 0) return false;
-      } else if (wouldBecomeEngaged) {
-        const isAdjacent = isAdjacentToCreature(nx, ny, { x: current.x, y: current.y } as Creature);
-        if (!isAdjacent) return false;
-      }
-    }
-
-    // Check if the complete path to this tile passes through hostile zones of control
-    let wouldBecomeEngagedDuringPath = false;
-    for (let i = 1; i < newPath.length; i++) {
-      const pathStep = newPath[i];
-      const wouldBeEngagedAtStep = allCreatures.some(c =>
-        c !== creature &&
-        c.isAlive() &&
-        creature.isHostileTo(c) &&
-        isInZoneOfControl(pathStep.x, pathStep.y, c)
-      );
-      if (wouldBeEngagedAtStep) {
-        wouldBecomeEngagedDuringPath = true;
-        break;
-      }
-    }
-
-    if (wouldBecomeEngagedDuringPath) {
-      const pathBlockedByHostileZOC = allCreatures.some(c =>
-        c !== creature &&
-        c.isAlive() &&
-        creature.isHostileTo(c) &&
-        pathPassesThroughZoneOfControl(current.x, current.y, nx, ny, c)
-      );
-
-      if (pathBlockedByHostileZOC) {
-        return false;
-      }
     }
 
     return true;
