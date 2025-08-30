@@ -253,8 +253,9 @@ const customMercenary = new Mercenary({
 // Get reachable tiles
 const { tiles, costMap } = creature.getReachableTiles(allCreatures, mapData, cols, rows);
 
-// Move creature
-const result = creature.moveTo(newX, newY, allCreatures);
+// Move creature through a path
+const path = [{x: creature.x, y: creature.y}, {x: newX, y: newY}]; // Path from current position to destination
+const result = creature.moveTo(path, allCreatures);
 if (result.success) {
   console.log('Moved successfully');
 } else {

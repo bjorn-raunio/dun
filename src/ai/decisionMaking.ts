@@ -177,12 +177,23 @@ export function executeAIDecision(
       
     case 'move':
       if (decision.destination) {
-        // Get the actual movement cost from the reachable tiles calculation
-        const { costMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
-        const cost = costMap.get(`${decision.destination.x},${decision.destination.y}`) ?? Infinity;
+        // Get the actual movement cost and path from the reachable tiles calculation
+        const { costMap, pathMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+        const destKey = `${decision.destination.x},${decision.destination.y}`;
+        const cost = costMap.get(destKey) ?? Infinity;
+        const path = pathMap.get(destKey);
+        
+        if (!path) {
+          return {
+            success: false,
+            message: `No path found to destination (${decision.destination.x}, ${decision.destination.y})`,
+            newState: ai,
+            targetDefeated: false
+          };
+        }
         
         // Use the same movement validation and execution as heroes
-        const moveResult = executeMovement(creature, decision.destination.x, decision.destination.y, allCreatures, cost, mapData, mapDefinition);
+        const moveResult = executeMovement(creature, path, allCreatures, cost, mapData, mapDefinition);
         
         if (moveResult.success) {
           // Update AI state

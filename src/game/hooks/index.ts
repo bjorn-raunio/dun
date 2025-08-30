@@ -4,3 +4,4 @@ export * from './useReachableTiles';
 export * from './useTargetsInRange';
 export * from './useSelectedCreature';
 export * from './useKeyboardHandlers';
+export * from './usePathHighlight';

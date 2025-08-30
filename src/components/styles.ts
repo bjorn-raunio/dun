@@ -22,6 +22,8 @@ export const COLORS = {
   success: "#00ff00",
   reachable: "rgba(0, 229, 255, 0.25)",
   reachableBorder: "rgba(0, 229, 255, 0.7)",
+  pathHighlight: "rgba(0, 255, 0, 0.4)",
+  pathHighlightBorder: "rgba(0, 255, 0, 0.8)",
 } as const;
 
 // Common styles

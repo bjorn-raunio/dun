@@ -13,9 +13,9 @@ export function useReachableTiles(
 ) {
   // Calculate possible squares for selected creature
   const reachable = React.useMemo(() => {
-    if (!selectedCreatureId) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
+    if (!selectedCreatureId) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>(), pathMap: new Map<string, Array<{x: number; y: number}>>() };
     const selected = findCreatureById(creatures, selectedCreatureId);
-    if (!selected || !selected.isPlayerControlled()) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>() };
+    if (!selected || !selected.isPlayerControlled()) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>(), pathMap: new Map<string, Array<{x: number; y: number}>>() };
 
     // Use the creature's built-in pathfinding method
     return selected.getReachableTiles(creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);

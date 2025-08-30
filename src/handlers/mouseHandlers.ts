@@ -21,7 +21,7 @@ export function createMouseHandlers(
   gameRefs: GameRefs,
   creatures: Creature[],
   selectedCreatureId: string | null,
-  reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number> },
+  reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   mapDefinition?: any
@@ -86,6 +86,31 @@ export function createMouseHandlers(
         const currentCreature = findCreatureById(creatures, selectedCreatureId);
         if (!currentCreature) return;
         
+        // Get the path to the destination from the pathMap
+        const path = reachable.pathMap.get(destKey);
+        if (!path) {
+          console.error(`No path found for destination (${pos.tileX}, ${pos.tileY})`);
+          return;
+        }
+        
+        // Validate that the path is still valid for the current creature position
+        if (path.length > 0 && (path[0].x !== currentCreature.x || path[0].y !== currentCreature.y)) {
+          console.warn(`Path is stale - creature moved from (${path[0].x}, ${path[0].y}) to (${currentCreature.x}, ${currentCreature.y}). Recalculating path.`);
+          
+          // Recalculate the path for the current position
+          const freshReachable = currentCreature.getReachableTiles(creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+          const freshPath = freshReachable.pathMap.get(destKey);
+          
+          if (!freshPath) {
+            console.error(`No fresh path found for destination (${pos.tileX}, ${pos.tileY}) from current position (${currentCreature.x}, ${currentCreature.y})`);
+            return;
+          }
+          
+          // Use the fresh path
+          path.length = 0;
+          path.push(...freshPath);
+        }
+        
         // Calculate the step cost from current position to destination
         const currentCost = reachable.costMap.get(`${currentCreature.x},${currentCreature.y}`) ?? 0;
         const destCost = reachable.costMap.get(destKey) ?? 0;
@@ -93,6 +118,7 @@ export function createMouseHandlers(
         
         // Debug logging for movement cost
         console.log(`Movement cost debug: Hero at (${currentCreature.x},${currentCreature.y}) moving to (${pos.tileX},${pos.tileY})`);
+        console.log(`  Path:`, path);
         console.log(`  Current cost: ${currentCost}, Dest cost: ${destCost}, Step cost: ${stepCost}`);
         console.log(`  Remaining movement before: ${currentCreature.remainingMovement}`);
         
@@ -108,8 +134,8 @@ export function createMouseHandlers(
            const targetCreature = findCreatureById(prev, selectedCreatureId);
            if (!targetCreature) return prev;
            
-                       // Execute movement using extracted logic
-                          const moveResult = executeMovement(targetCreature, pos.tileX, pos.tileY, prev, stepCost, mapData, mapDefinition);
+                                               // Execute movement using the path
+                           const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
            
            if (moveResult.success) {
              console.log(`  Movement cost applied: ${moveResult.cost}, Remaining after: ${targetCreature.remainingMovement}`);
@@ -131,7 +157,7 @@ export function createMouseHandlers(
                            // Check engagement status after movement
               const isEngaged = targetCreature.isEngagedWithAll(prev);
               if (isEngaged) {
-                addMessage(VALIDATION_MESSAGES.NOW_ENGAGED(targetCreature.name), setMessages);
+                console.log(`${targetCreature.name} is now engaged`);
               }
              
              return prev.map(c => {
@@ -140,8 +166,8 @@ export function createMouseHandlers(
                return targetCreature.clone();
              });
                        } else {
-              // Movement failed - show message
-              addMessage(moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name), setMessages);
+              // Movement failed - log to console
+              console.log(`Movement failed: ${moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name)}`);
               return prev;
             }
          });
@@ -152,8 +178,8 @@ export function createMouseHandlers(
            c.x === pos.tileX && 
            c.y === pos.tileY
          );
-         if (deadCreatureAtDestination) {
-                       addMessage(VALIDATION_MESSAGES.MOVES_OVER_REMAINS(selected.name), setMessages);
+                  if (deadCreatureAtDestination) {
+           console.log(`${selected.name} moves over remains`);
          }
       }
       if (moved) {
@@ -171,10 +197,10 @@ export function createMouseHandlers(
 
          // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
      if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
-       if (!targetsInRangeIds.has(creature.id)) {
-         addMessage(VALIDATION_MESSAGES.CANNOT_REACH_TARGET(selected.name, creature.name), setMessages);
-         return; // keep hero selected
-       }
+              if (!targetsInRangeIds.has(creature.id)) {
+          console.log(`Cannot reach target: ${selected.name} cannot reach ${creature.name}`);
+          return; // keep hero selected
+        }
       
       // Get the current creature state to avoid stale closures
       const currentCreature = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;

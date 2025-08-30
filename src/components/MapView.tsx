@@ -18,10 +18,13 @@ interface MapViewProps {
   reachable: {
     tiles: Array<{ x: number; y: number }>;
     costMap: Map<string, number>;
+    pathMap: Map<string, Array<{ x: number; y: number }>>;
   };
+  highlightedPath: Array<{ x: number; y: number }>;
   onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
   onTileClick: (pos: { tileX: number; tileY: number }) => void;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -34,9 +37,11 @@ export function MapView({
   creatures,
   selectedCreatureId,
   reachable,
+  highlightedPath,
   onMouseDown,
   onMouseMove,
   onMouseUp,
+  onMouseLeave,
   onCreatureClick,
   onTileClick,
   viewportRef,
@@ -161,6 +166,7 @@ export function MapView({
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
+      onMouseLeave={onMouseLeave}
     >
       <div
         ref={panRef}
@@ -286,6 +292,38 @@ export function MapView({
             ))}
           </div>
         ) : null}
+        
+        {/* Path highlight overlay */}
+        {highlightedPath.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: TILE_SIZE * cols,
+              height: TILE_SIZE * rows,
+              pointerEvents: "none",
+              zIndex: 3,
+            }}
+          >
+            {highlightedPath.map((tile, index) => (
+              <div
+                key={`path-${tile.x}-${tile.y}-${index}`}
+                style={{
+                  position: "absolute",
+                  left: tile.x * TILE_SIZE,
+                  top: tile.y * TILE_SIZE,
+                  width: TILE_SIZE,
+                  height: TILE_SIZE,
+                  background: COLORS.pathHighlight,
+                  boxShadow: `inset 0 0 0 2px ${COLORS.pathHighlightBorder}`,
+                  borderRadius: 6,
+                  pointerEvents: "none",
+                }}
+              />
+            ))}
+          </div>
+        )}
         
         {/* Creatures overlay */}
         <div

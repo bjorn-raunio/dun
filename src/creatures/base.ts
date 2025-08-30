@@ -526,15 +526,15 @@ export abstract class Creature {
   }
 
   // Get reachable tiles (delegates to CreatureMovement)
-  getReachableTiles(allCreatures: Creature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: any): { tiles: Array<{x: number; y: number}>; costMap: Map<string, number> } {
+  getReachableTiles(allCreatures: Creature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: any): { tiles: Array<{x: number; y: number}>; costMap: Map<string, number>; pathMap: Map<string, Array<{x: number; y: number}>> } {
     const { CreatureMovement } = require('./movement');
     return CreatureMovement.getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
-  // Move to new position (delegates to CreatureMovement)
-  moveTo(x: number, y: number, allCreatures: Creature[] = []): { success: boolean; message?: string } {
+  // Move to new position through a path (delegates to CreatureMovement)
+  moveTo(path: Array<{x: number; y: number}>, allCreatures: Creature[] = []): { success: boolean; message?: string } {
     const { CreatureMovement } = require('./movement');
-    return CreatureMovement.moveTo(this, x, y, allCreatures);
+    return CreatureMovement.moveTo(this, path, allCreatures);
   }
 
   // Attack target (delegates to executeCombat)

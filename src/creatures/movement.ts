@@ -16,7 +16,7 @@ export class CreatureMovement {
     cols: number, 
     rows: number, 
     mapDefinition?: any
-  ): { tiles: Array<{x: number; y: number}>; costMap: Map<string, number> } {
+  ): { tiles: Array<{x: number; y: number}>; costMap: Map<string, number>; pathMap: Map<string, Array<{x: number; y: number}>> } {
     return PathfindingSystem.getReachableTiles(
       creature,
       allCreatures,
@@ -32,47 +32,76 @@ export class CreatureMovement {
 
 
 
-  // Move creature to new position (with zone of control checks)
-  static moveTo(creature: Creature, x: number, y: number, allCreatures: Creature[] = []): { success: boolean; message?: string } {
-    // Check if we're currently engaged
-    const engagingCreatures = getEngagingCreatures(creature, allCreatures);
-    const currentlyEngaged = engagingCreatures.length > 0;
-    
-    if (currentlyEngaged) {
-      // We're engaged - check if we can move to the new position
-      if (!canMoveToWhenEngaged(creature, x, y, engagingCreatures)) {
-        return {
-          success: false,
-          message: `${creature.name} is engaged and cannot move outside the zone of control of engaging creatures.`
+  // Move creature through a sequence of adjacent tiles (prevents teleporting)
+  static moveTo(creature: Creature, path: Array<{x: number; y: number}>, allCreatures: Creature[] = []): { success: boolean; message?: string } {
+    if (path.length === 0) {
+      return { success: false, message: "No path provided for movement." };
+    }
+
+    // Validate that the path starts from the creature's current position
+    const startTile = path[0];
+    if (startTile.x !== creature.x || startTile.y !== creature.y) {
+      return { 
+        success: false, 
+        message: `Path must start from creature's current position (${creature.x}, ${creature.y}), but starts at (${startTile.x}, ${startTile.y})` 
+      };
+    }
+
+    // Move through each tile in the path sequentially
+    for (let i = 1; i < path.length; i++) {
+      const currentTile = path[i - 1];
+      const nextTile = path[i];
+      
+      // Validate that tiles are adjacent (including diagonal)
+      const dx = Math.abs(nextTile.x - currentTile.x);
+      const dy = Math.abs(nextTile.y - currentTile.y);
+      if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
+        // Valid adjacent movement (orthogonal or diagonal)
+      } else {
+        return { 
+          success: false, 
+          message: `Invalid path: tiles (${currentTile.x}, ${currentTile.y}) and (${nextTile.x}, ${nextTile.y}) are not adjacent` 
         };
       }
+
+      // Check if we're currently engaged
+      const engagingCreatures = getEngagingCreatures(creature, allCreatures);
+      const currentlyEngaged = engagingCreatures.length > 0;
       
-      // Mark that we've moved while engaged
-      creature.hasMovedWhileEngaged = true;
-    } else {
-      // Check if moving to this position would put us in engagement
-      const wouldBeEngaged = allCreatures.some(c => 
-        c !== creature && 
-        c.isAlive() && 
-        creature.isHostileTo(c) && 
-        isInZoneOfControl(x, y, c)
-      );
-      
-      if (wouldBeEngaged) {
-        // We would become engaged at this position
-        // Mark that we've moved while engaged (since we're becoming engaged)
+      if (currentlyEngaged) {
+        // We're engaged - check if we can move to the next position
+        if (!canMoveToWhenEngaged(creature, nextTile.x, nextTile.y, engagingCreatures)) {
+          return {
+            success: false,
+            message: `${creature.name} is engaged and cannot move outside the zone of control of engaging creatures.`
+          };
+        }
+        
+        // Mark that we've moved while engaged
         creature.hasMovedWhileEngaged = true;
+      } else {
+        // Check if moving to this position would put us in engagement
+        const wouldBeEngaged = allCreatures.some(c => 
+          c !== creature && 
+          c.isAlive() && 
+          creature.isHostileTo(c) && 
+          isInZoneOfControl(nextTile.x, nextTile.y, c)
+        );
+        
+        if (wouldBeEngaged) {
+          // We would become engaged at this position
+          // Mark that we've moved while engaged (since we're becoming engaged)
+          creature.hasMovedWhileEngaged = true;
+        }
       }
+      
+      // Face the direction of movement
+      creature.faceTowards(nextTile.x, nextTile.y);
+      
+      // Update position to the next tile
+      creature.x = nextTile.x;
+      creature.y = nextTile.y;
     }
-    
-    // Face the direction of movement
-    if (x !== creature.x || y !== creature.y) {
-      creature.faceTowards(x, y);
-    }
-    
-    // Update position
-    creature.x = x;
-    creature.y = y;
     
     return { success: true };
   }

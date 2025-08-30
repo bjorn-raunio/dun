@@ -15,6 +15,7 @@ import {
 export interface PathfindingResult {
   tiles: Array<{x: number; y: number}>;
   costMap: Map<string, number>;
+  pathMap: Map<string, Array<{x: number; y: number}>>;
 }
 
 export interface PathfindingOptions {
@@ -23,7 +24,7 @@ export interface PathfindingOptions {
   includeStartPosition?: boolean;
 }
 
-// Direction constants for movement
+// Direction constants for movement (including diagonal with corner rule)
 const DIRECTIONS = [
   [1, 0], [-1, 0], [0, 1], [0, -1],  // Cardinal directions
   [1, 1], [1, -1], [-1, 1], [-1, -1], // Diagonal directions
@@ -47,6 +48,7 @@ export class PathfindingSystem {
   ): PathfindingResult {
     const maxBudget = options.maxBudget ?? creature.remainingMovement ?? creature.movement;
     const dist = new Map<string, number>();
+    const pathMap = new Map<string, Array<{x: number; y: number}>>();
     const result: Array<{x: number; y: number}> = [];
     const cmp = (a: {x:number;y:number;cost:number;path:Array<{x:number;y:number}>}, b: {x:number;y:number;cost:number;path:Array<{x:number;y:number}>}) => a.cost - b.cost;
     const pq: Array<{x:number;y:number;cost:number;path:Array<{x:number;y:number}>}> = [{ 
@@ -161,12 +163,13 @@ export class PathfindingSystem {
         const key = `${nx},${ny}`;
         if (newCost < (dist.get(key) ?? Infinity)) {
           dist.set(key, newCost);
+          pathMap.set(key, newPath);
           pq.push({ x: nx, y: ny, cost: newCost, path: newPath });
         }
       }
     }
 
-    return { tiles: result, costMap: dist };
+    return { tiles: result, costMap: dist, pathMap };
   }
 
   /**

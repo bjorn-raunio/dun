@@ -158,7 +158,7 @@ export function executeAITurnForCreature(
   // Continue taking actions until no progress is made (remaining actions/movement/quick actions don't change)
   while (true) {
     // Get updated reachable tiles and targets in range (may have changed after movement)
-    const { tiles: reachableTiles, costMap: reachableTilesCostMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+    const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = CreatureMovement.getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
     const targetsInRangeIds = calculateTargetsInRange(creature, allCreatures);
     const targetsInRange = allCreatures.filter(c => targetsInRangeIds.has(c.id));
 
@@ -187,8 +187,12 @@ export function executeAITurnForCreature(
         (creature as any).updateAIState(executionResult.newState);
       }
       
-      // Add message
-      addMessage(executionResult.message, setMessages);
+      // Add message to console for movement, to message system for other actions
+      if (decisionResult.action.type === 'move') {
+        console.log(executionResult.message);
+      } else {
+        addMessage(executionResult.message, setMessages);
+      }
       
       success = true;
       

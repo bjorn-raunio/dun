@@ -29,7 +29,7 @@ export function addMovementMessage(
   facingDirection: string,
   setMessages: GameActions['setMessages']
 ) {
-  addMessage(`${creatureName} faces ${facingDirection}`, setMessages);
+  console.log(`${creatureName} faces ${facingDirection}`);
 }
 
 export function addErrorMessage(

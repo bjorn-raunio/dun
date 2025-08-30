@@ -4,7 +4,7 @@ import { mapDefinition, generateMapTiles } from './maps';
 import { useGameState, endTurnWithAI } from './game';
 import { MapView, GameUI, CreaturePanel, TurnTracker } from './components';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement } from './game/hooks';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight } from './game/hooks';
 
 // Map and game state are now imported from extracted modules
 
@@ -19,12 +19,21 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   const [gameState, gameRefs, gameActions] = useGameState(mapDefinition.creatures, mapDefinition);
   const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState } = gameState;
   const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState, setTurnState } = gameActions;
-  const { panRef, viewportRef, lastMovement } = gameRefs;
+  const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
   
   // Custom hooks for game logic
   const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey);
   const reachable = useReachableTiles(creatures, selectedCreatureId, mapData, reachableKey, mapDefinition);
   const selectedCreature = useSelectedCreature(creatures, selectedCreatureId);
+
+  // Path highlight hook
+  const { highlightedPath, onMouseMove: onPathMouseMove, onMouseLeave: onPathMouseLeave } = usePathHighlight(
+    reachable,
+    viewportRef,
+    livePan,
+    mapData,
+    reachableKey
+  );
 
   // Turn advancement hook
   useTurnAdvancement(turnState, creatures, setTurnState);
@@ -53,9 +62,14 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         creatures={creatures}
         selectedCreatureId={selectedCreatureId}
         reachable={reachable}
+        highlightedPath={highlightedPath}
         onMouseDown={mouseHandlers.onMouseDown}
-        onMouseMove={mouseHandlers.onMouseMove}
+        onMouseMove={(e) => {
+          mouseHandlers.onMouseMove(e);
+          onPathMouseMove(e);
+        }}
         onMouseUp={mouseHandlers.onMouseUp}
+        onMouseLeave={onPathMouseLeave}
         onCreatureClick={mouseHandlers.onCreatureClick}
         onTileClick={() => {}} // Handled in onMouseUp
         viewportRef={viewportRef}

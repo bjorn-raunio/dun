@@ -18,7 +18,7 @@ export function useEventHandlers(
   gameRefs: GameRefs,
   creatures: Creature[],
   selectedCreatureId: string | null,
-  reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number> },
+  reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   setSelectedCreatureId: (id: string | null) => void,

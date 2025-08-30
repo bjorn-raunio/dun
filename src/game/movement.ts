@@ -11,19 +11,29 @@ export interface MovementResult {
 }
 
 /**
- * Execute movement for a creature
+ * Execute movement for a creature through a path
  */
 export function executeMovement(
   creature: Creature,
-  newX: number,
-  newY: number,
+  path: Array<{x: number; y: number}>,
   allCreatures: Creature[],
   stepCost: number,
   mapData: { tiles: string[][] },
   mapDefinition?: any
 ): MovementResult {
+  if (path.length === 0) {
+    return {
+      success: false,
+      message: "No path provided for movement.",
+      cost: 0
+    };
+  }
+
+  // Get the destination from the last tile in the path
+  const destination = path[path.length - 1];
+  
   // Validate movement using extracted validation logic
-  const validation = validateMovement(creature, newX, newY, allCreatures, mapData, stepCost, mapDefinition);
+  const validation = validateMovement(creature, destination.x, destination.y, allCreatures, mapData, stepCost, mapDefinition);
   
   if (!validation.isValid) {
     return {
@@ -33,8 +43,8 @@ export function executeMovement(
     };
   }
   
-  // Try to move with zone of control checks
-  const moveResult = creature.moveTo(newX, newY, allCreatures);
+  // Try to move through the path with zone of control checks
+  const moveResult = creature.moveTo(path, allCreatures);
   
   if (!moveResult.success) {
     return {
