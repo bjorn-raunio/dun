@@ -190,6 +190,11 @@ export class CreatureStateManager {
     this.turnStartPosition = { ...position };
   }
 
+  recordTurnEndPosition(): void {
+    // This method is a no-op in the state manager
+    // The base creature class handles recording the current position
+  }
+
   // --- Updates ---
 
   updateMaxValues(

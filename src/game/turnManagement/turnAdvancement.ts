@@ -125,6 +125,14 @@ export function advanceToNextCreature(
   // Find current creature index
   const currentIndex = turnState.turnOrder.findIndex(id => id === turnState.activeCreatureId);
   
+  // Record the turn-end position of the current creature before advancing
+  if (turnState.activeCreatureId && currentIndex >= 0) {
+    const currentCreature = findCreatureById(creatures, turnState.activeCreatureId);
+    if (currentCreature) {
+      currentCreature.recordTurnEndPosition();
+    }
+  }
+  
   // Find next creature that can take actions
   let nextIndex = currentIndex + 1;
   if (nextIndex >= turnState.turnOrder.length) {
@@ -165,4 +173,20 @@ export function shouldEndTurn(
 ): boolean {
   const livingCreatures = getLivingCreatures(creatures);
   return livingCreatures.every(c => !canTakeActions(c));
+}
+
+/**
+ * Record turn-end positions for all creatures when the turn ends
+ */
+export function recordTurnEndPositions(
+  turnState: TurnState,
+  creatures: Creature[]
+): void {
+  // Record the position of the currently active creature if there is one
+  if (turnState.activeCreatureId) {
+    const currentCreature = findCreatureById(creatures, turnState.activeCreatureId);
+    if (currentCreature) {
+      currentCreature.recordTurnEndPosition();
+    }
+  }
 }

@@ -108,6 +108,7 @@ export interface ICreatureStateManager {
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
   resetTurn(): void;
+  recordTurnEndPosition(): void;
   resetRemainingActions(): void;
   setRemainingMovement(value: number): void;
   setRemainingActions(value: number): void;

@@ -237,6 +237,9 @@ export abstract class Creature implements ICreature {
   setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
   resetTurn(): void { 
     this.stateManager.resetTurn(); 
+  }
+
+  recordTurnEndPosition(): void {
     this.stateManager.recordTurnStartPosition(this.positionManager.getPosition());
   }
   resetRemainingActions(): void { this.stateManager.resetRemainingActions(); }
@@ -276,7 +279,7 @@ export abstract class Creature implements ICreature {
 
   wasBehindTargetAtTurnStart(target: any): boolean {
     return this.combatManager.wasBehindTargetAtTurnStart(
-      target.x, target.y, target.turnStartFacing, this.turnStartX, this.turnStartY
+      target.x, target.y, target.facing, this.turnStartX, this.turnStartY
     );
   }
 

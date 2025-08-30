@@ -23,7 +23,7 @@ Each attack is now resolved in three distinct phases, each handled by its own fu
 - **Double Criticals**: Both dice rolling 6 provides automatic hit and bonus damage
 
 ### Modifiers
-- Back attack bonus (+1 if attacker was behind target at turn start)
+- Back attack bonus (+1 if attacker was behind target at turn start) - applies to both melee and ranged attacks
 - Elevation bonus (+1 for higher ground)
 - Weapon combat modifiers
 - Equipment bonuses

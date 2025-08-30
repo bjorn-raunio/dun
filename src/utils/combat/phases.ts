@@ -19,6 +19,7 @@ import {
   calculateElevationBonus,
   calculateDamage
 } from './calculations';
+import { COMBAT_CONSTANTS } from '../constants';
 
 // --- Combat Phase 1: To-Hit Roll ---
 
@@ -57,9 +58,9 @@ export function executeToHitRollMelee(
 
   // Check for back attack bonus
   if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
-    attackerBonus += 1;
-    attackerModifiers.push("back attack +1");
-    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind!`);
+    attackerBonus += COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
+    attackerModifiers.push(`back attack +${COMBAT_CONSTANTS.BACK_ATTACK_BONUS}`);
+    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind! (+${COMBAT_CONSTANTS.BACK_ATTACK_BONUS} bonus)`);
   }
 
   // Check for elevation bonus
@@ -169,6 +170,13 @@ export function executeToHitRollRanged(
     criticalHit = false;
   }
 
+  // Check for back attack bonus
+  let backAttackBonus = 0;
+  if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
+    backAttackBonus = COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
+    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind with ranged weapon! (+${COMBAT_CONSTANTS.BACK_ATTACK_BONUS} bonus)`);
+  }
+
   // Apply range penalty: -1 over 3, -2 over 6, -3 over 9
   let rangePenalty = 0;
   if (distance > 9) {
@@ -200,13 +208,13 @@ export function executeToHitRollRanged(
     }
   }
   
-  // Ranged attacks hit on 10 or greater (with all penalties), but double criticals always hit
-  const totalPenalty = agilityPenalty + movementPenalty + rangePenalty;
-  const hit = attackerDoubleCritical || (toHitRoll + totalPenalty) >= 10;
+  // Ranged attacks hit on 10 or greater (with all penalties and bonuses), but double criticals always hit
+  const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
+  const hit = attackerDoubleCritical || (toHitRoll + totalModifier) >= 10;
 
   const toHitMessage = attackerDoubleCritical
     ? `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged) (DOUBLE CRITICAL!) - AUTOMATIC HIT!`
-    : `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged)${totalPenalty < 0 ? ` (total penalty ${totalPenalty})` : ''}`;
+    : `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged)${totalModifier !== 0 ? ` (total modifier ${totalModifier > 0 ? '+' : ''}${totalModifier})` : ''}`;
 
   return {
     hit,
