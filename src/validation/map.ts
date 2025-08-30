@@ -146,7 +146,8 @@ export function validatePositionStandable(
     for (let dx = 0; dx < dimensions.w; dx++) {
       for (let dy = 0; dy < dimensions.h; dy++) {
         const height = terrainHeightAt(x + dx, y + dy, mapDefinition);
-        if (height > 0) { // Assuming height > 0 means impassable terrain
+        // Allow terrain up to height 1 (elevation 1) - creatures can climb up to 1 elevation
+        if (height > 1) {
           return false;
         }
       }

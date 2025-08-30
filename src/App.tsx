@@ -2,7 +2,8 @@ import React from "react";
 import './App.css';
 import { mapDefinition, generateMapTiles } from './maps';
 import { useGameState, endTurnWithAI } from './game';
-import { MapView, GameUI, CreaturePanel, TurnTracker } from './components';
+import { MapView, GameUI, TurnTracker } from './components';
+import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight } from './game/hooks';
 

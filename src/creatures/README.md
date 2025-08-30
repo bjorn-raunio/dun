@@ -70,7 +70,7 @@ const hero = new Hero({
   // No need to specify id - it's auto-generated as "creature-1", "creature-2", etc.
 });
 
-const monster = createMonster("bandit", {
+const monster = createMonster("bandit", "bandits", {
   x: 5,
   y: 5,
   // No need to specify id
@@ -186,7 +186,7 @@ const hero = new Hero({
 });
 
 // Create a monster from preset
-const bandit = createMonster('bandit', {
+const bandit = createMonster('bandit', 'bandits', {
   x: 10,
   y: 10
   // group: 'enemy' is automatically set by Monster constructor
@@ -211,7 +211,7 @@ console.log('Current target:', aiState.currentTarget?.name);
 monster.updateAIState(newAIState);
 
 // Create a monster with custom group
-const neutralCreature = createMonster('bandit', {
+const neutralCreature = createMonster('bandit', 'bandits', {
   x: 15,
   y: 15,
   group: 'neutral'  // Override default group

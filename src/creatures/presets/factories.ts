@@ -1,10 +1,11 @@
 import { Monster, Mercenary, CREATURE_GROUPS } from '../index';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../../items';
-import { MONSTER_FACTIONS } from '../monster';
-import { monsterPresets, monsterPresetsByFaction } from './monsters';
+import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
+import { monsterPresets } from './monsters';
 import { mercenaryPresets } from './mercenaries';
 import { MonsterPreset, MercenaryPreset } from './types';
-import { getLoadoutById } from './loadouts';
+import { getWeaponLoadoutById, getArmorLoadoutById, getRandomWeaponLoadout, getRandomArmorLoadout } from './loadouts';
+import { EquipmentSystem } from '../../items/equipment';
 
 // --- Factory Functions ---
 
@@ -68,41 +69,98 @@ function createEquipmentFromPreset(preset: MonsterPreset | MercenaryPreset): any
  */
 export function createMonster(
   presetId: string, 
-  overrides?: Partial<Monster> & { id?: string; x: number; y: number; loadout?: string }
+  faction: MonsterFaction,
+  overrides?: Partial<Monster> & { id?: string; x: number; y: number; weaponLoadout?: string; armorLoadout?: string }
 ): Monster {
   const p = monsterPresets[presetId];
   if (!p) {
     throw new Error(`Monster preset "${presetId}" not found`);
   }
 
-  // Determine faction from preset location in monsterPresetsByFaction
-  let faction: string = MONSTER_FACTIONS.bandits.id; // default
-  for (const [factionId, factionPresets] of Object.entries(monsterPresetsByFaction)) {
-    if (presetId in factionPresets) {
-      faction = factionId as string;
-      break;
-    }
+  // Validate that the faction is valid
+  if (!Object.values(MONSTER_FACTIONS).some(f => f.id === faction)) {
+    throw new Error(`Invalid faction "${faction}". Valid factions are: ${Object.values(MONSTER_FACTIONS).map(f => f.id).join(', ')}`);
   }
 
-  // Handle weapon loadouts
-  let loadoutToUse = overrides?.loadout || p.defaultLoadout;
-  let loadoutData = null;
+    // Handle weapon and armor loadouts
+  let weaponLoadoutToUse = overrides?.weaponLoadout;
+  let armorLoadoutToUse = overrides?.armorLoadout;
   
-  if (loadoutToUse && p.weaponLoadouts && p.weaponLoadouts[loadoutToUse]) {
-    const loadoutId = p.weaponLoadouts[loadoutToUse];
-    loadoutData = getLoadoutById(loadoutId);
+  // If no loadout specified, randomly select from available options
+  if (!weaponLoadoutToUse && p.weaponLoadouts && p.weaponLoadouts.length > 0) {
+    weaponLoadoutToUse = getRandomWeaponLoadout(p.weaponLoadouts);
+  }
+  
+  if (!armorLoadoutToUse && p.armorLoadouts && p.armorLoadouts.length > 0) {
+    armorLoadoutToUse = getRandomArmorLoadout(p.armorLoadouts);
+  }
+  
+  let weaponLoadoutData = null;
+  let armorLoadoutData = null;
+   
+  if (weaponLoadoutToUse && p.weaponLoadouts && p.weaponLoadouts.includes(weaponLoadoutToUse)) {
+    weaponLoadoutData = getWeaponLoadoutById(weaponLoadoutToUse);
+  }
+  
+  if (armorLoadoutToUse && p.armorLoadouts && p.armorLoadouts.includes(armorLoadoutToUse)) {
+    armorLoadoutData = getArmorLoadoutById(armorLoadoutToUse);
   }
 
-  // Use loadout data if available, otherwise fall back to base preset
-  const effectivePreset = loadoutData ? {
+  // Combine weapon and armor loadouts with base preset
+  const effectivePreset = {
     ...p,
-    equipment: loadoutData.equipment || p.equipment,
-    inventory: loadoutData.inventory || p.inventory,
-    aiBehavior: loadoutData.aiBehavior || p.aiBehavior,
-  } : p;
+    // Combine weapon loadout data
+    equipment: {
+      ...p.equipment,
+      ...(weaponLoadoutData && {
+        mainHand: weaponLoadoutData.mainHand,
+        offHand: weaponLoadoutData.offHand,
+      }),
+      ...(armorLoadoutData && {
+        armor: armorLoadoutData.armor,
+        // Note: Shields from armor loadouts go to offHand if no weapon is using it
+        ...(armorLoadoutData.shield && !weaponLoadoutData?.offHand && {
+          offHand: armorLoadoutData.shield
+        })
+      })
+    },
+    // Combine inventory from both loadouts
+    inventory: [
+      ...(p.inventory || []),
+      ...(weaponLoadoutData?.inventory || []),
+      ...(armorLoadoutData?.inventory || [])
+    ],
+    // Use weapon loadout AI behavior if available
+    aiBehavior: weaponLoadoutData?.aiBehavior || p.aiBehavior,
+  };
 
   const inventory = createInventoryFromPreset(effectivePreset);
   const equipment = createEquipmentFromPreset(effectivePreset);
+
+  // Validate equipment compatibility using the existing EquipmentSystem
+  const equipmentSystem = new EquipmentSystem(equipment);
+  const equipmentValidation = equipmentSystem.validateEquipment();
+  if (!equipmentValidation.isValid) {
+    console.warn(`Equipment validation failed for monster ${presetId}: ${equipmentValidation.reason}`);
+    
+    // Move conflicting items to inventory and fix equipment
+    if (equipmentValidation.slot) {
+      const conflictingItem = equipment[equipmentValidation.slot];
+      if (conflictingItem) {
+        // Remove the conflicting item from equipment
+        delete equipment[equipmentValidation.slot];
+        // Add it to inventory
+        inventory.push(conflictingItem);
+        console.log(`Moved conflicting ${equipmentValidation.slot} item to inventory for monster ${presetId}`);
+      }
+    }
+    
+    // Re-validate after fixing
+    const revalidation = equipmentSystem.validateEquipment();
+    if (!revalidation.isValid) {
+      console.warn(`Equipment still invalid after fixing: ${revalidation.reason}`);
+    }
+  }
 
   const attributes = {
     movement: overrides?.movement ?? p.attributes.movement,

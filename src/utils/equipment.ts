@@ -83,7 +83,7 @@ export function getWeaponDamage(creature: Creature): number {
 /**
  * Get weapon range information for a creature
  * @param creature The creature to check
- * @param rangeType The type of range to return ('normal', 'long', or 'info')
+ * @param rangeType The type of range to return ('normal', 'long', or 'info') - note: 'long' and 'normal' now return the same value for ranged weapons
  * @returns Range value or range info object
  */
 export function getWeaponRange(
@@ -100,10 +100,10 @@ export function getWeaponRange(
     rangeTiles = Math.max(1, main.reach ?? 1);
   } else if (main instanceof RangedWeapon) {
     isRanged = true;
-    rangeTiles = Math.max(1, rangeType === 'long' ? main.range.long : main.range.normal);
+    rangeTiles = Math.max(1, main.range);
   } else if (offHand instanceof RangedWeapon) {
     isRanged = true;
-    rangeTiles = Math.max(1, rangeType === 'long' ? offHand.range.long : offHand.range.normal);
+    rangeTiles = Math.max(1, offHand.range);
   }
   
   // If no weapon equipped, return unarmed range (1)

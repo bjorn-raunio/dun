@@ -1,8 +1,6 @@
 import { Creature } from '../creatures/index';
-import { AIState, AIDecision, AIBehaviorType } from './types';
-import { calculateDistanceBetween } from '../utils/pathfinding';
-import { isBackAttack } from '../utils/combatUtils';
-import { createAIDecision, updateAIStateWithAction, assessThreatLevel, getBehaviorModifiers } from './helpers';
+import { AIState, AIDecision } from './types';
+import { createAIDecision, updateAIStateWithAction } from './helpers';
 
 // --- AI Combat Logic ---
 
@@ -42,30 +40,7 @@ export function shouldFlee(
   creature: Creature,
   allCreatures: Creature[]
 ): boolean {
-  const threatAssessment = assessThreatLevel(creature, allCreatures, 3);
-  const behaviorModifiers = getBehaviorModifiers(ai.behavior);
-  
-  // Don't flee if health is good
-  if (threatAssessment.healthRatio > 0.4) {
-    return false;
-  }
-  
-  // Flee if threat level is critical
-  if (threatAssessment.threatLevel === 'critical') {
-    return true;
-  }
-  
-  // Apply behavior-specific modifiers
-  const fleeThreshold = behaviorModifiers.riskTolerance;
-  
-  switch (threatAssessment.threatLevel) {
-    case 'high':
-      return threatAssessment.healthRatio < (0.3 + fleeThreshold * 0.2);
-    case 'medium':
-      return threatAssessment.healthRatio < (0.2 + fleeThreshold * 0.1);
-    default:
-      return false;
-  }
+  return false;
 }
 
 /**

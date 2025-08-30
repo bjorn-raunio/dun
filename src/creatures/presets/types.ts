@@ -29,12 +29,9 @@ export type BasePreset = {
 
 export type MonsterPreset = BasePreset & {
   aiBehavior?: AIBehaviorType; // AI behavior type (melee, ranged, animal)
-  // Weapon loadout system for different variants
-  weaponLoadouts?: {
-    [loadoutName: string]: string; // Reference to loadout ID from centralized loadouts
-  };
-  // Default weapon loadout to use if none specified
-  defaultLoadout?: string;
+  // Loadout system for different variants
+  weaponLoadouts?: string[]; // Array of weapon loadout IDs
+  armorLoadouts?: string[];  // Array of armor loadout IDs
 };
 
 export type MercenaryPreset = BasePreset & {

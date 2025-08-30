@@ -84,16 +84,23 @@ export class PathfindingSystem {
           const destStats = this.areaStats(nx, ny, selectedDims, mapData, cols, rows, mapDefinition);
           const currentStats = this.areaStats(current.x, current.y, selectedDims, mapData, cols, rows, mapDefinition);
           
-          const movingIntoTerrain = destStats.maxH >= 1;
-          const standingOnEqualOrHigherTerrain = currentStats.maxH >= Math.max(sideA.maxH, sideB.maxH);
-          
+          // Check if the sides block diagonal movement
           const sideABlocks = sideA.maxH >= 1;
           const sideBBlocks = sideB.maxH >= 1;
-          if ((sideABlocks || sideBBlocks) && !movingIntoTerrain && !standingOnEqualOrHigherTerrain) continue;
+          
+          // Allow diagonal movement if:
+          // 1. Neither side blocks, OR
+          // 2. Creature is standing on terrain equal to or higher than the blocking sides, OR  
+          // 3. Creature is moving into terrain (climbing up)
+          if ((sideABlocks || sideBBlocks) && 
+              currentStats.maxH < Math.max(sideA.maxH, sideB.maxH) && 
+              destStats.maxH <= currentStats.maxH) {
+            continue; // Block diagonal movement
+          }
         }
 
         // Cost and passability
-        const stepCost = this.moveCostInto(nx, ny, selectedDims, mapData, cols, rows, mapDefinition);
+        const stepCost = this.moveCostInto(nx, ny, selectedDims, mapData, cols, rows, mapDefinition, current.x, current.y);
         if (!isFinite(stepCost)) continue;
         if (!this.areaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition)) continue;
         
@@ -288,8 +295,8 @@ export class PathfindingSystem {
   /**
    * Get terrain movement cost for a tile
    */
-  static getTerrainCost(x: number, y: number, mapData: { tiles: string[][] }, mapDefinition?: any): number {
-    return getTerrainCost(x, y, mapData, mapDefinition);
+  static getTerrainCost(x: number, y: number, mapData: { tiles: string[][] }, mapDefinition?: any, fromX?: number, fromY?: number): number {
+    return getTerrainCost(x, y, mapData, mapDefinition, fromX, fromY);
   }
 
   /**
@@ -348,23 +355,43 @@ export class PathfindingSystem {
   /**
    * Helper method to calculate movement cost
    */
-  private static moveCostInto(tx: number, ty: number, dims: {w: number; h: number}, mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: any): number {
+  private static moveCostInto(tx: number, ty: number, dims: {w: number; h: number}, mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: any, fromX?: number, fromY?: number): number {
     if (tx < 0 || ty < 0 || tx + dims.w > cols || ty + dims.h > rows) return Infinity;
     let hasStandTile = false;
     let extra = 0;
+    let maxHeight = 0;
+    
     for (let oy = 0; oy < dims.h; oy++) {
       for (let ox = 0; ox < dims.w; ox++) {
         const cx = tx + ox;
         const cy = ty + oy;
         const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
         const th = this.terrainHeightAt(cx, cy, mapData, mapDefinition);
-        if (th > 1) return Infinity; // Terrain with height > 1 blocks movement
+        
         if (nonEmpty) hasStandTile = true;
-        if (th === 1) extra = 1; // If any tile is height 1, costs +1
+        if (th > maxHeight) maxHeight = th;
       }
     }
+    
     if (!hasStandTile) return Infinity;
-    return 1 + extra;
+    
+         // Check elevation difference if we have starting coordinates
+     if (fromX !== undefined && fromY !== undefined && mapDefinition) {
+       const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
+       
+       // Allow movement to terrain that is 1 elevation higher than current, but with extra cost
+       if (maxHeight > fromHeight + 1) {
+         return Infinity; // Terrain is too high to climb
+       }
+       if (maxHeight === fromHeight + 1) {
+         extra = 1; // Climbing up 1 elevation costs 1 extra movement
+       }
+     } else {
+       // Fallback to old logic if no starting coordinates
+       if (maxHeight > 1) return Infinity; // Terrain with height > 1 blocks movement
+       if (maxHeight === 1) extra = 1; // If any tile is height 1, costs +1
+     }
+     return 1 + extra;
   }
 
   /**

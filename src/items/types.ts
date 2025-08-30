@@ -49,7 +49,7 @@ export class Weapon extends Item {
 export class RangedWeapon extends Item {
   kind: "ranged_weapon" = "ranged_weapon";
   damage: number;
-  range: { normal: number; long: number }; // e.g., tiles or feet
+  range: number; // in tiles
   ammoType?: string;
   hands: 1 | 2;
   properties?: string[];
@@ -59,7 +59,7 @@ export class RangedWeapon extends Item {
     id?: string;
     name: string;
     damage: number;
-    range: { normal: number; long: number };
+    range: number;
     hands: 1 | 2;
     ammoType?: string;
     properties?: string[];

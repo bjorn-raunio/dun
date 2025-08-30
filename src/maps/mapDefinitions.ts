@@ -42,15 +42,8 @@ export const mapDefinition: MapDefinition = {
   ],
   creatures: [
     // Bandits with different loadouts
-    createMonster("bandit", { x: 12, y: 7, facing: 1, loadout: "aggressive" }),
-    createMonster("bandit", { x: 10, y: 1, facing: 3, loadout: "defensive" }),
-    createMonster("bandit_archer", { x: 15, y: 8, facing: 2, loadout: "crossbowman" }),
-    createMonster("bandit_leader", { x: 14, y: 6, facing: 0, loadout: "berserker" }),
-    
-    // Undead monsters using the same loadouts
-    createMonster("skeleton", { x: 20, y: 10, facing: 2, loadout: "aggressive" }),
-    createMonster("skeleton_archer", { x: 22, y: 12, facing: 4, loadout: "crossbowman" }),
-    createMonster("skeleton_warrior", { x: 24, y: 10, facing: 6, loadout: "tactician" }),
+    createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
+    createMonster("shooter", "bandits", { x: 10, y: 1, facing: 3, weaponLoadout: "shortbow" }),
     
     createMercenary("civilian", { 
       x: 16, 

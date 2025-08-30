@@ -226,46 +226,6 @@ export function validateAIAction(
 }
 
 /**
- * Common threat assessment patterns
- */
-export function assessThreatLevel(
-  creature: Creature,
-  allCreatures: Creature[],
-  radius: number = 3
-): {
-  threatLevel: 'low' | 'medium' | 'high' | 'critical';
-  nearbyEnemies: number;
-  healthRatio: number;
-} {
-  const healthRatio = creature.remainingVitality / creature.vitality;
-  
-  const nearbyEnemies = allCreatures.filter(c => 
-    c.isAlive() && 
-    c.id !== creature.id && 
-    creature.isHostileTo(c) &&
-            calculateDistanceBetween(c.x, c.y, creature.x, creature.y) <= radius
-  ).length;
-
-  let threatLevel: 'low' | 'medium' | 'high' | 'critical';
-  
-  if (healthRatio < 0.2 || nearbyEnemies > 3) {
-    threatLevel = 'critical';
-  } else if (healthRatio < 0.4 || nearbyEnemies > 2) {
-    threatLevel = 'high';
-  } else if (healthRatio < 0.6 || nearbyEnemies > 1) {
-    threatLevel = 'medium';
-  } else {
-    threatLevel = 'low';
-  }
-
-  return {
-    threatLevel,
-    nearbyEnemies,
-    healthRatio
-  };
-}
-
-/**
  * Common behavior-specific logic patterns
  */
 export function getBehaviorModifiers(behavior: AIBehaviorType): {

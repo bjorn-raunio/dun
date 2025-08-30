@@ -292,10 +292,10 @@ export class EquipmentSystem {
       rangeTiles = Math.max(1, main.reach ?? 1);
     } else if (main instanceof RangedWeapon) {
       isRanged = true;
-      rangeTiles = Math.max(1, rangeType === 'long' ? main.range.long : main.range.normal);
+      rangeTiles = Math.max(1, main.range);
     } else if (offHand instanceof RangedWeapon) {
       isRanged = true;
-      rangeTiles = Math.max(1, rangeType === 'long' ? offHand.range.long : offHand.range.normal);
+      rangeTiles = Math.max(1, offHand.range);
     }
     
     if (rangeType === 'info') {

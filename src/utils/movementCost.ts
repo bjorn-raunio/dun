@@ -46,7 +46,7 @@ export function calculateMovementCost(
   }
   
   // Check terrain cost at destination
-  const terrainCost = getTerrainCost(toX, toY, mapData, mapDefinition);
+  const terrainCost = getTerrainCost(toX, toY, mapData, mapDefinition, fromX, fromY);
   cost += terrainCost;
   
   // Check if movement is blocked by creatures
@@ -66,7 +66,7 @@ export function calculateMovementCost(
 /**
  * Get terrain movement cost for a tile
  */
-export function getTerrainCost(x: number, y: number, mapData: { tiles: string[][] }, mapDefinition?: any): number {
+export function getTerrainCost(x: number, y: number, mapData: { tiles: string[][] }, mapDefinition?: any, fromX?: number, fromY?: number): number {
   if (x < 0 || y < 0 || x >= mapData.tiles[0]?.length || y >= mapData.tiles.length) {
     return Infinity; // Out of bounds
   }
@@ -79,11 +79,27 @@ export function getTerrainCost(x: number, y: number, mapData: { tiles: string[][
   // Check terrain height and other properties
   if (mapDefinition) {
     const height = terrainHeightAt(x, y, mapDefinition);
-    if (height > 1) {
-      return Infinity; // Impassable terrain
-    }
-    if (height === 1) {
-      return 1; // Elevated terrain costs extra
+    
+    if (fromX !== undefined && fromY !== undefined) {
+      // We have starting coordinates, so we can calculate elevation differences
+      const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
+      
+      // Allow movement to terrain that is 1 elevation higher than current, but with extra cost
+      if (height > fromHeight + 1) {
+        return Infinity; // Terrain is too high to climb
+      }
+      if (height === fromHeight + 1) {
+        return 1; // Climbing up 1 elevation costs 1 extra movement
+      }
+    } else {
+      // No starting coordinates - this is a general accessibility check
+      // Allow terrain up to height 1 to be accessible (creatures can climb up to 1 elevation)
+      if (height > 1) {
+        return Infinity; // Terrain with height > 1 is impassable
+      }
+      if (height === 1) {
+        return 1; // Elevated terrain costs 1 extra movement
+      }
     }
   }
   

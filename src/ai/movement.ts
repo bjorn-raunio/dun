@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { AIState, AIMovementOption, AIDecision } from './types';
+import { AIState, AIMovementOption, AIDecision, AIBehaviorType } from './types';
 import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/pathfinding';
 import { createAIDecision, updateAIStateWithAction } from './helpers';
 import { logAI } from '../utils/logging';
@@ -55,7 +55,7 @@ export function evaluateMovementOption(
     const attackRange = creature.getAttackRange();
     
     // Check if this position puts us in attack range
-    if (newPathDistance <= 0) {
+    if (newPathDistance <= attackRange) {
       benefits.inAttackRange = true;
       score += 100; // High priority for getting into attack range
     }
@@ -260,16 +260,46 @@ export function shouldMove(
     return false;
   }
   
-     // Check if we can attack immediately from current position
+  // Check if we can attack immediately from current position
   const canAttackNow = canAttackImmediately(creature, target);
   
-  // If we can attack now, we should NOT move
-  if (canAttackNow) {
-    return false;
+  // If we can't attack now, we should try to move to get into attack range
+  if (!canAttackNow) {
+    return true;
   }
   
-  // If we can't attack now, we should try to move to get into attack range
-  return true;
+  // If we can attack now, check if we should still move for better positioning
+  const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
+  const isRangedBehavior = ai.behavior === AIBehaviorType.RANGED;
+  
+  if (hasRangedWeapon || isRangedBehavior) {
+    // For ranged weapons, check if we're at optimal range
+    const currentDistance = Math.max(
+      Math.abs(target.x - creature.x),
+      Math.abs(target.y - creature.y)
+    );
+    const attackRange = creature.getAttackRange();
+    
+    // If we're too close (within 80% of max range), consider moving to a better position
+    if (currentDistance < attackRange * 0.8) {
+      // Check if there's a better position available
+      const betterPositionAvailable = reachableTiles.some(tile => {
+        const newDistance = Math.max(
+          Math.abs(target.x - tile.x),
+          Math.abs(target.y - tile.y)
+        );
+        // Prefer positions that are closer to optimal range
+        return newDistance >= attackRange * 0.8 && newDistance <= attackRange;
+      });
+      
+      if (betterPositionAvailable) {
+        return true;
+      }
+    }
+  }
+  
+  // If we can attack now and we're well-positioned, don't move
+  return false;
 }
 
 /**
