@@ -36,11 +36,6 @@ export {
   reconstructPath
 } from './helpers';
 
-// Legacy compatibility - re-export commonly used functions
-export { PathfindingSystem as Pathfinding } from './core';
-export { LineOfSightSystem as LineOfSight } from './lineOfSight';
-export { DistanceSystem as Distance } from './distance';
-
 // Utility function exports for backward compatibility
 export const calculateDistanceBetween = (fromX: number, fromY: number, toX: number, toY: number, options: any = {}) => 
   DistanceSystem.calculateDistanceBetween(fromX, fromY, toX, toY, options);

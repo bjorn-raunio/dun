@@ -28,7 +28,3 @@ export {
 
 // Re-export main combat execution
 export { executeCombat } from './execution';
-
-// Legacy exports for backward compatibility
-// These maintain the same interface as the old combatUtils.ts
-export { executeCombat as executeCombatAttack } from './execution';

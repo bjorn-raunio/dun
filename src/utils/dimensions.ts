@@ -148,14 +148,3 @@ export function getCreatureArea(
     height: dims.h
   };
 }
-
-// --- Legacy Support ---
-
-/**
- * @deprecated Use getCreatureDimensions instead
- * @param size Creature size
- * @returns Creature dimensions
- */
-export function getCreatureDims(size: number): { w: number; h: number } {
-  return getCreatureDimensions(size);
-}
