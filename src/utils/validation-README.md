@@ -227,4 +227,4 @@ export function validateAttack(attacker: Creature, target: Creature): CombatVali
 
 ## Examples
 
-See the updated `src/utils/combatUtils.ts` and `src/validation/movement.ts` files for real-world examples of how to use these validation utilities.
+See the updated `src/utils/combat/` and `src/validation/movement.ts` files for real-world examples of how to use these validation utilities.

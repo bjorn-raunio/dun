@@ -1,5 +1,5 @@
 import { ICombatExecutor } from './interfaces';
-import { executeCombat as executeCombatUtil } from '../utils/combatUtils';
+import { executeCombat as executeCombatUtil } from '../utils/combat';
 
 // --- Combat Executor Implementation ---
 // This class wraps the combat utility functions to implement the ICombatExecutor interface

@@ -1,6 +1,6 @@
 import { Creature } from '../../creatures/index';
 import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../../ai/decisionMaking';
-import { calculateTargetsInRange } from '../../utils/combatUtils';
+import { calculateTargetsInRange } from '../../utils/combat';
 import { addMessage } from '../messageSystem';
 import { getVisibleCreatures } from '../../utils/pathfinding';
 import { logTurn, logAI } from '../../utils/logging';

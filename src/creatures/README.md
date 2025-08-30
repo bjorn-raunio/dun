@@ -129,7 +129,7 @@ Contains the `CreatureMovement` class with all movement and pathfinding logic:
 - Zone of control movement rules
 
 ### Combat Logic
-Combat logic is now centralized in `src/utils/combatUtils.ts`:
+Combat logic is now centralized in `src/utils/combat/`:
 - Attack execution via `executeCombat()` function
 - Damage calculation and dice rolling utilities
 - Combat validation and range checking
@@ -156,7 +156,7 @@ import { Creature, Hero, Monster, Mercenary, createMonster, createMercenary } fr
 ### Specific Module Import
 ```typescript
 import { CreatureMovement } from '../creatures/movement';
-import { executeCombat } from '../utils/combatUtils';
+import { executeCombat } from '../utils/combat';
 import { monsterPresets, mercenaryPresets } from '../creatures/presets';
 ```
 

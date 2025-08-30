@@ -1,6 +1,6 @@
 import React from 'react';
 import { Creature } from '../../creatures/index';
-import { calculateTargetsInRange } from '../../utils/combatUtils';
+import { calculateTargetsInRange } from '../../utils/combat';
 import { findCreatureById, isCreatureVisible } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
 

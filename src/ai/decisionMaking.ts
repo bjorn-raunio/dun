@@ -3,7 +3,7 @@ import { AIState, AIDecision, AIContext, AIActionResult, AIBehaviorType } from '
 import { selectBestTarget, updateTargetInformation } from './targeting';
 import { createMovementDecision, updateAIStateAfterMovement } from './movement';
 import { shouldFlee, createFleeDecision, updateAIStateAfterAttack, isTargetValid } from './combat';
-import { calculateTargetsInRange } from '../utils/combatUtils';
+import { calculateTargetsInRange } from '../utils/combat';
 import { canAttackImmediately } from '../utils/pathfinding';
 import { validateCombat } from '../validation/combat';
 import { executeMovement } from '../game/movement';
