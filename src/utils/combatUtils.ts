@@ -208,8 +208,7 @@ function executeToHitRollMelee(
 
   // Add weapon combat modifier display for attacker
   const attackerWeapon = attackerEquipment.getMainWeapon();
-  const attackerWeaponModifier = attackerWeapon instanceof Weapon ? (attackerWeapon.combatModifier ?? 0) :
-    (attackerWeapon ? 0 : -1); // Unarmed creatures get -1 modifier
+  const attackerWeaponModifier = attackerWeapon instanceof Weapon ? (attackerWeapon.combatModifier ?? 0) : 0;
   if (attackerWeaponModifier !== 0) {
     const modifierText = attackerWeaponModifier > 0 ? `+${attackerWeaponModifier}` : `${attackerWeaponModifier}`;
     attackerModifiers.push(`weapon ${modifierText}`);
@@ -217,8 +216,7 @@ function executeToHitRollMelee(
 
   // Add weapon combat modifier display for defender
   const defenderWeapon = targetEquipment.getMainWeapon();
-  const defenderWeaponModifier = defenderWeapon instanceof Weapon ? (defenderWeapon.combatModifier ?? 0) :
-    (defenderWeapon ? 0 : -1); // Unarmed creatures get -1 modifier
+  const defenderWeaponModifier = defenderWeapon instanceof Weapon ? (defenderWeapon.combatModifier ?? 0) : 0;
   if (defenderWeaponModifier !== 0) {
     const modifierText = defenderWeaponModifier > 0 ? `+${defenderWeaponModifier}` : `${defenderWeaponModifier}`;
     defenderModifiers.push(`weapon ${modifierText}`);

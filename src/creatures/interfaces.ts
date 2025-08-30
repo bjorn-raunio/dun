@@ -31,7 +31,7 @@ export interface ICreature {
   
   // Combat
   getArmorValue(): number;
-  getMainWeapon(): any;
+  getMainWeapon(): Weapon | RangedWeapon;
   hasRangedWeapon(): boolean;
   hasShield(): boolean;
   getAttackBonus(): number;

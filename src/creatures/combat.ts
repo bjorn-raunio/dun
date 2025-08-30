@@ -1,5 +1,6 @@
 import { Attributes } from './types';
 import { EquipmentSystem } from '../items/equipment';
+import { Weapon, RangedWeapon } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
 
@@ -28,7 +29,7 @@ export class CreatureCombatManager {
     return this.getEquipment().getEffectiveArmor(this.naturalArmor);
   }
 
-  getMainWeapon(): any {
+  getMainWeapon(): Weapon | RangedWeapon {
     return this.getEquipment().getMainWeapon();
   }
 

@@ -13,6 +13,7 @@ import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
 import { Item } from '../items';
+import { Weapon, RangedWeapon } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
@@ -165,7 +166,7 @@ export abstract class Creature implements ICreature {
 
   // --- Combat Methods ---
   getArmorValue(): number { return this.combatManager.getArmorValue(); }
-  getMainWeapon(): any { return this.combatManager.getMainWeapon(); }
+  getMainWeapon(): Weapon | RangedWeapon { return this.combatManager.getMainWeapon(); }
   hasRangedWeapon(): boolean { return this.combatManager.hasRangedWeapon(); }
   hasShield(): boolean { return this.combatManager.hasShield(); }
   getAttackBonus(): number { return this.combatManager.getAttackBonus(); }

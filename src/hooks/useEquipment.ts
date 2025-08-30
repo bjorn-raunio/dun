@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { Creature } from '../creatures/index';
-import { EquipmentManager } from '../items/equipment';
+import { EquipmentManager, EquipmentValidator } from '../items/equipment';
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items/types';
 import { EquipmentSlot } from '../items/equipment';
 
@@ -170,10 +170,7 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
       return true;
     }
 
-    const equipmentManager = new EquipmentManager(creature);
-    const equipment = equipmentManager.getEquipment();
-    const validation = equipment.validateEquip(item, slot, creature);
-    return validation.isValid;
+    return EquipmentValidator.validateEquip(item, slot, creature).isValid;
   }, [creature]);
 
   const canSwitchWeaponOrShield = useCallback((item: Item, slot: EquipmentSlot): boolean => {
