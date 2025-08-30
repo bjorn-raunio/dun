@@ -13,46 +13,47 @@ export class CreatureCombatManager {
     private size: number
   ) {}
 
+  // --- Equipment Access Consolidation ---
+  
+  /**
+   * Get EquipmentSystem instance - consolidated to eliminate repeated instantiation
+   */
+  private getEquipment(): EquipmentSystem {
+    return new EquipmentSystem(this.equipment);
+  }
+
   // --- Equipment-based Combat Methods ---
 
   getArmorValue(): number {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getEffectiveArmor(this.naturalArmor);
+    return this.getEquipment().getEffectiveArmor(this.naturalArmor);
   }
 
   getMainWeapon(): any {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getMainWeapon();
+    return this.getEquipment().getMainWeapon();
   }
 
   hasRangedWeapon(): boolean {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.hasRangedWeapon();
+    return this.getEquipment().hasRangedWeapon();
   }
 
   hasShield(): boolean {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.hasShield();
+    return this.getEquipment().hasShield();
   }
 
   getAttackBonus(): number {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getAttackBonus(this.attributes.combat, this.attributes.ranged);
+    return this.getEquipment().getAttackBonus(this.attributes.combat, this.attributes.ranged);
   }
 
   getWeaponDamage(): number {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getWeaponDamage();
+    return this.getEquipment().getWeaponDamage();
   }
 
   getAttackRange(): number {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getAttackRange();
+    return this.getEquipment().getAttackRange();
   }
 
   getMaxAttackRange(): number {
-    const equipment = new EquipmentSystem(this.equipment);
-    return equipment.getMaxAttackRange();
+    return this.getEquipment().getMaxAttackRange();
   }
 
   // --- Zone of Control ---
@@ -80,34 +81,58 @@ export class CreatureCombatManager {
 
   // --- Effective Attributes ---
 
-  getEffectiveAttribute(baseValue: number, isWounded: boolean): number {
+  /**
+   * Generic method to get effective attribute value with wounding penalty
+   */
+  private getEffectiveAttribute(baseValue: number, isWounded: boolean): number {
     return isWounded ? Math.max(1, baseValue - 1) : baseValue;
   }
 
+  /**
+   * Get effective movement attribute
+   */
   getEffectiveMovement(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.movement, isWounded);
   }
 
+  /**
+   * Get effective combat attribute
+   */
   getEffectiveCombat(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.combat, isWounded);
   }
 
+  /**
+   * Get effective ranged attribute
+   */
   getEffectiveRanged(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.ranged, isWounded);
   }
 
+  /**
+   * Get effective strength attribute
+   */
   getEffectiveStrength(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.strength, isWounded);
   }
 
+  /**
+   * Get effective agility attribute
+   */
   getEffectiveAgility(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.agility, isWounded);
   }
 
+  /**
+   * Get effective courage attribute
+   */
   getEffectiveCourage(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.courage, isWounded);
   }
 
+  /**
+   * Get effective intelligence attribute
+   */
   getEffectiveIntelligence(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.intelligence, isWounded);
   }

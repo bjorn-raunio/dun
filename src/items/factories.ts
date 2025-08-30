@@ -1,54 +1,55 @@
 import { Weapon, RangedWeapon, Armor, Shield } from './types';
 import { weaponPresets, rangedPresets, armorPresets, shieldPresets } from './presets';
 
+/**
+ * Generic item factory function that eliminates code duplication
+ * @param ItemClass The constructor class to instantiate
+ * @param presetId The preset ID to use as base configuration
+ * @param presetMap The preset map to look up the preset
+ * @param overrides Optional overrides to apply to the preset
+ * @returns A new instance of the specified item class
+ */
+function createItem<T>(
+  ItemClass: new (config: any) => T,
+  presetId: string,
+  presetMap: Record<string, any>,
+  overrides?: Partial<ConstructorParameters<typeof ItemClass>[0]> & { id?: string }
+): T {
+  const preset = presetMap[presetId];
+  if (!preset) {
+    throw new Error(`Preset '${presetId}' not found in preset map`);
+  }
+  
+  return new ItemClass({
+    ...preset,
+    ...overrides
+  });
+}
+
+/**
+ * Create a weapon using the generic factory
+ */
 export function createWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof Weapon>[0]> & { id?: string }): Weapon {
-  const p = weaponPresets[presetId];
-  return new Weapon({
-    name: overrides?.name ?? p.name,
-    damage: overrides?.damage ?? p.damage,
-    hands: overrides?.hands ?? p.hands,
-    reach: overrides?.reach ?? p.reach,
-    properties: overrides?.properties ?? p.properties,
-    combatModifier: overrides?.combatModifier ?? p.combatModifier,
-    armorModifier: overrides?.armorModifier ?? p.armorModifier,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
+  return createItem(Weapon, presetId, weaponPresets, overrides);
 }
 
+/**
+ * Create a ranged weapon using the generic factory
+ */
 export function createRangedWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof RangedWeapon>[0]> & { id?: string }): RangedWeapon {
-  const p = rangedPresets[presetId];
-  return new RangedWeapon({
-    name: overrides?.name ?? p.name,
-    damage: overrides?.damage ?? p.damage,
-    range: overrides?.range ?? p.range,
-    hands: overrides?.hands ?? p.hands,
-    ammoType: overrides?.ammoType ?? p.ammoType,
-    properties: overrides?.properties ?? p.properties,
-    armorModifier: overrides?.armorModifier ?? p.armorModifier,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
+  return createItem(RangedWeapon, presetId, rangedPresets, overrides);
 }
 
+/**
+ * Create armor using the generic factory
+ */
 export function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id?: string }): Armor {
-  const p = armorPresets[presetId];
-  return new Armor({
-    name: overrides?.name ?? p.name,
-    armor: overrides?.armor ?? p.armor,
-    armorType: overrides?.armorType ?? p.armorType,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
+  return createItem(Armor, presetId, armorPresets, overrides);
 }
 
+/**
+ * Create a shield using the generic factory
+ */
 export function createShield(presetId: string, overrides?: Partial<ConstructorParameters<typeof Shield>[0]> & { id?: string }): Shield {
-  const p = shieldPresets[presetId];
-  return new Shield({
-    name: overrides?.name ?? p.name,
-    block: overrides?.block ?? p.block,
-    special: overrides?.special ?? p.special,
-    weight: overrides?.weight ?? p.weight,
-    value: overrides?.value ?? p.value,
-  });
+  return createItem(Shield, presetId, shieldPresets, overrides);
 }

@@ -31,13 +31,21 @@ export interface CombatValidationResult extends BaseValidationResult { }
 // --- Combat Calculation Utilities ---
 
 /**
+ * Helper function to get EquipmentSystem instance for a creature
+ * Consolidates EquipmentSystem instantiation to reduce redundancy
+ */
+function getCreatureEquipment(creature: Creature): EquipmentSystem {
+  return new EquipmentSystem(creature.equipment);
+}
+
+/**
  * Calculate targets in range for a creature
  */
 export function calculateTargetsInRange(
   attacker: Creature,
   allCreatures: Creature[]
 ): Set<string> {
-  const equipment = new EquipmentSystem(attacker.equipment);
+  const equipment = getCreatureEquipment(attacker);
   const rangeTiles = equipment.getAttackRange();
   const attackerDims = getCreatureDimensions(attacker.size);
   const inRange = new Set<string>();
@@ -126,6 +134,49 @@ export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; 
   return { blocked, message };
 }
 
+// --- Shared Combat Helper Functions ---
+
+/**
+ * Calculate critical damage bonus based on hit type
+ */
+function calculateCriticalDamage(baseDamage: number, attackerDoubleCritical: boolean, criticalHit: boolean): number {
+  if (attackerDoubleCritical) return baseDamage + 2;
+  if (criticalHit) return baseDamage + 1;
+  return baseDamage;
+}
+
+/**
+ * Generate critical hit text for display
+ */
+function generateCriticalHitText(attackerDoubleCritical: boolean, criticalHit: boolean): string {
+  if (attackerDoubleCritical) return " (DOUBLE CRITICAL!)";
+  if (criticalHit) return " (CRITICAL HIT!)";
+  return "";
+}
+
+/**
+ * Calculate effective armor value for target
+ */
+function calculateEffectiveArmor(target: Creature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem): number {
+  const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
+  const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
+  return baseArmorValue + weaponArmorModifier;
+}
+
+/**
+ * Generate weapon modifier text for display
+ */
+function generateWeaponModifierText(weapon: any, isUnarmed: boolean = false): string {
+  if (isUnarmed) return "weapon -1";
+  if (!weapon) return "";
+  
+  const modifier = weapon instanceof Weapon ? (weapon.combatModifier ?? 0) : 0;
+  if (modifier === 0) return "";
+  
+  const modifierText = modifier > 0 ? `+${modifier}` : `${modifier}`;
+  return `weapon ${modifierText}`;
+}
+
 // --- Three-Part Attack System Functions ---
 
 /**
@@ -146,8 +197,8 @@ function executeToHitRollMelee(
   attackerModifiers: string[];
   defenderModifiers: string[];
 } {
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
-  const targetEquipment = new EquipmentSystem(target.equipment);
+  const attackerEquipment = getCreatureEquipment(attacker);
+  const targetEquipment = getCreatureEquipment(target);
   let attackerBonus = attackerEquipment.getAttackBonus(attacker.combat, attacker.ranged);
   let defenderBonus = targetEquipment.getAttackBonus(target.combat, target.ranged);
 
@@ -290,7 +341,7 @@ function executeToHitRollRanged(
   let criticalHit = isCriticalHit(toHitRollResult.dice);
 
   // Check if target is more than half the weapon's range away
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
+  const attackerEquipment = getCreatureEquipment(attacker);
   const weaponRange = attackerEquipment.getWeaponRange('normal') as number;
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   const halfRange = Math.ceil(weaponRange / 2);
@@ -329,7 +380,7 @@ function executeBlockRoll(
   blockMessage: string;
   blockSuccess: boolean;
 } {
-  const targetEquipment = new EquipmentSystem(target.equipment);
+  const targetEquipment = getCreatureEquipment(target);
   let blockMessage = '';
   let blockSuccess = false;
 
@@ -359,80 +410,41 @@ function executeBlockRoll(
 }
 
 /**
- * Phase 3: Execute damage roll for melee combat
+ * Phase 3: Execute damage roll for both melee and ranged combat
+ * Consolidated function to eliminate code duplication
  */
-function executeDamageRollMelee(
+function executeDamageRoll(
   attacker: Creature,
   target: Creature,
   attackerDoubleCritical: boolean,
-  criticalHit: boolean
+  criticalHit: boolean,
+  isRanged: boolean
 ): {
   damage: number;
   damageMessage: string;
   diceRolls: number[];
   armorValue: number;
 } {
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
-  const targetEquipment = new EquipmentSystem(target.equipment);
+  const attackerEquipment = getCreatureEquipment(attacker);
+  const targetEquipment = getCreatureEquipment(target);
 
+  // Calculate weapon damage with critical bonuses
   let weaponDamage = attackerEquipment.getWeaponDamage();
-  // Add damage for critical hits
-  if (attackerDoubleCritical) {
-    weaponDamage += 2;
-  } else if (criticalHit) {
-    weaponDamage += 1;
-  }
-  const diceRolls = calculateMeleeDamageRoll(attacker.strength, weaponDamage);
+  weaponDamage = calculateCriticalDamage(weaponDamage, attackerDoubleCritical, criticalHit);
 
-  // Determine armor value
-  const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
-  const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
-  const armorValue = baseArmorValue + weaponArmorModifier;
+  // Roll dice based on attack type
+  const diceRolls = isRanged
+    ? calculateRangedDamageRoll(weaponDamage)
+    : calculateMeleeDamageRoll(attacker.strength, weaponDamage);
 
+  // Calculate effective armor value
+  const armorValue = calculateEffectiveArmor(target, targetEquipment, attackerEquipment);
+
+  // Calculate final damage
   const damage = calculateDamage(diceRolls, armorValue);
 
   // Generate damage message
-  const criticalHitText = attackerDoubleCritical ? " (DOUBLE CRITICAL!)" : (criticalHit ? " (CRITICAL HIT!)" : "");
-  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}${criticalHitText}`;
-
-  return { damage, damageMessage, diceRolls, armorValue };
-}
-
-/**
- * Phase 3: Execute damage roll for ranged combat
- */
-function executeDamageRollRanged(
-  attacker: Creature,
-  target: Creature,
-  attackerDoubleCritical: boolean,
-  criticalHit: boolean
-): {
-  damage: number;
-  damageMessage: string;
-  diceRolls: number[];
-  armorValue: number;
-} {
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
-  const targetEquipment = new EquipmentSystem(target.equipment);
-
-  let weaponDamage = attackerEquipment.getWeaponDamage();
-  // Add damage for critical hits
-  if (attackerDoubleCritical) {
-    weaponDamage += 2;
-  } else if (criticalHit) {
-    weaponDamage += 1;
-  }
-  const diceRolls = calculateRangedDamageRoll(weaponDamage);
-
-  // Determine armor value
-  const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
-  const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
-  const armorValue = baseArmorValue + weaponArmorModifier;
-
-  const damage = calculateDamage(diceRolls, armorValue);
-
-  // Generate damage message
-  const criticalHitText = attackerDoubleCritical ? " (DOUBLE CRITICAL!)" : (criticalHit ? " (CRITICAL HIT!)" : "");
+  const criticalHitText = generateCriticalHitText(attackerDoubleCritical, criticalHit);
   const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}${criticalHitText}`;
 
   return { damage, damageMessage, diceRolls, armorValue };
@@ -458,14 +470,11 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
   }
 
   // Check if this is a ranged attack
-  const equipment = new EquipmentSystem(attacker.equipment);
-  let result: CombatResult;
+  const equipment = getCreatureEquipment(attacker);
+  const isRanged = equipment.hasRangedWeapon();
 
-  if (equipment.hasRangedWeapon()) {
-    result = executeRangedCombat(attacker, target, allCreatures);
-  } else {
-    result = executeMeleeCombat(attacker, target, allCreatures, mapDefinition);
-  }
+  // Execute unified combat
+  const result = executeCombatPhase(attacker, target, isRanged, allCreatures, mapDefinition);
 
   // Update combat states for all creatures after combat
   updateCombatStates(allCreatures);
@@ -474,21 +483,28 @@ export function executeCombat(attacker: Creature, target: Creature, allCreatures
 }
 
 /**
- * Execute ranged combat with three-part attack system
+ * Unified combat execution for both melee and ranged combat
  */
-function executeRangedCombat(attacker: Creature, target: Creature, allCreatures: Creature[]): CombatResult {
+function executeCombatPhase(
+  attacker: Creature,
+  target: Creature,
+  isRanged: boolean,
+  allCreatures: Creature[],
+  mapDefinition?: any
+): CombatResult {
   // === PART 1: TO-HIT ROLL ===
-  const toHitResult = executeToHitRollRanged(attacker, target);
+  const toHitResult = isRanged 
+    ? executeToHitRollRanged(attacker, target)
+    : executeToHitRollMelee(attacker, target, mapDefinition);
 
   // Consume action (regardless of hit or miss)
   attacker.setRemainingActions(attacker.remainingActions - 1);
-  // Don't reset group actions during combat - this should only happen when turns actually end
-  // attacker.resetGroupActions(allCreatures);
 
   if (!toHitResult.hit) {
+    const missMessage = isRanged ? " - Miss! (needs 10+)" : " - Miss!";
     return {
       success: true,
-      message: `${toHitResult.toHitMessage} - Miss! (needs 10+)`,
+      message: `${toHitResult.toHitMessage}${missMessage}`,
       toHitMessage: toHitResult.toHitMessage,
       damage: 0,
       targetDefeated: false
@@ -511,64 +527,13 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   }
 
   // === PART 3: DAMAGE ROLL ===
-  const damageResult = executeDamageRollRanged(attacker, target, toHitResult.attackerDoubleCritical, toHitResult.criticalHit);
-
-  // Apply damage using the proper method
-  target.takeDamage(damageResult.damage);
-
-  // Check if target is defeated
-  const targetDefeated = target.isDead();
-
-  return {
-    success: true,
-    message: `${toHitResult.toHitMessage} - Hit! ${blockResult.blockMessage} ${damageResult.damageMessage}`,
-    toHitMessage: toHitResult.toHitMessage,
-    blockMessage: blockResult.blockMessage,
-    damageMessage: damageResult.damageMessage,
-    damage: damageResult.damage,
-    targetDefeated
-  };
-}
-
-/**
- * Execute melee combat with three-part attack system
- */
-function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: Creature[], mapDefinition?: any): CombatResult {
-  // === PART 1: TO-HIT ROLL ===
-  const toHitResult = executeToHitRollMelee(attacker, target, mapDefinition);
-
-  // Consume action (regardless of hit or miss)
-  attacker.setRemainingActions(attacker.remainingActions - 1);
-  // Don't reset group actions during combat - this should only happen when turns actually end
-  // attacker.resetGroupActions(allCreatures);
-
-  if (!toHitResult.hit) {
-    return {
-      success: true,
-      message: `${toHitResult.toHitMessage} - Miss!`,
-      toHitMessage: toHitResult.toHitMessage,
-      damage: 0,
-      targetDefeated: false
-    };
-  }
-
-  // === PART 2: BLOCK ROLL ===
-  const blockResult = executeBlockRoll(attacker, target, toHitResult.attackerDoubleCritical, toHitResult.criticalHit);
-
-  if (blockResult.blockSuccess) {
-    // Shield blocked the attack - no damage
-    return {
-      success: true,
-      message: `${toHitResult.toHitMessage} - Hit! ${blockResult.blockMessage} - Attack blocked!`,
-      toHitMessage: toHitResult.toHitMessage,
-      blockMessage: blockResult.blockMessage,
-      damage: 0,
-      targetDefeated: false
-    };
-  }
-
-  // === PART 3: DAMAGE ROLL ===
-  const damageResult = executeDamageRollMelee(attacker, target, toHitResult.attackerDoubleCritical, toHitResult.criticalHit);
+  const damageResult = executeDamageRoll(
+    attacker, 
+    target, 
+    toHitResult.attackerDoubleCritical, 
+    toHitResult.criticalHit,
+    isRanged
+  );
 
   // Apply damage using the proper method
   target.takeDamage(damageResult.damage);
