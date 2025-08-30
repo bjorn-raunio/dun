@@ -2,7 +2,7 @@ import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { chebyshevDistanceRect, isInBackArc } from './geometry';
 import { getCreatureDimensions } from './dimensions';
-import { calculateCombatRoll, calculateToHitRoll, calculateBlockRoll, calculateMeleeDamageRoll, calculateRangedDamageRoll, rollD6, isCriticalHit, isDoubleCritical } from './dice';
+import { calculateCombatRoll, calculateDamageRoll, rollD6, isCriticalHit, isDoubleCritical } from './dice';
 import { BaseValidationResult } from './types';
 import { validateCombat } from '../validation/combat';
 // Import equipment system
@@ -252,8 +252,8 @@ function executeToHitRollMelee(
   }
 
   // Roll for combat
-  const attackerRollResult = calculateToHitRoll(attackerBonus);
-  const defenderRollResult = calculateBlockRoll(defenderBonus);
+  const attackerRollResult = calculateCombatRoll(attackerBonus);
+  const defenderRollResult = calculateCombatRoll(defenderBonus);
   const attackerRoll = attackerRollResult.total;
   const defenderRoll = defenderRollResult.total;
 
@@ -335,7 +335,7 @@ function executeToHitRollRanged(
   attackerDoubleCritical: boolean;
   criticalHit: boolean;
 } {
-  const toHitRollResult = calculateToHitRoll(attacker.ranged);
+  const toHitRollResult = calculateCombatRoll(attacker.ranged);
   const toHitRoll = toHitRollResult.total;
   let attackerDoubleCritical = isDoubleCritical(toHitRollResult.dice);
   let criticalHit = isCriticalHit(toHitRollResult.dice);
@@ -434,8 +434,8 @@ function executeDamageRoll(
 
   // Roll dice based on attack type
   const diceRolls = isRanged
-    ? calculateRangedDamageRoll(weaponDamage)
-    : calculateMeleeDamageRoll(attacker.strength, weaponDamage);
+    ? calculateDamageRoll(weaponDamage, 0) // Ranged: weapon damage only, no strength
+    : calculateDamageRoll(weaponDamage, attacker.strength); // Melee: weapon damage + strength
 
   // Calculate effective armor value
   const armorValue = calculateEffectiveArmor(target, targetEquipment, attackerEquipment);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
-import { GameState, GameRefs, GameActions, ViewportState, PanState, TurnState } from './types';
-import { initializeAITurnState, initializeTurnState } from './turnManagement';
+import { GameState, GameRefs, GameActions, ViewportState, PanState } from './types';
+import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
 

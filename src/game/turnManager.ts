@@ -1,5 +1,6 @@
 import { Creature } from '../creatures/index';
-import { GameActions, TurnState } from './types';
+import { GameActions } from './types';
+import { TurnState, TurnExecutionContext } from './turnManagement';
 import { resetAllTurns } from './movement';
 import { 
   startAITurnPhase, 
@@ -32,13 +33,22 @@ export function endTurnWithAI(
   const newTurnState = advanceTurnLogic(currentTurnState, creatures, setCreatures, setMessages, lastMovement);
   setTurnState(() => newTurnState);
   
+  // Create context for AI turn phase
+  const context: TurnExecutionContext = {
+    creatures,
+    mapData,
+    setCreatures,
+    setMessages,
+    mapDefinition
+  };
+  
   // Start AI turn phase
-  const newAITurnState = startAITurnPhase(creatures, mapData, setCreatures, setMessages, mapDefinition);
+  const newAITurnState = startAITurnPhase(context);
   setAITurnState(() => newAITurnState);
   
   // If there are AI creatures, execute their first group's turns
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
-    executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState, mapDefinition);
+    executeNextAIGroup(newAITurnState, context, setAITurnState);
   }
 }
 
@@ -47,21 +57,17 @@ export function endTurnWithAI(
  */
 export function executeNextAIGroup(
   aiTurnState: any,
-  creatures: Creature[],
-  mapData: { tiles: string[][] },
-  setCreatures: GameActions['setCreatures'],
-  setMessages: GameActions['setMessages'],
-  setAITurnState: GameActions['setAITurnState'],
-  mapDefinition?: any
+  context: TurnExecutionContext,
+  setAITurnState: GameActions['setAITurnState']
 ) {
   // Continue AI turn phase
-  const newAITurnState = continueAITurnPhase(aiTurnState, creatures, mapData, setCreatures, setMessages, mapDefinition);
+  const newAITurnState = continueAITurnPhase(aiTurnState, context);
   setAITurnState(() => newAITurnState);
   
   // If there are more groups to process, continue after a short delay
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
     setTimeout(() => {
-      executeNextAIGroup(newAITurnState, creatures, mapData, setCreatures, setMessages, setAITurnState, mapDefinition);
+      executeNextAIGroup(newAITurnState, context, setAITurnState);
     }, 1000); // 1 second delay between groups
   }
 }

@@ -46,9 +46,19 @@ export function roll2d6(bonus: number = 0): number {
 
 /**
  * Calculate damage roll (Xd6 where X = base dice + optional strength)
+ * This is the unified damage roll function - use this for all damage calculations
+ * 
  * @param baseDice Base number of dice (usually weapon damage)
  * @param strength Optional strength modifier (defaults to 0 for ranged attacks)
  * @returns Array of dice roll results
+ * 
+ * @example
+ * // For melee attacks: strength + weapon damage
+ * const meleeDamage = calculateDamageRoll(weaponDamage, strength);
+ * 
+ * // For ranged attacks: weapon damage only (no strength)
+ * const rangedDamage = calculateDamageRoll(weaponDamage, 0);
+ * // or simply: calculateDamageRoll(weaponDamage);
  */
 export function calculateDamageRoll(baseDice: number, strength: number = 0): number[] {
   const numDice = baseDice + strength;
@@ -56,51 +66,26 @@ export function calculateDamageRoll(baseDice: number, strength: number = 0): num
 }
 
 /**
- * Calculate melee damage roll (Xd6 where X = strength + weapon damage)
- * @param strength Creature's strength attribute
- * @param weaponDamage Weapon's damage value
- * @returns Array of dice roll results
- */
-export function calculateMeleeDamageRoll(strength: number, weaponDamage: number): number[] {
-  return calculateDamageRoll(weaponDamage, strength);
-}
-
-/**
- * Calculate ranged damage roll (Xd6 where X = weapon damage only, no strength)
- * @param weaponDamage Weapon's damage value
- * @returns Array of dice roll results
- */
-export function calculateRangedDamageRoll(weaponDamage: number): number[] {
-  return calculateDamageRoll(weaponDamage, 0);
-}
-
-/**
  * Calculate combat roll (2d6 + combat bonus)
- * @param combatBonus Combat bonus to add
+ * This is the unified combat roll function - use this for all 2d6 + bonus rolls
+ * 
+ * @param combatBonus Combat bonus to add (attack bonus, defense bonus, etc.)
  * @returns Object containing total roll and individual dice results
+ * 
+ * @example
+ * // For attack rolls
+ * const attackRoll = calculateCombatRoll(attackBonus);
+ * 
+ * // For defense/block rolls
+ * const blockRoll = calculateCombatRoll(defenseBonus);
+ * 
+ * // For any other 2d6 + bonus rolls
+ * const skillCheck = calculateCombatRoll(skillBonus);
  */
 export function calculateCombatRoll(combatBonus: number): { total: number; dice: number[] } {
   const dice = rollXd6(2);
   const total = dice.reduce((sum, roll) => sum + roll, 0) + combatBonus;
   return { total, dice };
-}
-
-/**
- * Calculate to-hit roll (2d6 + attack bonus)
- * @param attackBonus Attack bonus to add
- * @returns Object containing total roll and individual dice results
- */
-export function calculateToHitRoll(attackBonus: number): { total: number; dice: number[] } {
-  return calculateCombatRoll(attackBonus);
-}
-
-/**
- * Calculate block roll (2d6 + defense bonus)
- * @param defenseBonus Defense bonus to add
- * @returns Object containing total roll and individual dice results
- */
-export function calculateBlockRoll(defenseBonus: number): { total: number; dice: number[] } {
-  return calculateCombatRoll(defenseBonus);
 }
 
 /**

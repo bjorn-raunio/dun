@@ -60,10 +60,8 @@ Each attack is now resolved in three distinct phases, each handled by its own fu
 - `executeRangedCombat(attacker, target, allCreatures)` - Ranged combat orchestrator
 
 ### Dice Functions
-- `calculateToHitRoll(bonus)` - Returns { total, dice } for attack rolls
-- `calculateBlockRoll(bonus)` - Returns { total, dice } for defense rolls  
-- `calculateMeleeDamageRoll(strength, weaponDamage)` - Returns array of damage dice
-- `calculateRangedDamageRoll(weaponDamage)` - Returns array of damage dice
+- `calculateCombatRoll(bonus)` - Returns { total, dice } for all 2d6 + bonus rolls (attack, defense, etc.)
+- `calculateDamageRoll(baseDice, strength)` - Returns array of damage dice (use strength=0 for ranged attacks)
 
 ### Combat Result Structure
 ```typescript

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TurnState } from '../game/types';
+import { TurnState } from '../game/turnManagement';
 import { COLORS } from './styles';
 
 // --- Turn Tracker Component ---

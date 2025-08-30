@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { TurnTracker } from './TurnTracker';
-import { TurnState } from '../game/types';
+import { TurnState } from '../game/turnManagement';
 import { Creature } from '../creatures/index';
 
 // --- Game UI Component ---

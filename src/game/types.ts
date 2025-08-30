@@ -1,14 +1,5 @@
 import { Creature } from '../creatures/index';
-import { AITurnState } from './turnManagement';
-
-// --- Turn State Types ---
-
-export interface TurnState {
-  currentTurn: number;
-  activeCreatureId: string | null;
-  turnOrder: string[];
-  turnIndex: number;
-}
+import { TurnState, AITurnState } from './turnManagement';
 
 // --- Game State Types ---
 
