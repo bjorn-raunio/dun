@@ -50,32 +50,4 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     fortune: 1,
     hireCost: 100,
   },
-  guard: {
-    name: "Guard",
-    image: "creatures/civilian.png",
-    attributes: {
-      movement: 4,
-      combat: 4,
-      ranged: 1,
-      strength: 3,
-      agility: 3,
-      courage: 3,
-      intelligence: 2,
-    },
-    size: 2,
-    facing: 0,
-    inventory: [
-      { type: "weapon", preset: "sword" },
-      { type: "shield", preset: "shield" },
-    ],
-    equipment: {
-      mainHand: { type: "weapon", preset: "sword" },
-      offHand: { type: "shield", preset: "shield" },
-      armor: { type: "armor", preset: "chainMail" }
-    },
-    vitality: 6,
-    mana: 0,
-    fortune: 2,
-    hireCost: 125,
-  },
 };

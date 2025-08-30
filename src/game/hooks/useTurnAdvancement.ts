@@ -23,7 +23,9 @@ export function useTurnAdvancement(
     }
 
     // Check if the active creature has finished their turn
-    const hasFinishedTurn = activeCreature.remainingActions === 0 && activeCreature.remainingMovement === 0;
+    const hasFinishedTurn = activeCreature.remainingActions === 0 && 
+                           activeCreature.remainingMovement === 0 && 
+                           activeCreature.remainingQuickActions === 0;
     
     if (hasFinishedTurn) {
       // Check if we should end the turn (no creatures can take actions)

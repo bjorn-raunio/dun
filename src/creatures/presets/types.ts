@@ -8,6 +8,7 @@ export type BasePreset = {
   image: string;
   attributes: Attributes;
   actions?: number; // Optional - defaults to 1
+  quickActions?: number; // Optional - defaults to 1
   mapWidth?: number;
   mapHeight?: number;
   size: number; // 1=small, 2=medium, 3=large, 4=huge

@@ -100,8 +100,8 @@ export abstract class Creature {
     this.remainingMovement = params.attributes.movement;
     this.actions = params.actions;
     this.remainingActions = params.actions;
-    this.quickActions = params.quickActions ?? 0;
-    this.remainingQuickActions = params.quickActions ?? 0;
+    this.quickActions = params.quickActions ?? 1;
+    this.remainingQuickActions = params.quickActions ?? 1;
     this.mapWidth = params.mapWidth ?? 1;
     this.mapHeight = params.mapHeight ?? 1;
     this.size = params.size;
@@ -172,11 +172,19 @@ export abstract class Creature {
 
   // Check if creature has moved this turn
   hasMoved(): boolean {
+    // Dead creatures cannot have moved
+    if (this.isDead()) {
+      return false;
+    }
     return this.remainingMovement !== this.movement;
   }
 
   // Check if creature has actions remaining
   hasActionsRemaining(): boolean {
+    // Dead creatures cannot have actions remaining
+    if (this.isDead()) {
+      return false;
+    }
     return this.remainingActions > 0;
   }
 
@@ -357,9 +365,16 @@ export abstract class Creature {
 
   // Reset movement and actions for new turn
   resetTurn(): void {
-    this.remainingMovement = this.movement;
-    this.remainingActions = this.actions;
-    this.remainingQuickActions = this.quickActions;
+    // If creature is dead, set movement, actions, and quick actions to 0
+    if (this.isDead()) {
+      this.remainingMovement = 0;
+      this.remainingActions = 0;
+      this.remainingQuickActions = 0;
+    } else {
+      this.remainingMovement = this.movement;
+      this.remainingActions = this.actions;
+      this.remainingQuickActions = this.quickActions;
+    }
     this.remainingMana = this.mana; // Reset mana to full
     this.hasMovedWhileEngaged = false;
     
@@ -382,11 +397,19 @@ export abstract class Creature {
 
   // Use movement points
   useMovement(points: number): void {
+    // Dead creatures cannot use movement
+    if (this.isDead()) {
+      return;
+    }
     this.remainingMovement = Math.max(0, this.remainingMovement - points);
   }
 
   // Use action
   useAction(): void {
+    // Dead creatures cannot use actions
+    if (this.isDead()) {
+      return;
+    }
     if (this.remainingActions > 0) {
       this.remainingActions--;
     }
@@ -394,6 +417,10 @@ export abstract class Creature {
 
   // Use quick action
   useQuickAction(): void {
+    // Dead creatures cannot use quick actions
+    if (this.isDead()) {
+      return;
+    }
     if (this.remainingQuickActions > 0) {
       this.remainingQuickActions--;
     }
@@ -415,6 +442,10 @@ export abstract class Creature {
 
   // Check if creature has taken any actions this turn (moved or used actions)
   hasTakenActionsThisTurn(): boolean {
+    // Dead creatures cannot have taken actions
+    if (this.isDead()) {
+      return false;
+    }
     return this.hasMoved() || this.remainingActions < this.actions || this.remainingQuickActions < this.quickActions;
   }
 

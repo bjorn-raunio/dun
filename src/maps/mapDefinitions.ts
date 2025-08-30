@@ -48,6 +48,7 @@ export const mapDefinition: MapDefinition = {
       y: 4, 
       group: CREATURE_GROUPS.HERO, 
       facing: 6,
+      quickActions: 1, // Allow weapon switching
       inventory: [
         createWeapon("dagger"),
         createWeapon("broadsword"),
