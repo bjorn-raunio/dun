@@ -18,6 +18,8 @@ export interface LineOfSightOptions {
   maxRange?: number;
   ignoreCreatures?: boolean;
   includeCreatures?: boolean;
+  /** Algorithm to use for line-of-sight calculations */
+  algorithm?: 'dda' | 'raybox' | 'bresenham';
 }
 
 // Distance calculation types

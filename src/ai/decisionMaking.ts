@@ -156,7 +156,7 @@ export function executeAIDecision(
     case 'attack':
       if (decision.target) {
         // Perform the attack
-        const attackResult = creature.attack(decision.target, allCreatures, mapDefinition);
+        const attackResult = creature.attack(decision.target, allCreatures, mapDefinition, mapData);
         
         // Update AI state
         const newState = updateAIStateAfterAttack(

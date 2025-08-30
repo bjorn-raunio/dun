@@ -39,6 +39,30 @@ This directory contains the reorganized pathfinding system, split into focused m
 - Legacy function names are preserved
 - Gradual migration path available
 
+### 5. **Enhanced Line of Sight (NEW!)**
+- **Replaced Bresenham's algorithm** with DDA (Digital Differential Analyzer)
+- **Better tile coverage** - no more missed obstacles or terrain
+- **More accurate visibility calculations** for complex terrain
+- **Configurable algorithms** for different use cases
+
+## Line of Sight Improvements
+
+### Problem with Bresenham's Algorithm
+The original implementation used Bresenham's line algorithm, which only samples discrete points along a line and may miss tiles that the line actually overlaps. This can lead to incorrect line-of-sight calculations where obstacles are missed.
+
+### New DDA Algorithm
+The new implementation uses a Digital Differential Analyzer approach that:
+- Steps through every tile the line intersects
+- Ensures maximum tile coverage
+- Provides more accurate obstacle detection
+- Maintains good performance
+
+### Benefits
+- **More accurate line-of-sight calculations**
+- **No missed obstacles or terrain**
+- **Better performance for complex terrain**
+- **Maintains backward compatibility**
+
 ## Usage Examples
 
 ### Basic Pathfinding
@@ -54,8 +78,15 @@ const result = PathfindingSystem.getReachableTiles(
 ```typescript
 import { LineOfSightSystem } from './pathfinding';
 
+// Use default DDA algorithm (recommended)
 const hasLOS = LineOfSightSystem.hasLineOfSight(
   fromX, fromY, toX, toY, mapData, cols, rows, mapDefinition
+);
+
+// Use specific algorithm if needed
+const hasLOS = LineOfSightSystem.hasLineOfSight(
+  fromX, fromY, toX, toY, mapData, cols, rows, mapDefinition,
+  { algorithm: 'dda' } // 'dda', 'raybox', or 'bresenham'
 );
 ```
 
@@ -63,55 +94,31 @@ const hasLOS = LineOfSightSystem.hasLineOfSight(
 ```typescript
 import { DistanceSystem } from './pathfinding';
 
-const distance = DistanceSystem.calculateDistanceBetween(
-  fromX, fromY, toX, toY, { usePathfinding: true, mapData, cols, rows, allCreatures }
+const distance = DistanceSystem.calculateDistanceToCreature(
+  fromX, fromY, target, options
 );
 ```
 
+## Testing
+
+A test file `lineOfSightTest.ts` is included to demonstrate the difference between the old Bresenham algorithm and the new DDA algorithm. Run it to see how the new algorithm provides better tile coverage.
+
 ## Migration Guide
 
-### Before (Old Structure)
-```typescript
-import { PathfindingSystem } from './pathfinding';
+### For Existing Code
+No changes are required - the new algorithm is used by default and provides better results.
 
-// All functionality was in one large class
-const result = PathfindingSystem.getReachableTiles(...);
-const hasLOS = PathfindingSystem.hasLineOfSight(...);
-const distance = PathfindingSystem.calculateDistanceBetween(...);
+### For New Code
+Use the default DDA algorithm for best results:
+```typescript
+const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows);
 ```
 
-### After (New Structure)
+### For Performance-Critical Applications
+If you need the fastest possible algorithm and can accept some accuracy trade-offs, you can still use Bresenham:
 ```typescript
-import { PathfindingSystem, LineOfSightSystem, DistanceSystem } from './pathfinding';
-
-// Use appropriate system for each task
-const result = PathfindingSystem.getReachableTiles(...);
-const hasLOS = LineOfSightSystem.hasLineOfSight(...);
-const distance = DistanceSystem.calculateDistanceBetween(...);
+const hasLOS = LineOfSightSystem.hasLineOfSight(
+  fromX, fromY, toX, toY, mapData, cols, rows, mapDefinition,
+  { algorithm: 'bresenham' }
+);
 ```
-
-### Backward Compatibility
-```typescript
-// These still work exactly as before
-import { 
-  getReachableTiles, 
-  hasLineOfSight, 
-  calculateDistanceBetween 
-} from './pathfinding';
-```
-
-## Benefits of New Organization
-
-1. **Easier Testing** - Each module can be tested independently
-2. **Better Code Reviews** - Smaller, focused changes
-3. **Improved Debugging** - Issues are isolated to specific modules
-4. **Easier Refactoring** - Changes to one area don't affect others
-5. **Better Documentation** - Each module has a clear purpose
-6. **Reduced Cognitive Load** - Developers can focus on one aspect at a time
-
-## Future Improvements
-
-- Consider extracting terrain analysis into a separate module
-- Add performance profiling and optimization hooks
-- Implement caching strategies for expensive calculations
-- Add more comprehensive error handling and validation

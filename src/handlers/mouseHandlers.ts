@@ -211,7 +211,7 @@ export function createMouseHandlers(
       if (!currentCreature) return;
       
              // Perform the attack using the creature's attack method
-       const combatResult = currentCreature.attack(creature, creatures, mapDefinition);
+       const combatResult = currentCreature.attack(creature, creatures, mapDefinition, mapData);
       
       // Add to-hit message
       if (combatResult.toHitMessage) {

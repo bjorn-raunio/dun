@@ -19,13 +19,14 @@ export function executeCombat(
   attacker: Creature, 
   target: Creature, 
   allCreatures: Creature[], 
-  mapDefinition?: any
+  mapDefinition?: any,
+  mapData?: { tiles: string[][] }
 ): CombatResult {
   // Face the target when attacking
   attacker.faceTowards(target.x, target.y);
 
   // Use consolidated validation
-  const validation = validateCombat(attacker, target, allCreatures, mapDefinition);
+  const validation = validateCombat(attacker, target, allCreatures, mapDefinition, mapData);
 
   if (!validation.isValid) {
     return {

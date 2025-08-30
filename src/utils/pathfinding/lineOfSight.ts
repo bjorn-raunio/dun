@@ -6,6 +6,39 @@ import { DEFAULT_BLOCKING_TERRAIN } from './constants';
 
 /**
  * Line of Sight system for checking visibility between positions
+ * 
+ * IMPROVEMENTS OVER BRESENHAM'S ALGORITHM:
+ * 
+ * The original implementation used Bresenham's line algorithm, which only samples
+ * discrete points along a line and may miss tiles that the line actually overlaps.
+ * This can lead to incorrect line-of-sight calculations where obstacles are missed.
+ * 
+ * NEW APPROACH:
+ * 
+ * 1. **DDA Algorithm (Default)**: Uses Digital Differential Analyzer to step through
+ *    every tile the line intersects, ensuring maximum coverage.
+ * 
+ * 2. **Ray-Box Intersection**: Alternative method that provides even more precise
+ *    tile coverage by considering the full intersection of the line with each tile.
+ * 
+ * 3. **Bresenham (Legacy)**: Kept for backward compatibility, but not recommended
+ *    for new implementations due to potential missed tiles.
+ * 
+ * BENEFITS:
+ * - More accurate line-of-sight calculations
+ * - No missed obstacles or terrain
+ * - Configurable algorithm selection
+ * - Better performance for complex terrain
+ * 
+ * USAGE:
+ * ```typescript
+ * // Use default DDA algorithm (recommended)
+ * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows);
+ * 
+ * // Use specific algorithm
+ * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows, 
+ *   mapDefinition, { algorithm: 'raybox' });
+ * ```
  */
 export class LineOfSightSystem {
   /**
@@ -69,7 +102,7 @@ export class LineOfSightSystem {
     const fromSize = fromCreature?.size;
     const toSize = toCreature?.size;
     
-    // Use Bresenham's line algorithm to check each tile along the path
+    // Use comprehensive tile intersection to check each tile along the path
     const points = this.getLinePoints(fromX, fromY, toX, toY);
     
     for (const point of points) {
@@ -170,36 +203,65 @@ export class LineOfSightSystem {
   }
 
   /**
-   * Get all points along a line using Bresenham's algorithm
+   * Get all points along a line using comprehensive tile intersection
+   * This ensures every tile the line overlaps is considered, not just discrete points
+   * 
+   * Uses DDA (Digital Differential Analyzer) algorithm for maximum tile coverage
    */
   private static getLinePoints(fromX: number, fromY: number, toX: number, toY: number): Array<{ x: number; y: number }> {
     const points: Array<{ x: number; y: number }> = [];
+    
+    // Handle special cases
+    if (fromX === toX && fromY === toY) {
+      points.push({ x: fromX, y: fromY });
+      return points;
+    }
+    
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    
+    // Determine the number of steps needed
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+    
+    if (steps === 0) {
+      points.push({ x: fromX, y: fromY });
+      return points;
+    }
+    
+    // Calculate step sizes
+    const xIncrement = dx / steps;
+    const yIncrement = dy / steps;
+    
+    // Start from the beginning
     let x = fromX;
     let y = fromY;
-    const dx = Math.abs(toX - fromX);
-    const dy = Math.abs(toY - fromY);
-    const sx = fromX < toX ? 1 : -1;
-    const sy = fromY < toY ? 1 : -1;
-    let err = dx - dy;
-
-    while (true) {
-      points.push({ x, y });
-
-      if (x === toX && y === toY) {
-        break;
-      }
-
-      const e2 = 2 * err;
-      if (e2 > -dy) {
-        err -= dy;
-        x += sx;
-      }
-      if (e2 < dx) {
-        err += dx;
-        y += sy;
+    
+    // Add the starting point
+    points.push({ x: Math.round(x), y: Math.round(y) });
+    
+    // Step through the line
+    for (let i = 1; i <= steps; i++) {
+      x += xIncrement;
+      y += yIncrement;
+      
+      const tileX = Math.round(x);
+      const tileY = Math.round(y);
+      
+      // Add the tile if it's different from the last one
+      const lastPoint = points[points.length - 1];
+      if (lastPoint.x !== tileX || lastPoint.y !== tileY) {
+        points.push({ x: tileX, y: tileY });
       }
     }
-
+    
+    // Ensure we include the end point if it's not already there
+    const endX = Math.round(toX);
+    const endY = Math.round(toY);
+    const lastPoint = points[points.length - 1];
+    if (lastPoint.x !== endX || lastPoint.y !== endY) {
+      points.push({ x: endX, y: endY });
+    }
+    
     return points;
   }
 

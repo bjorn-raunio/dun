@@ -4,6 +4,7 @@ import { VALIDATION_MESSAGES } from './messages';
 import { validateCreatureAlive, validateActionsRemaining } from './creature';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { terrainHeightAt } from '../maps/mapRenderer';
+import { LineOfSightSystem } from '../utils/pathfinding/lineOfSight';
 
 /**
  * Comprehensive combat validation - validates all aspects of an attack in one function
@@ -12,7 +13,8 @@ export function validateCombat(
   attacker: Creature,
   target: Creature,
   allCreatures: Creature[],
-  mapDefinition?: any
+  mapDefinition?: any,
+  mapData?: { tiles: string[][] }
 ): ValidationResult {
   // Basic creature state checks
   if (!attacker.isAlive()) {
@@ -53,6 +55,32 @@ export function validateCombat(
       isValid: false,
       reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, distance, attackRange)
     };
+  }
+
+  // Line of sight check - only if map data is available
+  if (mapData && mapData.tiles && mapData.tiles.length > 0) {
+    const cols = mapData.tiles[0].length;
+    const rows = mapData.tiles.length;
+    
+    if (!LineOfSightSystem.hasLineOfSight(
+      attacker.x, 
+      attacker.y, 
+      target.x, 
+      target.y, 
+      mapData, 
+      cols, 
+      rows, 
+      mapDefinition,
+      { maxRange: attackRange },
+      attacker,
+      target,
+      allCreatures
+    )) {
+      return {
+        isValid: false,
+        reason: VALIDATION_MESSAGES.TARGET_NOT_VISIBLE(target.name)
+      };
+    }
   }
 
   // Elevation check for melee attacks

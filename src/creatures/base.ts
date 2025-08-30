@@ -292,8 +292,8 @@ export abstract class Creature implements ICreature {
     return creatureServices.getMovementService().moveTo(this, path, allCreatures);
   }
 
-  attack(target: any, allCreatures: any[] = [], mapDefinition?: any): any {
-    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition);
+  attack(target: any, allCreatures: any[] = [], mapDefinition?: any, mapData?: any): any {
+    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, mapData);
     
     return {
       hit: result.success,

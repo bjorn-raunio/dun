@@ -52,7 +52,7 @@ export interface ICreature {
   moveTo(path: Array<{x: number; y: number}>, allCreatures?: any[]): { success: boolean; message?: string };
   
   // Combat
-  attack(target: any, allCreatures?: any[], mapDefinition?: any): any;
+  attack(target: any, allCreatures?: any[], mapDefinition?: any, mapData?: any): any;
   
   // State modifiers
   takeDamage(damage: number): number;
@@ -179,5 +179,5 @@ export interface ICreatureMovement {
 // --- Combat Interface ---
 
 export interface ICombatExecutor {
-  executeCombat(attacker: any, target: any, allCreatures: any[], mapDefinition?: any): any;
+  executeCombat(attacker: any, target: any, allCreatures: any[], mapDefinition?: any, mapData?: any): any;
 }
