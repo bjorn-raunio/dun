@@ -2,6 +2,7 @@ import React from 'react';
 import { Creature } from '../../creatures/index';
 import { calculateTargetsInRange } from '../../utils/combatUtils';
 import { findCreatureById } from '../../utils/pathfinding';
+import { logGame } from '../../utils/logging';
 
 // --- Targets in Range Hook ---
 
@@ -20,10 +21,10 @@ export function useTargetsInRange(
       return;
     }
     
-    console.log(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
+    logGame(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
     
     const inRange = calculateTargetsInRange(sel, creatures);
-    console.log(`  Targets in range: ${Array.from(inRange).join(', ')}`);
+    logGame(`Targets in range: ${Array.from(inRange).join(', ')}`);
     setTargetsInRangeIds(inRange);
   }, [selectedCreatureId, creatures, targetsInRangeKey]);
 

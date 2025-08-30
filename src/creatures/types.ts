@@ -11,7 +11,15 @@ export interface Attributes {
   agility: number;
   courage: number;
   intelligence: number;
+  perception?: number;
+  dexterity?: number;
 }
+
+// Default values for optional attributes
+export const DEFAULT_ATTRIBUTES: Partial<Attributes> = {
+  perception: 0,
+  dexterity: 0,
+};
 
 export type CreatureGroup = "hero" | "enemy" | "neutral";
 
@@ -33,6 +41,7 @@ export interface CreatureState {
   remainingQuickActions: number;
   remainingVitality: number;
   remainingMana: number;
+  remainingFortune: number;
   hasMovedWhileEngaged: boolean;
 }
 

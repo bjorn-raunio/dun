@@ -1,5 +1,6 @@
 import { GameActions } from './types';
 import { VALIDATION_MESSAGES } from '../validation/messages';
+import { logGame } from '../utils/logging';
 
 // --- Message System ---
 
@@ -29,7 +30,7 @@ export function addMovementMessage(
   facingDirection: string,
   setMessages: GameActions['setMessages']
 ) {
-  console.log(`${creatureName} faces ${facingDirection}`);
+  logGame(`${creatureName} faces ${facingDirection}`);
 }
 
 export function addErrorMessage(

@@ -1,8 +1,4 @@
-// --- ID Generation ---
-let itemIdCounter = 0;
-export function generateItemId(): string {
-  return `item-${++itemIdCounter}`;
-}
+import { generateItemId } from '../utils/idGeneration';
 
 // --- Items class hierarchy ---
 export class Item {
@@ -85,45 +81,36 @@ export class Armor extends Item {
   kind: "armor" = "armor";
   armor: number; // base AC or bonus
   armorType: "light" | "medium" | "heavy";
-  stealthDisadvantage?: boolean;
-  strengthRequirement?: number;
 
   constructor(params: {
     id?: string;
     name: string;
     armor: number;
     armorType: "light" | "medium" | "heavy";
-    stealthDisadvantage?: boolean;
-    strengthRequirement?: number;
     weight?: number;
     value?: number;
   }) {
     super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
     this.armor = params.armor;
     this.armorType = params.armorType;
-    this.stealthDisadvantage = params.stealthDisadvantage;
-    this.strengthRequirement = params.strengthRequirement;
   }
 }
 
 export class Shield extends Item {
   kind: "shield" = "shield";
   block: number; // shield bonus to AC
-  size: "small" | "medium" | "large"; // shield size affects coverage and weight
   special?: string[]; // special properties like "magical", "spiked", etc.
 
   constructor(params: {
     id?: string;
     name: string;
     block: number;
-    size: "small" | "medium" | "large";
     special?: string[];
     weight?: number;
     value?: number;
   }) {
     super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
     this.block = params.block;
-    this.size = params.size;
     this.special = params.special;
   }
 }

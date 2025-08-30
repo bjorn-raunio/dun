@@ -21,41 +21,41 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
 
   const handleEquip = (creature: Creature, item: Item, slot: EquipmentSlot) => {
     // Check if this is a weapon/shield switch (equipping a weapon or shield to mainHand or offHand)
-    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') && 
-                                  (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-    
+    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') &&
+      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
+
     // Check if this is an armor equip
     const isArmorEquip = slot === 'armor' && item instanceof Armor;
-    
+
     // Check combat state for armor equips
     if (isArmorEquip && creature.getCombatState()) {
       alert(`Cannot equip ${item.name}: Cannot equip armor while in combat`);
       return;
     }
-    
+
     // If it's a weapon/shield switch, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldSwitch && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
       return; // Silently fail - button should be disabled
     }
-    
+
     // If it's an armor equip, check if we have any actions available and haven't moved yet
     if (isArmorEquip && (creature.remainingActions <= 0 || creature.remainingMovement < creature.movement)) {
       return; // Silently fail - button should be disabled
     }
-    
+
     const equipmentManager = new EquipmentManagerClass(creature);
-    
+
     // First, unequip any existing item in the slot and add it to inventory
     const existingItem = creature.equipment[slot];
     if (existingItem) {
       equipmentManager.unequip(creature, slot);
       creature.inventory.push(existingItem);
     }
-    
+
     // If equipping a two-handed weapon to main hand, unequip both hands
-    if (slot === 'mainHand' && 
-        ((item instanceof Weapon && item.hands === 2) || 
-         (item instanceof RangedWeapon && item.hands === 2))) {
+    if (slot === 'mainHand' &&
+      ((item instanceof Weapon && item.hands === 2) ||
+        (item instanceof RangedWeapon && item.hands === 2))) {
       // Unequip off-hand item if it exists
       const offHandItem = creature.equipment.offHand;
       if (offHandItem) {
@@ -63,19 +63,19 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
         creature.inventory.push(offHandItem);
       }
     }
-    
+
     // If equipping any item to off-hand, check if there's a two-handed weapon in main hand that needs to be unequipped
     if (slot === 'offHand') {
       const mainHandItem = creature.equipment.mainHand;
-      if (mainHandItem && 
-          ((mainHandItem instanceof Weapon && mainHandItem.hands === 2) || 
-           (mainHandItem instanceof RangedWeapon && mainHandItem.hands === 2))) {
+      if (mainHandItem &&
+        ((mainHandItem instanceof Weapon && mainHandItem.hands === 2) ||
+          (mainHandItem instanceof RangedWeapon && mainHandItem.hands === 2))) {
         // Unequip the two-handed weapon from main-hand
         equipmentManager.unequip(creature, 'mainHand');
         creature.inventory.push(mainHandItem);
       }
     }
-    
+
     // Now equip the new item
     const validation = equipmentManager.equip(creature, item, slot);
     if (validation.isValid) {
@@ -84,7 +84,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
       if (itemIndex !== -1) {
         creature.inventory.splice(itemIndex, 1);
       }
-      
+
       // Consume an action if this was a weapon/shield switch
       if (isWeaponOrShieldSwitch) {
         if (creature.remainingQuickActions > 0) {
@@ -93,13 +93,13 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
           creature.useAction();
         }
       }
-      
+
       // Consume an action and prevent movement if this was an armor equip
       if (isArmorEquip) {
         creature.useAction();
         creature.setRemainingMovement(0); // Prevent movement in the same turn
       }
-      
+
       onCreatureUpdate?.(creature);
     } else {
       // If equipping failed, restore the original item to the slot
@@ -118,34 +118,34 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
   const handleUnequip = (creature: Creature, slot: EquipmentSlot) => {
     // Check if this is unequipping a weapon or shield from mainHand or offHand
     const item = creature.equipment[slot];
-    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') && 
-                                   (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-    
+    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') &&
+      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
+
     // Check if this is an armor unequip
     const isArmorUnequip = item && slot === 'armor' && item instanceof Armor;
-    
+
     // Check combat state for armor unequips
     if (isArmorUnequip && creature.getCombatState()) {
       alert(`Cannot unequip ${item.name}: Cannot unequip armor while in combat`);
       return;
     }
-    
+
     // If it's a weapon/shield unequip, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldUnequip && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
       return; // Silently fail - button should be disabled
     }
-    
+
     // If it's an armor unequip, check if we have any actions available and haven't moved yet
     if (isArmorUnequip && (creature.remainingActions <= 0 || creature.remainingMovement < creature.movement)) {
       return; // Silently fail - button should be disabled
     }
-    
+
     const equipmentManager = new EquipmentManagerClass(creature);
     const unequippedItem = equipmentManager.unequip(creature, slot);
     if (unequippedItem) {
       // Add item to inventory
       creature.inventory.push(unequippedItem);
-      
+
       // Consume an action if this was a weapon/shield unequip
       if (isWeaponOrShieldUnequip) {
         if (creature.remainingQuickActions > 0) {
@@ -154,13 +154,13 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
           creature.useAction();
         }
       }
-      
+
       // Consume an action and prevent movement if this was an armor unequip
       if (isArmorUnequip) {
         creature.useAction();
         creature.setRemainingMovement(0); // Prevent movement in the same turn
       }
-      
+
       onCreatureUpdate?.(creature);
     }
   };
@@ -170,7 +170,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     if (slot === 'armor' && item instanceof Armor) {
       return true;
     }
-    
+
     const equipmentManager = new EquipmentManagerClass(selectedCreature!);
     const equipment = equipmentManager.getEquipment();
     const validation = equipment.validateEquip(item, slot, selectedCreature!);
@@ -179,62 +179,62 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
 
   const canSwitchWeaponOrShield = (item: Item, slot: EquipmentSlot): boolean => {
     if (!selectedCreature) return false;
-    
+
     // Check if this is a weapon/shield switch (equipping a weapon or shield to mainHand or offHand)
-    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') && 
-                                  (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-    
+    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') &&
+      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
+
     // Check if this is an armor equip
     const isArmorEquip = slot === 'armor' && item instanceof Armor;
-    
+
     // If it's not a weapon/shield switch or armor equip, allow it (shields, etc.)
     if (!isWeaponOrShieldSwitch && !isArmorEquip) return true;
-    
+
     // Check combat state for armor equips
     if (isArmorEquip && selectedCreature.getCombatState()) {
       return false; // Cannot equip armor while in combat
     }
-    
+
     // For weapon/shield switches, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldSwitch) {
       return selectedCreature.remainingQuickActions > 0 || selectedCreature.remainingActions > 0;
     }
-    
+
     // For armor equips, check if we have regular actions available and haven't moved yet
     if (isArmorEquip) {
       return selectedCreature.remainingActions > 0 && selectedCreature.remainingMovement === selectedCreature.movement;
     }
-    
+
     return true;
   };
 
   const canUnequipWeaponOrShield = (slot: EquipmentSlot): boolean => {
     if (!selectedCreature) return false;
-    
+
     const item = selectedCreature.equipment[slot];
-    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') && 
-                                   (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-    
+    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') &&
+      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
+
     const isArmorUnequip = item && slot === 'armor' && item instanceof Armor;
-    
+
     // If it's not a weapon/shield unequip or armor unequip, allow it
     if (!isWeaponOrShieldUnequip && !isArmorUnequip) return true;
-    
+
     // Check combat state for armor unequips
     if (isArmorUnequip && selectedCreature.getCombatState()) {
       return false; // Cannot unequip armor while in combat
     }
-    
+
     // For weapon/shield unequips, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldUnequip) {
       return selectedCreature.remainingQuickActions > 0 || selectedCreature.remainingActions > 0;
     }
-    
+
     // For armor unequips, check if we have regular actions available and haven't moved yet
     if (isArmorUnequip) {
       return selectedCreature.remainingActions > 0 && selectedCreature.remainingMovement === selectedCreature.movement;
     }
-    
+
     return true;
   };
 
@@ -242,15 +242,15 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
 
   const renderEquipmentItem = (slot: EquipmentSlot, label: string) => {
     if (!selectedCreature) return null;
-    
+
     const item = selectedCreature.equipment[slot];
     const canUnequip = canUnequipWeaponOrShield(slot);
 
     return (
       <div key={slot} style={{ marginBottom: 8 }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between',
           padding: 8,
           border: `1px solid ${COLORS.border}`,
@@ -267,35 +267,35 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                 {item instanceof Weapon && `Damage: ${item.damage}, Hands: ${item.hands}`}
                 {item instanceof RangedWeapon && `Damage: ${item.damage}, Range: ${item.range.normal}/${item.range.long}`}
                 {item instanceof Armor && `Armor: ${item.armor}, Type: ${item.armorType}`}
-                {item instanceof Shield && `Block: ${item.block}, Size: ${item.size}`}
+                {item instanceof Shield && `Block: ${item.block}`}
               </div>
             )}
           </div>
-                     <div style={{ display: 'flex', gap: 4 }}>
-             {item && (
-               <button
-                 onClick={() => handleUnequip(selectedCreature, slot)}
-                 disabled={!canUnequip}
-                 style={{
-                   ...COMMON_STYLES.button,
-                   padding: '4px 8px',
-                   fontSize: 12,
-                   background: canUnequip ? COLORS.error : COLORS.border,
-                   opacity: canUnequip ? 1 : 0.5,
-                   cursor: canUnequip ? 'pointer' : 'not-allowed'
-                 }}
-                                   title={canUnequip ? 
-                    (selectedCreature.equipment[slot] instanceof Armor ? 
-                      "Unequip (uses action, prevents movement)" : 
-                      "Unequip (uses quick action or regular action)") : 
-                    (selectedCreature.equipment[slot] instanceof Armor ? 
-                      (selectedCreature.getCombatState() ? "Cannot unequip armor while in combat" : "Cannot unequip armor: must have actions and full movement") : 
-                      "No actions remaining for unequip")}
-               >
-                 Unequip
-               </button>
-             )}
-           </div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {item && (
+              <button
+                onClick={() => handleUnequip(selectedCreature, slot)}
+                disabled={!canUnequip}
+                style={{
+                  ...COMMON_STYLES.button,
+                  padding: '4px 8px',
+                  fontSize: 12,
+                  background: canUnequip ? COLORS.error : COLORS.border,
+                  opacity: canUnequip ? 1 : 0.5,
+                  cursor: canUnequip ? 'pointer' : 'not-allowed'
+                }}
+                title={canUnequip ?
+                  (selectedCreature.equipment[slot] instanceof Armor ?
+                    "Unequip (uses action, prevents movement)" :
+                    "Unequip (uses quick action or regular action)") :
+                  (selectedCreature.equipment[slot] instanceof Armor ?
+                    (selectedCreature.getCombatState() ? "Cannot unequip armor while in combat" : "Cannot unequip armor: must have actions and full movement") :
+                    "No actions remaining for unequip")}
+              >
+                Unequip
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -307,14 +307,14 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     const canEquipMainHand = canEquipToSlot(item, 'mainHand');
     const canEquipOffHand = canEquipToSlot(item, 'offHand');
     const canEquipArmor = canEquipToSlot(item, 'armor');
-    
+
     const canSwitchMainHand = canSwitchWeaponOrShield(item, 'mainHand');
     const canSwitchOffHand = canSwitchWeaponOrShield(item, 'offHand');
 
     return (
-      <div key={item.id} style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
+      <div key={item.id} style={{
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
         padding: 6,
         border: `1px solid ${COLORS.border}`,
@@ -328,7 +328,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
             {item instanceof Weapon && `Damage: ${item.damage}, Hands: ${item.hands}`}
             {item instanceof RangedWeapon && `Damage: ${item.damage}, Range: ${item.range.normal}/${item.range.long}`}
             {item instanceof Armor && `Armor: ${item.armor}, Type: ${item.armorType}`}
-            {item instanceof Shield && `Block: ${item.block}, Size: ${item.size}`}
+            {item instanceof Shield && `Block: ${item.block}`}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 2 }}>
@@ -344,7 +344,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                 opacity: canSwitchMainHand ? 1 : 0.5,
                 cursor: canSwitchMainHand ? 'pointer' : 'not-allowed'
               }}
-                             title={canSwitchMainHand ? "Equip to Main Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
+              title={canSwitchMainHand ? "Equip to Main Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
             >
               MH
             </button>
@@ -361,30 +361,30 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                 opacity: canSwitchOffHand ? 1 : 0.5,
                 cursor: canSwitchOffHand ? 'pointer' : 'not-allowed'
               }}
-                             title={canSwitchOffHand ? "Equip to Off Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
+              title={canSwitchOffHand ? "Equip to Off Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
             >
               OH
             </button>
           )}
-                     {canEquipArmor && (
-             <button
-               onClick={() => handleEquip(selectedCreature, item, 'armor')}
-               disabled={!canSwitchWeaponOrShield(item, 'armor')}
-               style={{
-                 ...COMMON_STYLES.button,
-                 padding: '2px 6px',
-                 fontSize: 10,
-                 background: canSwitchWeaponOrShield(item, 'armor') ? COLORS.primary : COLORS.border,
-                 opacity: canSwitchWeaponOrShield(item, 'armor') ? 1 : 0.5,
-                 cursor: canSwitchWeaponOrShield(item, 'armor') ? 'pointer' : 'not-allowed'
-               }}
-                                                               title={canSwitchWeaponOrShield(item, 'armor') ? "Equip as Armor (uses action, prevents movement)" : 
-                                       selectedCreature.getCombatState() ? "Cannot equip armor while in combat" : 
-                                       "Cannot equip armor: must have actions and full movement"}
-             >
-               A
-             </button>
-           )}
+          {canEquipArmor && (
+            <button
+              onClick={() => handleEquip(selectedCreature, item, 'armor')}
+              disabled={!canSwitchWeaponOrShield(item, 'armor')}
+              style={{
+                ...COMMON_STYLES.button,
+                padding: '2px 6px',
+                fontSize: 10,
+                background: canSwitchWeaponOrShield(item, 'armor') ? COLORS.primary : COLORS.border,
+                opacity: canSwitchWeaponOrShield(item, 'armor') ? 1 : 0.5,
+                cursor: canSwitchWeaponOrShield(item, 'armor') ? 'pointer' : 'not-allowed'
+              }}
+              title={canSwitchWeaponOrShield(item, 'armor') ? "Equip as Armor (uses action, prevents movement)" :
+                selectedCreature.getCombatState() ? "Cannot equip armor while in combat" :
+                  "Cannot equip armor: must have actions and full movement"}
+            >
+              A
+            </button>
+          )}
         </div>
       </div>
     );
@@ -420,26 +420,26 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                 src={process.env.PUBLIC_URL + "/" + selectedCreature.image}
                 alt={selectedCreature.name}
                 draggable={false}
-                style={{ 
-                  width: 56, 
-                  height: 56, 
-                  objectFit: "cover", 
-                  borderRadius: "50%", 
-                  border: selectedCreature.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000" 
+                style={{
+                  width: 56,
+                  height: 56,
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  border: selectedCreature.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"
                 }}
               />
             ) : (
-              <div style={{ 
-                width: 56, 
-                height: 56, 
-                borderRadius: "50%", 
-                                 background: selectedCreature.isHeroGroup() ? COLORS.hero : COLORS.monster, 
-                border: "2px solid #fff" 
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: selectedCreature.isHeroGroup() ? COLORS.hero : COLORS.monster,
+                border: "2px solid #fff"
               }} />
             )}
             <div>
-              <div style={{ 
-                fontSize: 18, 
+              <div style={{
+                fontSize: 18,
                 fontWeight: 700,
                 color: selectedCreature.isDead() ? COLORS.error : COLORS.text,
                 textDecoration: selectedCreature.isDead() ? 'line-through' : 'none',
@@ -448,29 +448,35 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                 {selectedCreature.name}
                 {selectedCreature.isDead() && " (DEAD)"}
               </div>
-              <div style={{ opacity: 0.8, textTransform: "capitalize" }}>{selectedCreature.group}</div>
             </div>
           </div>
-          
+
           <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
-            <div>Movement: <strong>{selectedCreature.remainingMovement}/{selectedCreature.movement}</strong></div>
-            <div>Actions: <strong>{selectedCreature.remainingActions}/{selectedCreature.actions}</strong></div>
-            <div>Quick Actions: <strong>{selectedCreature.remainingQuickActions}/{selectedCreature.quickActions}</strong></div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 8 }}>
-              <div>Combat: <strong>{selectedCreature.combat}</strong></div>
-              <div>Ranged: <strong>{selectedCreature.ranged}</strong></div>
-              <div>Strength: <strong>{selectedCreature.strength}</strong></div>
+              <div>Movement: <strong>{selectedCreature.remainingMovement}/{selectedCreature.movement}</strong></div>
               <div>Agility: <strong>{selectedCreature.agility}</strong></div>
-                            <div>Vitality: <strong style={{ 
-                        color: selectedCreature.isDead() ? COLORS.error :
-                               selectedCreature.isWounded() ? COLORS.warning : COLORS.text
+              <div>Combat: <strong>{selectedCreature.combat}</strong></div>
+              <div>Intelligence: <strong>{selectedCreature.intelligence}</strong></div>
+              <div>Strength: <strong>{selectedCreature.strength}</strong></div>
+              <div>Mana: <strong>{selectedCreature.remainingMana}/{selectedCreature.mana}</strong></div>
+              <div>Ranged: <strong>{selectedCreature.ranged}</strong></div>
+              <div>Courage: <strong>{selectedCreature.courage}</strong></div>
+              <div>Armor: <strong>{selectedCreature.naturalArmor}/{selectedCreature.getArmorValue()}</strong></div>
+              <div>Vitality: <strong style={{
+                color: selectedCreature.isDead() ? COLORS.error :
+                  selectedCreature.isWounded() ? COLORS.warning : COLORS.text
               }}>
                 {selectedCreature.remainingVitality}/{selectedCreature.vitality}
                 {selectedCreature.isWounded() && " (WOUNDED)"}
               </strong></div>
+              <div>Perception: <strong>{selectedCreature.perception}</strong></div>
+              <div>Dexterity: <strong>{selectedCreature.dexterity}</strong></div>
+              <div>Fortune: <strong>{selectedCreature.remainingFortune}/{selectedCreature.fortune}</strong></div>
             </div>
+            <div>Actions: <strong>{selectedCreature.remainingActions}/{selectedCreature.actions}</strong></div>
+            <div>Quick Actions: <strong>{selectedCreature.remainingQuickActions}/{selectedCreature.quickActions}</strong></div>
           </div>
-          
+
           {selectedCreature.isHeroGroup() && (
             <div style={{ marginTop: 12, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
               <div style={{ fontWeight: 700, marginBottom: 8 }}>Equipment</div>
@@ -479,7 +485,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
               {renderEquipmentItem('armor', 'Armor')}
             </div>
           )}
-          
+
           <div style={{ marginTop: 12, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>Inventory ({selectedCreature.inventory.length})</div>
             {selectedCreature.inventory.length === 0 ? (
@@ -490,7 +496,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
               </div>
             )}
           </div>
-          
+
           <button
             onClick={onDeselect}
             style={{
@@ -548,26 +554,26 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                       src={process.env.PUBLIC_URL + "/" + hero.image}
                       alt={hero.name}
                       draggable={false}
-                      style={{ 
-                        width: 40, 
-                        height: 40, 
-                        objectFit: "cover", 
-                        borderRadius: "50%", 
-                        border: "2px solid #00ff00" 
+                      style={{
+                        width: 40,
+                        height: 40,
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                        border: "2px solid #00ff00"
                       }}
                     />
                   ) : (
-                    <div style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: "50%", 
-                      background: COLORS.hero, 
-                      border: "2px solid #fff" 
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: COLORS.hero,
+                      border: "2px solid #fff"
                     }} />
                   )}
                   <div style={{ flex: 1 }}>
-                    <div style={{ 
-                      fontSize: 14, 
+                    <div style={{
+                      fontSize: 14,
                       fontWeight: 600,
                       color: hero.isDead() ? COLORS.error : COLORS.text,
                       textDecoration: hero.isDead() ? 'line-through' : 'none',
@@ -577,19 +583,19 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                       {hero.isDead() && " (DEAD)"}
                     </div>
                     <div style={{ fontSize: 12, opacity: 0.8 }}>
-                      Vitality: <strong style={{ 
+                      Vitality: <strong style={{
                         color: hero.isDead() ? COLORS.error :
-                               hero.isWounded() ? COLORS.warning : COLORS.text
+                          hero.isWounded() ? COLORS.warning : COLORS.text
                       }}>
                         {hero.remainingVitality}
                         {hero.isWounded() && " (WOUNDED)"}
-                      </strong> | 
-                      Actions: <strong>{hero.remainingActions ?? hero.actions}</strong> | 
-                      Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong> | 
+                      </strong> |
+                      Actions: <strong>{hero.remainingActions ?? hero.actions}</strong> |
+                      Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong> |
                       Quick: <strong>{hero.remainingQuickActions ?? hero.quickActions}</strong>
                     </div>
                     <div style={{ fontSize: 12, opacity: 0.7 }}>
-                      Position: ({hero.x}, {hero.y}) | 
+                      Position: ({hero.x}, {hero.y}) |
                       {(() => {
                         const isEngaged = hero.isEngagedWithAll(creatures);
                         return (

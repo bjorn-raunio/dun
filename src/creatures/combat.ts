@@ -111,4 +111,12 @@ export class CreatureCombatManager {
   getEffectiveIntelligence(isWounded: boolean): number {
     return this.getEffectiveAttribute(this.attributes.intelligence, isWounded);
   }
+
+  getEffectivePerception(isWounded: boolean): number {
+    return this.getEffectiveAttribute(this.attributes.perception ?? 0, isWounded);
+  }
+
+  getEffectiveDexterity(isWounded: boolean): number {
+    return this.getEffectiveAttribute(this.attributes.dexterity ?? 0, isWounded);
+  }
 }

@@ -6,6 +6,7 @@ import { calculateCostDifference } from '../utils/movementCost';
 import { VALIDATION_MESSAGES } from '../validation/messages';
 import { addMessage } from '../game/messageSystem';
 import { findCreatureById } from '../utils/pathfinding';
+import { logMovement, logGame } from '../utils/logging';
 
 // --- Mouse Event Handlers ---
 
@@ -117,10 +118,13 @@ export function createMouseHandlers(
         const stepCost = calculateCostDifference(currentCost, destCost);
         
         // Debug logging for movement cost
-        console.log(`Movement cost debug: Hero at (${currentCreature.x},${currentCreature.y}) moving to (${pos.tileX},${pos.tileY})`);
-        console.log(`  Path:`, path);
-        console.log(`  Current cost: ${currentCost}, Dest cost: ${destCost}, Step cost: ${stepCost}`);
-        console.log(`  Remaining movement before: ${currentCreature.remainingMovement}`);
+        logMovement(`Hero at (${currentCreature.x},${currentCreature.y}) moving to (${pos.tileX},${pos.tileY})`, {
+          path,
+          currentCost,
+          destCost,
+          stepCost,
+          remainingMovement: currentCreature.remainingMovement
+        });
         
                  setCreatures(prev => {
            // Check if this is a duplicate movement (React Strict Mode can cause double execution)
@@ -128,7 +132,7 @@ export function createMouseHandlers(
                lastMovement.current.creatureId === selectedCreatureId &&
                lastMovement.current.x === pos.tileX &&
                lastMovement.current.y === pos.tileY) {
-             console.log(`  Skipping duplicate movement to (${pos.tileX},${pos.tileY})`);
+             logMovement(`Skipping duplicate movement to (${pos.tileX},${pos.tileY})`);
              return prev;
            }
            const targetCreature = findCreatureById(prev, selectedCreatureId);
@@ -138,7 +142,7 @@ export function createMouseHandlers(
                            const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
            
            if (moveResult.success) {
-             console.log(`  Movement cost applied: ${moveResult.cost}, Remaining after: ${targetCreature.remainingMovement}`);
+             logMovement(`Movement cost applied: ${moveResult.cost}, Remaining after: ${targetCreature.remainingMovement}`);
              
              // Update last movement to prevent duplicate processing
              lastMovement.current = {
@@ -157,7 +161,7 @@ export function createMouseHandlers(
                            // Check engagement status after movement
               const isEngaged = targetCreature.isEngagedWithAll(prev);
               if (isEngaged) {
-                console.log(`${targetCreature.name} is now engaged`);
+                logGame(`${targetCreature.name} is now engaged`);
               }
              
              return prev.map(c => {
@@ -167,7 +171,7 @@ export function createMouseHandlers(
              });
                        } else {
               // Movement failed - log to console
-              console.log(`Movement failed: ${moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name)}`);
+              logMovement(`Movement failed: ${moveResult.message || VALIDATION_MESSAGES.CANNOT_MOVE_THERE(targetCreature.name)}`);
               return prev;
             }
          });
@@ -179,7 +183,7 @@ export function createMouseHandlers(
            c.y === pos.tileY
          );
                   if (deadCreatureAtDestination) {
-           console.log(`${selected.name} moves over remains`);
+           logGame(`${selected.name} moves over remains`);
          }
       }
       if (moved) {
@@ -198,7 +202,7 @@ export function createMouseHandlers(
          // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
      if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
               if (!targetsInRangeIds.has(creature.id)) {
-          console.log(`Cannot reach target: ${selected.name} cannot reach ${creature.name}`);
+          logGame(`Cannot reach target: ${selected.name} cannot reach ${creature.name}`);
           return; // keep hero selected
         }
       

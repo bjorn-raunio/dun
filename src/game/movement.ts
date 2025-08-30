@@ -57,8 +57,8 @@ export function executeMovement(
   // Apply movement cost
   creature.useMovement(stepCost);
   
-  // Reset actions for other creatures in the same group that have already acted
-  creature.resetGroupActions(allCreatures);
+  // Don't reset group actions during movement - this should only happen when turns actually end
+  // creature.resetGroupActions(allCreatures);
   
   // Check if movement resulted in engagement
   const isEngaged = creature.isEngagedWithAll(allCreatures);

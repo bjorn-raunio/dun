@@ -4,7 +4,8 @@ import {
   CREATURE_GROUPS, 
   CreatureConstructorParams,
   CreaturePosition,
-  CreatureState
+  CreatureState,
+  DEFAULT_ATTRIBUTES
 } from './types';
 import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
@@ -12,12 +13,7 @@ import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
 import { Item } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
-
-// --- ID Generation ---
-let creatureIdCounter = 0;
-export function generateCreatureId(): string {
-  return `creature-${++creatureIdCounter}`;
-}
+import { generateCreatureId } from '../utils/idGeneration';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature {
@@ -53,9 +49,9 @@ export abstract class Creature {
     this.id = params.id ?? generateCreatureId();
     this.name = params.name;
     this.image = params.image;
-    this.attributes = params.attributes;
+    this.attributes = { ...DEFAULT_ATTRIBUTES, ...params.attributes };
     this.actions = params.actions;
-    this.quickActions = params.quickActions ?? 0;
+    this.quickActions = params.quickActions ?? 1;
     this.mapWidth = params.mapWidth ?? 1;
     this.mapHeight = params.mapHeight ?? 1;
     this.size = params.size;
@@ -80,6 +76,7 @@ export abstract class Creature {
       params.quickActions ?? 1,
       params.vitality,
       params.mana,
+      params.fortune,
       initialPosition
     );
 
@@ -111,6 +108,7 @@ export abstract class Creature {
   get remainingQuickActions(): number { return this.stateManager.getState().remainingQuickActions; }
   get remainingVitality(): number { return this.stateManager.getState().remainingVitality; }
   get remainingMana(): number { return this.stateManager.getState().remainingMana; }
+  get remainingFortune(): number { return this.stateManager.getState().remainingFortune; }
   get hasMovedWhileEngaged(): boolean { return this.stateManager.getState().hasMovedWhileEngaged; }
 
   // --- Backward Compatibility Getters/Setters ---
@@ -135,6 +133,12 @@ export abstract class Creature {
   get intelligence(): number { 
     return this.combatManager.getEffectiveIntelligence(this.stateManager.isWounded(this.size)); 
   }
+  get perception(): number { 
+    return this.combatManager.getEffectivePerception(this.stateManager.isWounded(this.size)); 
+  }
+  get dexterity(): number { 
+    return this.combatManager.getEffectiveDexterity(this.stateManager.isWounded(this.size)); 
+  }
 
   set movement(value: number) { this.attributes.movement = value; }
   set combat(value: number) { this.attributes.combat = value; }
@@ -143,6 +147,8 @@ export abstract class Creature {
   set agility(value: number) { this.attributes.agility = value; }
   set courage(value: number) { this.attributes.courage = value; }
   set intelligence(value: number) { this.attributes.intelligence = value; }
+  set perception(value: number) { this.attributes.perception = value; }
+  set dexterity(value: number) { this.attributes.dexterity = value; }
 
   // --- State Methods ---
   isAlive(): boolean { return this.stateManager.isAlive(); }
@@ -152,6 +158,8 @@ export abstract class Creature {
   hasActionsRemaining(): boolean { return this.stateManager.hasActionsRemaining(); }
   hasMana(amount: number): boolean { return this.stateManager.hasMana(amount); }
   hasTakenActionsThisTurn(): boolean { return this.stateManager.hasTakenActionsThisTurn(); }
+  hasFortune(amount: number): boolean { return this.stateManager.hasFortune(amount); }
+  setRemainingFortune(value: number): void { this.stateManager.setRemainingFortune(value); }
 
   // --- Combat Methods ---
   getArmorValue(): number { return this.combatManager.getArmorValue(); }

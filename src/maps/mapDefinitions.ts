@@ -47,15 +47,7 @@ export const mapDefinition: MapDefinition = {
       x: 16, 
       y: 4, 
       group: CREATURE_GROUPS.HERO, 
-      facing: 6,
-      quickActions: 1, // Allow weapon switching
-      inventory: [
-        createWeapon("dagger"),
-        createWeapon("broadsword"),
-        createWeapon("greatsword"),
-        createShield("buckler"),
-        createArmor("leather"),
-      ]
+      facing: 6
     }),
     //createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
     new Hero({
@@ -77,14 +69,6 @@ export const mapDefinition: MapDefinition = {
       facing: 2,
       inventory: [
         createRangedWeapon("longbow"),
-        createShield("shield"),
-        createWeapon("broadsword"),
-        createWeapon("scimitar"),
-        createWeapon("greatsword"),
-        createWeapon("battleaxe"),
-        createShield("buckler"),
-        createShield("roundShield"),
-        createArmor("leather"),
       ],
       equipment: {
         mainHand: createWeapon("dagger"),

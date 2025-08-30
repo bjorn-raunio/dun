@@ -1,14 +1,14 @@
 // --- Reusable item presets and factories ---
-export type WeaponPreset = { 
-  name: string; 
-  damage: number; 
-  hands: 1 | 2; 
-  reach?: number; 
-  properties?: string[]; 
-  combatModifier?: number; 
-  armorModifier?: number; 
-  weight?: number; 
-  value?: number 
+export type WeaponPreset = {
+  name: string;
+  damage: number;
+  hands: 1 | 2;
+  reach?: number;
+  properties?: string[];
+  combatModifier?: number;
+  armorModifier?: number;
+  weight?: number;
+  value?: number
 };
 
 export const weaponPresets: Record<string, WeaponPreset> = {
@@ -20,16 +20,16 @@ export const weaponPresets: Record<string, WeaponPreset> = {
   battleaxe: { name: "Battleaxe", damage: 1, hands: 2, properties: ["heavy", "two-handed"], armorModifier: 0, weight: 4, value: 30 },
 };
 
-export type RangedWeaponPreset = { 
-  name: string; 
-  damage: number; 
-  range: { normal: number; long: number }; 
-  hands: 1 | 2; 
-  ammoType?: string; 
-  properties?: string[]; 
-  armorModifier?: number; 
-  weight?: number; 
-  value?: number 
+export type RangedWeaponPreset = {
+  name: string;
+  damage: number;
+  range: { normal: number; long: number };
+  hands: 1 | 2;
+  ammoType?: string;
+  properties?: string[];
+  armorModifier?: number;
+  weight?: number;
+  value?: number
 };
 
 export const rangedPresets: Record<string, RangedWeaponPreset> = {
@@ -37,33 +37,30 @@ export const rangedPresets: Record<string, RangedWeaponPreset> = {
   longbow: { name: "Longbow", damage: 8, range: { normal: 20, long: 80 }, hands: 2, properties: ["ammunition", "heavy", "two-handed"], armorModifier: 0, weight: 2, value: 50 },
 };
 
-export type ArmorPreset = { 
-  name: string; 
-  armor: number; 
-  armorType: "light" | "medium" | "heavy"; 
-  stealthDisadvantage?: boolean; 
-  strengthRequirement?: number; 
-  weight?: number; 
-  value?: number 
+export type ArmorPreset = {
+  name: string;
+  armor: number;
+  armorType: "light" | "medium" | "heavy";
+  weight?: number;
+  value?: number
 };
 
 export const armorPresets: Record<string, ArmorPreset> = {
   leather: { name: "Leather Armor", armor: 4, armorType: "light", weight: 10, value: 10 },
-  chainMail: { name: "Chain Mail", armor: 5, armorType: "heavy", strengthRequirement: 13, stealthDisadvantage: true, weight: 55, value: 75 },
+  chainMail: { name: "Chain Mail", armor: 5, armorType: "heavy", weight: 55, value: 75 },
 };
 
-export type ShieldPreset = { 
-  name: string; 
-  block: number; 
-  size: "small" | "medium" | "large"; 
-  special?: string[]; 
-  weight?: number; 
-  value?: number 
+export type ShieldPreset = {
+  name: string;
+  block: number;
+  special?: string[];
+  weight?: number;
+  value?: number
 };
 
 export const shieldPresets: Record<string, ShieldPreset> = {
-  buckler: { name: "Buckler", block: 6, size: "small", weight: 2, value: 5 },
-  shield: { name: "Shield", block: 5, size: "medium", weight: 6, value: 10 },
-  towerShield: { name: "Tower Shield", block: 4, size: "large", weight: 12, value: 30 },
-  roundShield: { name: "Round Shield", block: 5, size: "medium", weight: 5, value: 8 },
+  buckler: { name: "Buckler", block: 6, weight: 2, value: 5 },
+  shield: { name: "Shield", block: 5, weight: 6, value: 10 },
+  towerShield: { name: "Tower Shield", block: 4, weight: 12, value: 30 },
+  roundShield: { name: "Round Shield", block: 5, weight: 5, value: 8 },
 };

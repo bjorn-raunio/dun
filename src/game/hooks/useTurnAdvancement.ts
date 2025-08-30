@@ -23,8 +23,8 @@ export function useTurnAdvancement(
     }
 
     // Check if the active creature has finished their turn
+    // Movement alone should not end a turn - only when they have no actions and no quick actions
     const hasFinishedTurn = activeCreature.remainingActions === 0 && 
-                           activeCreature.remainingMovement === 0 && 
                            activeCreature.remainingQuickActions === 0;
     
     if (hasFinishedTurn) {

@@ -177,7 +177,7 @@ const hero = new Hero({
     intelligence: 3,
   },
   actions: 2,
-  quickActions: 1,  // Optional: defaults to 0 if not specified
+  quickActions: 1,  // Optional: defaults to 1 if not specified
   size: 2,
   vitality: 6,
   mana: 3,

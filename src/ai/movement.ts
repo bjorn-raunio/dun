@@ -2,6 +2,7 @@ import { Creature } from '../creatures/index';
 import { AIState, AIMovementOption, AIDecision } from './types';
 import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately } from '../utils/pathfinding';
 import { createAIDecision, updateAIStateWithAction } from './helpers';
+import { logAI } from '../utils/logging';
 
 // --- AI Movement Logic ---
 
@@ -143,10 +144,7 @@ export function findBestMovement(
     return null;
   }
   
-  console.log(`\n=== AI Movement Decision for ${creature.name} at (${creature.x}, ${creature.y}) ===`);
-  if (target) {
-    console.log(`Target: ${target.name} at (${target.x}, ${target.y})`);
-  }
+  logAI(`AI Movement Decision for ${creature.name} at (${creature.x}, ${creature.y})`, { target: target ? { name: target.name, x: target.x, y: target.y } : null });
   
   const options: AIMovementOption[] = [];
   
@@ -176,7 +174,7 @@ export function findBestMovement(
     
          const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
      const newPathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
-    console.log(`Option (${tile.x}, ${tile.y}): cost=${cost}, score=${option.score}, closerToTarget=${option.benefits.closerToTarget}, pathDistance=${newPathDistance} (current=${currentPathDistance})`);
+    logAI(`Option (${tile.x}, ${tile.y}): cost=${cost}, score=${option.score}, closerToTarget=${option.benefits.closerToTarget}, pathDistance=${newPathDistance} (current=${currentPathDistance})`);
     
     options.push(option);
   }
@@ -184,11 +182,13 @@ export function findBestMovement(
   // Sort by score (highest first)
   options.sort((a, b) => b.score - a.score);
   
-  console.log(`\nTop 3 options:`);
-  for (let i = 0; i < Math.min(3, options.length); i++) {
-    const option = options[i];
-    console.log(`${i+1}. (${option.x}, ${option.y}): score=${option.score}, closerToTarget=${option.benefits.closerToTarget}`);
-  }
+  logAI(`Top 3 options:`, options.slice(0, 3).map((option, i) => ({
+    rank: i + 1,
+    x: option.x,
+    y: option.y,
+    score: option.score,
+    closerToTarget: option.benefits.closerToTarget
+  })));
   
   // If we have a target, validate that the best option is actually the closest
   if (target && options.length > 0) {
@@ -199,7 +199,7 @@ export function findBestMovement(
              const isValidClosest = validateClosestDestination(bestOption, target, creature, reachableTiles, costMap, allCreatures, mapData, cols, rows, mapDefinition);
       
       if (!isValidClosest) {
-        console.log(`WARNING: Best option is not actually closest to target!`);
+        logAI(`WARNING: Best option is not actually closest to target!`);
         // Find the actual closest option
         let actualClosestOption: AIMovementOption | null = null;
         let closestDistance = Infinity;
@@ -214,7 +214,7 @@ export function findBestMovement(
         
         // If we found a closer option, use it instead
         if (actualClosestOption && actualClosestOption !== bestOption) {
-          console.log(`Correcting: Using actually closest option (${actualClosestOption.x}, ${actualClosestOption.y}) instead of (${bestOption.x}, ${bestOption.y})`);
+          logAI(`Correcting: Using actually closest option (${actualClosestOption.x}, ${actualClosestOption.y}) instead of (${bestOption.x}, ${bestOption.y})`);
           // Re-evaluate the closest option with a bonus for being actually closest
           const reEvaluatedOption = {
             ...actualClosestOption,
@@ -234,7 +234,7 @@ export function findBestMovement(
   
   const finalChoice = options.length > 0 ? options[0] : null;
   if (finalChoice) {
-    console.log(`\nFinal choice: (${finalChoice.x}, ${finalChoice.y}) with score ${finalChoice.score}`);
+    logAI(`Final choice: (${finalChoice.x}, ${finalChoice.y}) with score ${finalChoice.score}`);
   }
   
   return finalChoice;

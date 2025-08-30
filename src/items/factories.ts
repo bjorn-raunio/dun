@@ -37,8 +37,6 @@ export function createArmor(presetId: string, overrides?: Partial<ConstructorPar
     name: overrides?.name ?? p.name,
     armor: overrides?.armor ?? p.armor,
     armorType: overrides?.armorType ?? p.armorType,
-    stealthDisadvantage: overrides?.stealthDisadvantage ?? p.stealthDisadvantage,
-    strengthRequirement: overrides?.strengthRequirement ?? p.strengthRequirement,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,
   });
@@ -49,7 +47,6 @@ export function createShield(presetId: string, overrides?: Partial<ConstructorPa
   return new Shield({
     name: overrides?.name ?? p.name,
     block: overrides?.block ?? p.block,
-    size: overrides?.size ?? p.size,
     special: overrides?.special ?? p.special,
     weight: overrides?.weight ?? p.weight,
     value: overrides?.value ?? p.value,

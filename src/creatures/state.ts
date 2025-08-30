@@ -12,6 +12,7 @@ export class CreatureStateManager {
     private maxQuickActions: number,
     private maxVitality: number,
     private maxMana: number,
+    private maxFortune: number,
     private initialPosition: CreaturePosition
   ) {
     this.state = {
@@ -20,6 +21,7 @@ export class CreatureStateManager {
       remainingQuickActions: maxQuickActions,
       remainingVitality: maxVitality,
       remainingMana: maxMana,
+      remainingFortune: maxFortune,
       hasMovedWhileEngaged: false
     };
     
@@ -72,6 +74,10 @@ export class CreatureStateManager {
 
   hasMana(amount: number): boolean {
     return this.state.remainingMana >= amount;
+  }
+
+  hasFortune(amount: number): boolean {
+    return this.state.remainingFortune >= amount;
   }
 
   hasTakenActionsThisTurn(): boolean {
@@ -127,6 +133,14 @@ export class CreatureStateManager {
     return false;
   }
 
+  useFortune(amount: number): boolean {
+    if (this.state.remainingFortune >= amount) {
+      this.state.remainingFortune -= amount;
+      return true;
+    }
+    return false;
+  }
+
   setMovedWhileEngaged(value: boolean): void {
     this.state.hasMovedWhileEngaged = value;
   }
@@ -143,6 +157,10 @@ export class CreatureStateManager {
     this.state.remainingQuickActions = Math.max(0, value);
   }
 
+  setRemainingFortune(value: number): void {
+    this.state.remainingFortune = Math.max(0, value);
+  }
+
   // --- Turn Management ---
 
   resetTurn(): void {
@@ -157,13 +175,15 @@ export class CreatureStateManager {
       this.state.remainingQuickActions = this.maxQuickActions;
     }
     this.state.remainingMana = this.maxMana;
+    this.state.remainingFortune = this.maxFortune;
     this.state.hasMovedWhileEngaged = false;
   }
 
   resetRemainingActions(): void {
     this.state.remainingMovement = 0;
-    this.state.remainingActions = 0;
-    this.state.remainingQuickActions = 0;
+    // Don't reset actions and quick actions - movement alone should not end a creature's turn
+    // this.state.remainingActions = 0;
+    // this.state.remainingQuickActions = 0;
   }
 
   recordTurnStartPosition(position: CreaturePosition): void {
@@ -177,12 +197,14 @@ export class CreatureStateManager {
     maxActions: number,
     maxQuickActions: number,
     maxVitality: number,
-    maxMana: number
+    maxMana: number,
+    maxFortune: number
   ): void {
     this.maxMovement = maxMovement;
     this.maxActions = maxActions;
     this.maxQuickActions = maxQuickActions;
     this.maxVitality = maxVitality;
     this.maxMana = maxMana;
+    this.maxFortune = maxFortune;
   }
 }

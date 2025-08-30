@@ -9,6 +9,7 @@ import { validateCombat } from '../validation/combat';
 import { EquipmentSystem } from '../items/equipment';
 import { Weapon } from '../items/types';
 import { updateCombatStates } from './combatStateUtils';
+import { logCombat } from '../utils/logging';
 
 // --- Combat Utilities Module ---
 
@@ -100,8 +101,10 @@ export function isBackAttack(attacker: Creature, target: Creature): boolean {
   const isBack = isInBackArc(target.x, target.y, target.facing, attacker.x, attacker.y);
   
   // Debug logging
-  console.log(`Back attack check: ${attacker.name} at (${attacker.x},${attacker.y}) attacking ${target.name} at (${target.x},${target.y})`);
-  console.log(`  Target facing: ${target.facing}, Is back attack: ${isBack}`);
+  logCombat(`Back attack check: ${attacker.name} at (${attacker.x},${attacker.y}) attacking ${target.name} at (${target.x},${target.y})`, {
+    targetFacing: target.facing,
+    isBackAttack: isBack
+  });
   
   return isBack;
 }
@@ -173,7 +176,7 @@ function executeToHitRollMelee(
   if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
     attackerBonus += 1;
     attackerModifiers.push("back attack +1");
-    console.log(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind!`);
+    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind!`);
   }
   
   // Check for elevation bonus (only for melee attacks)
@@ -185,14 +188,14 @@ function executeToHitRollMelee(
     if (attackerElevation === targetElevation + 1) {
       attackerBonus += 1;
       attackerModifiers.push("elevation +1");
-      console.log(`Elevation bonus: ${attacker.name} is attacking from higher ground (+1 bonus)`);
+      logCombat(`Elevation bonus: ${attacker.name} is attacking from higher ground (+1 bonus)`);
     }
     
     // Defender gets +1 bonus if they are 1 elevation higher than attacker
     if (targetElevation === attackerElevation + 1) {
       defenderBonus += 1;
       defenderModifiers.push("elevation +1");
-      console.log(`Elevation bonus: ${target.name} is defending from higher ground (+1 bonus)`);
+      logCombat(`Elevation bonus: ${target.name} is defending from higher ground (+1 bonus)`);
     }
   }
   
@@ -466,7 +469,8 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   
   // Consume action (regardless of hit or miss)
   attacker.setRemainingActions(attacker.remainingActions - 1);
-  attacker.resetGroupActions(allCreatures);
+  // Don't reset group actions during combat - this should only happen when turns actually end
+  // attacker.resetGroupActions(allCreatures);
   
   if (!toHitResult.hit) {
     return {
@@ -522,7 +526,8 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
   
   // Consume action (regardless of hit or miss)
   attacker.setRemainingActions(attacker.remainingActions - 1);
-  attacker.resetGroupActions(allCreatures);
+  // Don't reset group actions during combat - this should only happen when turns actually end
+  // attacker.resetGroupActions(allCreatures);
   
   if (!toHitResult.hit) {
     return {

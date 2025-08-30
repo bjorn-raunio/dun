@@ -8,6 +8,7 @@ import { addMessage } from './messageSystem';
 import { getLivingCreatures } from '../validation/creature';
 import { findCreatureById } from '../utils/pathfinding';
 import { AIBehaviorType } from '../ai/types';
+import { logTurn, logAI } from '../utils/logging';
 
 // --- Turn Management Logic ---
 
@@ -189,7 +190,7 @@ export function executeAITurnForCreature(
       
       // Add message to console for movement, to message system for other actions
       if (decisionResult.action.type === 'move') {
-        console.log(executionResult.message);
+        logAI(executionResult.message);
       } else {
         addMessage(executionResult.message, setMessages);
       }
@@ -209,10 +210,10 @@ export function executeAITurnForCreature(
           
           // If we have remaining movement and other targets, continue the turn
           // The AI will automatically select a new target and move towards it
-          console.log(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
+          logTurn(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
         } else {
           // Target was not killed, end the turn
-          console.log(`${creature.name} attacked but did not kill the target. Ending turn.`);
+          logTurn(`${creature.name} attacked but did not kill the target. Ending turn.`);
           break;
         }
       }
