@@ -3,7 +3,8 @@ import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
-import { findCreatureById } from '../utils/pathfinding';
+import { findCreatureById, PathfindingSystem } from '../utils/pathfinding';
+import { logGame } from '../utils/logging';
 
 
 // --- Event Handlers Custom Hook ---
@@ -42,14 +43,36 @@ export function useEventHandlers(
     handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
       const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
 
-          // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
-    if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
+      // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
+      if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
         originalOnCreatureClick(creature, e);
         return;
       }
 
       // Otherwise, select the clicked creature
       setSelectedCreatureId(creature.id);
+      
+      // If the clicked creature is player-controlled, calculate line of sight
+      if (creature.isPlayerControlled() && mapData && mapData.tiles && mapData.tiles.length > 0) {
+        const cols = mapData.tiles[0].length;
+        const rows = mapData.tiles.length;
+        
+        logGame(`${creature.name} selected - calculating line of sight at (${creature.x}, ${creature.y})`);
+        
+        // Get visible creatures for the selected player creature
+        const visibleCreatures = PathfindingSystem.getVisibleCreatures(
+          creature.x,
+          creature.y,
+          creatures,
+          mapData,
+          cols,
+          rows,
+          mapDefinition
+        );
+        
+        const visibleHostileCreatures = visibleCreatures.filter(c => creature.isHostileTo(c));
+        logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map(c => c.name).join(', ')}`);
+      }
     };
 
     // Use the original mouse up handler without deselection logic

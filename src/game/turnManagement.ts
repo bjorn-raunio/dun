@@ -6,7 +6,7 @@ import { CreatureMovement } from '../creatures/movement';
 import { calculateTargetsInRange } from '../utils/combatUtils';
 import { addMessage } from './messageSystem';
 import { getLivingCreatures } from '../validation/creature';
-import { findCreatureById } from '../utils/pathfinding';
+import { findCreatureById, PathfindingSystem } from '../utils/pathfinding';
 import { AIBehaviorType } from '../ai/types';
 import { logTurn, logAI } from '../utils/logging';
 
@@ -149,6 +149,28 @@ export function executeAITurnForCreature(
   if (!aiState) {
     console.warn(`Creature ${creature.name} has no AI state`);
     return false;
+  }
+
+  // Calculate line of sight at the start of AI turn
+  if (mapData && mapData.tiles && mapData.tiles.length > 0) {
+    const cols = mapData.tiles[0].length;
+    const rows = mapData.tiles.length;
+    
+    logAI(`${creature.name} calculating line of sight at (${creature.x}, ${creature.y})`);
+    
+    // Get visible creatures for this AI creature
+    const visibleCreatures = PathfindingSystem.getVisibleCreatures(
+      creature.x,
+      creature.y,
+      allCreatures,
+      mapData,
+      cols,
+      rows,
+      mapDefinition
+    );
+    
+    const visibleHostileCreatures = visibleCreatures.filter(c => creature.isHostileTo(c));
+    logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map(c => c.name).join(', ')}`);
   }
 
   let success = false;

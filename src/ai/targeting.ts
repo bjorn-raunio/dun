@@ -2,6 +2,7 @@ import { Creature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
 import { filterValidTargets, evaluateTargetWithScoring } from './helpers';
+import { PathfindingSystem } from '../utils/pathfinding';
 
 // --- AI Targeting Logic ---
 
@@ -82,21 +83,51 @@ export function updateTargetInformation(
     }
 
     if (creature.isHostileTo(target)) {
-      const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
-        usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
-        mapData,
-        cols,
-        rows,
-        mapDefinition,
-        allCreatures
-      });
+      // Check if target is visible using line of sight
+      let isVisible = false;
+      
+      if (mapData && cols !== undefined && rows !== undefined) {
+        isVisible = PathfindingSystem.isCreatureVisible(
+          creature.x, 
+          creature.y, 
+          target, 
+          mapData, 
+          cols, 
+          rows, 
+          mapDefinition,
+          {},
+          creature,
+          allCreatures
+        );
+      } else {
+        // Fallback: assume visible if no map data available
+        isVisible = true;
+      }
 
-      // Enemies have unlimited sight range - they can see all targets
-      newState.lastKnownPlayerPositions.set(target.id, {
-        x: target.x,
-        y: target.y,
-        turn: Date.now() // Use timestamp as turn number for now
-      });
+      if (isVisible) {
+        // Target is visible, update current position
+        const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
+          usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
+          mapData,
+          cols,
+          rows,
+          mapDefinition,
+          allCreatures
+        });
+
+        newState.lastKnownPlayerPositions.set(target.id, {
+          x: target.x,
+          y: target.y,
+          turn: Date.now() // Use timestamp as turn number for now
+        });
+      } else {
+        // Target is not visible, keep last known position if it exists
+        // This allows AI to remember where enemies were last seen
+        if (!newState.lastKnownPlayerPositions.has(target.id)) {
+          // If we've never seen this target, we can't target it
+          continue;
+        }
+      }
     }
   }
 

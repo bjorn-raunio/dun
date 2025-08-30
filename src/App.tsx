@@ -23,7 +23,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
   
   // Custom hooks for game logic
-  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey);
+  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, mapData, mapDefinition);
   const reachable = useReachableTiles(creatures, selectedCreatureId, mapData, reachableKey, mapDefinition);
   const selectedCreature = useSelectedCreature(creatures, selectedCreatureId);
 

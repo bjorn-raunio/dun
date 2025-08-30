@@ -224,39 +224,3 @@ export function validateAIAction(
 
   return { isValid: true };
 }
-
-/**
- * Common behavior-specific logic patterns
- */
-export function getBehaviorModifiers(behavior: AIBehaviorType): {
-  aggressionLevel: number;
-  riskTolerance: number;
-  tacticalPreference: 'offensive' | 'defensive' | 'balanced';
-} {
-  switch (behavior) {
-    case AIBehaviorType.MELEE:
-      return {
-        aggressionLevel: 0.8,
-        riskTolerance: 0.6,
-        tacticalPreference: 'offensive'
-      };
-    case AIBehaviorType.RANGED:
-      return {
-        aggressionLevel: 0.7,
-        riskTolerance: 0.3,
-        tacticalPreference: 'balanced'
-      };
-    case AIBehaviorType.ANIMAL:
-      return {
-        aggressionLevel: 0.9,
-        riskTolerance: 0.4,
-        tacticalPreference: 'offensive'
-      };
-    default:
-      return {
-        aggressionLevel: 0.5,
-        riskTolerance: 0.5,
-        tacticalPreference: 'balanced'
-      };
-  }
-}
