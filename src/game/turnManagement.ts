@@ -6,7 +6,7 @@ import { CreatureMovement } from '../creatures/movement';
 import { calculateTargetsInRange } from '../utils/combatUtils';
 import { addMessage } from './messageSystem';
 import { getLivingCreatures } from '../validation/creature';
-import { findCreatureById, PathfindingSystem } from '../utils/pathfinding';
+import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { AIBehaviorType } from '../ai/types';
 import { logTurn, logAI } from '../utils/logging';
 
@@ -159,7 +159,7 @@ export function executeAITurnForCreature(
     logAI(`${creature.name} calculating line of sight at (${creature.x}, ${creature.y})`);
     
     // Get visible creatures for this AI creature
-    const visibleCreatures = PathfindingSystem.getVisibleCreatures(
+    const visibleCreatures = getVisibleCreatures(
       creature.x,
       creature.y,
       allCreatures,
@@ -169,8 +169,8 @@ export function executeAITurnForCreature(
       mapDefinition
     );
     
-    const visibleHostileCreatures = visibleCreatures.filter(c => creature.isHostileTo(c));
-    logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map(c => c.name).join(', ')}`);
+    const visibleHostileCreatures = visibleCreatures.filter((c: Creature) => creature.isHostileTo(c));
+    logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: Creature) => c.name).join(', ')}`);
   }
 
   let success = false;

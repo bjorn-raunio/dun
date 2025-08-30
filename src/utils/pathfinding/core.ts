@@ -3,7 +3,7 @@ import { getCreatureDimensions } from '../dimensions';
 import { calculateMovementCost } from '../movementCost';
 import { isInZoneOfControl, pathPassesThroughZoneOfControl, getEngagingCreatures, isAdjacentToCreature } from '../zoneOfControl';
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
-import { DIRECTIONS, MAX_PATHFINDING_ITERATIONS } from './constants';
+import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { getAreaStats, isAreaStandable, calculateMoveCostInto, calculateHeuristic, reconstructPath } from './helpers';
 
 /**
@@ -49,7 +49,7 @@ export class PathfindingSystem {
         result.push({ x: current.x, y: current.y });
       }
 
-      for (const [dx, dy] of DIRECTIONS) {
+      for (const [dx, dy] of MOVEMENT_DIRECTIONS) {
         const nx = current.x + dx;
         const ny = current.y + dy;
 
@@ -142,7 +142,7 @@ export class PathfindingSystem {
       openSet.delete(currentKey);
       closedSet.add(currentKey);
 
-      for (const [dx, dy] of DIRECTIONS) {
+      for (const [dx, dy] of MOVEMENT_DIRECTIONS) {
         const neighborX = currentX + dx;
         const neighborY = currentY + dy;
         const neighborKey = `${neighborX},${neighborY}`;
@@ -198,7 +198,7 @@ export class PathfindingSystem {
     mapDefinition?: any,
     creature?: Creature
   ): number {
-    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, creature);
+    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS);
   }
 
   /**

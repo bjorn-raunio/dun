@@ -1,7 +1,7 @@
 import { Creature } from '../../creatures/index';
 import { isPositionInCreatureBounds } from '../dimensions';
 import { LineOfSightOptions } from './types';
-import { getTerrainHeightAt } from './helpers';
+import { terrainHeightAt } from '../../maps/mapRenderer';
 import { DEFAULT_BLOCKING_TERRAIN } from './constants';
 
 /**
@@ -64,8 +64,8 @@ export class LineOfSightSystem {
     }
     
     // Get elevation and size information if creatures are provided
-    const fromElevation = fromCreature ? getTerrainHeightAt(fromX, fromY, mapData, mapDefinition) : undefined;
-    const toElevation = toCreature ? getTerrainHeightAt(toX, toY, mapData, mapDefinition) : undefined;
+    const fromElevation = fromCreature ? terrainHeightAt(fromX, fromY, mapDefinition) : undefined;
+    const toElevation = toCreature ? terrainHeightAt(toX, toY, mapDefinition) : undefined;
     const fromSize = fromCreature?.size;
     const toSize = toCreature?.size;
     
@@ -252,7 +252,7 @@ export class LineOfSightSystem {
         toX !== undefined && toY !== undefined) {
 
         // Get terrain height at this position
-        const terrainHeight = getTerrainHeightAt(x, y, mapData, mapDefinition);
+        const terrainHeight = terrainHeightAt(x, y, mapDefinition);
 
         // Calculate the effective heights of the creatures
         const fromEffectiveHeight = fromElevation + fromSize;
@@ -288,7 +288,7 @@ export class LineOfSightSystem {
         // Check if this creature is at the current position
         if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
           // Get the creature's elevation and calculate its effective height
-          const creatureElevation = getTerrainHeightAt(creature.x, creature.y, mapData, mapDefinition);
+          const creatureElevation = terrainHeightAt(creature.x, creature.y, mapDefinition);
           const creatureEffectiveHeight = creatureElevation + creature.size;
           
           // Calculate the line of sight height at this point

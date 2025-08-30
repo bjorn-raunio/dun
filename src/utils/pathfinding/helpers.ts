@@ -1,7 +1,7 @@
 import { terrainHeightAt } from '../../maps/mapRenderer';
-import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions';
 import { validatePositionStandable } from '../../validation/map';
-import { calculateMovementCost, getTerrainCost } from '../movementCost';
+import { calculateAreaMovementCost } from '../movementCost';
+import { DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { AreaStats } from './types';
 
 /**
@@ -29,7 +29,7 @@ export function getAreaStats(
       const cy = ty + oy;
       const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
       if (!nonEmpty) hasEmpty = true;
-      const th = getTerrainHeightAt(cx, cy, mapData, mapDefinition);
+      const th = terrainHeightAt(cx, cy, mapDefinition);
       if (th > maxH) maxH = th;
     }
   }
@@ -57,6 +57,7 @@ export function isAreaStandable(
 
 /**
  * Helper method to calculate movement cost
+ * Now uses the consolidated movement cost calculation system
  */
 export function calculateMoveCostInto(
   tx: number, 
@@ -69,65 +70,26 @@ export function calculateMoveCostInto(
   fromX?: number, 
   fromY?: number
 ): number {
-  if (tx < 0 || ty < 0 || tx + dims.w > cols || ty + dims.h > rows) return Infinity;
-  
-  let hasStandTile = false;
-  let extra = 0;
-  let maxHeight = 0;
-
-  for (let oy = 0; oy < dims.h; oy++) {
-    for (let ox = 0; ox < dims.w; ox++) {
-      const cx = tx + ox;
-      const cy = ty + oy;
-      const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
-      const th = getTerrainHeightAt(cx, cy, mapData, mapDefinition);
-
-      if (nonEmpty) hasStandTile = true;
-      if (th > maxHeight) maxHeight = th;
+  // Use the consolidated area movement cost calculation
+  return calculateAreaMovementCost(
+    fromX || 0, 
+    fromY || 0, 
+    tx, 
+    ty, 
+    dims, 
+    [], // No creatures to check in this context
+    mapData, 
+    cols, 
+    rows, 
+    mapDefinition,
+    {
+      ...DEFAULT_MOVEMENT_OPTIONS,
+      considerCreatures: false // Don't check creatures in this context
     }
-  }
-
-  if (!hasStandTile) return Infinity;
-
-  // Check elevation difference if we have starting coordinates
-  if (fromX !== undefined && fromY !== undefined && mapDefinition) {
-    const fromHeight = terrainHeightAt(fromX, fromY, mapDefinition);
-
-    // Allow movement to terrain that is 1 elevation higher than current, but with extra cost
-    if (maxHeight > fromHeight + 1) {
-      return Infinity; // Terrain is too high to climb
-    }
-    if (maxHeight === fromHeight + 1) {
-      extra = 1; // Climbing up 1 elevation costs 1 extra movement
-    }
-  } else {
-    // Fallback to old logic if no starting coordinates
-    if (maxHeight > 1) return Infinity; // Terrain with height > 1 blocks movement
-    if (maxHeight === 1) extra = 1; // If any tile is height 1, costs +1
-  }
-  
-  return 1 + extra;
+  );
 }
 
-/**
- * Helper method to get terrain height
- */
-export function getTerrainHeightAt(
-  cx: number, 
-  cy: number, 
-  mapData: { tiles: string[][] }, 
-  mapDefinition?: any
-): number {
-  if (mapDefinition) {
-    return terrainHeightAt(cx, cy, mapDefinition);
-  }
 
-  if (cx < 0 || cy < 0 || cx >= mapData.tiles[0]?.length || cy >= mapData.tiles.length) return 0;
-  const tile = mapData.tiles[cy]?.[cx];
-  if (!tile || tile === "empty.jpg") return 0;
-
-  return 0;
-}
 
 /**
  * Heuristic function for A* (Manhattan distance)

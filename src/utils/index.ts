@@ -4,9 +4,31 @@ export * from './constants';
 export * from './dice';
 export * from './combatUtils';
 export * from './equipment';
-export * from './pathfinding';
 export * from './messageUtils';
 export * from './zoneOfControl';
 export * from './idGeneration';
 export * from './logging';
 export * from './loggingConfig';
+
+// Export pathfinding functions with explicit naming to avoid conflicts
+export {
+  PathfindingSystem,
+  LineOfSightSystem,
+  DistanceSystem,
+  calculateDistanceBetween,
+  calculateDistanceToCreature,
+  canReachAndAttack,
+  canAttackImmediately,
+  calculateDistanceToAttackablePosition,
+  isPositionAccessible,
+  isPositionAccessibleWithBounds,
+  isCreatureAtPosition,
+  findCreatureById,
+  isCreatureVisible,
+  hasLineOfSight,
+  debugLineOfSight,
+  getVisibleCreatures,
+  getReachableTiles,
+  findPathToTarget,
+  calculateStepCost
+} from './pathfinding';

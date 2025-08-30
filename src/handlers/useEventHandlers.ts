@@ -3,7 +3,7 @@ import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
-import { findCreatureById, PathfindingSystem } from '../utils/pathfinding';
+import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
 
 
@@ -60,7 +60,7 @@ export function useEventHandlers(
         logGame(`${creature.name} selected - calculating line of sight at (${creature.x}, ${creature.y})`);
         
         // Get visible creatures for the selected player creature
-        const visibleCreatures = PathfindingSystem.getVisibleCreatures(
+        const visibleCreatures = getVisibleCreatures(
           creature.x,
           creature.y,
           creatures,
@@ -70,8 +70,8 @@ export function useEventHandlers(
           mapDefinition
         );
         
-        const visibleHostileCreatures = visibleCreatures.filter(c => creature.isHostileTo(c));
-        logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map(c => c.name).join(', ')}`);
+        const visibleHostileCreatures = visibleCreatures.filter((c: Creature) => creature.isHostileTo(c));
+        logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: Creature) => c.name).join(', ')}`);
       }
     };
 

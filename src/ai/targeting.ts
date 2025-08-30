@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
-import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
+import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { filterValidTargets, evaluateTargetWithScoring } from './helpers';
 import { PathfindingSystem } from '../utils/pathfinding';
 
@@ -87,7 +87,7 @@ export function updateTargetInformation(
       let isVisible = false;
       
       if (mapData && cols !== undefined && rows !== undefined) {
-        isVisible = PathfindingSystem.isCreatureVisible(
+        isVisible = isCreatureVisible(
           creature.x, 
           creature.y, 
           target, 

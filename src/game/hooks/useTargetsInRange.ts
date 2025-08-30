@@ -1,7 +1,7 @@
 import React from 'react';
 import { Creature } from '../../creatures/index';
 import { calculateTargetsInRange } from '../../utils/combatUtils';
-import { findCreatureById, PathfindingSystem } from '../../utils/pathfinding';
+import { findCreatureById, isCreatureVisible } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
 
 // --- Targets in Range Hook ---
@@ -39,7 +39,7 @@ export function useTargetsInRange(
       
       for (const targetId of Array.from(basicTargetsInRange)) {
         const target = findCreatureById(creatures, targetId);
-        if (target && PathfindingSystem.isCreatureVisible(
+        if (target && isCreatureVisible(
           sel.x, 
           sel.y, 
           target, 
