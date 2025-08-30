@@ -86,6 +86,24 @@ export function calculateCombatRoll(combatBonus: number): { total: number; dice:
 }
 
 /**
+ * Calculate to-hit roll (2d6 + attack bonus)
+ * @param attackBonus Attack bonus to add
+ * @returns Object containing total roll and individual dice results
+ */
+export function calculateToHitRoll(attackBonus: number): { total: number; dice: number[] } {
+  return calculateCombatRoll(attackBonus);
+}
+
+/**
+ * Calculate block roll (2d6 + defense bonus)
+ * @param defenseBonus Defense bonus to add
+ * @returns Object containing total roll and individual dice results
+ */
+export function calculateBlockRoll(defenseBonus: number): { total: number; dice: number[] } {
+  return calculateCombatRoll(defenseBonus);
+}
+
+/**
  * Check if a combat roll contains a critical hit (any die rolled a 6)
  * @param diceResults Array of individual dice results from a combat roll
  * @returns True if any die rolled a 6 (critical hit)

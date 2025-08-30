@@ -538,7 +538,7 @@ export abstract class Creature {
   }
 
   // Attack target (delegates to executeCombat)
-  attack(target: Creature, allCreatures: Creature[] = [], mapDefinition?: any): { hit: boolean; damage: number; message: string; targetDefeated: boolean; toHitMessage?: string; damageMessage?: string } {
+  attack(target: Creature, allCreatures: Creature[] = [], mapDefinition?: any): { hit: boolean; damage: number; message: string; targetDefeated: boolean; toHitMessage?: string; blockMessage?: string; damageMessage?: string } {
     const { executeCombat } = require('../utils/combatUtils');
     const result = executeCombat(this, target, allCreatures, mapDefinition);
     
@@ -548,6 +548,7 @@ export abstract class Creature {
       message: result.message,
       targetDefeated: result.targetDefeated,
       toHitMessage: result.toHitMessage,
+      blockMessage: result.blockMessage,
       damageMessage: result.damageMessage
     };
   }

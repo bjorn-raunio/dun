@@ -188,6 +188,11 @@ export function createMouseHandlers(
         addMessage(combatResult.toHitMessage!, setMessages);
       }
       
+      // Add block message if present
+      if (combatResult.blockMessage) {
+        addMessage(combatResult.blockMessage!, setMessages);
+      }
+      
       // Add damage message if hit
       if (combatResult.damageMessage) {
         addMessage(combatResult.damageMessage!, setMessages);
