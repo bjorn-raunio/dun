@@ -3,6 +3,7 @@ import { TILE_SIZE, COLORS } from './styles';
 import { typeToImage, resolveTerrain } from '../maps';
 import { Creature } from '../creatures/index';
 import { getLivingCreatures } from '../validation/creature';
+import { getCreatureUIDimensions, getCreatureUIOffset, getRotatedDimensions } from '../utils/dimensions';
 
 // --- Map View Component ---
 
@@ -69,9 +70,7 @@ export function MapView({
       const block = getBlockAt(x, y);
       if (block) {
         // Adjust width/height for rotation
-        const isRotated = block.rotation === 90 || block.rotation === 270;
-        const blockWidth = isRotated ? block.mapHeight : block.mapWidth;
-        const blockHeight = isRotated ? block.mapWidth : block.mapHeight;
+        const { width: blockWidth, height: blockHeight } = getRotatedDimensions(block.mapWidth, block.mapHeight, block.rotation);
         
         // Mark all tiles in the block as rendered
         for (let dy = 0; dy < blockHeight; dy++) {
@@ -197,9 +196,7 @@ export function MapView({
         >
           {mapDefinition.terrain.map((t: any, index: number) => {
             const rt = resolveTerrain(t);
-            const isRot = rt.rotation === 90 || rt.rotation === 270;
-            const blockWidth = isRot ? rt.mapHeight : rt.mapWidth;
-            const blockHeight = isRot ? rt.mapWidth : rt.mapHeight;
+            const { width: blockWidth, height: blockHeight } = getRotatedDimensions(rt.mapWidth, rt.mapHeight, rt.rotation);
             const wrapperWidth = TILE_SIZE * blockWidth;
             const wrapperHeight = TILE_SIZE * blockHeight;
             // Inner wrapper size before rotation
@@ -346,8 +343,8 @@ export function MapView({
                 position: "absolute",
                 left: cr.x * TILE_SIZE + (TILE_SIZE * 0.1),
                 top: cr.y * TILE_SIZE + (TILE_SIZE * 0.1),
-                width: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
-                height: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
+                width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
+                height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
                 cursor: "pointer",
                 pointerEvents: "auto",
                 zIndex: 4,
@@ -372,8 +369,8 @@ export function MapView({
               ) : (
                 <div
                   style={{
-                    width: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
-                    height: Math.floor(TILE_SIZE * 0.8 * ((cr.size >= 3) ? 2 : 1)),
+                    width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
+                    height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
                     borderRadius: "50%",
                     background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
                     border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
@@ -389,7 +386,7 @@ export function MapView({
                   position: "absolute",
                   top: "50%",
                   left: "50%",
-                  transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${Math.floor(TILE_SIZE * 0.4 * ((cr.size >= 3) ? 2 : 1))}px)`,
+                  transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
                   fontSize: "12px",
                                      color: cr.isHeroGroup() ? COLORS.hero : COLORS.monster,
                   fontWeight: "bold",

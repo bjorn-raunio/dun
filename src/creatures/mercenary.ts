@@ -1,4 +1,5 @@
-import { Creature, CREATURE_GROUPS } from './base';
+import { Creature } from './base';
+import { CREATURE_GROUPS } from './types';
 
 // --- Mercenary Class ---
 export class Mercenary extends Creature {

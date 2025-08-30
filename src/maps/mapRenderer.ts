@@ -1,5 +1,6 @@
 import { Terrain, ResolvedTerrain } from './types';
 import { terrainPresets } from './mapDefinitions';
+import { getRotatedDimensions } from '../utils/dimensions';
 
 // Resolve terrain definition to concrete values
 export function resolveTerrain(t: Terrain): ResolvedTerrain {
@@ -33,8 +34,7 @@ export function generateMapTiles(mapDefinition: any) {
   // Fill in room tiles
   for (const room of mapDefinition.rooms) {
     const isRot = room.rotation === 90 || room.rotation === 270;
-    const w = isRot ? room.mapHeight : room.mapWidth;
-    const h = isRot ? room.mapWidth : room.mapHeight;
+      const { width: w, height: h } = getRotatedDimensions(room.mapWidth, room.mapHeight, room.rotation);
     
     for (let y = room.y; y < room.y + h; y++) {
       for (let x = room.x; x < room.x + w; x++) {
@@ -53,9 +53,7 @@ export function terrainHeightAt(tx: number, ty: number, mapDefinition: any): num
   let h = 0;
   for (const t of mapDefinition.terrain) {
     const rt = resolveTerrain(t);
-    const isRot = rt.rotation === 90 || rt.rotation === 270;
-    const w = isRot ? rt.mapHeight : rt.mapWidth;
-    const hgt = isRot ? rt.mapWidth : rt.mapHeight;
+    const { width: w, height: hgt } = getRotatedDimensions(rt.mapWidth, rt.mapHeight, rt.rotation);
     if (tx >= rt.x && tx < rt.x + w && ty >= rt.y && ty < rt.y + hgt) {
       h = Math.max(h, rt.height ?? 1);
     }

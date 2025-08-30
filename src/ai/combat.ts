@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AIState, AIDecision, AIBehaviorType } from './types';
-import { calculateDistance } from '../utils/geometry';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isBackAttack } from '../utils/combatUtils';
 import { createAIDecision, updateAIStateWithAction, assessThreatLevel, getBehaviorModifiers } from './helpers';
 

@@ -1,5 +1,6 @@
 import { CreaturePosition } from './types';
 import { DIRECTION_ARROWS, DIRECTION_NAMES, DIRECTION_SHORT_NAMES } from '../utils/constants';
+import { getCreatureDimensions } from '../utils/dimensions';
 
 // --- Creature Position Management ---
 
@@ -78,9 +79,6 @@ export class CreaturePositionManager {
   // --- Dimensions ---
 
   getDimensions(size: number): { w: number; h: number } {
-    if (size >= 3) { // large (3) or huge (4)
-      return { w: 2, h: 2 };
-    }
-    return { w: 1, h: 1 };
+    return getCreatureDimensions(size);
   }
 }

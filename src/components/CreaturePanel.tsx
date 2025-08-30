@@ -27,6 +27,12 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     // Check if this is an armor equip
     const isArmorEquip = slot === 'armor' && item instanceof Armor;
     
+    // Check combat state for armor equips
+    if (isArmorEquip && creature.getCombatState()) {
+      alert(`Cannot equip ${item.name}: Cannot equip armor while in combat`);
+      return;
+    }
+    
     // If it's a weapon/shield switch, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldSwitch && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
       return; // Silently fail - button should be disabled
@@ -91,7 +97,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
       // Consume an action and prevent movement if this was an armor equip
       if (isArmorEquip) {
         creature.useAction();
-        creature.remainingMovement = 0; // Prevent movement in the same turn
+        creature.setRemainingMovement(0); // Prevent movement in the same turn
       }
       
       onCreatureUpdate?.(creature);
@@ -117,6 +123,12 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     
     // Check if this is an armor unequip
     const isArmorUnequip = item && slot === 'armor' && item instanceof Armor;
+    
+    // Check combat state for armor unequips
+    if (isArmorUnequip && creature.getCombatState()) {
+      alert(`Cannot unequip ${item.name}: Cannot unequip armor while in combat`);
+      return;
+    }
     
     // If it's a weapon/shield unequip, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldUnequip && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
@@ -146,7 +158,7 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
       // Consume an action and prevent movement if this was an armor unequip
       if (isArmorUnequip) {
         creature.useAction();
-        creature.remainingMovement = 0; // Prevent movement in the same turn
+        creature.setRemainingMovement(0); // Prevent movement in the same turn
       }
       
       onCreatureUpdate?.(creature);
@@ -154,9 +166,14 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
   };
 
   const canEquipToSlot = (item: Item, slot: EquipmentSlot): boolean => {
+    // Always allow armor to be shown as equippable, but the actual validation will be done in canSwitchWeaponOrShield
+    if (slot === 'armor' && item instanceof Armor) {
+      return true;
+    }
+    
     const equipmentManager = new EquipmentManagerClass(selectedCreature!);
     const equipment = equipmentManager.getEquipment();
-    const validation = equipment.validateEquip(item, slot);
+    const validation = equipment.validateEquip(item, slot, selectedCreature!);
     return validation.isValid;
   };
 
@@ -172,6 +189,11 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     
     // If it's not a weapon/shield switch or armor equip, allow it (shields, etc.)
     if (!isWeaponOrShieldSwitch && !isArmorEquip) return true;
+    
+    // Check combat state for armor equips
+    if (isArmorEquip && selectedCreature.getCombatState()) {
+      return false; // Cannot equip armor while in combat
+    }
     
     // For weapon/shield switches, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldSwitch) {
@@ -197,6 +219,11 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
     
     // If it's not a weapon/shield unequip or armor unequip, allow it
     if (!isWeaponOrShieldUnequip && !isArmorUnequip) return true;
+    
+    // Check combat state for armor unequips
+    if (isArmorUnequip && selectedCreature.getCombatState()) {
+      return false; // Cannot unequip armor while in combat
+    }
     
     // For weapon/shield unequips, check if we have any actions available (quick or regular)
     if (isWeaponOrShieldUnequip) {
@@ -257,13 +284,13 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                    opacity: canUnequip ? 1 : 0.5,
                    cursor: canUnequip ? 'pointer' : 'not-allowed'
                  }}
-                 title={canUnequip ? 
-                   (selectedCreature.equipment[slot] instanceof Armor ? 
-                     "Unequip (uses action, prevents movement)" : 
-                     "Unequip (uses quick action or regular action)") : 
-                   (selectedCreature.equipment[slot] instanceof Armor ? 
-                     "Cannot unequip armor: must have actions and full movement" : 
-                     "No actions remaining for unequip")}
+                                   title={canUnequip ? 
+                    (selectedCreature.equipment[slot] instanceof Armor ? 
+                      "Unequip (uses action, prevents movement)" : 
+                      "Unequip (uses quick action or regular action)") : 
+                    (selectedCreature.equipment[slot] instanceof Armor ? 
+                      (selectedCreature.getCombatState() ? "Cannot unequip armor while in combat" : "Cannot unequip armor: must have actions and full movement") : 
+                      "No actions remaining for unequip")}
                >
                  Unequip
                </button>
@@ -351,7 +378,9 @@ export function CreaturePanel({ selectedCreature, creatures, onDeselect, onSelec
                  opacity: canSwitchWeaponOrShield(item, 'armor') ? 1 : 0.5,
                  cursor: canSwitchWeaponOrShield(item, 'armor') ? 'pointer' : 'not-allowed'
                }}
-                               title={canSwitchWeaponOrShield(item, 'armor') ? "Equip as Armor (uses action, prevents movement)" : "Cannot equip armor: must have actions and full movement"}
+                                                               title={canSwitchWeaponOrShield(item, 'armor') ? "Equip as Armor (uses action, prevents movement)" : 
+                                       selectedCreature.getCombatState() ? "Cannot equip armor while in combat" : 
+                                       "Cannot equip armor: must have actions and full movement"}
              >
                A
              </button>

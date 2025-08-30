@@ -11,6 +11,7 @@ import { CreaturePositionManager } from './position';
 import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
 import { Item } from '../items';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 
 // --- ID Generation ---
 let creatureIdCounter = 0;
@@ -163,6 +164,42 @@ export abstract class Creature {
   getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
 
+  // --- Combat State Management ---
+  private isInCombat: boolean = false;
+  
+  checkCombatState(allCreatures: any[]): boolean {
+    const hostileCreatures = this.getHostileCreatures(allCreatures);
+    
+    for (const enemy of hostileCreatures) {
+      const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
+      if (distance <= 12) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  updateCombatState(allCreatures: any[]): void {
+    this.isInCombat = this.checkCombatState(allCreatures);
+  }
+
+  getCombatState(): boolean {
+    return this.isInCombat;
+  }
+
+  // Get all enemies within combat range (12 tiles)
+  getEnemiesInCombatRange(allCreatures: any[]): any[] {
+    const hostileCreatures = this.getHostileCreatures(allCreatures);
+    
+    return hostileCreatures.filter(enemy => {
+      const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
+      return distance <= 12;
+    });
+  }
+
+
+
   // --- Position Methods ---
   getFacingDegrees(): number { return this.positionManager.getFacingDegrees(); }
   getFacingArrow(): string { return this.positionManager.getFacingArrow(); }
@@ -185,6 +222,10 @@ export abstract class Creature {
   useAction(): void { this.stateManager.useAction(); }
   useQuickAction(): void { this.stateManager.useQuickAction(); }
   useMana(amount: number): boolean { return this.stateManager.useMana(amount); }
+  setMovedWhileEngaged(value: boolean): void { this.stateManager.setMovedWhileEngaged(value); }
+  setRemainingMovement(value: number): void { this.stateManager.setRemainingMovement(value); }
+  setRemainingActions(value: number): void { this.stateManager.setRemainingActions(value); }
+  setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
   resetTurn(): void { 
     this.stateManager.resetTurn(); 
     this.stateManager.recordTurnStartPosition(this.positionManager.getPosition());
@@ -211,6 +252,12 @@ export abstract class Creature {
 
   canMoveToWhenEngaged(newX: number, newY: number, engagingCreatures: any[]): boolean {
     return this.relationshipsManager.canMoveToWhenEngaged(newX, newY, engagingCreatures, this.hasMovedWhileEngaged);
+  }
+
+  // Convenience method to check engagement status with all creatures
+  isEngagedWithAll(allCreatures: any[]): boolean {
+    const hostileCreatures = this.getHostileCreatures(allCreatures);
+    return this.isEngaged(hostileCreatures);
   }
 
   // --- Turn Start Position ---

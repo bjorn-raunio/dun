@@ -4,7 +4,8 @@ import { Monster } from './monster';
 import { Mercenary } from './mercenary';
 
 // Export all creature-related modules
-export { Creature, CREATURE_GROUPS, type CreatureGroup, type Attributes } from './base';
+export { Creature } from './base';
+export { CREATURE_GROUPS, type CreatureGroup, type Attributes } from './types';
 export { Hero } from './hero';
 export { Monster, MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS, type MonsterFaction, type MonsterFactionInfo } from './monster';
 export { Mercenary } from './mercenary';

@@ -2,7 +2,7 @@ import { Creature } from '../creatures/index';
 import { ValidationResult } from './core';
 import { VALIDATION_MESSAGES } from './messages';
 import { validateCreatureAlive, validateActionsRemaining } from './creature';
-import { calculateDistance } from '../utils/geometry';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 import { terrainHeightAt } from '../maps/mapRenderer';
 
 /**
@@ -46,7 +46,7 @@ export function validateCombat(
 
   // Range check
   const attackRange = attacker.hasRangedWeapon() ? attacker.getMaxAttackRange() : attacker.getAttackRange();
-  const distance = calculateDistance(attacker.x, attacker.y, target.x, target.y, 'chebyshev');
+  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {
     return {
@@ -77,7 +77,7 @@ export function validateCombat(
  */
 export function validateTargetInRange(attacker: Creature, target: Creature): ValidationResult {
   const attackRange = attacker.hasRangedWeapon() ? attacker.getMaxAttackRange() : attacker.getAttackRange();
-  const distance = calculateDistance(attacker.x, attacker.y, target.x, target.y, 'chebyshev');
+  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {
     return {

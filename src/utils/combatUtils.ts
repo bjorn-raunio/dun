@@ -1,6 +1,7 @@
 import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
-import { chebyshevDistanceRect, getCreatureDimensions, isInBackArc } from './geometry';
+import { chebyshevDistanceRect, isInBackArc } from './geometry';
+import { getCreatureDimensions } from './dimensions';
 import { calculateCombatRoll, calculateToHitRoll, calculateBlockRoll, calculateMeleeDamageRoll, calculateRangedDamageRoll, rollD6, isCriticalHit, isDoubleCritical } from './dice';
 import { BaseValidationResult } from './types';
 import { validateCombat } from '../validation/combat';
@@ -464,7 +465,7 @@ function executeRangedCombat(attacker: Creature, target: Creature, allCreatures:
   const toHitResult = executeToHitRollRanged(attacker, target);
   
   // Consume action (regardless of hit or miss)
-  attacker.remainingActions -= 1;
+  attacker.setRemainingActions(attacker.remainingActions - 1);
   attacker.resetGroupActions(allCreatures);
   
   if (!toHitResult.hit) {
@@ -520,7 +521,7 @@ function executeMeleeCombat(attacker: Creature, target: Creature, allCreatures: 
   const toHitResult = executeToHitRollMelee(attacker, target, mapDefinition);
   
   // Consume action (regardless of hit or miss)
-  attacker.remainingActions -= 1;
+  attacker.setRemainingActions(attacker.remainingActions - 1);
   attacker.resetGroupActions(allCreatures);
   
   if (!toHitResult.hit) {

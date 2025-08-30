@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { calculateDistance } from './geometry';
+import { calculateDistanceBetween } from './pathfinding';
 
 // --- Zone of Control Utilities ---
 
@@ -7,7 +7,7 @@ import { calculateDistance } from './geometry';
  * Check if a position is within a creature's zone of control
  */
 export function isInZoneOfControl(x: number, y: number, creature: Creature): boolean {
-  const distance = calculateDistance(creature.x, creature.y, x, y, 'chebyshev');
+  const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
   return distance <= creature.getZoneOfControlRange();
 }
 
@@ -15,7 +15,7 @@ export function isInZoneOfControl(x: number, y: number, creature: Creature): boo
  * Check if a position is within a creature's zone of control using a custom range
  */
 export function isInZoneOfControlWithRange(x: number, y: number, creature: Creature, zoneRange: number): boolean {
-  const distance = calculateDistance(creature.x, creature.y, x, y, 'chebyshev');
+  const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
   return distance <= zoneRange;
 }
 
@@ -127,7 +127,7 @@ export function canMoveToWhenEngaged(
  * Check if a position is adjacent to a creature
  */
 export function isAdjacentToCreature(x: number, y: number, creature: Creature): boolean {
-  return calculateDistance(x, y, creature.x, creature.y, 'chebyshev') <= 1;
+  return calculateDistanceBetween(x, y, creature.x, creature.y) <= 1;
 }
 
 /**

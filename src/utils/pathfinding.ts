@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { terrainHeightAt } from '../maps/mapRenderer';
-import { calculateDistance } from './geometry';
+
 
 import { validatePositionStandable } from '../validation/map';
 import { calculateMovementCost, getTerrainCost } from './movementCost';
@@ -10,6 +10,7 @@ import {
   getEngagingCreatures,
   isAdjacentToCreature
 } from './zoneOfControl';
+import { getCreatureDimensions, isPositionInCreatureBounds } from './dimensions';
 
 // Types for pathfinding
 export interface PathfindingResult {
@@ -59,7 +60,7 @@ export class PathfindingSystem {
     }];
     dist.set(`${creature.x},${creature.y}`, 0);
 
-    const selectedDims = (creature.size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 };
+    const selectedDims = getCreatureDimensions(creature.size);
 
     while (pq.length) {
       // Pop min-cost
@@ -431,8 +432,7 @@ export function isPositionAccessible(
   for (const creature of allCreatures) {
     if (creature.isDead()) continue; // Dead creatures don't block
     
-    if (x >= creature.x && x < creature.x + creature.mapWidth &&
-        y >= creature.y && y < creature.y + creature.mapHeight) {
+    if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
       return false;
     }
   }
@@ -469,8 +469,7 @@ export function isPositionAccessibleWithBounds(
   for (const creature of allCreatures) {
     if (creature.isDead()) continue; // Dead creatures don't block
     
-    if (x >= creature.x && x < creature.x + creature.mapWidth &&
-        y >= creature.y && y < creature.y + creature.mapHeight) {
+    if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
       return false;
     }
   }
@@ -497,8 +496,7 @@ export function isCreatureAtPosition(
   for (const creature of allCreatures) {
     if (creature.isDead()) continue; // Dead creatures don't block
     
-    if (x >= creature.x && x < creature.x + creature.mapWidth &&
-        y >= creature.y && y < creature.y + creature.mapHeight) {
+    if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
       return true;
     }
   }
@@ -530,7 +528,19 @@ export function calculateDistanceBetween(
   }
 
   // Fallback to simple distance calculation
-  return calculateDistance(fromX, fromY, toX, toY, metric);
+  const dx = Math.abs(toX - fromX);
+  const dy = Math.abs(toY - fromY);
+  
+  switch (metric) {
+    case 'chebyshev':
+      return Math.max(dx, dy);
+    case 'manhattan':
+      return dx + dy;
+    case 'euclidean':
+      return Math.sqrt(dx * dx + dy * dy);
+    default:
+      return Math.max(dx, dy);
+  }
 }
 
 /**
@@ -555,7 +565,7 @@ export function calculateDistanceToCreature(
   }
 
   // Fallback to simple distance calculation
-  return calculateDistance(fromX, fromY, target.x, target.y, metric);
+  return calculateDistanceBetween(fromX, fromY, target.x, target.y);
 }
 
 /**
@@ -644,8 +654,9 @@ function findClosestAccessiblePositionToTarget(
   // Check positions around the target
   const positions = [];
   
-  for (let dy = -1; dy <= target.mapHeight; dy++) {
-    for (let dx = -1; dx <= target.mapWidth; dx++) {
+  const targetDims = getCreatureDimensions(target.size);
+  for (let dy = -1; dy <= targetDims.h; dy++) {
+    for (let dx = -1; dx <= targetDims.w; dx++) {
       const x = target.x + dx;
       const y = target.y + dy;
       
@@ -663,10 +674,10 @@ function findClosestAccessiblePositionToTarget(
   
   // Find the closest position
   let closest = positions[0];
-  let minDistance = calculateDistance(fromX, fromY, closest.x, closest.y);
+      let minDistance = calculateDistanceBetween(fromX, fromY, closest.x, closest.y);
   
   for (const pos of positions) {
-    const distance = calculateDistance(fromX, fromY, pos.x, pos.y);
+          const distance = calculateDistanceBetween(fromX, fromY, pos.x, pos.y);
     if (distance < minDistance) {
       minDistance = distance;
       closest = pos;
@@ -690,7 +701,7 @@ export function canReachAndAttack(
 ): boolean {
   // If we don't have map data, fall back to simple distance calculation
   if (!mapData || cols === undefined || rows === undefined) {
-    const distance = calculateDistance(attacker.x, attacker.y, target.x, target.y);
+    const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
     const attackRange = attacker.getAttackRange();
     return distance <= attackRange;
   }
@@ -716,7 +727,7 @@ export function canAttackImmediately(
   attacker: Creature,
   target: Creature
 ): boolean {
-  const distance = calculateDistance(attacker.x, attacker.y, target.x, target.y);
+      const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   const attackRange = attacker.getAttackRange();
   return distance <= attackRange;
 }
@@ -737,7 +748,7 @@ export function calculateDistanceToAttackablePosition(
 ): number {
   // If we don't have map data, fall back to simple distance calculation
   if (!mapData || cols === undefined || rows === undefined) {
-    return calculateDistance(fromX, fromY, target.x, target.y);
+    return calculateDistanceBetween(fromX, fromY, target.x, target.y);
   }
   
   const closestPosition = findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);

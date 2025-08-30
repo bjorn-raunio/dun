@@ -1,6 +1,6 @@
 import { Attributes } from './types';
 import { EquipmentSystem } from '../items/equipment';
-import { calculateDistance } from '../utils/geometry';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
 
 // --- Creature Combat Management ---
@@ -62,7 +62,7 @@ export class CreatureCombatManager {
   }
 
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean {
-    const distance = calculateDistance(creatureX, creatureY, x, y, 'chebyshev');
+    const distance = calculateDistanceBetween(creatureX, creatureY, x, y);
     return distance <= this.getZoneOfControlRange();
   }
 

@@ -64,7 +64,7 @@ export function executeMovement(
   const isEngaged = creature.isEngagedWithAll(allCreatures);
   if (isEngaged) {
     // Set remaining movement to zero when entering hostile zone of control
-    creature.remainingMovement = 0;
+    creature.setRemainingMovement(0);
   }
   
   return {

@@ -60,8 +60,8 @@ export class EquipmentSystem {
   /**
    * Equip an item to a specific slot
    */
-  equip(item: Item, slot: EquipmentSlot): EquipmentValidation {
-    const validation = this.validateEquip(item, slot);
+  equip(item: Item, slot: EquipmentSlot, creature?: Creature): EquipmentValidation {
+    const validation = this.validateEquip(item, slot, creature);
     if (!validation.isValid) {
       return validation;
     }
@@ -73,7 +73,12 @@ export class EquipmentSystem {
   /**
    * Unequip an item from a specific slot
    */
-  unequip(slot: EquipmentSlot): Item | undefined {
+  unequip(slot: EquipmentSlot, creature?: Creature): Item | undefined {
+    // Check if creature is in combat and trying to unequip armor
+    if (creature && slot === 'armor' && creature.getCombatState()) {
+      return undefined; // Cannot unequip armor while in combat
+    }
+
     const item = this.slots[slot];
     if (item) {
       delete this.slots[slot];
@@ -108,7 +113,12 @@ export class EquipmentSystem {
   /**
    * Validate if an item can be equipped to a specific slot
    */
-  validateEquip(item: Item, slot: EquipmentSlot): EquipmentValidation {
+  validateEquip(item: Item, slot: EquipmentSlot, creature?: Creature): EquipmentValidation {
+    // Check if creature is in combat and trying to equip armor
+    if (creature && slot === 'armor' && creature.getCombatState()) {
+      return { isValid: false, reason: 'Cannot equip armor while in combat', slot };
+    }
+
     // First check if the item type is valid for the slot
     switch (slot) {
       case 'mainHand':
@@ -423,7 +433,7 @@ export class EquipmentManager {
    * Equip an item to a creature
    */
   equip(creature: Creature, item: Item, slot: EquipmentSlot): EquipmentValidation {
-    const validation = this.equipment.equip(item, slot);
+    const validation = this.equipment.equip(item, slot, creature);
     if (validation.isValid) {
       creature.equipment[slot] = item as any;
     }
@@ -434,7 +444,7 @@ export class EquipmentManager {
    * Unequip an item from a creature
    */
   unequip(creature: Creature, slot: EquipmentSlot): Item | undefined {
-    const item = this.equipment.unequip(slot);
+    const item = this.equipment.unequip(slot, creature);
     if (item) {
       delete creature.equipment[slot];
     }

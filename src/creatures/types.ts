@@ -1,3 +1,6 @@
+// Import item types for the equipment interface
+import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
+
 // --- Core Creature Types ---
 
 export interface Attributes {
@@ -58,6 +61,3 @@ export interface CreatureConstructorParams {
   naturalArmor?: number;
   group: CreatureGroup;
 }
-
-// Import item types for the equipment interface
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';

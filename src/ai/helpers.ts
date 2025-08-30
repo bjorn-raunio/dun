@@ -1,6 +1,6 @@
 import { Creature } from '../creatures/index';
 import { AIState, AIDecision, AITarget, AIBehaviorType } from './types';
-import { calculateDistance } from '../utils/geometry';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
 
 // --- AI Helper Functions ---
@@ -243,7 +243,7 @@ export function assessThreatLevel(
     c.isAlive() && 
     c.id !== creature.id && 
     creature.isHostileTo(c) &&
-    calculateDistance(c.x, c.y, creature.x, creature.y, 'chebyshev') <= radius
+            calculateDistanceBetween(c.x, c.y, creature.x, creature.y) <= radius
   ).length;
 
   let threatLevel: 'low' | 'medium' | 'high' | 'critical';

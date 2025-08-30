@@ -79,7 +79,7 @@ export class CreatureMovement {
         }
         
         // Mark that we've moved while engaged
-        creature.hasMovedWhileEngaged = true;
+        creature.setMovedWhileEngaged(true);
       } else {
         // Check if moving to this position would put us in engagement
         const wouldBeEngaged = allCreatures.some(c => 
@@ -92,7 +92,7 @@ export class CreatureMovement {
         if (wouldBeEngaged) {
           // We would become engaged at this position
           // Mark that we've moved while engaged (since we're becoming engaged)
-          creature.hasMovedWhileEngaged = true;
+          creature.setMovedWhileEngaged(true);
         }
       }
       

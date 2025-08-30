@@ -131,6 +131,18 @@ export class CreatureStateManager {
     this.state.hasMovedWhileEngaged = value;
   }
 
+  setRemainingMovement(value: number): void {
+    this.state.remainingMovement = Math.max(0, value);
+  }
+
+  setRemainingActions(value: number): void {
+    this.state.remainingActions = Math.max(0, value);
+  }
+
+  setRemainingQuickActions(value: number): void {
+    this.state.remainingQuickActions = Math.max(0, value);
+  }
+
   // --- Turn Management ---
 
   resetTurn(): void {

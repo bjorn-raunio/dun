@@ -2,31 +2,7 @@ import { DIRECTIONS } from './constants';
 
 // --- Geometry Utilities ---
 
-/**
- * Calculate distance between two points using the specified metric
- * This is the main distance calculation function - use this instead of individual metric functions
- */
-export function calculateDistance(
-  x1: number, 
-  y1: number, 
-  x2: number, 
-  y2: number, 
-  metric: 'chebyshev' | 'manhattan' | 'euclidean' = 'chebyshev'
-): number {
-  const dx = Math.abs(x2 - x1);
-  const dy = Math.abs(y2 - y1);
-  
-  switch (metric) {
-    case 'chebyshev':
-      return Math.max(dx, dy);
-    case 'manhattan':
-      return dx + dy;
-    case 'euclidean':
-      return Math.sqrt(dx * dx + dy * dy);
-    default:
-      return Math.max(dx, dy);
-  }
-}
+
 
 /**
  * Calculate Chebyshev distance between two rectangles (size-aware, on tile-grid)
@@ -89,12 +65,7 @@ export function tileFromPointer(
   return { tileX, tileY };
 }
 
-/**
- * Get creature dimensions based on size
- */
-export function getCreatureDimensions(size: number): { w: number; h: number } {
-  return (size >= 3) ? { w: 2, h: 2 } : { w: 1, h: 1 }; // 3=large, 4=huge
-}
+
 
 /**
  * Check if two rectangles overlap
