@@ -5,10 +5,17 @@ interface PathOverlayProps {
   highlightedPath: Array<{ x: number; y: number }>;
   cols: number;
   rows: number;
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
 
-export function PathOverlay({ highlightedPath, cols, rows }: PathOverlayProps) {
-  if (highlightedPath.length === 0) return null;
+export function PathOverlay({ 
+  highlightedPath, 
+  cols, 
+  rows, 
+  targetingMode 
+}: PathOverlayProps) {
+  // Don't show path highlights if no path or if in targeting mode
+  if (highlightedPath.length === 0 || targetingMode?.isActive) return null;
 
   return (
     <div

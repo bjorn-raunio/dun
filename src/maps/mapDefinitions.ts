@@ -47,10 +47,10 @@ export const mapDefinition: MapDefinition = {
     createMercenary("civilian", { 
       x: 16, 
       y: 4, 
-      group: CREATURE_GROUPS.HERO, 
+      group: CREATURE_GROUPS.PLAYER, 
       facing: 6
     }),
-    createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.HERO, facing: 6 }),
+    createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
     new Hero({
       name: "Knight",
       x: 0,
@@ -80,7 +80,7 @@ export const mapDefinition: MapDefinition = {
       mana: 0,
       fortune: 3,
       naturalArmor: 3,
-      group: CREATURE_GROUPS.HERO,
+      group: CREATURE_GROUPS.PLAYER,
     }),
   ],
 };

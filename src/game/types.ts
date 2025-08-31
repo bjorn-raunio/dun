@@ -14,6 +14,13 @@ export type GameState = {
   targetsInRangeKey: number;
   aiTurnState: AITurnState;
   turnState: TurnState;
+  targetingMode: TargetingMode;
+};
+
+export type TargetingMode = {
+  isActive: boolean;
+  attackerId: string | null;
+  message: string;
 };
 
 export type ViewportState = {
@@ -51,4 +58,5 @@ export type GameActions = {
   setAITurnState: (updater: (prev: AITurnState) => AITurnState) => void;
   setTurnState: (updater: (prev: TurnState) => TurnState) => void;
   setZoom: (zoom: number) => void;
+  setTargetingMode: (targetingMode: TargetingMode) => void;
 };

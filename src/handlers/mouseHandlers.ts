@@ -25,16 +25,17 @@ export function createMouseHandlers(
   reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
-  mapDefinition?: any
+  setSelectedCreatureId: (id: string | null) => void,
+  mapDefinition?: any,
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): MouseHandlers {
-  const { setDragging, setPan, setCreatures, setMessages, setReachableKey, setTargetsInRangeKey } = gameActions;
+  const { setDragging, setPan, setCreatures, setMessages, setReachableKey, setTargetsInRangeKey, setTargetingMode } = gameActions;
   const { dragStart, panStart, panRef, livePan, rafId, viewportRef, dragMoved, lastMovement, updateTransform } = gameRefs;
-
-
 
   // Mouse down handler for panning
   function onMouseDown(e: React.MouseEvent<HTMLDivElement>) {
-    setDragging(true);
+    if (e.button !== 0) return; // Only handle left mouse button
+    
     dragStart.current = { x: e.clientX, y: e.clientY };
     panStart.current = { x: livePan.current.x, y: livePan.current.y };
     dragMoved.current = { dx: 0, dy: 0 };
@@ -43,10 +44,16 @@ export function createMouseHandlers(
   // Mouse move handler for panning
   function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     if (!dragStart.current) return;
+    
     const dx = e.clientX - dragStart.current.x;
     const dy = e.clientY - dragStart.current.y;
     dragMoved.current = { dx, dy };
-    const newPan = { x: panStart.current.x + dx, y: panStart.current.y + dy };
+    
+    const newPan = {
+      x: panStart.current.x + dx,
+      y: panStart.current.y + dy
+    };
+    
     livePan.current = { ...newPan, zoom: livePan.current.zoom };
     if (rafId.current === null) {
       rafId.current = window.requestAnimationFrame(() => {
@@ -65,8 +72,45 @@ export function createMouseHandlers(
 
     if (wasDrag) return; // Don't handle clicks if we were dragging
 
+    // If in targeting mode and clicking on empty space, cancel targeting mode
+    if (targetingMode?.isActive) {
+      const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapData.tiles[0].length, mapData.tiles.length);
+      if (pos) {
+        // Check if there's a creature at this position
+        const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY);
+        if (!creatureAtPosition) {
+          // Clicked on empty space - cancel targeting mode
+          setTargetingMode({ isActive: false, attackerId: null, message: '' });
+          addMessage('Targeting mode cancelled', setMessages);
+          return;
+        }
+      }
+    }
+
     const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapData.tiles[0].length, mapData.tiles.length);
-    if (!pos) return;
+    
+    // If clicked outside map area or on empty tile, deselect creature
+    if (!pos) {
+      if (selectedCreatureId) {
+        setSelectedCreatureId(null);
+      }
+      return;
+    }
+
+    // Check if clicked on an empty tile (no creature present)
+    const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY);
+    if (!creatureAtPosition && selectedCreatureId) {
+      // Check if this is a highlighted movement tile - if so, don't deselect
+      const reachableKeySet = new Set(reachable.tiles.map((t: any) => `${t.x},${t.y}`));
+      const destKey = `${pos.tileX},${pos.tileY}`;
+      
+      if (!reachableKeySet.has(destKey)) {
+        // Clicked on empty tile that's not highlighted for movement - deselect creature
+        setSelectedCreatureId(null);
+        return;
+      }
+      // If it's a highlighted movement tile, continue to movement logic
+    }
 
     // Handle tile click for movement
     if (selectedCreatureId) {
@@ -195,6 +239,74 @@ export function createMouseHandlers(
   // Creature click handler
   function onCreatureClick(creature: Creature, e: React.MouseEvent) {
     e.stopPropagation();
+    
+    // If we're in targeting mode, handle attack targeting
+    if (targetingMode?.isActive && targetingMode.attackerId) {
+      const attacker = findCreatureById(creatures, targetingMode.attackerId);
+      if (!attacker) {
+        // Cancel targeting mode if attacker no longer exists
+        setTargetingMode({ isActive: false, attackerId: null, message: '' });
+        return;
+      }
+
+      // Check if the clicked creature is a valid target
+      if (attacker.isHostileTo(creature) && creature.isAlive()) {
+        // Check if target is in range
+        if (!targetsInRangeIds.has(creature.id)) {
+          addMessage(`Cannot reach target: ${attacker.name} cannot reach ${creature.name}`, setMessages);
+          return;
+        }
+
+        // Perform the attack
+        const combatResult = attacker.attack(creature, creatures, mapDefinition, mapData);
+
+        // Add to-hit message
+        if (combatResult.toHitMessage) {
+          addMessage(combatResult.toHitMessage!, setMessages);
+        }
+
+        // Add block message if present
+        if (combatResult.blockMessage) {
+          addMessage(combatResult.blockMessage!, setMessages);
+        }
+
+        // Add damage message if hit
+        if (combatResult.damageMessage) {
+          addMessage(combatResult.damageMessage!, setMessages);
+        }
+
+        // Add defeat message if target was defeated
+        if (combatResult.targetDefeated) {
+          addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
+        }
+
+        // Update creatures state to reflect the attack
+        // Use the modified creatures directly since attack() modifies them in place
+        setCreatures(prev => prev.map(c => {
+          if (c.id === attacker.id) {
+            // Return the attacker with updated remaining actions
+            return attacker;
+          } else if (c.id === creature.id) {
+            // Return the target with updated health/damage
+            return creature;
+          }
+          return c;
+        }));
+
+        // Exit targeting mode
+        setTargetingMode({ isActive: false, attackerId: null, message: '' });
+
+        // Force targets in range recalculation
+        setTargetsInRangeKey(prev => prev + 1);
+        return;
+      } else {
+        // Invalid target - cancel targeting mode
+        setTargetingMode({ isActive: false, attackerId: null, message: '' });
+        addMessage(`Invalid target: ${creature.name} is not a valid target for ${attacker.name}`, setMessages);
+        return;
+      }
+    }
+
     const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
 
     // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
@@ -231,17 +343,15 @@ export function createMouseHandlers(
         addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
       }
 
-      // Set remaining movement to zero if the creature has already moved this turn
-      const hasMoved = currentCreature.hasMoved();
-
-      // Set remaining movement to zero if already moved (action already consumed in attack method)
+      // Update creatures state to reflect the attack
+      // Use the modified creatures directly since attack() modifies them in place
       setCreatures(prev => prev.map(c => {
         if (c.id === selectedCreatureId) {
-          // Ensure we're working with class instances
-          if (hasMoved) {
-            c.useMovement(c.remainingMovement);
-          }
-          return c;
+          // Return the attacker with updated remaining actions
+          return currentCreature;
+        } else if (c.id === creature.id) {
+          // Return the target with updated health/damage
+          return creature;
         }
         return c;
       }));

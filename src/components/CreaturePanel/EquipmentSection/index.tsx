@@ -6,9 +6,11 @@ import { useEquipment } from '../../../hooks/useEquipment';
 interface EquipmentSectionProps {
   creature: Creature;
   onUpdate?: (creature: Creature) => void;
+  onAttack?: (creature: Creature) => void;
+  canAttack?: (creature: Creature) => boolean;
 }
 
-export function EquipmentSection({ creature, onUpdate }: EquipmentSectionProps) {
+export function EquipmentSection({ creature, onUpdate, onAttack, canAttack }: EquipmentSectionProps) {
   const { handleUnequip, canUnequipWeaponOrShield } = useEquipment(creature, onUpdate);
 
   return (
@@ -20,6 +22,8 @@ export function EquipmentSection({ creature, onUpdate }: EquipmentSectionProps) 
         creature={creature}
         onUnequip={handleUnequip}
         canUnequip={canUnequipWeaponOrShield}
+        onAttack={onAttack}
+        canAttack={canAttack}
       />
       <EquipmentSlot 
         slot="offHand" 
@@ -27,6 +31,8 @@ export function EquipmentSection({ creature, onUpdate }: EquipmentSectionProps) 
         creature={creature}
         onUnequip={handleUnequip}
         canUnequip={canUnequipWeaponOrShield}
+        onAttack={onAttack}
+        canAttack={canAttack}
       />
       <EquipmentSlot 
         slot="armor" 
@@ -34,6 +40,8 @@ export function EquipmentSection({ creature, onUpdate }: EquipmentSectionProps) 
         creature={creature}
         onUnequip={handleUnequip}
         canUnequip={canUnequipWeaponOrShield}
+        onAttack={onAttack}
+        canAttack={canAttack}
       />
     </div>
   );

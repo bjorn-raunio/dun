@@ -21,10 +21,10 @@ export const DEFAULT_ATTRIBUTES: Partial<Attributes> = {
   dexterity: 0,
 };
 
-export type CreatureGroup = "hero" | "enemy" | "neutral";
+export type CreatureGroup = "player" | "enemy" | "neutral";
 
 export const CREATURE_GROUPS = {
-  HERO: "hero" as const,
+  PLAYER: "player" as const,
   ENEMY: "enemy" as const,
   NEUTRAL: "neutral" as const,
 } as const;

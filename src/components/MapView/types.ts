@@ -25,6 +25,7 @@ export interface MapViewProps {
   onTileClick: (pos: { tileX: number; tileY: number }) => void;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
   panRef: React.MutableRefObject<HTMLDivElement | null>;
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
 
 export interface MapBlock {

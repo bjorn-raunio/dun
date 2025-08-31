@@ -8,7 +8,7 @@ export class CreatureRelationshipsManager {
   // --- Group System Methods ---
 
   isHeroGroup(): boolean {
-    return this.group === CREATURE_GROUPS.HERO;
+    return this.group === CREATURE_GROUPS.PLAYER;
   }
 
   isPlayerControlled(): boolean {

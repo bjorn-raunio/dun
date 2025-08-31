@@ -10,10 +10,18 @@ interface ReachableOverlayProps {
   selectedCreatureId: string | null;
   cols: number;
   rows: number;
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
 
-export function ReachableOverlay({ reachable, selectedCreatureId, cols, rows }: ReachableOverlayProps) {
-  if (!selectedCreatureId) return null;
+export function ReachableOverlay({ 
+  reachable, 
+  selectedCreatureId, 
+  cols, 
+  rows, 
+  targetingMode 
+}: ReachableOverlayProps) {
+  // Don't show reachable tiles if no creature is selected or if in targeting mode
+  if (!selectedCreatureId || targetingMode?.isActive) return null;
 
   return (
     <div

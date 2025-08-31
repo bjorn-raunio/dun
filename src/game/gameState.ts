@@ -1,6 +1,6 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
-import { GameState, GameRefs, GameActions, ViewportState, PanState } from './types';
+import { GameState, GameRefs, GameActions, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
@@ -71,6 +71,11 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
   const [targetsInRangeKey, setTargetsInRangeKey] = React.useState<number>(0);
   const [aiTurnState, setAITurnState] = React.useState(initializeAITurnState());
   const [turnState, setTurnState] = React.useState<TurnState>(() => initializeTurnState(initialCreatures));
+  const [targetingMode, setTargetingMode] = React.useState<TargetingMode>({
+    isActive: false,
+    attackerId: null,
+    message: ''
+  });
 
   // Initialize combat states when creatures are first loaded
   React.useEffect(() => {
@@ -113,6 +118,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     targetsInRangeKey,
     aiTurnState,
     turnState,
+    targetingMode,
   };
 
   const gameRefs: GameRefs = {
@@ -139,6 +145,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     setAITurnState,
     setTurnState,
     setZoom,
+    setTargetingMode,
   };
 
   return [gameState, gameRefs, gameActions];

@@ -115,14 +115,18 @@ export class EquipmentSystem {
   hasMeleeWeapon(): boolean {
     return this.slots.mainHand instanceof Weapon || 
            this.slots.offHand instanceof Weapon ||
-           (this.slots.mainHand === undefined && this.slots.offHand === undefined); // Unarmed
+           this.isUnarmed(); // Unarmed creatures count as having a melee weapon
   }
 
   /**
    * Check if creature is unarmed (no weapons equipped)
+   * A creature is considered unarmed if they have no weapons, even if they have a shield
    */
   isUnarmed(): boolean {
-    return this.slots.mainHand === undefined && this.slots.offHand === undefined;
+    const hasMainHandWeapon = this.slots.mainHand instanceof Weapon || this.slots.mainHand instanceof RangedWeapon;
+    const hasOffHandWeapon = this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon;
+    
+    return !hasMainHandWeapon && !hasOffHandWeapon;
   }
 
   /**

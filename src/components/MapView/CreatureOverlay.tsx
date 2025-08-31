@@ -3,14 +3,25 @@ import { TILE_SIZE, COLORS } from '../styles';
 import { Creature } from '../../creatures/index';
 import { getLivingCreatures } from '../../validation/creature';
 import { getCreatureUIDimensions, getCreatureUIOffset } from '../../utils/dimensions';
+import { validateCombat } from '../../validation/combat';
 
 interface CreatureOverlayProps {
   creatures: Creature[];
   selectedCreatureId: string | null;
   onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  mapDefinition?: any;
+  mapData?: { tiles: string[][] };
 }
 
-export function CreatureOverlay({ creatures, selectedCreatureId, onCreatureClick }: CreatureOverlayProps) {
+export function CreatureOverlay({ 
+  creatures, 
+  selectedCreatureId, 
+  onCreatureClick, 
+  targetingMode,
+  mapDefinition,
+  mapData
+}: CreatureOverlayProps) {
   return (
     <div
       style={{
@@ -23,71 +34,102 @@ export function CreatureOverlay({ creatures, selectedCreatureId, onCreatureClick
         zIndex: 3,
       }}
     >
-      {getLivingCreatures(creatures).map((cr) => (
-        <div
-          key={cr.id}
-          title={cr.name}
-          onClick={(e) => onCreatureClick(cr, e)}
-          style={{
-            position: "absolute",
-            left: cr.x * TILE_SIZE + (TILE_SIZE * 0.1),
-            top: cr.y * TILE_SIZE + (TILE_SIZE * 0.1),
-            width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
-            height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
-            cursor: "pointer",
-            pointerEvents: "auto",
-            zIndex: 4,
-          }}
-        >
-          {cr.image ? (
-            <img
-              src={process.env.PUBLIC_URL + "/" + cr.image}
-              alt={cr.name}
-              draggable={false}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: "50%",
-                border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
-                boxSizing: "border-box",
-                pointerEvents: "none",
-                opacity: cr.isDead() ? 0.3 : 1,
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
-                height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
-                borderRadius: "50%",
-                background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
-                border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
-                boxSizing: "border-box",
-                pointerEvents: "none",
-                opacity: cr.isDead() ? 0.3 : 1,
-              }}
-            />
-          )}
-          {/* Facing direction arrow */}
+      {getLivingCreatures(creatures).map((cr) => {
+        // Determine if this creature is a valid target in targeting mode
+        let isValidTarget = false;
+        let isEnemy = false;
+        if (targetingMode?.isActive && targetingMode.attackerId) {
+          const attacker = creatures.find(c => c.id === targetingMode.attackerId);
+          if (attacker) {
+            isEnemy = attacker.isHostileTo(cr);
+            // Use validateCombat to check if the target is valid
+            if (isEnemy) {
+              const validation = validateCombat(attacker, cr, creatures, mapDefinition, mapData);
+              isValidTarget = validation.isValid;
+            }
+          }
+        }
+
+        // Determine cursor style
+        let cursorStyle = "pointer";
+        if (targetingMode?.isActive) {
+          cursorStyle = isValidTarget ? "crosshair" : "not-allowed";
+        }
+
+        // Determine opacity based on targeting mode
+        let opacity = cr.isDead() ? 0.3 : 1;
+        if (targetingMode?.isActive && isEnemy && !isValidTarget) {
+          // Dim enemies that cannot be attacked (out of range, etc.)
+          opacity = 0.4;
+        }
+
+        return (
           <div
+            key={cr.id}
+            title={cr.name}
+            onClick={(e) => onCreatureClick(cr, e)}
             style={{
               position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
-              fontSize: "12px",
-              color: cr.isHeroGroup() ? COLORS.hero : COLORS.monster,
-              fontWeight: "bold",
-              textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
-              pointerEvents: "none",
-              zIndex: 1,
+              left: cr.x * TILE_SIZE + (TILE_SIZE * 0.1),
+              top: cr.y * TILE_SIZE + (TILE_SIZE * 0.1),
+              width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
+              height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
+              cursor: cursorStyle,
+              pointerEvents: "auto",
+              zIndex: 4,
             }}
           >
-            ▲
+            {cr.image ? (
+              <img
+                src={process.env.PUBLIC_URL + "/" + cr.image}
+                alt={cr.name}
+                draggable={false}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
+                  boxSizing: "border-box",
+                  pointerEvents: "none",
+                  opacity: opacity,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
+                  height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
+                  borderRadius: "50%",
+                  background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
+                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
+                  boxSizing: "border-box",
+                  pointerEvents: "none",
+                  opacity: opacity,
+                }}
+              />
+            )}
+            {/* Facing direction arrow */}
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
+                fontSize: "12px",
+                color: cr.isHeroGroup() ? COLORS.hero : COLORS.monster,
+                fontWeight: "bold",
+                textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                pointerEvents: "none",
+                zIndex: 1,
+                opacity: opacity,
+              }}
+            >
+              ▲
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -13,9 +13,18 @@ interface GameUIProps {
   turnState: TurnState;
   creatures: Creature[];
   onCreatureClick?: (creature: Creature) => void;
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
 
-export function GameUI({ messages, onEndTurn, isAITurnActive = false, turnState, creatures, onCreatureClick }: GameUIProps) {
+export function GameUI({ 
+  messages, 
+  onEndTurn, 
+  isAITurnActive = false, 
+  turnState, 
+  creatures, 
+  onCreatureClick,
+  targetingMode 
+}: GameUIProps) {
   return (
     <div
       style={{
@@ -66,20 +75,35 @@ export function GameUI({ messages, onEndTurn, isAITurnActive = false, turnState,
         <TurnTracker
           turnState={turnState}
         />
+        {targetingMode?.isActive && (
+          <div style={{
+            marginTop: 8,
+            padding: 8,
+            background: COLORS.primary,
+            color: 'white',
+            borderRadius: 4,
+            fontSize: 12,
+            fontWeight: 600,
+            textAlign: 'center'
+          }}>
+            🎯 {targetingMode.message}
+            <div style={{ fontSize: 10, opacity: 0.8, marginTop: 4 }}>
+              Press ESC to cancel
+            </div>
+          </div>
+        )}
       </div>
 
-
-      
       <button
         onClick={onEndTurn}
-        disabled={isAITurnActive}
+        disabled={isAITurnActive || targetingMode?.isActive}
         style={{
           minWidth: 140,
           height: "100%",
           ...COMMON_STYLES.button,
           fontWeight: 800,
-          opacity: isAITurnActive ? 0.5 : 1,
-          cursor: isAITurnActive ? 'not-allowed' : 'pointer',
+          opacity: (isAITurnActive || targetingMode?.isActive) ? 0.5 : 1,
+          cursor: (isAITurnActive || targetingMode?.isActive) ? 'not-allowed' : 'pointer',
         }}
       >
         {isAITurnActive ? 'AI Turn...' : 'End Turn'}

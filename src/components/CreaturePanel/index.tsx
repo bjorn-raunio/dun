@@ -5,7 +5,7 @@ import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
 import { HeroSelector } from './HeroSelector';
-import { DeselectButton } from './DeselectButton';
+
 import { COMMON_STYLES } from '../styles';
 
 interface CreaturePanelProps {
@@ -14,6 +14,8 @@ interface CreaturePanelProps {
   onDeselect: () => void;
   onSelectCreature?: (creature: Creature) => void;
   onCreatureUpdate?: (creature: Creature) => void;
+  onAttack?: (creature: Creature) => void;
+  canAttack?: (creature: Creature) => boolean;
 }
 
 export function CreaturePanel({ 
@@ -21,7 +23,9 @@ export function CreaturePanel({
   creatures, 
   onDeselect, 
   onSelectCreature, 
-  onCreatureUpdate 
+  onCreatureUpdate,
+  onAttack,
+  canAttack
 }: CreaturePanelProps) {
   if (!selectedCreature) {
     return (
@@ -40,13 +44,14 @@ export function CreaturePanel({
       <CreatureStats creature={selectedCreature} />
       <EquipmentSection 
         creature={selectedCreature} 
-        onUpdate={onCreatureUpdate} 
+        onUpdate={onCreatureUpdate}
+        onAttack={onAttack}
+        canAttack={canAttack}
       />
       <InventorySection 
         creature={selectedCreature} 
         onUpdate={onCreatureUpdate} 
       />
-      <DeselectButton onClick={onDeselect} />
     </div>
   );
 }

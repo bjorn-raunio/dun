@@ -38,7 +38,7 @@ export function getRandomStartingPosition(mapDefinition: MapDefinition): { x: nu
 export function validateHeroStartingPositions(mapDefinition: MapDefinition): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   const heroes = mapDefinition.creatures.filter(creature => 
-    creature.group === CREATURE_GROUPS.HERO || creature instanceof Hero
+    creature.group === CREATURE_GROUPS.PLAYER || creature instanceof Hero
   );
   
   for (const hero of heroes) {

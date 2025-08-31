@@ -23,7 +23,8 @@ export function useEventHandlers(
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   setSelectedCreatureId: (id: string | null) => void,
-  mapDefinition?: any
+  mapDefinition?: any,
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {
   // Create mouse handlers
   const mouseHandlers = React.useMemo(() => {
@@ -35,21 +36,33 @@ export function useEventHandlers(
       reachable,
       targetsInRangeIds,
       mapData,
-      mapDefinition
+      setSelectedCreatureId,
+      mapDefinition,
+      targetingMode
     );
 
-    // Wrap the creature click handler to handle selection
-    const originalOnCreatureClick = handlers.onCreatureClick;
+    // Override the creature click handler to handle both targeting mode and creature selection
     handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
-      const selected = selectedCreatureId ? findCreatureById(creatures, selectedCreatureId) : null;
-
-      // If a player-controlled creature is selected and the clicked creature is hostile, handle attack
-      if (selected && selected.isPlayerControlled() && selected.isHostileTo(creature)) {
-        originalOnCreatureClick(creature, e);
+      // If we're in targeting mode, let the original handler deal with it
+      if (targetingMode?.isActive) {
+        // Call the original handler for targeting mode
+        const originalHandler = createMouseHandlers(
+          gameActions,
+          gameRefs,
+          creatures,
+          selectedCreatureId,
+          reachable,
+          targetsInRangeIds,
+          mapData,
+          setSelectedCreatureId,
+          mapDefinition,
+          targetingMode
+        );
+        originalHandler.onCreatureClick(creature, e);
         return;
       }
 
-      // Otherwise, select the clicked creature
+      // Otherwise, always select the clicked creature
       setSelectedCreatureId(creature.id);
       
       // If the clicked creature is player-controlled, calculate line of sight
@@ -88,15 +101,14 @@ export function useEventHandlers(
     targetsInRangeIds,
     mapData,
     setSelectedCreatureId,
-    mapDefinition
+    mapDefinition,
+    targetingMode
   ]);
 
   // Create keyboard handlers
   const keyboardHandlers = React.useMemo(() => {
-    return createKeyboardHandlers(gameActions, creatures, selectedCreatureId);
-  }, [gameActions, creatures, selectedCreatureId]);
-
-
+    return createKeyboardHandlers(gameActions, creatures, selectedCreatureId, targetingMode);
+  }, [gameActions, creatures, selectedCreatureId, targetingMode]);
 
   return {
     mouseHandlers,

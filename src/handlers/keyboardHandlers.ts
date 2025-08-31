@@ -13,14 +13,22 @@ export interface KeyboardHandlers {
 export function createKeyboardHandlers(
   gameActions: GameActions,
   creatures: Creature[],
-  selectedCreatureId: string | null
+  selectedCreatureId: string | null,
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): KeyboardHandlers {
-  const { setCreatures, setMessages } = gameActions;
+  const { setCreatures, setMessages, setTargetingMode } = gameActions;
 
   let keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
   function setupKeyboardHandler() {
     keyboardHandler = (e: KeyboardEvent) => {
+      // Handle Escape key to cancel targeting mode
+      if (e.key === 'Escape' && targetingMode?.isActive) {
+        setTargetingMode({ isActive: false, attackerId: null, message: '' });
+        setMessages(prev => ['Targeting mode cancelled', ...prev].slice(0, 50));
+        return;
+      }
+
       if (!selectedCreatureId) return;
       
       const currentCreature = findCreatureById(creatures, selectedCreatureId);

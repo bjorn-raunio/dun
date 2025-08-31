@@ -23,9 +23,13 @@ export function MapView({
   onTileClick,
   viewportRef,
   panRef,
+  targetingMode,
 }: MapViewProps) {
   const rows = mapData.tiles.length;
   const cols = mapData.tiles[0].length;
+
+  // Determine cursor style based on targeting mode
+  const cursorStyle = targetingMode?.isActive ? 'crosshair' : 'grab';
 
   return (
     <div
@@ -54,7 +58,7 @@ export function MapView({
           gridTemplateColumns: `repeat(${cols}, ${TILE_SIZE}px)`,
           gridTemplateRows: `repeat(${rows}, ${TILE_SIZE}px)`,
           gap: 0,
-          cursor: "grab",
+          cursor: cursorStyle,
           transformOrigin: "0 0",
         }}
       >
@@ -70,6 +74,7 @@ export function MapView({
           selectedCreatureId={selectedCreatureId}
           cols={cols}
           rows={rows}
+          targetingMode={targetingMode}
         />
         
         {/* Path highlight overlay */}
@@ -77,6 +82,7 @@ export function MapView({
           highlightedPath={highlightedPath}
           cols={cols}
           rows={rows}
+          targetingMode={targetingMode}
         />
         
         {/* Creatures overlay */}
@@ -84,6 +90,9 @@ export function MapView({
           creatures={creatures}
           selectedCreatureId={selectedCreatureId}
           onCreatureClick={onCreatureClick}
+          targetingMode={targetingMode}
+          mapDefinition={mapDefinition}
+          mapData={mapData}
         />
       </div>
     </div>

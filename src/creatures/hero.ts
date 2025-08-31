@@ -11,7 +11,7 @@ export class Hero extends Creature {
     // Ensure hero group is set
     super({
       ...params,
-      group: params.group || CREATURE_GROUPS.HERO
+      group: params.group || CREATURE_GROUPS.PLAYER
     });
   }
 

@@ -14,7 +14,7 @@ export class Mercenary extends Creature {
     // Ensure mercenary group is set (default to hero group for player control)
     super({
       ...params,
-      group: params.group || CREATURE_GROUPS.HERO
+      group: params.group || CREATURE_GROUPS.PLAYER
     });
 
     // Initialize mercenary-specific properties

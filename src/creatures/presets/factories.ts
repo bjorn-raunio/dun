@@ -236,7 +236,7 @@ export function createMercenary(
     mana: overrides?.mana ?? p.mana ?? 0,
     fortune: overrides?.fortune ?? p.fortune ?? 0,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
-    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.HERO,
+    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.PLAYER,
     // Mercenary-specific properties
     hireCost: overrides?.hireCost ?? p.hireCost,
   });
