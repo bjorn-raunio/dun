@@ -1,4 +1,5 @@
 // --- Map and Terrain Type Definitions ---
+import { Creature } from '../creatures/index';
 
 export type RoomType = {
   type: string; // e.g. "room1", "room2", "corridor"
@@ -6,7 +7,7 @@ export type RoomType = {
   y: number;
   mapWidth: number;
   mapHeight: number;
-  rotation?: 0 | 90 | 180 | 270; // Rotation property
+  rotation: 0 | 90 | 180 | 270; // Rotation property
 };
 
 export type Terrain = {
@@ -22,6 +23,14 @@ export type Terrain = {
   height?: number; // optional vertical height/elevation of terrain
 };
 
+export type TerrainType = {
+  blocksLineOfSight?: boolean;
+  height?: number;
+  image?: string;
+  mapWidth?: number;
+  mapHeight?: number;
+};
+
 export type MapDefinition = {
   name: string;
   description: string;
@@ -29,8 +38,9 @@ export type MapDefinition = {
   height: number;
   rooms: RoomType[];
   terrain: Terrain[];
-  creatures: any[]; // Will be properly typed when we import Creature
+  creatures: Creature[]; // Array of creatures on the map
   startingTiles: Array<{ x: number; y: number; name?: string }>; // Designated starting positions for heroes
+  terrainTypes?: Record<string, TerrainType>; // Terrain type definitions for line of sight and other properties
 };
 
 export type ResolvedTerrain = {

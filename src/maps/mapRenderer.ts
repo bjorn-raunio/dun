@@ -1,4 +1,4 @@
-import { Terrain, ResolvedTerrain } from './types';
+import { Terrain, ResolvedTerrain, MapDefinition } from './types';
 import { terrainPresets } from './mapDefinitions';
 import { getRotatedDimensions } from '../utils/dimensions';
 
@@ -20,7 +20,7 @@ export function resolveTerrain(t: Terrain): ResolvedTerrain {
 }
 
 // Generate map tiles from map definition
-export function generateMapTiles(mapDefinition: any) {
+export function generateMapTiles(mapDefinition: MapDefinition) {
   const tiles: string[][] = [];
   
   // Initialize empty tiles
@@ -49,7 +49,7 @@ export function generateMapTiles(mapDefinition: any) {
 }
 
 // Helper: terrain height at tile
-export function terrainHeightAt(tx: number, ty: number, mapDefinition: any): number {
+export function terrainHeightAt(tx: number, ty: number, mapDefinition: MapDefinition): number {
   let h = 0;
   for (const t of mapDefinition.terrain) {
     const rt = resolveTerrain(t);

@@ -1,4 +1,5 @@
 import { CreatureGroup, CREATURE_GROUPS } from './types';
+import { Creature } from './index';
 
 // --- Creature Relationships Management ---
 
@@ -37,17 +38,15 @@ export class CreatureRelationshipsManager {
 
   // --- Creature Filtering ---
 
-  getHostileCreatures(allCreatures: any[]): any[] {
+  getHostileCreatures(allCreatures: Creature[]): Creature[] {
     return allCreatures.filter(creature => 
-      creature !== this && 
       creature.isAlive() && 
       this.isHostileTo(creature.group)
     );
   }
 
-  getFriendlyCreatures(allCreatures: any[]): any[] {
+  getFriendlyCreatures(allCreatures: Creature[]): Creature[] {
     return allCreatures.filter(creature => 
-      creature !== this && 
       creature.isAlive() && 
       this.isFriendlyTo(creature.group)
     );
@@ -55,28 +54,27 @@ export class CreatureRelationshipsManager {
 
   // --- Engagement Logic ---
 
-  isEngaged(hostileCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): boolean {
+  isEngaged(hostileCreatures: Creature[], positionX: number, positionY: number, zoneOfControlRange: number): boolean {
     return this.getEngagingCreatures(hostileCreatures, positionX, positionY, zoneOfControlRange).length > 0;
   }
 
-  getEngagingCreatures(allCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): any[] {
+  getEngagingCreatures(allCreatures: Creature[], positionX: number, positionY: number, zoneOfControlRange: number): Creature[] {
     // Find all hostile creatures in our zone of control
     return allCreatures.filter(creature => 
-      creature !== this && 
       creature.isAlive() && 
       this.isHostileTo(creature.group) && // Must be hostile
       this.isInZoneOfControl(positionX, positionY, creature, zoneOfControlRange) // They are in our zone
     );
   }
 
-  isInZoneOfControl(x: number, y: number, creature: any, zoneOfControlRange: number): boolean {
+  isInZoneOfControl(x: number, y: number, creature: Creature, zoneOfControlRange: number): boolean {
     const distance = Math.max(Math.abs(x - creature.x), Math.abs(y - creature.y));
     return distance <= zoneOfControlRange;
   }
 
   // --- Group Action Management ---
 
-  resetGroupActions(allCreatures: any[]): void {
+  resetGroupActions(allCreatures: Creature[]): void {
     const friendlyCreatures = this.getFriendlyCreatures(allCreatures);
     
     // Reset remaining movement and actions for all friendly creatures that have already acted

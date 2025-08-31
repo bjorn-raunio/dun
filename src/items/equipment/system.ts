@@ -1,17 +1,18 @@
 import { Weapon, RangedWeapon, Armor, Shield, Item } from '../types';
 import { createWeapon } from '../factories';
-import { EquipmentSlot, EquipmentSlots, EquipmentValidation } from './validation';
+import { EquipmentSlot, EquipmentSlots, EquipmentValidation, EquipmentValidator } from './validation';
 import { CombatCalculator } from './combat';
+import { Creature } from '../../creatures/index';
 
 // --- Equipment System ---
 
 export class EquipmentSystem {
-  private slots: EquipmentSlots = {};
+  private slots: EquipmentSlots = { mainHand: undefined, offHand: undefined, armor: undefined };
   private unarmedWeapon: Weapon;
 
   constructor(initialEquipment?: Partial<EquipmentSlots>) {
     if (initialEquipment) {
-      this.slots = { ...initialEquipment };
+      this.slots = { ...initialEquipment, mainHand: initialEquipment.mainHand ?? undefined, offHand: initialEquipment.offHand ?? undefined, armor: initialEquipment.armor ?? undefined };
     }
     // Every creature gets a default unarmed weapon
     this.unarmedWeapon = createWeapon('unarmed');
@@ -22,22 +23,28 @@ export class EquipmentSystem {
   /**
    * Equip an item to a specific slot
    */
-  equip(item: Item, slot: EquipmentSlot, creature?: any): EquipmentValidation {
-    // Import validation dynamically to avoid circular dependencies
-    const { EquipmentValidator } = require('./validation');
+  equip(item: Item, slot: EquipmentSlot, creature?: Creature): EquipmentValidation {
     const validation = EquipmentValidator.validateEquip(item, slot, creature);
     if (!validation.isValid) {
       return validation;
     }
-
-    this.slots[slot] = item as any;
+    
+    // Type assertion to ensure the item is compatible with the slot
+    if (slot === 'mainHand' && (item instanceof Weapon || item instanceof RangedWeapon)) {
+      this.slots[slot] = item;
+    } else if (slot === 'offHand' && (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield)) {
+      this.slots[slot] = item;
+    } else if (slot === 'armor' && item instanceof Armor) {
+      this.slots[slot] = item;
+    }
+    
     return { isValid: true };
   }
 
   /**
    * Unequip an item from a specific slot
    */
-  unequip(slot: EquipmentSlot, creature?: any): Item | undefined {
+  unequip(slot: EquipmentSlot, creature?: Creature): Item | undefined {
     // Check if creature is in combat and trying to unequip armor
     if (creature && slot === 'armor' && creature.getCombatState()) {
       return undefined; // Cannot unequip armor while in combat
@@ -45,7 +52,7 @@ export class EquipmentSystem {
 
     const item = this.slots[slot];
     if (item) {
-      delete this.slots[slot];
+      this.slots[slot] = undefined;
       return item;
     }
     return undefined;
@@ -69,15 +76,13 @@ export class EquipmentSystem {
    * Clear all equipment
    */
   clearAll(): void {
-    this.slots = {};
+    this.slots = { mainHand: undefined, offHand: undefined, armor: undefined };
   }
 
   /**
    * Check if equipment is valid (no conflicts)
    */
   validateEquipment(): EquipmentValidation {
-    // Import validation dynamically to avoid circular dependencies
-    const { EquipmentValidator } = require('./validation');
     return EquipmentValidator.validateEquipment(this.slots);
   }
 

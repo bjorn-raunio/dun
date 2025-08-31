@@ -35,7 +35,7 @@ export function ReachableOverlay({
         zIndex: 2,
       }}
     >
-      {reachable.tiles.map((t: any) => (
+      {reachable.tiles.map((t: { x: number; y: number }) => (
         <div
           key={`reach-${t.x}-${t.y}`}
           style={{

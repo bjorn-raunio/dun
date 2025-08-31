@@ -3,6 +3,7 @@ import { Creature } from '../../creatures/index';
 import { calculateTargetsInRange } from '../../utils/combat';
 import { findCreatureById, isCreatureVisible } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
+import { MapDefinition } from '../../maps/types';
 
 // --- Targets in Range Hook ---
 
@@ -11,7 +12,7 @@ export function useTargetsInRange(
   selectedCreatureId: string | null,
   targetsInRangeKey: number,
   mapData?: { tiles: string[][] },
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ) {
   const [targetsInRangeIds, setTargetsInRangeIds] = React.useState<Set<string>>(new Set());
 

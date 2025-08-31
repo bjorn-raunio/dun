@@ -3,6 +3,7 @@ import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions
 import { getTerrainCost } from '../movementCost';
 import { DistanceOptions } from './types';
 import { PathfindingSystem } from './core';
+import { MapDefinition } from '../../maps/types';
 
 /**
  * Distance calculation utilities
@@ -82,7 +83,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): boolean {
     // If we don't have map data, fall back to simple distance calculation
     if (!mapData || cols === undefined || rows === undefined) {
@@ -129,7 +130,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): number {
     // If we don't have map data, fall back to simple distance calculation
     if (!mapData || cols === undefined || rows === undefined) {
@@ -157,7 +158,7 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): number {
     const path = PathfindingSystem.findPathToTarget(fromX, fromY, toX, toY, allCreatures, mapData, cols, rows, mapDefinition);
 
@@ -179,7 +180,7 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): number {
     // Find the closest accessible position to the target
     const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);
@@ -203,7 +204,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): number {
     const key = `${fromX},${fromY}`;
     const cost = costMap.get(key);
@@ -226,7 +227,7 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): { x: number; y: number } | null {
     // Check positions around the target
     const positions = [];
@@ -272,7 +273,7 @@ export class DistanceSystem {
     y: number,
     allCreatures: Creature[],
     mapData: { tiles: string[][] },
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): boolean {
     // Check map bounds
     if (x < 0 || y < 0 || x >= mapData.tiles[0].length || y >= mapData.tiles.length) {
@@ -309,7 +310,7 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): boolean {
     // Check map bounds
     if (x < 0 || y < 0 || x >= cols || y >= rows) {

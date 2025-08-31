@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
-import { Creature } from '../creatures/index';
-import { EquipmentManager, EquipmentValidator } from '../items/equipment';
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items/types';
-import { EquipmentSlot } from '../items/equipment';
+import { Creature } from '../../creatures/index';
+import { EquipmentManager, EquipmentValidator } from '../../items/equipment';
+import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items/types';
+import { EquipmentSlot } from '../../items/equipment';
 
 export function useEquipment(creature: Creature, onUpdate?: (creature: Creature) => void) {
   const handleEquip = useCallback((item: Item, slot: EquipmentSlot) => {

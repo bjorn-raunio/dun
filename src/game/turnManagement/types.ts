@@ -1,4 +1,5 @@
 import { Creature } from '../../creatures/index';
+import { MapDefinition } from '../../maps/types';
 
 export interface TurnState {
   currentTurn: number;
@@ -25,5 +26,5 @@ export interface TurnExecutionContext {
   creatures: Creature[];
   mapData: { tiles: string[][] };
   dispatch: React.Dispatch<any>;
-  mapDefinition?: any;
+  mapDefinition?: MapDefinition;
 }

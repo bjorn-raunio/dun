@@ -8,6 +8,7 @@ import {
 import { updateCombatStates } from '../utils/combatStateUtils';
 import { calculateMovementCost } from '../utils/movementCost';
 import { MovementResult, MovementStatus } from '../game/movement';
+import { MapDefinition } from '../maps/types';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement implements ICreatureMovement {
@@ -18,7 +19,7 @@ export class CreatureMovement implements ICreatureMovement {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> } {
     return PathfindingSystem.getReachableTiles(
       creature,
@@ -32,7 +33,7 @@ export class CreatureMovement implements ICreatureMovement {
   }
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
-  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: any): MovementResult {
+  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
     if (path.length === 0) {
       return {
         status: 'failed',
@@ -171,12 +172,12 @@ export class CreatureMovement implements ICreatureMovement {
 // --- Static Methods for Backward Compatibility ---
 // These are kept for existing code that uses the static methods
 
-export const getReachableTiles = (creature: Creature, allCreatures: Creature[], mapData: any, cols: number, rows: number, mapDefinition?: any) => {
+export const getReachableTiles = (creature: Creature, allCreatures: Creature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition) => {
   const movement = new CreatureMovement();
   return movement.getReachableTiles(creature, allCreatures, mapData, cols, rows, mapDefinition);
 };
 
-export const moveTo = (creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: any) => {
+export const moveTo = (creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition) => {
   const movement = new CreatureMovement();
   return movement.moveTo(creature, path, allCreatures, mapData, mapDefinition);
 };

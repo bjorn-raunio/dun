@@ -1,6 +1,7 @@
 import React from 'react';
 import { Creature } from '../../creatures/index';
 import { findCreatureById } from '../../utils/pathfinding';
+import { MapDefinition } from '../../maps/types';
 
 // --- Reachable Tiles Hook ---
 
@@ -9,7 +10,7 @@ export function useReachableTiles(
   selectedCreatureId: string | null,
   mapData: { tiles: string[][] },
   reachableKey: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ) {
   // Calculate possible squares for selected creature
   const reachable = React.useMemo(() => {

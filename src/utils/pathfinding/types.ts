@@ -1,4 +1,5 @@
 import { Creature } from '../../creatures/index';
+import { MapDefinition } from '../../maps/types';
 
 // Core pathfinding types
 export interface PathfindingResult {
@@ -32,7 +33,7 @@ export interface DistanceOptions {
   cols?: number;
   rows?: number;
   /** Map definition for terrain costs */
-  mapDefinition?: any;
+  mapDefinition?: MapDefinition;
   /** All creatures for obstacle checking */
   allCreatures?: Creature[];
   /** Cost map for path-based distance calculation */

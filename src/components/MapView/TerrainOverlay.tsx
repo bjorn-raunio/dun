@@ -3,9 +3,10 @@ import { TILE_SIZE } from '../styles';
 import { resolveTerrain } from '../../maps';
 import { getRotatedDimensions } from '../../utils/dimensions';
 import { TerrainItem } from './types';
+import { MapDefinition, Terrain } from '../../maps/types';
 
 interface TerrainOverlayProps {
-  mapDefinition: any;
+  mapDefinition: MapDefinition;
 }
 
 export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
@@ -21,7 +22,7 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
         zIndex: 1,
       }}
     >
-      {mapDefinition.terrain.map((t: any, index: number) => {
+      {mapDefinition.terrain.map((t: Terrain, index: number) => {
         const rt = resolveTerrain(t);
         const { width: blockWidth, height: blockHeight } = getRotatedDimensions(
           rt.mapWidth, 

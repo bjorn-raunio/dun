@@ -4,13 +4,14 @@ import { Creature } from '../../creatures/index';
 import { getLivingCreatures } from '../../validation/creature';
 import { getCreatureUIDimensions, getCreatureUIOffset } from '../../utils/dimensions';
 import { validateCombat } from '../../validation/combat';
+import { MapDefinition } from '../../maps/types';
 
 interface CreatureOverlayProps {
   creatures: Creature[];
   selectedCreatureId: string | null;
   onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
-  mapDefinition?: any;
+  mapDefinition?: MapDefinition;
   mapData?: { tiles: string[][] };
 }
 

@@ -1,5 +1,7 @@
 // Import item types for the equipment interface
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
+import { Creature } from './index';
+import { CombatResult } from '../utils/combat/types';
 
 // --- Status Effect Types ---
 export type StatusEffectType = 
@@ -30,11 +32,11 @@ export interface StatusEffect {
   accuracyModifier?: number;
   
   // Special effects
-  onTurnStart?: (creature: any) => void;
-  onTurnEnd?: (creature: any) => void;
-  onCombatStart?: (creature: any) => void;
-  onCombatEnd?: (creature: any) => void;
-  onDeath?: (creature: any) => void;
+  onTurnStart?: (creature: Creature) => void;
+  onTurnEnd?: (creature: Creature) => void;
+  onCombatStart?: (creature: Creature) => void;
+  onCombatEnd?: (creature: Creature) => void;
+  onDeath?: (creature: Creature) => void;
   
   // Visual properties
   icon?: string;
@@ -85,8 +87,8 @@ export type CombatTriggerType =
 
 export interface CombatTrigger {
   type: CombatTriggerType;
-  condition?: (attacker: any, target: any, combatResult: any) => boolean;
-  effect: (attacker: any, target: any, combatResult: any) => void;
+  condition?: (attacker: Creature, target: Creature, combatResult: CombatResult) => boolean;
+  effect: (attacker: Creature, target: Creature, combatResult: CombatResult) => void;
   description: string;
 }
 
@@ -152,11 +154,7 @@ export interface CreatureConstructorParams {
   size: number;
   facing?: number;
   inventory?: Item[];
-  equipment?: {
-    mainHand?: Weapon | RangedWeapon;
-    offHand?: Weapon | RangedWeapon | Shield;
-    armor?: Armor;
-  };
+  equipment?: EquipmentSlots;
   vitality: number;
   mana: number;
   fortune: number;

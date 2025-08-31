@@ -1,7 +1,6 @@
 import { Attributes } from '../index';
 import { AIBehaviorType } from '../../ai/types';
-import { WeaponLoadout } from './loadouts';
-import { Skills, Skill } from '../types';
+import { Skills, Skill, CreatureGroup } from '../types';
 
 // --- Shared Preset Types ---
 
@@ -25,7 +24,7 @@ export type BasePreset = {
   mana?: number; // Optional - defaults to 0
   fortune?: number;// Optional - defaults to 0
   naturalArmor?: number;
-  group?: string;
+  group?: CreatureGroup;
   skills?: Skill[] | Skills;
 };
 

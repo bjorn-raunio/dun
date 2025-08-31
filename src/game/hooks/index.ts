@@ -1,4 +1,5 @@
 // --- Game Hooks ---
+export { useEquipment } from './useEquipment';
 export { useKeyboardHandlers } from './useKeyboardHandlers';
 export { usePathHighlight } from './usePathHighlight';
 export { useReachableTiles } from './useReachableTiles';

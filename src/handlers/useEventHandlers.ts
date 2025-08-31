@@ -5,6 +5,7 @@ import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
+import { MapDefinition } from '../maps/types';
 
 // --- Event Handlers Custom Hook ---
 
@@ -22,7 +23,7 @@ export function useEventHandlers(
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   setSelectedCreatureId: (id: string | null) => void,
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {
   // Create mouse handlers

@@ -9,6 +9,8 @@ import {
   getNextCreature,
   setActiveCreature as setActiveCreatureLogic
 } from './turnManagement';
+import { MapDefinition } from '../maps/types';
+import { AITurnState } from './turnManagement/types';
 
 // --- Game-Specific Turn Management ---
 
@@ -21,7 +23,7 @@ export function endTurnWithAI(
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
   currentTurnState: TurnState,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ) {
   // Advance to next turn (this will reset all turns internally)
   const newTurnState = advanceTurnLogic(currentTurnState, creatures, dispatch, lastMovement);
@@ -49,7 +51,7 @@ export function endTurnWithAI(
  * Execute the next AI group's turns
  */
 export function executeNextAIGroup(
-  aiTurnState: any,
+  aiTurnState: AITurnState,
   context: TurnExecutionContext,
   dispatch: React.Dispatch<any>
 ) {

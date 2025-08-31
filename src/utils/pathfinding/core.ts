@@ -5,6 +5,7 @@ import { isInZoneOfControl, pathPassesThroughZoneOfControl, getEngagingCreatures
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
 import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { getAreaStats, isAreaStandable, calculateMoveCostInto, calculateHeuristic, reconstructPath } from './helpers';
+import { MapDefinition } from '../../maps/types';
 
 /**
  * Core pathfinding system that handles A* pathfinding algorithms
@@ -19,7 +20,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any,
+    mapDefinition?: MapDefinition,
     options: PathfindingOptions = {}
   ): PathfindingResult {
     const maxBudget = options.maxBudget ?? creature.remainingMovement ?? creature.movement;
@@ -95,7 +96,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any,
+    mapDefinition?: MapDefinition,
     creature?: Creature
   ): Array<{ x: number; y: number }> | null {
     const openSet = new Set<string>();
@@ -188,7 +189,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any,
+    mapDefinition?: MapDefinition,
     creature?: Creature
   ): number {
     return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
@@ -206,7 +207,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: any
+    mapDefinition?: MapDefinition
   ): boolean {
     const sideA = getAreaStats(currentX + (nx - currentX), currentY, selectedDims, mapData, cols, rows, mapDefinition);
     const sideB = getAreaStats(currentX, currentY + (ny - currentY), selectedDims, mapData, cols, rows, mapDefinition);

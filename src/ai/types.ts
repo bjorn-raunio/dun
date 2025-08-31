@@ -1,4 +1,5 @@
 import { Creature } from '../creatures/index';
+import { MapDefinition } from '../maps/types';
 
 // --- AI Types ---
 
@@ -67,7 +68,7 @@ export interface AIContext {
   creature: Creature;
   allCreatures: Creature[];
   mapData: { tiles: string[][] };
-  mapDefinition?: any;
+  mapDefinition?: MapDefinition;
   currentTurn: number;
   reachableTiles: Array<{ x: number; y: number }>;
   reachableTilesCostMap: Map<string, number>;

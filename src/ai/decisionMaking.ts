@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, Monster } from '../creatures/index';
 import { AIState, AIDecision, AIContext, AIActionResult, AIBehaviorType } from './types';
 import { selectBestTarget, updateTargetInformation } from './targeting';
 import { createMovementDecision, updateAIStateAfterMovement } from './movement';
@@ -11,6 +11,8 @@ import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 import { createAIDecision, validateAIAction } from './helpers';
 import creatureServices from '../creatures/services';
+import { MapDefinition } from '../maps/types';
+import { MonsterPreset, MercenaryPreset } from '../creatures/presets/types';
 
 // --- AI Decision Making Logic ---
 
@@ -211,7 +213,7 @@ export function executeAIDecision(
           ai,
           creature,
           decision.target,
-          attackResult.hit,
+          attackResult.success,
           attackResult.damage
         );
         
@@ -331,7 +333,7 @@ export function createDefaultAIState(behavior: AIBehaviorType = AIBehaviorType.M
 /**
  * Create AI state based on creature type and preset
  */
-export function createAIStateForCreature(creature: Creature, preset?: any): AIState {
+export function createAIStateForCreature(creature: Monster, preset?: MonsterPreset): AIState {
   // Determine behavior based on creature type or preset
   let behavior: AIBehaviorType = AIBehaviorType.MELEE;
   
@@ -366,7 +368,7 @@ export function shouldMoveBeforeAttack(
   movementDecision: AIDecision, 
   allCreatures: Creature[],
   mapData?: { tiles: string[][] },
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): boolean {
   if (movementDecision.type !== 'move' || !movementDecision.destination) {
     return false;

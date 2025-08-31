@@ -1,6 +1,7 @@
 import { Creature } from '../creatures/index';
 import { GameState, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, AITurnState } from './turnManagement';
+import { MapDefinition } from '../maps/types';
 
 // --- Game Action Types ---
 
@@ -92,7 +93,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
 export function getInitialGameState(
   initialCreatures: Creature[], 
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): GameState {
   // Calculate initial pan position to center over a starting tile
   const mapWidth = mapDefinition?.width ?? 40;

@@ -4,6 +4,7 @@ import { validatePositionStandable } from '../../validation/map';
 import { calculateMovementCost } from '../movementCost';
 import { DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { AreaStats } from './types';
+import { MapDefinition } from '../../maps/types';
 
 /**
  * Helper method to get area stats
@@ -15,7 +16,7 @@ export function getAreaStats(
   mapData: { tiles: string[][] }, 
   cols: number, 
   rows: number, 
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): AreaStats {
   let maxH = 0;
   let hasEmpty = false;
@@ -30,7 +31,7 @@ export function getAreaStats(
       const cy = ty + oy;
       const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
       if (!nonEmpty) hasEmpty = true;
-      const th = terrainHeightAt(cx, cy, mapDefinition);
+      const th = terrainHeightAt(cx, cy, mapDefinition!);
       if (th > maxH) maxH = th;
     }
   }
@@ -46,11 +47,11 @@ export function isAreaStandable(
   ty: number, 
   dims: { w: number; h: number }, 
   considerCreatures: boolean, 
-  allCreatures: any[], 
+  allCreatures: Creature[], 
   cols: number, 
   rows: number, 
   mapData?: { tiles: string[][] }, 
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): boolean {
   if (!mapData) return false;
   return validatePositionStandable(tx, ty, dims, allCreatures, mapData, mapDefinition, considerCreatures);
@@ -68,7 +69,7 @@ export function calculateMoveCostInto(
   cols: number, 
   rows: number, 
   allCreatures: Creature[],
-  mapDefinition?: any, 
+  mapDefinition?: MapDefinition, 
   fromX?: number, 
   fromY?: number,
   creature?: Creature

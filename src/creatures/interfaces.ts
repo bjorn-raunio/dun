@@ -4,7 +4,10 @@
 
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
 import { MovementResult } from '../game/movement';
-import { StatusEffectManager } from './types';
+import { StatusEffectManager, StatusEffect, CreatureState, CreaturePosition } from './types';
+import { MapDefinition } from '../maps/types';
+import { CombatResult } from '../utils/combat/types';
+import { PathfindingResult } from '../utils/pathfinding/types';
 
 // --- Core Creature Interfaces ---
 
@@ -47,15 +50,15 @@ export interface ICreature {
   isHeroGroup(): boolean;
   isPlayerControlled(): boolean;
   isAIControlled(): boolean;
-  isHostileTo(other: any): boolean;
-  isFriendlyTo(other: any): boolean;
+  isHostileTo(other: ICreature): boolean;
+  isFriendlyTo(other: ICreature): boolean;
   
   // Movement
-  getReachableTiles(allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any;
-  moveTo(path: Array<{x: number; y: number}>, allCreatures?: any[], mapData?: any, mapDefinition?: any): MovementResult;
+  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult;
+  moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult;
   
   // Combat
-  attack(target: any, allCreatures?: any[], mapDefinition?: any, mapData?: any): any;
+  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
   
   // State modifiers
   takeDamage(damage: number): number;
@@ -72,12 +75,12 @@ export interface ICreature {
   isInZoneOfControl(x: number, y: number): boolean;
   
   // Creature filtering
-  getHostileCreatures(allCreatures: any[]): any[];
-  getFriendlyCreatures(allCreatures: any[]): any[];
+  getHostileCreatures(allCreatures: ICreature[]): ICreature[];
+  getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
   
   // Engagement
-  isEngaged(hostileCreatures: any[]): boolean;
-  getEngagingCreatures(allCreatures: any[]): any[];
+  isEngaged(hostileCreatures: ICreature[]): boolean;
+  getEngagingCreatures(allCreatures: ICreature[]): ICreature[];
   
   // Turn start position
   get turnStartX(): number;
@@ -85,18 +88,18 @@ export interface ICreature {
   get turnStartFacing(): number;
   
   // Group actions
-  resetGroupActions(allCreatures: any[]): void;
+  resetGroupActions(allCreatures: ICreature[]): void;
   
   // Cloning
-  clone(overrides?: Partial<any>): any;
+  clone(overrides?: Partial<ICreature>): ICreature;
   
   // Status Effects
   getStatusEffectManager(): StatusEffectManager;
-  addStatusEffect(effect: any): void;
+  addStatusEffect(effect: StatusEffect): void;
   removeStatusEffect(effectId: string): void;
   hasStatusEffect(type: string): boolean;
-  getStatusEffect(type: string): any;
-  getActiveStatusEffects(): any[];
+  getStatusEffect(type: string): StatusEffect | null;
+  getActiveStatusEffects(): StatusEffect[];
   
   // Health Management
   heal(amount: number): void;
@@ -105,8 +108,8 @@ export interface ICreature {
 // --- Manager Interfaces ---
 
 export interface ICreatureStateManager {
-  getState(): any;
-  getTurnStartPosition(): any;
+  getState(): CreatureState;
+  getTurnStartPosition(): CreaturePosition;
   isAlive(): boolean;
   isDead(): boolean;
   isWounded(size: number): boolean;
@@ -129,11 +132,11 @@ export interface ICreatureStateManager {
   setRemainingQuickActions(value: number): void;
   setRemainingFortune(value: number): void;
   setRemainingVitality(value: number): void;
-  recordTurnStartPosition(position: any): void;
+  recordTurnStartPosition(position: CreaturePosition): void;
 }
 
 export interface ICreaturePositionManager {
-  getPosition(): any;
+  getPosition(): CreaturePosition;
   getX(): number;
   getY(): number;
   getFacing(): number;
@@ -150,7 +153,7 @@ export interface ICreaturePositionManager {
 
 export interface ICreatureCombatManager {
   getArmorValue(): number;
-  getMainWeapon(): any;
+  getMainWeapon(): Weapon | RangedWeapon;
   hasRangedWeapon(): boolean;
   hasShield(): boolean;
   getAttackBonus(): number;
@@ -160,15 +163,15 @@ export interface ICreatureCombatManager {
   getZoneOfControlRange(): number;
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean;
   wasBehindTargetAtTurnStart(targetX: number, targetY: number, targetTurnStartFacing: number, attackerTurnStartX: number, attackerTurnStartY: number): boolean;
-  getEffectiveMovement(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveCombat(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveRanged(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveStrength(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveAgility(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveCourage(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveIntelligence(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectivePerception(isWounded: boolean, statusEffects?: any[]): number;
-  getEffectiveDexterity(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveMovement(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveCombat(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveRanged(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveStrength(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveAgility(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveCourage(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveIntelligence(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectivePerception(isWounded: boolean, statusEffects?: StatusEffect[]): number;
+  getEffectiveDexterity(isWounded: boolean, statusEffects?: StatusEffect[]): number;
 }
 
 export interface ICreatureRelationshipsManager {
@@ -177,22 +180,22 @@ export interface ICreatureRelationshipsManager {
   isAIControlled(): boolean;
   isHostileTo(otherGroup: string): boolean;
   isFriendlyTo(otherGroup: string): boolean;
-  getHostileCreatures(allCreatures: any[]): any[];
-  getFriendlyCreatures(allCreatures: any[]): any[];
-  isEngaged(hostileCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): boolean;
-  getEngagingCreatures(allCreatures: any[], positionX: number, positionY: number, zoneOfControlRange: number): any[];
-  resetGroupActions(allCreatures: any[]): void;
+  getHostileCreatures(allCreatures: ICreature[]): ICreature[];
+  getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
+  isEngaged(hostileCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): boolean;
+  getEngagingCreatures(allCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): ICreature[];
+  resetGroupActions(allCreatures: ICreature[]): void;
 }
 
 // --- Movement Interface ---
 
 export interface ICreatureMovement {
-  getReachableTiles(creature: any, allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any;
-  moveTo(creature: any, path: Array<{x: number; y: number}>, allCreatures?: any[], mapData?: any, mapDefinition?: any): MovementResult;
+  getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult;
+  moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult;
 }
 
 // --- Combat Interface ---
 
 export interface ICombatExecutor {
-  executeCombat(attacker: any, target: any, allCreatures: any[], mapDefinition?: any, mapData?: any): any;
+  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
 }

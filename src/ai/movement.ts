@@ -3,6 +3,7 @@ import { AIState, AIMovementOption, AIDecision, AIBehaviorType } from './types';
 import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { createAIDecision, updateAIStateWithAction } from './helpers';
 import { logAI } from '../utils/logging';
+import { MapDefinition } from '../maps/types';
 
 // --- AI Movement Logic ---
 
@@ -29,7 +30,7 @@ export function evaluateMovementOption(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): AIMovementOption {
   const benefits = {
     closerToTarget: false,
@@ -146,7 +147,7 @@ function validateClosestDestination(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): boolean {
       const destinationPathDistance = calculateDistanceToAttackablePosition(destination.x, destination.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
   
@@ -181,7 +182,7 @@ export function findBestMovement(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): AIMovementOption | null {
   if (reachableTiles.length === 0) {
     return null;
@@ -299,7 +300,7 @@ export function shouldMove(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): boolean {
   // If no target, movement is less important
   if (!target) {
@@ -412,7 +413,7 @@ export function createMovementDecision(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): AIDecision | null {
   if (!shouldMove(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition)) {
     return null;
@@ -472,7 +473,7 @@ function countAccessibleNeighbors(
   mapData: { tiles: string[][] },
   cols: number,
   rows: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): number {
   let count = 0;
   

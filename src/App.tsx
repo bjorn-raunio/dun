@@ -10,6 +10,7 @@ import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardH
 import { findCreatureById } from './utils/pathfinding';
 import { addMessage } from './game/messageSystem';
 import { VALIDATION_MESSAGES } from './validation/messages';
+import { Creature } from './creatures/index';
 
 // Map and game state are now imported from extracted modules
 
@@ -47,7 +48,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
 
   // Attack function for equipment panel - enters targeting mode
-  const handleAttack = React.useCallback((attackingCreature: any) => {
+  const handleAttack = React.useCallback((attackingCreature: Creature) => {
     // Check if creature can attack
     if (!attackingCreature.isPlayerControlled() || 
         !attackingCreature.isAlive() || 
@@ -74,7 +75,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   }, [creatures, setTargetingMode]);
 
   // Check if creature can attack
-  const canAttack = React.useCallback((creature: any) => {
+  const canAttack = React.useCallback((creature: Creature) => {
     return creature.isPlayerControlled() && 
            creature.isAlive() && 
            creature.hasActionsRemaining() &&

@@ -6,6 +6,7 @@ import { getVisibleCreatures } from '../../utils/pathfinding';
 import { logTurn, logAI } from '../../utils/logging';
 import creatureServices from '../../creatures/services';
 import { TurnExecutionContext } from './types';
+import { AIState } from '../../ai/types';
 
 /**
  * Execute AI turn for a single creature
@@ -53,7 +54,7 @@ export function executeAITurnForCreature(
  */
 function executeAITurnLoop(
   creature: Creature,
-  aiState: any,
+  aiState: AIState,
   context: TurnExecutionContext
 ): boolean {
   let success = false;
@@ -112,7 +113,7 @@ function executeAITurnLoop(
  */
 function executeSingleAIAction(
   creature: Creature,
-  aiState: any,
+  aiState: AIState,
   context: TurnExecutionContext
 ): { success: boolean; actionType?: string; targetDefeated?: boolean } {
   const { creatures, mapData, mapDefinition } = context;

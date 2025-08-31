@@ -1,7 +1,7 @@
 import React from 'react';
 import { Creature } from '../../../creatures/index';
 import { EquipmentSlot } from './EquipmentSlot';
-import { useEquipment } from '../../../hooks/useEquipment';
+import { useEquipment } from '../../../game/hooks/useEquipment';
 
 interface EquipmentSectionProps {
   creature: Creature;

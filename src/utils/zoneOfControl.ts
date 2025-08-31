@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/interfaces';
 import { calculateDistanceBetween } from './pathfinding';
 
 // --- Zone of Control Utilities ---
@@ -6,7 +6,7 @@ import { calculateDistanceBetween } from './pathfinding';
 /**
  * Check if a position is within a creature's zone of control
  */
-export function isInZoneOfControl(x: number, y: number, creature: Creature): boolean {
+export function isInZoneOfControl(x: number, y: number, creature: ICreature): boolean {
   const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
   return distance <= creature.getZoneOfControlRange();
 }
@@ -14,7 +14,7 @@ export function isInZoneOfControl(x: number, y: number, creature: Creature): boo
 /**
  * Check if a position is within a creature's zone of control using a custom range
  */
-export function isInZoneOfControlWithRange(x: number, y: number, creature: Creature, zoneRange: number): boolean {
+export function isInZoneOfControlWithRange(x: number, y: number, creature: ICreature, zoneRange: number): boolean {
   const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
   return distance <= zoneRange;
 }
@@ -28,7 +28,7 @@ export function pathPassesThroughZoneOfControl(
   fromY: number,
   toX: number,
   toY: number,
-  creature: Creature
+  creature: ICreature
 ): boolean {
   const zoneRange = creature.getZoneOfControlRange();
   
@@ -66,13 +66,13 @@ export function pathPassesThroughZoneOfControl(
  * Check if a path passes through any hostile creature's zone of control
  */
 export function pathPassesThroughHostileZones(
-  creature: Creature,
+  creature: ICreature,
   fromX: number,
   fromY: number,
   toX: number,
   toY: number,
-  allCreatures: Creature[]
-): { blocked: boolean; blocker?: Creature } {
+  allCreatures: ICreature[]
+): { blocked: boolean; blocker?: ICreature } {
   const hostileCreatures = creature.getHostileCreatures(allCreatures);
   
   for (const hostile of hostileCreatures) {
@@ -87,11 +87,11 @@ export function pathPassesThroughHostileZones(
 /**
  * Get all creatures that are engaging a given creature
  */
-export function getEngagingCreatures(creature: Creature, allCreatures: Creature[]): Creature[] {
+export function getEngagingCreatures(creature: ICreature, allCreatures: ICreature[]): ICreature[] {
   return getEngagingCreaturesAtPosition(creature, allCreatures, creature.x, creature.y);
 }
 
-export function getEngagingCreaturesAtPosition(creature: Creature, allCreatures: Creature[], x: number, y: number): Creature[] {
+export function getEngagingCreaturesAtPosition(creature: ICreature, allCreatures: ICreature[], x: number, y: number): ICreature[] {
   return allCreatures.filter(other => 
     other !== creature && 
     other.isAlive() && 
@@ -103,20 +103,20 @@ export function getEngagingCreaturesAtPosition(creature: Creature, allCreatures:
 /**
  * Check if a creature is engaged by any hostile creatures
  */
-export function isEngaged(creature: Creature, allCreatures: Creature[]): boolean {
+export function isEngaged(creature: ICreature, allCreatures: ICreature[]): boolean {
   return getEngagingCreatures(creature, allCreatures).length > 0;
 }
 
 /**
  * Check if a position is adjacent to a creature
  */
-export function isAdjacentToCreature(x: number, y: number, creature: Creature): boolean {
+export function isAdjacentToCreature(x: number, y: number, creature: ICreature): boolean {
   return calculateDistanceBetween(x, y, creature.x, creature.y) <= 1;
 }
 
 /**
  * Get the zone of control range for a creature
  */
-export function getZoneOfControlRange(creature: Creature): number {
+export function getZoneOfControlRange(creature: ICreature): number {
   return creature.getZoneOfControlRange();
 }

@@ -1,5 +1,6 @@
 import { Creature } from './base';
 import { CREATURE_GROUPS } from './types';
+import { CreatureConstructorParams } from './types';
 
 // --- Mercenary Class ---
 export class Mercenary extends Creature {
@@ -10,7 +11,7 @@ export class Mercenary extends Creature {
     return "mercenary";
   }
 
-  constructor(params: any) {
+  constructor(params: CreatureConstructorParams & { hireCost?: number }) {
     // Ensure mercenary group is set (default to hero group for player control)
     super({
       ...params,
@@ -22,7 +23,7 @@ export class Mercenary extends Creature {
   }
 
   // --- Abstract Method Implementation ---
-  protected createInstance(params: any): Creature {
+  protected createInstance(params: CreatureConstructorParams & { hireCost?: number }): Creature {
     return new Mercenary(params);
   }
 

@@ -6,9 +6,9 @@ import { Weapon, RangedWeapon, Armor, Shield, Item } from '../types';
 export type EquipmentSlot = 'mainHand' | 'offHand' | 'armor';
 
 export interface EquipmentSlots {
-  mainHand?: Weapon | RangedWeapon;
-  offHand?: Weapon | RangedWeapon | Shield;
-  armor?: Armor;
+  mainHand: Weapon | RangedWeapon | undefined;
+  offHand: Weapon | RangedWeapon | Shield | undefined;
+  armor: Armor | undefined;
 }
 
 // --- Equipment Validation ---
@@ -99,22 +99,22 @@ export class EquipmentValidator {
 
   // --- Static Utility Methods ---
 
-  static isItemEquippable(item: any): boolean {
+  static isItemEquippable(item: Item): boolean {
     return item instanceof Weapon || 
            item instanceof RangedWeapon || 
            item instanceof Armor || 
            item instanceof Shield;
   }
 
-  static isValidWeapon(item: any): boolean {
+  static isValidWeapon(item: Item): boolean {
     return item instanceof Weapon || item instanceof RangedWeapon;
   }
 
-  static isValidOffHand(item: any): boolean {
+  static isValidOffHand(item: Item): boolean {
     return item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield;
   }
 
-  static isValidArmor(item: any): boolean {
+  static isValidArmor(item: Item): boolean {
     return item instanceof Armor;
   }
 }

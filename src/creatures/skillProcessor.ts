@@ -1,4 +1,4 @@
-import { Attributes, Skill, Skills } from './types';
+import { Attributes, Skill, Skills, StatusEffect } from './types';
 
 // --- Skill Processor ---
 // This class handles calculating effective attributes based on creature skills
@@ -12,29 +12,32 @@ export class SkillProcessor {
     attributeName: keyof Attributes,
     skills: Skills,
     isWounded: boolean = false,
-    statusEffects: any[] = []
+    statusEffects: StatusEffect[] = []
   ): number {
     let effectiveValue = baseValue;
-    
+
     // Apply skill modifiers (all are flat)
     const modifiers = this.getAttributeModifiers(attributeName, skills);
-    
+
     for (const modifier of modifiers) {
       effectiveValue += modifier.value;
     }
-    
+
     // Apply status effect modifiers
     for (const effect of statusEffects) {
-      if (effect.attributeModifiers && effect.attributeModifiers[attributeName]) {
-        effectiveValue += effect.attributeModifiers[attributeName];
+      if (effect.attributeModifiers) {
+        let modifier = effect.attributeModifiers[attributeName];
+        if (modifier) {
+          effectiveValue += modifier;
+        }
       }
     }
-    
+
     // Apply wounding penalty (minimum of 1)
     if (isWounded) {
       effectiveValue = Math.max(1, effectiveValue - 1);
     }
-    
+
     return effectiveValue;
   }
 
@@ -46,7 +49,7 @@ export class SkillProcessor {
     skills: Skills
   ): Array<{ attribute: keyof Attributes; value: number }> {
     const modifiers: Array<{ attribute: keyof Attributes; value: number }> = [];
-    
+
     for (const skill of Object.values(skills)) {
       if (skill.attributeModifiers) {
         for (const modifier of skill.attributeModifiers) {
@@ -56,7 +59,7 @@ export class SkillProcessor {
         }
       }
     }
-    
+
     return modifiers;
   }
 
@@ -65,7 +68,7 @@ export class SkillProcessor {
    */
   static getSkillEffectsSummary(skills: Skills): string[] {
     const effects: string[] = [];
-    
+
     for (const skill of Object.values(skills)) {
       if (skill.attributeModifiers) {
         for (const modifier of skill.attributeModifiers) {
@@ -74,7 +77,7 @@ export class SkillProcessor {
         }
       }
     }
-    
+
     return effects;
   }
 
@@ -82,7 +85,7 @@ export class SkillProcessor {
    * Check if a creature has a specific skill
    */
   static hasSkill(creatureSkills: Skills, skillName: string): boolean {
-    return Object.values(creatureSkills).some(skill => 
+    return Object.values(creatureSkills).some(skill =>
       skill.name.toLowerCase() === skillName.toLowerCase()
     );
   }

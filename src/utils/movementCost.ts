@@ -3,6 +3,7 @@ import { terrainHeightAt } from '../maps/mapRenderer';
 import { validateEngagementMovement } from '../validation/movement';
 import { isCreatureAtPosition } from './pathfinding';
 import { getEngagingCreaturesAtPosition } from './zoneOfControl';
+import { MapDefinition } from '../maps/types';
 
 // --- Centralized Movement Cost Calculation Service ---
 // 
@@ -49,7 +50,7 @@ export function calculateMovementCost(
   toY: number,
   allCreatures: Creature[],
   mapData: { tiles: string[][] },
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   options: MovementCostOptions = {},
   movingCreature?: Creature,
 ): number {
@@ -132,7 +133,7 @@ export function calculateMovementCost(
       if (isMultiTile && mapDefinition) {
         const tile = mapData.tiles[cy]?.[cx];
         const nonEmpty = tile && tile !== "empty.jpg";
-        const th = terrainHeightAt(cx, cy, mapDefinition);
+        const th = terrainHeightAt(cx, cy, mapDefinition!);
 
         if (nonEmpty) hasStandTile = true;
         if (th > maxHeight) maxHeight = th;
@@ -228,7 +229,7 @@ export function getTerrainCost(
   x: number,
   y: number,
   mapData: { tiles: string[][] },
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   fromX?: number,
   fromY?: number,
   options: { maxElevationDifference?: number; climbingCostPenalty?: number; returnInfinityForBlocked?: boolean } = {}

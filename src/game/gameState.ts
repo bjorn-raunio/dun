@@ -4,10 +4,11 @@ import { GameState, GameRefs, GameActions, ViewportState, PanState, TargetingMod
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
+import { MapDefinition } from '../maps/types';
 
 // --- Game State Management ---
 
-export function useGameState(initialCreatures: Creature[], mapDefinition?: any): [GameState, GameRefs, GameActions] {
+export function useGameState(initialCreatures: Creature[], mapDefinition?: MapDefinition): [GameState, GameRefs, GameActions] {
   // --- VIEWPORT SIZE ---
     const [viewport, setViewport] = React.useState<ViewportState>({ 
     width: window.innerWidth, 

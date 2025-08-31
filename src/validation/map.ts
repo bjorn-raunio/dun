@@ -4,6 +4,7 @@ import { VALIDATION_MESSAGES } from './messages';
 import { rectsOverlap, areCreaturesOverlapping } from '../utils/geometry';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
+import { MapDefinition } from '../maps/types';
 
 /**
  * Validate map dimensions
@@ -132,7 +133,7 @@ export function validatePositionStandable(
   dimensions: { w: number; h: number }, 
   allCreatures: Creature[], 
   mapData: { tiles: string[][] }, 
-  mapDefinition?: any, 
+  mapDefinition?: MapDefinition, 
   considerCreatures: boolean = true, 
   creatureId?: string
 ): boolean {

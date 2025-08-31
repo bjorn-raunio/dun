@@ -7,6 +7,7 @@ import { VALIDATION_MESSAGES } from '../validation/messages';
 import { addMessage } from '../game/messageSystem';
 import { findCreatureById } from '../utils/pathfinding';
 import { logMovement, logGame } from '../utils/logging';
+import { MapDefinition } from '../maps/types';
 
 // --- Mouse Event Handlers ---
 
@@ -26,7 +27,7 @@ export function createMouseHandlers(
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   setSelectedCreatureId: (id: string | null) => void,
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): MouseHandlers {
   const { setDragging, setPan, setCreatures, setReachableKey, setTargetsInRangeKey, setTargetingMode, dispatch } = gameActions;
@@ -101,7 +102,7 @@ export function createMouseHandlers(
     const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY);
     if (!creatureAtPosition && selectedCreatureId) {
       // Check if this is a highlighted movement tile - if so, don't deselect
-      const reachableKeySet = new Set(reachable.tiles.map((t: any) => `${t.x},${t.y}`));
+      const reachableKeySet = new Set(reachable.tiles.map((t: { x: number; y: number }) => `${t.x},${t.y}`));
       const destKey = `${pos.tileX},${pos.tileY}`;
       
       if (!reachableKeySet.has(destKey)) {
@@ -120,7 +121,7 @@ export function createMouseHandlers(
         return;
       }
 
-      const reachableKeySet = new Set(reachable.tiles.map((t: any) => `${t.x},${t.y}`));
+      const reachableKeySet = new Set(reachable.tiles.map((t: { x: number; y: number }) => `${t.x},${t.y}`));
       const destKey = `${pos.tileX},${pos.tileY}`;
 
       let moved = false;

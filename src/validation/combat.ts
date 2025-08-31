@@ -5,6 +5,7 @@ import { validateCreatureAlive, validateActionsRemaining } from './creature';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { LineOfSightSystem } from '../utils/pathfinding/lineOfSight';
+import { MapDefinition } from '../maps/types';
 
 /**
  * Comprehensive combat validation - validates all aspects of an attack in one function
@@ -13,7 +14,7 @@ export function validateCombat(
   attacker: Creature,
   target: Creature,
   allCreatures: Creature[],
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   mapData?: { tiles: string[][] }
 ): ValidationResult {
   // Basic creature state checks

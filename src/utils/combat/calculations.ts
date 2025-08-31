@@ -6,6 +6,7 @@ import { calculateDistanceBetween } from '../pathfinding';
 import { terrainHeightAt } from '../../maps/mapRenderer';
 import { isInBackArc } from '../geometry';
 import { logCombat } from '../logging';
+import { MapDefinition } from '../../maps/types';
 
 // --- Combat Calculation Utilities ---
 
@@ -121,7 +122,7 @@ export function calculateEffectiveArmor(target: Creature, targetEquipment: Equip
 /**
  * Generate weapon modifier text for display
  */
-export function generateWeaponModifierText(weapon: any, isUnarmed: boolean = false): string {
+export function generateWeaponModifierText(weapon: Weapon | null, isUnarmed: boolean = false): string {
   if (isUnarmed) return "weapon -1";
   if (!weapon) return "";
   
@@ -138,7 +139,7 @@ export function generateWeaponModifierText(weapon: any, isUnarmed: boolean = fal
 export function calculateElevationBonus(
   attacker: Creature,
   target: Creature,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): { attackerBonus: number; defenderBonus: number } {
   if (!mapDefinition) return { attackerBonus: 0, defenderBonus: 0 };
 

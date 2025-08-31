@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { Weapon, RangedWeapon, Armor, Shield, createWeapon } from '../items';
+import { Weapon, RangedWeapon, Armor, Shield, createWeapon, Item } from '../items';
 import { GAME_SETTINGS } from './constants';
 
 // --- Equipment Utilities ---
@@ -77,7 +77,7 @@ export function getEffectiveArmor(creature: Creature): number {
  */
 export function getWeaponDamage(creature: Creature): number {
   const weapon = getMainWeapon(creature);
-  return (weapon as any).damage as number;
+  return weapon.damage;
 }
 
 /**
@@ -141,7 +141,7 @@ export function getAttackBonus(creature: Creature): number {
 /**
  * Check if an item is equippable
  */
-export function isItemEquippable(item: any): boolean {
+export function isItemEquippable(item: Item): boolean {
   return item instanceof Weapon || 
          item instanceof RangedWeapon || 
          item instanceof Armor || 
@@ -151,20 +151,20 @@ export function isItemEquippable(item: any): boolean {
 /**
  * Check if an item is a valid weapon
  */
-export function isValidWeapon(item: any): boolean {
+export function isValidWeapon(item: Item): boolean {
   return item instanceof Weapon || item instanceof RangedWeapon;
 }
 
 /**
  * Check if an item is a valid off-hand item
  */
-export function isValidOffHand(item: any): boolean {
+export function isValidOffHand(item: Item): boolean {
   return item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield;
 }
 
 /**
  * Check if an item is valid armor
  */
-export function isValidArmor(item: any): boolean {
+export function isValidArmor(item: Item): boolean {
   return item instanceof Armor;
 }

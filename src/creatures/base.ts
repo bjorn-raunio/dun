@@ -19,12 +19,14 @@ import { CreatureRelationshipsManager } from './relationships';
 import { CreatureStatusEffectManager } from './statusEffects';
 import { SkillProcessor } from './skillProcessor';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
-import { Item } from '../items';
-import { Weapon, RangedWeapon } from '../items/types';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
 import { MovementResult } from '../game/movement';
+import { MapDefinition } from '../maps/types';
+import { CombatResult } from '../utils/combat/types';
+import { PathfindingResult } from '../utils/pathfinding/types';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -39,11 +41,7 @@ export abstract class Creature implements ICreature {
   mapHeight: number;
   size: number;
   inventory: Item[];
-  equipment: {
-    mainHand?: any;
-    offHand?: any;
-    armor?: any;
-  };
+  equipment: EquipmentSlots;
   vitality: number;
   mana: number;
   fortune: number;
@@ -69,7 +67,7 @@ export abstract class Creature implements ICreature {
     this.mapHeight = params.mapHeight ?? 1;
     this.size = params.size;
     this.inventory = params.inventory ?? [];
-    this.equipment = params.equipment ?? {};
+    this.equipment = params.equipment ?? { mainHand: undefined, offHand: undefined, armor: undefined };
     this.vitality = params.vitality;
     this.mana = params.mana;
     this.fortune = params.fortune;
@@ -295,7 +293,7 @@ export abstract class Creature implements ICreature {
   // --- Combat State Management ---
   private isInCombat: boolean = false;
   
-  checkCombatState(allCreatures: any[]): boolean {
+  checkCombatState(allCreatures: ICreature[]): boolean {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
     
     for (const enemy of hostileCreatures) {
@@ -308,7 +306,7 @@ export abstract class Creature implements ICreature {
     return false;
   }
 
-  updateCombatState(allCreatures: any[]): void {
+  updateCombatState(allCreatures: ICreature[]): void {
     this.isInCombat = this.checkCombatState(allCreatures);
   }
 
@@ -317,7 +315,7 @@ export abstract class Creature implements ICreature {
   }
 
   // Get all enemies within combat range (12 tiles)
-  getEnemiesInCombatRange(allCreatures: any[]): any[] {
+  getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[] {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
     
     return hostileCreatures.filter(enemy => {
@@ -339,8 +337,8 @@ export abstract class Creature implements ICreature {
   isHeroGroup(): boolean { return this.relationshipsManager.isHeroGroup(); }
   isPlayerControlled(): boolean { return this.relationshipsManager.isPlayerControlled(); }
   isAIControlled(): boolean { return this.relationshipsManager.isAIControlled(); }
-  isHostileTo(other: any): boolean { return this.relationshipsManager.isHostileTo(other.group); }
-  isFriendlyTo(other: any): boolean { return this.relationshipsManager.isFriendlyTo(other.group); }
+  isHostileTo(other: ICreature): boolean { return this.relationshipsManager.isHostileTo(other.group); }
+  isFriendlyTo(other: ICreature): boolean { return this.relationshipsManager.isFriendlyTo(other.group); }
 
   // --- State Modifiers ---
   takeDamage(damage: number): number { return this.stateManager.takeDamage(damage); }
@@ -385,20 +383,20 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Creature Filtering ---
-  getHostileCreatures(allCreatures: any[]): any[] { return this.relationshipsManager.getHostileCreatures(allCreatures); }
-  getFriendlyCreatures(allCreatures: any[]): any[] { return this.relationshipsManager.getFriendlyCreatures(allCreatures); }
+  getHostileCreatures(allCreatures: ICreature[]): ICreature[] { return this.relationshipsManager.getHostileCreatures(allCreatures); }
+  getFriendlyCreatures(allCreatures: ICreature[]): ICreature[] { return this.relationshipsManager.getFriendlyCreatures(allCreatures); }
 
   // --- Engagement ---
-  isEngaged(hostileCreatures: any[]): boolean {
+  isEngaged(hostileCreatures: ICreature[]): boolean {
     return this.relationshipsManager.isEngaged(hostileCreatures, this.x, this.y, this.getZoneOfControlRange());
   }
 
-  getEngagingCreatures(allCreatures: any[]): any[] {
+  getEngagingCreatures(allCreatures: ICreature[]): ICreature[] {
     return this.relationshipsManager.getEngagingCreatures(allCreatures, this.x, this.y, this.getZoneOfControlRange());
   }
 
   // Convenience method to check engagement status with all creatures
-  isEngagedWithAll(allCreatures: any[]): boolean {
+  isEngagedWithAll(allCreatures: ICreature[]): boolean {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
     return this.isEngaged(hostileCreatures);
   }
@@ -408,29 +406,29 @@ export abstract class Creature implements ICreature {
   get turnStartY(): number { return this.stateManager.getTurnStartPosition().y; }
   get turnStartFacing(): number { return this.stateManager.getTurnStartPosition().facing; }
 
-  wasBehindTargetAtTurnStart(target: any): boolean {
+  wasBehindTargetAtTurnStart(target: ICreature): boolean {
     return this.combatManager.wasBehindTargetAtTurnStart(
       target.x, target.y, target.facing, this.turnStartX, this.turnStartY
     );
   }
 
   // --- Group Actions ---
-  resetGroupActions(allCreatures: any[]): void { this.relationshipsManager.resetGroupActions(allCreatures); }
+  resetGroupActions(allCreatures: ICreature[]): void { this.relationshipsManager.resetGroupActions(allCreatures); }
 
   // --- Movement and Combat Delegation ---
-  getReachableTiles(allCreatures: any[], mapData: any, cols: number, rows: number, mapDefinition?: any): any {
+  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult {
     return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
-  moveTo(path: Array<{x: number; y: number}>, allCreatures: any[] = [], mapData?: any, mapDefinition?: any): MovementResult {
+  moveTo(path: Array<{x: number; y: number}>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
   }
 
-  attack(target: any, allCreatures: any[] = [], mapDefinition?: any, mapData?: any): any {
+  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult {
     const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, mapData);
     
     return {
-      hit: result.success,
+      success: result.success,
       damage: result.damage,
       message: result.message,
       targetDefeated: result.targetDefeated,
@@ -516,7 +514,7 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Abstract Factory Method ---
-  protected abstract createInstance(params: any): Creature;
+  protected abstract createInstance(params: CreatureConstructorParams): Creature;
 
   // Get effective actions and quick actions with status effect modifiers
   get effectiveActions(): number {

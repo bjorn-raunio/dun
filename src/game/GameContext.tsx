@@ -5,6 +5,8 @@ import { GameState, GameRefs, GameActions, TargetingMode } from './types';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
+import { MapDefinition } from '../maps/types';
+import { AITurnState } from './turnManagement/types';
 
 // --- Game Context Types ---
 
@@ -26,7 +28,7 @@ export function GameProvider({
 }: {
   children: React.ReactNode;
   initialCreatures: Creature[];
-  mapDefinition?: any;
+  mapDefinition?: MapDefinition;
 }) {
   const [state, dispatch] = useReducer(
     gameReducer, 
@@ -113,7 +115,7 @@ export function GameProvider({
     }
   }, [state.targetsInRangeKey, dispatch]);
   
-  const setAITurnState = useCallback((updater: (prev: any) => any) => {
+  const setAITurnState = useCallback((updater: (prev: AITurnState) => AITurnState) => {
     const newState = updater(state.aiTurnState);
     dispatch({ type: 'SET_AI_TURN_STATE', payload: newState });
   }, [state.aiTurnState, dispatch]);

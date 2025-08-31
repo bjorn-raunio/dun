@@ -11,6 +11,7 @@ import {
   isAdjacentToCreature,
   getEngagingCreatures
 } from '../utils/zoneOfControl';
+import { MapDefinition } from '../maps/types';
 
 // --- Movement Validation Logic ---
 
@@ -26,7 +27,7 @@ export function validateMovement(
   allCreatures: Creature[],
   mapData: { tiles: string[][] },
   stepCost: number,
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): MovementValidationResult {
   // Use centralized validation for basic creature state
   const aliveCheck = validateCreatureAlive(creature, 'move');
@@ -71,7 +72,7 @@ export function isPositionStandable(
   y: number,
   allCreatures: Creature[],
   mapData: { tiles: string[][] },
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): boolean {
   const dimensions = creature.getDimensions();
   return validatePositionStandable(x, y, dimensions, allCreatures, mapData, mapDefinition, true, creature.id);

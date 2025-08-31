@@ -1,5 +1,6 @@
 import React from 'react';
 import { Creature } from '../../creatures/index';
+import { MapDefinition } from '../../maps/types';
 
 export interface MapViewProps {
   mapData: {
@@ -7,7 +8,7 @@ export interface MapViewProps {
     description: string;
     tiles: string[][];
   };
-  mapDefinition: any;
+  mapDefinition: MapDefinition;
   creatures: Creature[];
   selectedCreatureId: string | null;
   reachable: {

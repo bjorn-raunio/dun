@@ -1,5 +1,6 @@
 import { Weapon, RangedWeapon, Armor, Shield } from './types';
 import { weaponPresets, rangedPresets, armorPresets, shieldPresets } from './presets';
+import { Item } from './types';
 
 /**
  * Generic item factory function that eliminates code duplication
@@ -9,12 +10,12 @@ import { weaponPresets, rangedPresets, armorPresets, shieldPresets } from './pre
  * @param overrides Optional overrides to apply to the preset
  * @returns A new instance of the specified item class
  */
-function createItem<T>(
-  ItemClass: new (config: any) => T,
+function createItem<T extends { new (config: any): any }>(
+  ItemClass: T,
   presetId: string,
-  presetMap: Record<string, any>,
-  overrides?: Partial<ConstructorParameters<typeof ItemClass>[0]> & { id?: string }
-): T {
+  presetMap: Record<string, ConstructorParameters<T>[0]>,
+  overrides?: Partial<ConstructorParameters<T>[0]> & { id?: string }
+): InstanceType<T> {
   const preset = presetMap[presetId];
   if (!preset) {
     throw new Error(`Preset '${presetId}' not found in preset map`);

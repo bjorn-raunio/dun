@@ -2,6 +2,7 @@ import { Creature } from '../creatures/index';
 import { AIState, AIDecision, AITarget, AIBehaviorType } from './types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
+import { MapDefinition } from '../maps/types';
 
 // --- AI Helper Functions ---
 
@@ -30,7 +31,7 @@ export function evaluateTargetWithScoring(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: any,
+  mapDefinition?: MapDefinition,
   scoringOptions: {
     basePriority?: number;
     distanceWeight?: number;
@@ -192,7 +193,7 @@ export function validateAIAction(
   action: AIDecision,
   allCreatures: Creature[],
   mapData?: { tiles: string[][] },
-  mapDefinition?: any
+  mapDefinition?: MapDefinition
 ): { isValid: boolean; reason?: string } {
   // Basic creature state validation
   if (!creature.isAlive()) {

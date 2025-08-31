@@ -3,12 +3,13 @@ import { TILE_SIZE, COLORS } from '../styles';
 import { typeToImage } from '../../maps';
 import { getRotatedDimensions } from '../../utils/dimensions';
 import { MapBlock } from './types';
+import { MapDefinition } from '../../maps/types';
 
 interface MapRendererProps {
   mapData: {
     tiles: string[][];
   };
-  mapDefinition: any;
+  mapDefinition: MapDefinition;
 }
 
 export function MapRenderer({ mapData, mapDefinition }: MapRendererProps) {

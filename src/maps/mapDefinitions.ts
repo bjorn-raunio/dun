@@ -35,6 +35,15 @@ export const mapDefinition: MapDefinition = {
     { preset: "wagon", x: 16, y: 4, rotation: 90 },
     { preset: "horse", x: 18, y: 4, rotation: 270 },
   ],
+  terrainTypes: {
+    "tree": { blocksLineOfSight: true, height: 4, mapWidth: 2, mapHeight: 2 },
+    "wagon": { blocksLineOfSight: false, height: 1, mapWidth: 1, mapHeight: 2 },
+    "horse": { blocksLineOfSight: false, height: 1, mapWidth: 1, mapHeight: 2 },
+    "wall": { blocksLineOfSight: true, height: 3 },
+    "mountain": { blocksLineOfSight: true, height: 5 },
+    "forest": { blocksLineOfSight: true, height: 4 },
+    "building": { blocksLineOfSight: true, height: 4 },
+  },
   startingTiles: [
     { x: 0, y: 1, name: "Hero Starting Position 1" },
     { x: 1, y: 1, name: "Hero Starting Position 2" },

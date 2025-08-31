@@ -2,6 +2,8 @@ import { Creature } from './base';
 import { CREATURE_GROUPS } from './types';
 import { AIState } from '../ai/types';
 import { createAIStateForCreature } from '../ai/decisionMaking';
+import { CreatureConstructorParams } from './types';
+import { MonsterPreset, MercenaryPreset } from './presets/types';
 
 // --- Monster Faction System ---
 export type MonsterFaction = "bandits" | "undead" | "beasts" | "neutral";
@@ -61,7 +63,7 @@ export class Monster extends Creature {
     return "monster";
   }
 
-  constructor(params: any) {
+  constructor(params: CreatureConstructorParams & { faction?: MonsterFaction; preset?: MonsterPreset | MercenaryPreset }) {
     // Ensure monster group is set (default to bandits if not specified)
     super({
       ...params,
@@ -76,7 +78,7 @@ export class Monster extends Creature {
   }
 
   // --- Abstract Method Implementation ---
-  protected createInstance(params: any): Creature {
+  protected createInstance(params: CreatureConstructorParams & { faction?: MonsterFaction; preset?: MonsterPreset | MercenaryPreset }): Creature {
     return new Monster(params);
   }
 

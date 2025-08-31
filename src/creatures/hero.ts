@@ -1,5 +1,6 @@
 import { Creature } from './base';
 import { CREATURE_GROUPS } from './types';
+import { CreatureConstructorParams } from './types';
 
 // --- Hero Class ---
 export class Hero extends Creature {
@@ -7,7 +8,7 @@ export class Hero extends Creature {
     return "hero";
   }
 
-  constructor(params: any) {
+  constructor(params: CreatureConstructorParams) {
     // Ensure hero group is set
     super({
       ...params,
@@ -16,7 +17,7 @@ export class Hero extends Creature {
   }
 
   // --- Abstract Method Implementation ---
-  protected createInstance(params: any): Creature {
+  protected createInstance(params: CreatureConstructorParams): Creature {
     return new Hero(params);
   }
 

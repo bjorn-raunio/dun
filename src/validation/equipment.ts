@@ -1,11 +1,12 @@
 import { Creature } from '../creatures/index';
 import { ValidationResult } from './core';
 import { VALIDATION_MESSAGES } from './messages';
+import { Item } from '../items/types';
 
 /**
  * Validate that an item is in the creature's inventory
  */
-export function validateItemInInventory(creature: Creature, item: any): ValidationResult {
+export function validateItemInInventory(creature: Creature, item: Item): ValidationResult {
   const hasItem = creature.inventory.some(invItem => invItem.id === item.id);
   
   if (!hasItem) {
@@ -21,7 +22,7 @@ export function validateItemInInventory(creature: Creature, item: any): Validati
 /**
  * Validate that an item can be equipped
  */
-export function validateItemEquippable(item: any, isItemEquippable: (item: any) => boolean): ValidationResult {
+export function validateItemEquippable(item: Item, isItemEquippable: (item: Item) => boolean): ValidationResult {
   if (!isItemEquippable(item)) {
     return {
       isValid: false,

@@ -5,15 +5,16 @@ import { monsterPresets } from './monsters';
 import { mercenaryPresets } from './mercenaries';
 import { MonsterPreset, MercenaryPreset } from './types';
 import { getWeaponLoadoutById, getArmorLoadoutById, getRandomWeaponLoadout, getRandomArmorLoadout } from './loadouts';
-import { EquipmentSystem } from '../../items/equipment';
+import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
+import { Item } from '../../items/types';
 
 // --- Factory Functions ---
 
 /**
  * Create inventory items from preset definitions
  */
-function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): any[] {
-  const inventory: any[] = [];
+function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): Item[] {
+  const inventory: Item[] = [];
   if (preset.inventory) {
     for (const itemDef of preset.inventory) {
       switch (itemDef.type) {
@@ -38,8 +39,8 @@ function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): any
 /**
  * Create equipment from preset definitions
  */
-function createEquipmentFromPreset(preset: MonsterPreset | MercenaryPreset): any {
-  const equipment: any = {};
+function createEquipmentFromPreset(preset: MonsterPreset | MercenaryPreset): EquipmentSlots {
+  const equipment: EquipmentSlots = { mainHand: undefined, offHand: undefined, armor: undefined };
   if (preset.equipment) {
     if (preset.equipment.mainHand) {
       if (preset.equipment.mainHand.type === "weapon") {
@@ -145,10 +146,10 @@ export function createMonster(
     
     // Move conflicting items to inventory and fix equipment
     if (equipmentValidation.slot) {
-      const conflictingItem = equipment[equipmentValidation.slot];
+      const conflictingItem = equipment[equipmentValidation.slot as keyof EquipmentSlots];
       if (conflictingItem) {
         // Remove the conflicting item from equipment
-        delete equipment[equipmentValidation.slot];
+        equipment[equipmentValidation.slot as keyof EquipmentSlots] = undefined;
         // Add it to inventory
         inventory.push(conflictingItem);
         console.log(`Moved conflicting ${equipmentValidation.slot} item to inventory for monster ${presetId}`);
