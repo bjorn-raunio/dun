@@ -3,7 +3,9 @@ import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
 import { CombatResult } from './types';
-import { CombatSkillTriggerManager } from '../../creatures/combatSkillTriggers';
+import { CombatSkillTriggerManager } from '../../skills';
+import { applyStatusEffect, CommonStatusEffects } from '../../statusEffects';
+import { logCombat } from '../logging';
 import { 
   executeToHitRollMelee, 
   executeToHitRollRanged, 
@@ -121,15 +123,12 @@ function executeCombatPhase(
 
     // Universal rule: Double critical hits apply knocked down status unless target has greater size
     if (target.size <= attacker.size) {
-      const { applyStatusEffect } = require('../../utils/statusEffects');
-      const { CommonStatusEffects } = require('../../creatures/presets/statusEffectPresets');
-      
       const knockedDownEffect = CommonStatusEffects.knockedDown(target);
       applyStatusEffect(target, knockedDownEffect);
       
-      console.log(`${attacker.name}'s double critical hit knocks down ${target.name}!`);
+      logCombat(`${attacker.name}'s double critical hit knocks down ${target.name}!`);
     } else {
-      console.log(`${attacker.name}'s double critical hit cannot knock down ${target.name} (target is larger)`);
+      logCombat(`${attacker.name}'s double critical hit cannot knock down ${target.name} (target is larger)`);
     }
   }
 

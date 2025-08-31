@@ -7,11 +7,9 @@ export { monsterPresets, monsterPresetsByFaction } from './monsters';
 // --- Mercenary Presets ---
 export { mercenaryPresets } from './mercenaries';
 
-// --- Skills ---
-export * from './skills';
+// Skills are now exported from the skills module
 
-// --- Status Effect Presets ---
-export * from './statusEffectPresets';
+// Status Effect Presets are now exported from the statusEffects module
 
 // --- Factory Functions ---
 export { createMonster, createMercenary } from './factories';

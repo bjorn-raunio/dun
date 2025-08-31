@@ -1,5 +1,5 @@
 import { MercenaryPreset } from './types';
-import { SKILL_PRESETS } from './skills';
+import { SKILL_PRESETS } from '../../skills';
 
 // --- Mercenary Presets ---
 

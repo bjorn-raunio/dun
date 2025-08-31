@@ -4,7 +4,8 @@
 
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
 import { MovementResult } from '../game/movement';
-import { StatusEffectManager, StatusEffect, CreatureState, CreaturePosition } from './types';
+import { CreatureState, CreaturePosition } from './types';
+import { StatusEffectManager, StatusEffect } from '../statusEffects';
 import { MapDefinition } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';

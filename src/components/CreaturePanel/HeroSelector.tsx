@@ -86,13 +86,7 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
                   Actions: <strong>{hero.remainingActions ?? hero.effectiveActions}</strong> |
                   Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong> |
                   Quick: <strong>{hero.remainingQuickActions ?? hero.quickActions}</strong>
-                </div>
-                {hero.getAllSkills().length > 0 && (
-                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                    Skills: {hero.getAllSkills().slice(0, 3).map(s => s.name).join(', ')}
-                    {hero.getAllSkills().length > 3 && ` +${hero.getAllSkills().length - 3} more`}
-                  </div>
-                )}
+                </div>          
               </div>
             </div>
           ))}

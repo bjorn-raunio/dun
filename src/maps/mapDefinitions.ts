@@ -1,7 +1,7 @@
 import { MapDefinition, Terrain } from './types';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
-import { SKILL_PRESETS } from '../creatures/presets/skills';
+import { SKILL_PRESETS } from '../skills';
 
 // --- Generate tiles from map definition ---
 export const typeToImage: Record<string, string> = {

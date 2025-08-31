@@ -8,7 +8,7 @@ import './init';
 
 // Export all creature-related modules
 export { Creature } from './base';
-export { CREATURE_GROUPS, type CreatureGroup, type Attributes } from './types';
+export { CREATURE_GROUPS, type CreatureGroup } from './types';
 export { Hero } from './hero';
 export { Monster, MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS, type MonsterFaction, type MonsterFactionInfo } from './monster';
 export { Mercenary } from './mercenary';

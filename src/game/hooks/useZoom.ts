@@ -12,8 +12,6 @@ export function useZoom(
   const { viewportRef, panRef } = gameRefs;
 
   const onWheel = React.useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    
     const delta = e.deltaY > 0 ? 0.9 : 1.1; // Zoom out on scroll down, in on scroll up
     const newZoom = Math.max(0.25, Math.min(3.0, viewport.zoom * delta));
     

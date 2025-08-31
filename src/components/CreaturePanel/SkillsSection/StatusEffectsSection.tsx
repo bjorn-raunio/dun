@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Creature } from '../../../creatures/index';
-import { StatusEffect } from '../../../creatures/types';
+import { StatusEffect } from '../../../statusEffects';
 import { COLORS } from '../../styles';
 
 interface StatusEffectsSectionProps {

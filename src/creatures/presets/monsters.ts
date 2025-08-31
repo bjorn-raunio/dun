@@ -1,6 +1,6 @@
 import { AIBehaviorType } from '../../ai/types';
 import { MonsterPreset } from './types';
-import { SKILL_PRESETS } from './skills';
+import { SKILL_PRESETS } from '../../skills';
 
 // --- Monster Presets Organized by Faction ---
 

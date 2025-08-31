@@ -4,7 +4,7 @@ import { logger, LogLevel } from './logging';
 // Default logging configuration
 export const DEFAULT_LOGGING_CONFIG = {
   // Global log level (can be overridden by category-specific settings)
-  globalLevel: LogLevel.DEBUG,
+  globalLevel: LogLevel.NONE,
   
   // Category-specific log levels
   categories: {

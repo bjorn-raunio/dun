@@ -1,6 +1,6 @@
-import { StatusEffectType, StatusEffect } from '../types';
-import { Creature } from '../index';
-import { createStatusEffect } from '../statusEffects';
+import { StatusEffectType, StatusEffect } from './types';
+import { Creature } from '../creatures/index';
+import { createStatusEffect } from './manager';
 
 export interface StatusEffectPreset {
   name: string;
@@ -103,13 +103,14 @@ export function getStatusEffectIcon(type: StatusEffectType): string {
   return STATUS_EFFECT_PRESETS[type].icon;
 }
 
-/**
- * CommonStatusEffects is now an alias for the preset factory functions
- * This maintains backward compatibility while using the unified system
- */
+// Common status effects that can be used throughout the codebase
 export const CommonStatusEffects = {
-  poison: STATUS_EFFECT_PRESETS.poison.createEffect,
-  wounded: STATUS_EFFECT_PRESETS.wounded.createEffect,
-  stunned: STATUS_EFFECT_PRESETS.stunned.createEffect,
-  knockedDown: STATUS_EFFECT_PRESETS.knockedDown.createEffect,
+  poison: (creature: Creature, duration?: number, stacks?: number) => 
+    STATUS_EFFECT_PRESETS.poison.createEffect(creature, duration, stacks),
+  wounded: (creature: Creature, duration?: number, stacks?: number) => 
+    STATUS_EFFECT_PRESETS.wounded.createEffect(creature, duration, stacks),
+  stunned: (creature: Creature, duration?: number, stacks?: number) => 
+    STATUS_EFFECT_PRESETS.stunned.createEffect(creature, duration, stacks),
+  knockedDown: (creature: Creature, duration?: number, stacks?: number) => 
+    STATUS_EFFECT_PRESETS.knockedDown.createEffect(creature, duration, stacks),
 };

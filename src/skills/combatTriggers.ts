@@ -1,8 +1,8 @@
-import { Creature } from './index';
+import { Creature } from '../creatures/index';
 import { CombatTrigger, CombatTriggerType } from './types';
 import { CombatResult } from '../utils/combat/types';
-import { applyStatusEffect } from '../utils/statusEffects';
-import { CommonStatusEffects } from './presets/statusEffectPresets';
+import { applyStatusEffect } from '../statusEffects';
+import { CommonStatusEffects } from '../statusEffects';
 
 // --- Combat Skill Trigger System ---
 // This system handles triggering skills during combat based on specific events

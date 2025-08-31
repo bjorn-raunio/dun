@@ -1,5 +1,5 @@
 import { Creature } from '../creatures/index';
-import { StatusEffect, StatusEffectType } from '../creatures/types';
+import { StatusEffect, StatusEffectType } from './types';
 
 /**
  * Apply a status effect to a creature

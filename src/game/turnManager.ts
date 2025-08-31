@@ -1,7 +1,6 @@
 import { Creature } from '../creatures/index';
 import { GameActions } from './types';
 import { TurnState, TurnExecutionContext } from './turnManagement';
-import { resetAllTurns } from './movement';
 import { 
   startAITurnPhase, 
   continueAITurnPhase,

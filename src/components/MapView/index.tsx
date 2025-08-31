@@ -28,8 +28,36 @@ export function MapView({
   const rows = mapData.tiles.length;
   const cols = mapData.tiles[0].length;
 
-  // Determine cursor style based on targeting mode
+  // Determine cursor style based on cursor style
   const cursorStyle = targetingMode?.isActive ? 'crosshair' : 'grab';
+
+  // Manually add wheel event listener to avoid passive listener issues
+  React.useEffect(() => {
+    const viewportElement = viewportRef.current;
+    if (!viewportElement) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      // Create a minimal React-like event object with just the properties we need
+      const reactEvent = {
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+        deltaY: e.deltaY,
+        clientX: e.clientX,
+        clientY: e.clientY,
+        currentTarget: viewportElement,
+        target: e.target,
+      } as any;
+      
+      onWheel(reactEvent);
+    };
+
+    viewportElement.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      viewportElement.removeEventListener('wheel', handleWheel);
+    };
+  }, [onWheel, viewportRef]);
 
   return (
     <div
@@ -45,7 +73,7 @@ export function MapView({
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseLeave}
-      onWheel={onWheel}
+      // Remove onWheel prop since we're handling it manually
     >
       <div
         ref={panRef}

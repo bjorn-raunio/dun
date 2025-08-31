@@ -1,5 +1,5 @@
-import { Skill, SkillType } from '../types';
-import { CombatTriggerEffects } from '../combatSkillTriggers';
+import { Skill, SkillType } from './types';
+import { CombatTriggerEffects } from './combatTriggers';
 
 // --- Skill Presets ---
 export const SKILL_PRESETS: { [key: string]: Skill } = {

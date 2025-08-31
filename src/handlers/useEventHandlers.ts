@@ -1,11 +1,12 @@
 import React from 'react';
 import { Creature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
-import { createMouseHandlers, MouseHandlers } from './mouseHandlers';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
 import { MapDefinition } from '../maps/types';
+import { createMouseHandlers } from './mouseHandlers/mainMouseHandlers';
+import { MouseHandlers } from './mouseHandlers/types';
 
 // --- Event Handlers Custom Hook ---
 
@@ -26,9 +27,9 @@ export function useEventHandlers(
   mapDefinition?: MapDefinition,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {
-  // Create mouse handlers
+  // Create mouse handlers with organized structure
   const mouseHandlers = React.useMemo(() => {
-    const handlers = createMouseHandlers(
+    const handlers = createMouseHandlers({
       gameActions,
       gameRefs,
       creatures,
@@ -39,14 +40,14 @@ export function useEventHandlers(
       setSelectedCreatureId,
       mapDefinition,
       targetingMode
-    );
+    });
 
     // Override the creature click handler to handle both targeting mode and creature selection
     handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
       // If we're in targeting mode, let the original handler deal with it
       if (targetingMode?.isActive) {
         // Call the original handler for targeting mode
-        const originalHandler = createMouseHandlers(
+        const originalHandler = createMouseHandlers({
           gameActions,
           gameRefs,
           creatures,
@@ -57,7 +58,7 @@ export function useEventHandlers(
           setSelectedCreatureId,
           mapDefinition,
           targetingMode
-        );
+        });
         originalHandler.onCreatureClick(creature, e);
         return;
       }

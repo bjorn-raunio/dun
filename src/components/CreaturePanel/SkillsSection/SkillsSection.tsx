@@ -43,7 +43,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ creature }) => {
       {Object.entries(skillsByType).map(([type, typeSkills]) => (
         <div key={type} style={{ marginBottom: 6 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {typeSkills.map((skill) => (
+            {(typeSkills as Skill[]).map((skill) => (
               <div key={skill.name} style={{
                 padding: 8,
                 borderRadius: 6,

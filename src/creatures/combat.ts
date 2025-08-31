@@ -1,23 +1,24 @@
-import { Attributes, Skills, StatusEffect } from './types';
+import { Attributes, StatusEffect } from '../statusEffects';
+import { Skills } from '../skills';
 import { EquipmentSystem } from '../items/equipment';
 import { Weapon, RangedWeapon, Armor, Shield } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
-import { SkillProcessor } from './skillProcessor';
+import { SkillProcessor } from '../skills';
 
 // --- Creature Combat Management ---
 
 export class CreatureCombatManager {
   constructor(
-    private attributes: Attributes,
-    private equipment: {
+    private getAttributes: () => Attributes,
+    private getEquipment: () => {
       mainHand?: Weapon | RangedWeapon;
       offHand?: Weapon | RangedWeapon | Shield;
       armor?: Armor;
     },
-    private naturalArmor: number,
-    private size: number,
-    private skills: Skills = {}
+    private getNaturalArmor: () => number,
+    private getSize: () => number,
+    private getSkills: () => Skills
   ) {}
 
   // --- Equipment Access Consolidation ---
@@ -25,42 +26,43 @@ export class CreatureCombatManager {
   /**
    * Get EquipmentSystem instance - consolidated to eliminate repeated instantiation
    */
-  private getEquipment(): EquipmentSystem {
-    return new EquipmentSystem(this.equipment);
+  private getEquipmentSystem(): EquipmentSystem {
+    return new EquipmentSystem(this.getEquipment());
   }
 
   // --- Equipment-based Combat Methods ---
 
   getArmorValue(): number {
-    return this.getEquipment().getEffectiveArmor(this.naturalArmor);
+    return this.getEquipmentSystem().getEffectiveArmor(this.getNaturalArmor());
   }
 
   getMainWeapon(): Weapon | RangedWeapon {
-    return this.getEquipment().getMainWeapon();
+    return this.getEquipmentSystem().getMainWeapon();
   }
 
   hasRangedWeapon(): boolean {
-    return this.getEquipment().hasRangedWeapon();
+    return this.getEquipmentSystem().hasRangedWeapon();
   }
 
   hasShield(): boolean {
-    return this.getEquipment().hasShield();
+    return this.getEquipmentSystem().hasShield();
   }
 
   getAttackBonus(): number {
-    return this.getEquipment().getAttackBonus(this.attributes.combat, this.attributes.ranged);
+    const attributes = this.getAttributes();
+    return this.getEquipmentSystem().getAttackBonus(attributes.combat, attributes.ranged);
   }
 
   getWeaponDamage(): number {
-    return this.getEquipment().getWeaponDamage();
+    return this.getEquipmentSystem().getWeaponDamage();
   }
 
   getAttackRange(): number {
-    return this.getEquipment().getAttackRange();
+    return this.getEquipmentSystem().getAttackRange();
   }
 
   getMaxAttackRange(): number {
-    return this.getEquipment().getMaxAttackRange();
+    return this.getEquipmentSystem().getMaxAttackRange();
   }
 
   // --- Zone of Control ---
@@ -96,8 +98,9 @@ export class CreatureCombatManager {
     isWounded: boolean,
     statusEffects: StatusEffect[] = []
   ): number {
-    const baseValue = this.attributes[attributeName] ?? 0;
-    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.skills, isWounded, statusEffects);
+    const attributes = this.getAttributes();
+    const baseValue = attributes[attributeName] ?? 0;
+    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.getSkills(), isWounded, statusEffects);
   }
 
   /**

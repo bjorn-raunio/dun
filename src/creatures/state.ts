@@ -7,21 +7,21 @@ export class CreatureStateManager {
   private turnStartPosition: CreaturePosition;
 
   constructor(
-    private maxMovement: number,
-    private maxActions: number,
-    private maxQuickActions: number,
-    private maxVitality: number,
-    private maxMana: number,
-    private maxFortune: number,
+    private getMaxMovement: () => number,
+    private getMaxActions: () => number,
+    private getMaxQuickActions: () => number,
+    private getMaxVitality: () => number,
+    private getMaxMana: () => number,
+    private getMaxFortune: () => number,
     private initialPosition: CreaturePosition
   ) {
     this.state = {
-      remainingMovement: maxMovement,
-      remainingActions: maxActions,
-      remainingQuickActions: maxQuickActions,
-      remainingVitality: maxVitality,
-      remainingMana: maxMana,
-      remainingFortune: maxFortune,
+      remainingMovement: this.getMaxMovement(),
+      remainingActions: this.getMaxActions(),
+      remainingQuickActions: this.getMaxQuickActions(),
+      remainingVitality: this.getMaxVitality(),
+      remainingMana: this.getMaxMana(),
+      remainingFortune: this.getMaxFortune(),
       hasMovedWhileEngaged: false
     };
     
@@ -67,7 +67,7 @@ export class CreatureStateManager {
       return false;
     }
     // Use effective movement (with skill modifiers) if provided, otherwise fall back to base maxMovement
-    const expectedMovement = effectiveMovement ?? this.maxMovement;
+    const expectedMovement = effectiveMovement ?? this.getMaxMovement();
     return this.state.remainingMovement !== expectedMovement;
   }
 
@@ -93,8 +93,8 @@ export class CreatureStateManager {
       return false;
     }
     return this.hasMoved() || 
-           this.state.remainingActions < this.maxActions || 
-           this.state.remainingQuickActions < this.maxQuickActions;
+           this.state.remainingActions < this.getMaxActions() || 
+           this.state.remainingQuickActions < this.getMaxQuickActions();
   }
 
   // --- State Modifiers ---
@@ -169,7 +169,7 @@ export class CreatureStateManager {
   }
 
   setRemainingVitality(value: number): void {
-    this.state.remainingVitality = Math.max(0, Math.min(value, this.maxVitality));
+    this.state.remainingVitality = Math.max(0, Math.min(value, this.getMaxVitality()));
   }
 
   // --- Turn Management ---
@@ -182,12 +182,12 @@ export class CreatureStateManager {
       this.state.remainingQuickActions = 0;
     } else {
       // Reset to base maxMovement - effective movement will be set separately by the creature class
-      this.state.remainingMovement = this.maxMovement;
-      this.state.remainingActions = this.maxActions;
-      this.state.remainingQuickActions = this.maxQuickActions;
+      this.state.remainingMovement = this.getMaxMovement();
+      this.state.remainingActions = this.getMaxActions();
+      this.state.remainingQuickActions = this.getMaxQuickActions();
     }
-    this.state.remainingMana = this.maxMana;
-    this.state.remainingFortune = this.maxFortune;
+    this.state.remainingMana = this.getMaxMana();
+    this.state.remainingFortune = this.getMaxFortune();
     this.state.hasMovedWhileEngaged = false;
   }
 
@@ -217,11 +217,8 @@ export class CreatureStateManager {
     maxMana: number,
     maxFortune: number
   ): void {
-    this.maxMovement = maxMovement;
-    this.maxActions = maxActions;
-    this.maxQuickActions = maxQuickActions;
-    this.maxVitality = maxVitality;
-    this.maxMana = maxMana;
-    this.maxFortune = maxFortune;
+    // This method is now deprecated since we use function callbacks
+    // The values are retrieved dynamically when needed
+    // Keeping for backward compatibility but it's a no-op
   }
 }

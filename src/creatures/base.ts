@@ -1,5 +1,4 @@
 import { 
-  Attributes, 
   CreatureGroup, 
   CREATURE_GROUPS, 
   CreatureConstructorParams,
@@ -8,16 +7,19 @@ import {
   DEFAULT_ATTRIBUTES,
   Skills,
   Skill,
-  SkillType,
-  StatusEffect,
-  StatusEffectType
+  SkillType
 } from './types';
+import { 
+  Attributes,
+  StatusEffect,
+  StatusEffectType,
+  CreatureStatusEffectManager 
+} from '../statusEffects';
 import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
 import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
-import { CreatureStatusEffectManager } from './statusEffects';
-import { SkillProcessor } from './skillProcessor';
+import { SkillProcessor } from '../skills';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
 import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
@@ -92,30 +94,27 @@ export abstract class Creature implements ICreature {
     };
 
     this.stateManager = new CreatureStateManager(
-      params.attributes.movement,
-      params.actions,
-      params.quickActions ?? 1,
-      params.vitality,
-      params.mana,
-      params.fortune,
+      () => this.attributes.movement,
+      () => this.actions,
+      () => this.quickActions,
+      () => this.vitality,
+      () => this.mana,
+      () => this.fortune,
       initialPosition
     );
 
     this.positionManager = new CreaturePositionManager(initialPosition);
     this.combatManager = new CreatureCombatManager(
-      this.attributes,
-      this.equipment,
-      this.naturalArmor,
-      this.size,
-      this.skills
+      () => this.attributes,
+      () => this.equipment,
+      () => this.naturalArmor,
+      () => this.size,
+      () => this.skills
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
     
     // Initialize status effect manager
-    this.statusEffectManager = new CreatureStatusEffectManager(this);
-    
-    // Initialize the creature's turn state with effective movement including skill modifiers
-    this.resetTurn();
+    this.statusEffectManager = new CreatureStatusEffectManager(this);    
   }
 
   // --- Abstract Methods ---
@@ -485,6 +484,7 @@ export abstract class Creature implements ICreature {
   // --- Cloning ---
   clone(overrides?: Partial<Creature>): Creature {
     const params = {
+      id: this.id,
       name: this.name,
       x: this.x,
       y: this.y,

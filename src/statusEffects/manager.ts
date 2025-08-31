@@ -5,8 +5,8 @@ import {
   getStatusEffectDescription, 
   getStatusEffectIcon, 
   CommonStatusEffects
-} from './presets/statusEffectPresets';
-import { Creature } from './index';
+} from './presets';
+import { Creature } from '../creatures/index';
 
 export class CreatureStatusEffectManager implements StatusEffectManager {
   effects: Map<string, StatusEffect> = new Map();
@@ -98,17 +98,15 @@ export class CreatureStatusEffectManager implements StatusEffectManager {
     return false;
   }
 
-  /**
-   * Get a specific effect (including automatic effects)
-   */
   getEffect(type: StatusEffectType): StatusEffect | null {
-    // Check manual effects first
-    const manualEffect = Array.from(this.effects.values()).find(effect => effect.type === type);
-    if (manualEffect) {
-      return manualEffect;
+    // First check manual effects
+    for (const effect of Array.from(this.effects.values())) {
+      if (effect.type === type) {
+        return effect;
+      }
     }
 
-    // Check automatic effects
+    // Then check automatic effects
     if (type === 'wounded' && this.creature.isWounded()) {
       return this.getWoundedEffect();
     }
@@ -116,51 +114,72 @@ export class CreatureStatusEffectManager implements StatusEffectManager {
     return null;
   }
 
-  getWoundedEffect(): StatusEffect {
-    const woundedEffect = CommonStatusEffects.wounded(this.creature, undefined);
-    woundedEffect.id = this.creature.id + '-wounded';
-    return woundedEffect;
-  }
-
   clearAllEffects(): void {
     this.effects.clear();
   }
 
+  /**
+   * Get the wounded status effect for this creature
+   * This is an automatic effect that's generated based on creature state
+   */
+  private getWoundedEffect(): StatusEffect {
+    const woundedEffect = CommonStatusEffects.wounded(this.creature, undefined);
+    return {
+      ...woundedEffect,
+      id: `wounded_${this.creature.id}`,
+      isAutomatic: true,
+      remainingTurns: null, // Permanent until healed
+      duration: null
+    };
+  }
+
+  /**
+   * Update effect modifiers based on stack count
+   * This allows effects to scale with the number of stacks
+   */
   private updateEffectModifiers(effect: StatusEffect): void {
-    // Apply stack-based modifiers
+    if (effect.stackCount <= 1) return;
+
+    // For now, we'll just multiply the modifiers by stack count
+    // In the future, this could be more sophisticated
     if (effect.attributeModifiers) {
-      // Multiply modifiers by stack count
       Object.keys(effect.attributeModifiers).forEach(key => {
         const attrKey = key as keyof typeof effect.attributeModifiers;
-        if (effect.attributeModifiers![attrKey]) {
-          effect.attributeModifiers![attrKey] = effect.attributeModifiers![attrKey]! * effect.stackCount;
+        if (effect.attributeModifiers && effect.attributeModifiers[attrKey] !== undefined) {
+          effect.attributeModifiers[attrKey] = (effect.attributeModifiers[attrKey] || 0) * effect.stackCount;
         }
       });
     }
-    
-    // Apply other stack-based modifiers
+
     if (effect.movementModifier) {
-      effect.movementModifier = effect.movementModifier * effect.stackCount;
+      effect.movementModifier *= effect.stackCount;
     }
+
     if (effect.actionModifier) {
-      effect.actionModifier = effect.actionModifier * effect.stackCount;
+      effect.actionModifier *= effect.stackCount;
     }
+
     if (effect.quickActionModifier) {
-      effect.quickActionModifier = effect.quickActionModifier * effect.stackCount;
+      effect.quickActionModifier *= effect.stackCount;
     }
+
     if (effect.damageModifier) {
-      effect.damageModifier = effect.damageModifier * effect.stackCount;
+      effect.damageModifier *= effect.stackCount;
     }
+
     if (effect.armorModifier) {
-      effect.armorModifier = effect.armorModifier * effect.stackCount;
+      effect.armorModifier *= effect.stackCount;
     }
+
     if (effect.accuracyModifier) {
-      effect.accuracyModifier = effect.accuracyModifier * effect.stackCount;
+      effect.accuracyModifier *= effect.stackCount;
     }
   }
 }
 
-// Factory function to create common status effects
+/**
+ * Factory function to create status effects
+ */
 export function createStatusEffect(
   type: StatusEffectType,
   duration: number | null = null,
@@ -169,7 +188,7 @@ export function createStatusEffect(
   overrides: Partial<StatusEffect> = {}
 ): StatusEffect {
   const baseEffect: StatusEffect = {
-    id: generateId('status-effect'),
+    id: generateId(),
     type,
     name: getStatusEffectName(type),
     description: getStatusEffectDescription(type),
@@ -184,13 +203,9 @@ export function createStatusEffect(
   return baseEffect;
 }
 
-// Re-export the helper functions for external use
-export { 
-  getStatusEffectName, 
-  getStatusEffectDescription, 
-  getStatusEffectIcon 
-} from './presets/statusEffectPresets';
-
-
-
-
+// Re-export the helper functions for backward compatibility
+export {
+  getStatusEffectName,
+  getStatusEffectDescription,
+  getStatusEffectIcon
+} from './presets';

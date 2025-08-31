@@ -1,4 +1,5 @@
-import { Attributes, Skill, Skills, StatusEffect } from './types';
+import { Skill, Skills } from './types';
+import { Attributes, StatusEffect } from '../statusEffects';
 
 // --- Skill Processor ---
 // This class handles calculating effective attributes based on creature skills
