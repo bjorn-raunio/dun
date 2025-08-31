@@ -48,7 +48,7 @@ export function tileFromPointer(
   clientX: number,
   clientY: number,
   viewportRef: React.MutableRefObject<HTMLDivElement | null>,
-  livePan: { x: number; y: number },
+  livePan: { x: number; y: number; zoom: number },
   mapWidth: number,
   mapHeight: number,
   tileSize: number = 50
@@ -59,8 +59,12 @@ export function tileFromPointer(
   const y = clientY - rect.top;
   const worldX = x - livePan.x;
   const worldY = y - livePan.y;
-  const tileX = Math.floor(worldX / tileSize);
-  const tileY = Math.floor(worldY / tileSize);
+  
+  // Scale tile size by zoom factor
+  const scaledTileSize = tileSize * livePan.zoom;
+  
+  const tileX = Math.floor(worldX / scaledTileSize);
+  const tileY = Math.floor(worldY / scaledTileSize);
   if (tileX < 0 || tileY < 0 || tileX >= mapWidth || tileY >= mapHeight) return null;
   return { tileX, tileY };
 }

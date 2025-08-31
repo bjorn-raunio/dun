@@ -1,7 +1,8 @@
 // --- Game Hooks ---
-export * from './useTurnAdvancement';
-export * from './useReachableTiles';
-export * from './useTargetsInRange';
-export * from './useSelectedCreature';
-export * from './useKeyboardHandlers';
-export * from './usePathHighlight';
+export { useKeyboardHandlers } from './useKeyboardHandlers';
+export { usePathHighlight } from './usePathHighlight';
+export { useReachableTiles } from './useReachableTiles';
+export { useSelectedCreature } from './useSelectedCreature';
+export { useTargetsInRange } from './useTargetsInRange';
+export { useTurnAdvancement } from './useTurnAdvancement';
+export { useZoom } from './useZoom';

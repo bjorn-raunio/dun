@@ -5,7 +5,7 @@ import { useGameState, endTurnWithAI } from './game';
 import { MapView, GameUI, TurnTracker } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight } from './game/hooks';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
 
 // Map and game state are now imported from extracted modules
 
@@ -35,6 +35,9 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     mapData,
     reachableKey
   );
+
+  // Zoom hook
+  const { onWheel } = useZoom(gameActions, gameRefs, gameState.viewport);
 
   // Turn advancement hook
   useTurnAdvancement(turnState, creatures, setTurnState);
@@ -71,6 +74,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         }}
         onMouseUp={mouseHandlers.onMouseUp}
         onMouseLeave={onPathMouseLeave}
+        onWheel={onWheel}
         onCreatureClick={mouseHandlers.onCreatureClick}
         onTileClick={() => {}} // Handled in onMouseUp
         viewportRef={viewportRef}

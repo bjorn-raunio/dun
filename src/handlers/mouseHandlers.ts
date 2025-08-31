@@ -28,7 +28,7 @@ export function createMouseHandlers(
   mapDefinition?: any
 ): MouseHandlers {
   const { setDragging, setPan, setCreatures, setMessages, setReachableKey, setTargetsInRangeKey } = gameActions;
-  const { dragStart, panStart, panRef, livePan, rafId, viewportRef, dragMoved, lastMovement } = gameRefs;
+  const { dragStart, panStart, panRef, livePan, rafId, viewportRef, dragMoved, lastMovement, updateTransform } = gameRefs;
 
 
 
@@ -36,7 +36,7 @@ export function createMouseHandlers(
   function onMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     setDragging(true);
     dragStart.current = { x: e.clientX, y: e.clientY };
-    panStart.current = { ...livePan.current };
+    panStart.current = { x: livePan.current.x, y: livePan.current.y };
     dragMoved.current = { dx: 0, dy: 0 };
   }
 
@@ -47,12 +47,10 @@ export function createMouseHandlers(
     const dy = e.clientY - dragStart.current.y;
     dragMoved.current = { dx, dy };
     const newPan = { x: panStart.current.x + dx, y: panStart.current.y + dy };
-    livePan.current = newPan;
+    livePan.current = { ...newPan, zoom: livePan.current.zoom };
     if (rafId.current === null) {
       rafId.current = window.requestAnimationFrame(() => {
-        if (panRef.current) {
-          panRef.current.style.transform = `translate(${livePan.current.x}px, ${livePan.current.y}px)`;
-        }
+        updateTransform(livePan.current.x, livePan.current.y);
         rafId.current = null;
       });
     }

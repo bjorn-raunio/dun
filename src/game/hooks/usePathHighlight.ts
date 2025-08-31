@@ -10,7 +10,7 @@ export function usePathHighlight(
     pathMap: Map<string, Array<{ x: number; y: number }>>;
   },
   viewportRef: React.MutableRefObject<HTMLDivElement | null>,
-  livePan: React.MutableRefObject<{ x: number; y: number }>,
+  livePan: React.MutableRefObject<{ x: number; y: number; zoom: number }>,
   mapData: { tiles: string[][] },
   reachableKey?: number
 ) {

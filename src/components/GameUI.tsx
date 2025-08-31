@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { TurnTracker } from './TurnTracker';
 import { TurnState } from '../game/turnManagement';
@@ -67,6 +67,8 @@ export function GameUI({ messages, onEndTurn, isAITurnActive = false, turnState,
           turnState={turnState}
         />
       </div>
+
+
       
       <button
         onClick={onEndTurn}

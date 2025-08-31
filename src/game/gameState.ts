@@ -9,14 +9,15 @@ import { updateCombatStates } from '../utils/combatStateUtils';
 
 export function useGameState(initialCreatures: Creature[], mapDefinition?: any): [GameState, GameRefs, GameActions] {
   // --- VIEWPORT SIZE ---
-  const [viewport, setViewport] = React.useState<ViewportState>({ 
+    const [viewport, setViewport] = React.useState<ViewportState>({ 
     width: window.innerWidth, 
-    height: window.innerHeight 
+    height: window.innerHeight,
+    zoom: 1.0
   });
   
   React.useEffect(() => {
     function handleResize() {
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
+      setViewport(prev => ({ ...prev, width: window.innerWidth, height: window.innerHeight }));
     }
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -57,6 +58,11 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     setPan({ x: newPanX, y: newPanY });
   }, [viewport.width, viewport.height, startingTilePixelX, startingTilePixelY]);
 
+  // --- ZOOM MANAGEMENT ---
+  const setZoom = React.useCallback((newZoom: number) => {
+    setViewport(prev => ({ ...prev, zoom: Math.max(0.25, Math.min(3.0, newZoom)) }));
+  }, []);
+
   // --- GAME STATE ---
   const [creatures, setCreatures] = React.useState<Creature[]>(initialCreatures);
   const [selectedCreatureId, setSelectedCreatureId] = React.useState<string | null>(null);
@@ -75,7 +81,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
   const dragStart = React.useRef<{ x: number; y: number } | null>(null);
   const panStart = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const panRef = React.useRef<HTMLDivElement>(null);
-  const livePan = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const livePan = React.useRef<{ x: number; y: number; zoom: number }>({ x: 0, y: 0, zoom: 1.0 });
   const rafId = React.useRef<number | null>(null);
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const dragMoved = React.useRef<{dx: number; dy: number}>({dx: 0, dy: 0});
@@ -83,11 +89,18 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
 
   // Set panRef to current pan when React renders
   React.useEffect(() => {
-    livePan.current = { ...pan };
+    livePan.current = { ...pan, zoom: viewport.zoom };
     if (panRef.current) {
-      panRef.current.style.transform = `translate(${pan.x}px, ${pan.y}px)`;
+      panRef.current.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${viewport.zoom})`;
     }
-  }, [pan]);
+  }, [pan, viewport.zoom]);
+
+  // Function to update transform with current zoom
+  const updateTransform = React.useCallback((x: number, y: number) => {
+    if (panRef.current) {
+      panRef.current.style.transform = `translate(${x}px, ${y}px) scale(${viewport.zoom})`;
+    }
+  }, [viewport.zoom]);
 
   const gameState: GameState = {
     creatures,
@@ -111,6 +124,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     viewportRef,
     dragMoved,
     lastMovement,
+    updateTransform,
   };
 
   const gameActions: GameActions = {
@@ -124,6 +138,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     setTargetsInRangeKey,
     setAITurnState,
     setTurnState,
+    setZoom,
   };
 
   return [gameState, gameRefs, gameActions];

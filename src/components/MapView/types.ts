@@ -20,6 +20,7 @@ export interface MapViewProps {
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseUp: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onWheel: (e: React.WheelEvent<HTMLDivElement>) => void;
   onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
   onTileClick: (pos: { tileX: number; tileY: number }) => void;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;

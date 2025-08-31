@@ -19,6 +19,7 @@ export type GameState = {
 export type ViewportState = {
   width: number;
   height: number;
+  zoom: number;
 };
 
 export type PanState = {
@@ -30,11 +31,12 @@ export type GameRefs = {
   dragStart: React.MutableRefObject<{ x: number; y: number } | null>;
   panStart: React.MutableRefObject<{ x: number; y: number }>;
   panRef: React.MutableRefObject<HTMLDivElement | null>;
-  livePan: React.MutableRefObject<{ x: number; y: number }>;
+  livePan: React.MutableRefObject<{ x: number; y: number; zoom: number }>;
   rafId: React.MutableRefObject<number | null>;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
   dragMoved: React.MutableRefObject<{ dx: number; dy: number }>;
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>;
+  updateTransform: (x: number, y: number) => void;
 };
 
 export type GameActions = {
@@ -48,4 +50,5 @@ export type GameActions = {
   setTargetsInRangeKey: (updater: (prev: number) => number) => void;
   setAITurnState: (updater: (prev: AITurnState) => AITurnState) => void;
   setTurnState: (updater: (prev: TurnState) => TurnState) => void;
+  setZoom: (zoom: number) => void;
 };

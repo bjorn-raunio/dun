@@ -18,6 +18,7 @@ export function MapView({
   onMouseMove,
   onMouseUp,
   onMouseLeave,
+  onWheel,
   onCreatureClick,
   onTileClick,
   viewportRef,
@@ -40,9 +41,11 @@ export function MapView({
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseLeave}
+      onWheel={onWheel}
     >
       <div
         ref={panRef}
+        className="map-pan-container"
         style={{
           position: "absolute",
           top: 0,
@@ -52,6 +55,7 @@ export function MapView({
           gridTemplateRows: `repeat(${rows}, ${TILE_SIZE}px)`,
           gap: 0,
           cursor: "grab",
+          transformOrigin: "0 0",
         }}
       >
         {/* Base map rendering */}
