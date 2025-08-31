@@ -63,6 +63,16 @@ export function EquipmentSlot({
         opacity: isUnarmedWeapon ? 0.8 : 1
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+          {!shouldShowAttackButton && (
+            <div
+              style={{
+                width: '40px', // Left padding (4px) + content width (~24px) + right padding (8px) + left border (2px) + right border (2px) = 40px
+                height: '28px', // Top padding (4px) + content height (~20px) + bottom padding (8px) + top border (2px) + bottom border (2px) = 28px
+                visibility: 'hidden', // Invisible but takes up space
+                boxSizing: 'border-box', // Include border in dimensions
+              }}
+            />
+          )}
           {shouldShowAttackButton && (
             <button
               onClick={() => onAttack(creature)}

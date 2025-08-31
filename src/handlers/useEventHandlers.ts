@@ -6,7 +6,6 @@ import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
 
-
 // --- Event Handlers Custom Hook ---
 
 export interface EventHandlers {

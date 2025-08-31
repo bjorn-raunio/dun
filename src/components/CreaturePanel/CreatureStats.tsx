@@ -24,7 +24,6 @@ export function CreatureStats({ creature }: CreatureStatsProps) {
             creature.isWounded() ? COLORS.warning : COLORS.text
         }}>
           {creature.remainingVitality}/{creature.vitality}
-          {creature.isWounded() && " (WOUNDED)"}
         </strong></div>
         <div>Perception: <strong>{creature.perception}</strong></div>
         <div>Dexterity: <strong>{creature.dexterity}</strong></div>

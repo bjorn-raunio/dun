@@ -49,6 +49,11 @@ export class CreatureStateManager {
   }
 
   isWounded(size: number): boolean {
+    // Creatures with 0 or negative vitality are dead, not wounded
+    if (this.state.remainingVitality <= 0) {
+      return false;
+    }
+    
     if (size < 4) {
       return this.state.remainingVitality <= 1;
     } else {

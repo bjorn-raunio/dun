@@ -53,7 +53,9 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
                     height: 40,
                     objectFit: "cover" as const,
                     borderRadius: "50%",
-                    border: "2px solid #00ff00"
+                    border: "2px solid #00ff00",
+                    filter: hero.isDead() ? "grayscale(100%)" : "none",
+                    opacity: hero.isDead() ? 0.6 : 1
                   }}
                 />
               ) : (
@@ -62,19 +64,17 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
                   height: 40,
                   borderRadius: "50%",
                   background: COLORS.hero,
-                  border: "2px solid #fff"
+                  border: "2px solid #fff",
+                  filter: hero.isDead() ? "grayscale(100%)" : "none",
+                  opacity: hero.isDead() ? 0.6 : 1
                 }} />
               )}
               <div style={{ flex: 1 }}>
                 <div style={{
                   fontSize: 14,
                   fontWeight: 600,
-                  color: hero.isDead() ? COLORS.error : COLORS.text,
-                  textDecoration: hero.isDead() ? 'line-through' : 'none',
-                  opacity: hero.isDead() ? 0.7 : 1
                 }}>
                   {hero.name}
-                  {hero.isDead() && " (DEAD)"}
                 </div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>
                   Vitality: <strong style={{
@@ -82,14 +82,10 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
                       hero.isWounded() ? COLORS.warning : COLORS.text
                   }}>
                     {hero.remainingVitality}
-                    {hero.isWounded() && " (WOUNDED)"}
                   </strong> |
                   Actions: <strong>{hero.remainingActions ?? hero.actions}</strong> |
                   Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong> |
                   Quick: <strong>{hero.remainingQuickActions ?? hero.quickActions}</strong>
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.7 }}>
-                  Position: ({hero.x}, {hero.y})
                 </div>
               </div>
             </div>

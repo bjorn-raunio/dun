@@ -34,43 +34,45 @@ export function createKeyboardHandlers(
       const currentCreature = findCreatureById(creatures, selectedCreatureId);
       if (!currentCreature) return;
       
+      // Prevent controlling enemies with keyboard shortcuts
+      // Check if the creature is player-controlled
+      if (!currentCreature.isPlayerControlled()) {
+        return; // Don't allow keyboard control of AI-controlled creatures
+      }
+      
       let newFacing = currentCreature.facing;
       
       switch (e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
+        case 'Numpad8':
+        case '8':
           newFacing = DIRECTIONS.NORTH;
           break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
+        case 'Numpad6':
+        case '6':
           newFacing = DIRECTIONS.EAST;
           break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
+        case 'Numpad2':
+        case '2':
           newFacing = DIRECTIONS.SOUTH;
           break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
+        case 'Numpad4':
+        case '4':
           newFacing = DIRECTIONS.WEST;
           break;
-        case 'q':
-        case 'Q':
+        case 'Numpad7':
+        case '7':
           newFacing = DIRECTIONS.NORTHWEST;
           break;
-        case 'e':
-        case 'E':
+        case 'Numpad9':
+        case '9':
           newFacing = DIRECTIONS.NORTHEAST;
           break;
-        case 'z':
-        case 'Z':
+        case 'Numpad1':
+        case '1':
           newFacing = DIRECTIONS.SOUTHWEST;
           break;
-        case 'c':
-        case 'C':
+        case 'Numpad3':
+        case '3':
           newFacing = DIRECTIONS.SOUTHEAST;
           break;
         default:
@@ -80,33 +82,16 @@ export function createKeyboardHandlers(
       if (newFacing !== currentCreature.facing) {
         setCreatures(prev => prev.map(c => {
           if (c.id === selectedCreatureId) {
-            // Ensure we're working with class instances
+            // Update the creature's facing direction in place
             if (c.faceDirection) {
               c.faceDirection(newFacing);
-              return c.clone(); // Ensure React detects the change
+              // Return the same creature instance to maintain selection
+              return c;
             } else {
-              // Fallback for plain objects
-              if (c.isPlayerControlled()) {
-                // Handle player-controlled creatures (Hero, Mercenary, etc.)
-                if (c.kind === "hero") {
-                  const hero = new (require('../creatures').Hero)(c);
-                  hero.faceDirection(newFacing);
-                  return hero;
-                } else if (c.kind === "mercenary") {
-                  const mercenary = new (require('../creatures').Mercenary)(c);
-                  mercenary.faceDirection(newFacing);
-                  return mercenary;
-                } else {
-                  // Default to Hero for other player-controlled creatures
-                  const hero = new (require('../creatures').Hero)(c);
-                  hero.faceDirection(newFacing);
-                  return hero;
-                }
-              } else {
-                const monster = new (require('../creatures').Monster)(c);
-                monster.faceDirection(newFacing);
-                return monster;
-              }
+              // For plain objects, we need to create a new instance to maintain type safety
+              // This is a fallback case that shouldn't normally occur
+              console.warn('Creature without faceDirection method detected');
+              return c;
             }
           }
           return c;
