@@ -1,6 +1,7 @@
 import { MapDefinition, Terrain } from './types';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
+import { SKILL_PRESETS } from '../creatures/presets/skills';
 
 // --- Generate tiles from map definition ---
 export const typeToImage: Record<string, string> = {
@@ -81,6 +82,9 @@ export const mapDefinition: MapDefinition = {
       fortune: 3,
       naturalArmor: 3,
       group: CREATURE_GROUPS.PLAYER,
+      skills: [
+        SKILL_PRESETS.lostInTheDark
+      ]
     }),
   ],
 };

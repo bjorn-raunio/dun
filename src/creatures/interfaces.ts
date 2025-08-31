@@ -14,6 +14,7 @@ export interface ICreature {
   image?: string;
   group: string;
   size: number;
+  skills: { [key: string]: { name: string; type: string; description?: string } };
   
   // Position
   x: number;
@@ -96,7 +97,7 @@ export interface ICreatureStateManager {
   isAlive(): boolean;
   isDead(): boolean;
   isWounded(size: number): boolean;
-  hasMoved(): boolean;
+  hasMoved(effectiveMovement?: number): boolean;
   hasActionsRemaining(): boolean;
   hasMana(amount: number): boolean;
   hasFortune(amount: number): boolean;

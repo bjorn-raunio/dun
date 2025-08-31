@@ -61,12 +61,14 @@ export class CreatureStateManager {
     }
   }
 
-  hasMoved(): boolean {
+  hasMoved(effectiveMovement?: number): boolean {
     // Dead creatures cannot have moved
     if (this.isDead()) {
       return false;
     }
-    return this.state.remainingMovement !== this.maxMovement;
+    // Use effective movement (with skill modifiers) if provided, otherwise fall back to base maxMovement
+    const expectedMovement = effectiveMovement ?? this.maxMovement;
+    return this.state.remainingMovement !== expectedMovement;
   }
 
   hasActionsRemaining(): boolean {
@@ -175,6 +177,7 @@ export class CreatureStateManager {
       this.state.remainingActions = 0;
       this.state.remainingQuickActions = 0;
     } else {
+      // Reset to base maxMovement - effective movement will be set separately by the creature class
       this.state.remainingMovement = this.maxMovement;
       this.state.remainingActions = this.maxActions;
       this.state.remainingQuickActions = this.maxQuickActions;

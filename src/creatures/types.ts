@@ -1,6 +1,23 @@
 // Import item types for the equipment interface
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
 
+// --- Skill Types ---
+export type SkillType = "combat" | "stealth" | "academic" | "natural";
+
+export interface Skill {
+  name: string;
+  type: SkillType;
+  description?: string;
+  attributeModifiers?: Array<{
+    attribute: keyof Attributes;
+    value: number;
+  }>;
+}
+
+export interface Skills {
+  [key: string]: Skill;
+}
+
 // --- Core Creature Types ---
 
 export interface Attributes {
@@ -69,4 +86,5 @@ export interface CreatureConstructorParams {
   fortune: number;
   naturalArmor?: number;
   group: CreatureGroup;
+  skills?: Skills | Skill[];
 }

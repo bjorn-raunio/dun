@@ -1,5 +1,6 @@
 import { AIBehaviorType } from '../../ai/types';
 import { MonsterPreset } from './types';
+import { SKILL_PRESETS } from './skills';
 
 // --- Monster Presets Organized by Faction ---
 
@@ -22,6 +23,11 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
       weaponLoadouts: ["broadsword", "axe", "mace"],
       armorLoadouts: ["shield", "leather"],
       aiBehavior: AIBehaviorType.MELEE,
+      skills: [
+        SKILL_PRESETS.lostInTheDark,
+        SKILL_PRESETS.dirtyFighter,
+        SKILL_PRESETS.ambush,
+      ]
     },
     shooter: {
       name: "Shooter",
@@ -43,6 +49,11 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
       weaponLoadouts: ["shortbow"],
       armorLoadouts: [],
       aiBehavior: AIBehaviorType.RANGED,
+      skills: [
+        SKILL_PRESETS.lostInTheDark,
+        SKILL_PRESETS.dirtyFighter,
+        SKILL_PRESETS.ambush,
+      ]
     },
   },
 };

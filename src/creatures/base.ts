@@ -5,7 +5,10 @@ import {
   CreatureConstructorParams,
   CreaturePosition,
   CreatureState,
-  DEFAULT_ATTRIBUTES
+  DEFAULT_ATTRIBUTES,
+  Skills,
+  Skill,
+  SkillType
 } from './types';
 import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
@@ -42,6 +45,7 @@ export abstract class Creature implements ICreature {
   fortune: number;
   naturalArmor: number;
   group: CreatureGroup;
+  skills: Skills;
 
   // Manager instances - now using interfaces
   private stateManager: ICreatureStateManager;
@@ -66,6 +70,16 @@ export abstract class Creature implements ICreature {
     this.fortune = params.fortune;
     this.naturalArmor = params.naturalArmor ?? 3;
     this.group = params.group;
+    // Handle skills as either array or object
+    if (Array.isArray(params.skills)) {
+      // Convert array to object format for internal storage
+      this.skills = params.skills.reduce((acc, skill) => {
+        acc[skill.name.toLowerCase().replace(/\s+/g, '_')] = skill;
+        return acc;
+      }, {} as Skills);
+    } else {
+      this.skills = params.skills ?? {};
+    }
 
     // Initialize managers
     const initialPosition: CreaturePosition = {
@@ -89,9 +103,13 @@ export abstract class Creature implements ICreature {
       this.attributes,
       this.equipment,
       this.naturalArmor,
-      this.size
+      this.size,
+      this.skills
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
+    
+    // Initialize the creature's turn state with effective movement including skill modifiers
+    this.resetTurn();
   }
 
   // --- Abstract Methods ---
@@ -158,7 +176,11 @@ export abstract class Creature implements ICreature {
   isAlive(): boolean { return this.stateManager.isAlive(); }
   isDead(): boolean { return this.stateManager.isDead(); }
   isWounded(): boolean { return this.stateManager.isWounded(this.size); }
-  hasMoved(): boolean { return this.stateManager.hasMoved(); }
+  hasMoved(): boolean { 
+    // Calculate effective movement including skill modifiers
+    const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size));
+    return this.stateManager.hasMoved(effectiveMovement); 
+  }
   hasActionsRemaining(): boolean { return this.stateManager.hasActionsRemaining(); }
   hasMana(amount: number): boolean { return this.stateManager.hasMana(amount); }
   hasTakenActionsThisTurn(): boolean { return this.stateManager.hasTakenActionsThisTurn(); }
@@ -175,6 +197,49 @@ export abstract class Creature implements ICreature {
   getAttackRange(): number { return this.combatManager.getAttackRange(); }
   getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
+
+  // --- Skill Management ---
+  
+  /**
+   * Get all skills the creature has
+   */
+  getSkills(): Skills {
+    return this.skills;
+  }
+
+  /**
+   * Check if the creature has a specific skill
+   */
+  hasSkill(skillName: string): boolean {
+    return Object.values(this.skills).some(skill => 
+      skill.name.toLowerCase() === skillName.toLowerCase()
+    );
+  }
+
+  /**
+   * Get skills of a specific type
+   */
+  getSkillsByType(type: string): Skill[] {
+    return Object.values(this.skills).filter(skill => skill.type === type);
+  }
+
+  /**
+   * Get a summary of all skill effects
+   */
+  getSkillEffectsSummary(): string[] {
+    const effects: string[] = [];
+    
+    for (const skill of Object.values(this.skills)) {
+      if (skill.attributeModifiers) {
+        for (const modifier of skill.attributeModifiers) {
+          const sign = modifier.value >= 0 ? "+" : "";
+          effects.push(`${skill.name}: ${sign}${modifier.value} ${modifier.attribute}`);
+        }
+      }
+    }
+    
+    return effects;
+  }
 
   // --- Combat State Management ---
   private isInCombat: boolean = false;
@@ -237,7 +302,13 @@ export abstract class Creature implements ICreature {
   setRemainingActions(value: number): void { this.stateManager.setRemainingActions(value); }
   setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
   resetTurn(): void { 
-    this.stateManager.resetTurn(); 
+    // Reset turn state first
+    this.stateManager.resetTurn();
+    // Only set effective movement if the creature is alive
+    if (!this.stateManager.isDead()) {
+      const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size));
+      this.stateManager.setRemainingMovement(effectiveMovement);
+    }
   }
 
   recordTurnEndPosition(): void {
@@ -306,6 +377,15 @@ export abstract class Creature implements ICreature {
     };
   }
 
+  // --- Skills ---
+  getSkill(skillName: string): Skill | undefined {
+    return this.skills[skillName];
+  }
+
+  getAllSkills(): Skill[] {
+    return Object.values(this.skills);
+  }
+
   // --- Cloning ---
   clone(overrides?: Partial<Creature>): Creature {
     const params = {
@@ -329,6 +409,7 @@ export abstract class Creature implements ICreature {
       naturalArmor: this.naturalArmor,
       hasMovedWhileEngaged: this.hasMovedWhileEngaged,
       group: this.group,
+      skills: { ...this.skills },
       ...overrides
     };
 

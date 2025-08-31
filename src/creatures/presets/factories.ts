@@ -191,6 +191,7 @@ export function createMonster(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.ENEMY,
     faction: faction,
+    skills: overrides?.skills ?? p.skills,
   });
 }
 
@@ -237,6 +238,7 @@ export function createMercenary(
     fortune: overrides?.fortune ?? p.fortune ?? 0,
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
     group: overrides?.group ?? p.group ?? CREATURE_GROUPS.PLAYER,
+    skills: overrides?.skills ?? p.skills,
     // Mercenary-specific properties
     hireCost: overrides?.hireCost ?? p.hireCost,
   });

@@ -1,6 +1,7 @@
 import { Attributes } from '../index';
 import { AIBehaviorType } from '../../ai/types';
 import { WeaponLoadout } from './loadouts';
+import { Skills, Skill } from '../types';
 
 // --- Shared Preset Types ---
 
@@ -25,6 +26,7 @@ export type BasePreset = {
   fortune?: number;// Optional - defaults to 0
   naturalArmor?: number;
   group?: string;
+  skills?: Skill[] | Skills;
 };
 
 export type MonsterPreset = BasePreset & {

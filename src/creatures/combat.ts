@@ -3,6 +3,7 @@ import { EquipmentSystem } from '../items/equipment';
 import { Weapon, RangedWeapon } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
+import { SkillProcessor } from './skillProcessor';
 
 // --- Creature Combat Management ---
 
@@ -11,7 +12,8 @@ export class CreatureCombatManager {
     private attributes: Attributes,
     private equipment: any,
     private naturalArmor: number,
-    private size: number
+    private size: number,
+    private skills: any = {}
   ) {}
 
   // --- Equipment Access Consolidation ---
@@ -83,66 +85,70 @@ export class CreatureCombatManager {
   // --- Effective Attributes ---
 
   /**
-   * Generic method to get effective attribute value with wounding penalty
+   * Generic method to get effective attribute value with skill modifiers and wounding penalty
    */
-  private getEffectiveAttribute(baseValue: number, isWounded: boolean): number {
-    return isWounded ? Math.max(1, baseValue - 1) : baseValue;
+  private getEffectiveAttribute(
+    attributeName: keyof Attributes,
+    isWounded: boolean
+  ): number {
+    const baseValue = this.attributes[attributeName] ?? 0;
+    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.skills, isWounded);
   }
 
   /**
    * Get effective movement attribute
    */
   getEffectiveMovement(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.movement, isWounded);
+    return this.getEffectiveAttribute("movement", isWounded);
   }
 
   /**
    * Get effective combat attribute
    */
   getEffectiveCombat(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.combat, isWounded);
+    return this.getEffectiveAttribute("combat", isWounded);
   }
 
   /**
    * Get effective ranged attribute
    */
   getEffectiveRanged(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.ranged, isWounded);
+    return this.getEffectiveAttribute("ranged", isWounded);
   }
 
   /**
    * Get effective strength attribute
    */
   getEffectiveStrength(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.strength, isWounded);
+    return this.getEffectiveAttribute("strength", isWounded);
   }
 
   /**
    * Get effective agility attribute
    */
   getEffectiveAgility(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.agility, isWounded);
+    return this.getEffectiveAttribute("agility", isWounded);
   }
 
   /**
    * Get effective courage attribute
    */
   getEffectiveCourage(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.courage, isWounded);
+    return this.getEffectiveAttribute("courage", isWounded);
   }
 
   /**
    * Get effective intelligence attribute
    */
   getEffectiveIntelligence(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.intelligence, isWounded);
+    return this.getEffectiveAttribute("intelligence", isWounded);
   }
 
   getEffectivePerception(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.perception ?? 0, isWounded);
+    return this.getEffectiveAttribute("perception", isWounded);
   }
 
   getEffectiveDexterity(isWounded: boolean): number {
-    return this.getEffectiveAttribute(this.attributes.dexterity ?? 0, isWounded);
+    return this.getEffectiveAttribute("dexterity", isWounded);
   }
 }
