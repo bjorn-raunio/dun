@@ -27,6 +27,7 @@ export function executeMovement(
   mapData: { tiles: string[][] },
   mapDefinition?: any
 ): MovementResult {
+  
   if (path.length === 0) {
     return {
       status: 'failed',

@@ -52,6 +52,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
       setSelectedCreatureId(null);
     } else if (tileAction.action === 'movement' && selectedCreatureId) {
       const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapData.tiles[0].length, mapData.tiles.length);
+
       if (pos) {
         movementHandlers.handleMovement({
           selectedCreatureId,

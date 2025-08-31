@@ -204,7 +204,7 @@ export function calculateMovementCost(
       totalCost += climbingCostPenalty;
     }
   }
-
+  
   if (movingCreature && mapDefinition) {
     const engagingCreatures = getEngagingCreaturesAtPosition(movingCreature, allCreatures, fromX, fromY);
     if (engagingCreatures.length > 0) {

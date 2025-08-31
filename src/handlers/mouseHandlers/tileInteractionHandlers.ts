@@ -41,8 +41,8 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
     if (targetingMode?.isActive) {
       const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapData.tiles[0].length, mapData.tiles.length);
       if (pos) {
-        // Check if there's a creature at this position
-        const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY);
+        // Check if there's a living creature at this position
+        const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY && c.isAlive());
         if (!creatureAtPosition) {
           // Clicked on empty space - cancel targeting mode
           setTargetingMode({ isActive: false, attackerId: null, message: '' });
@@ -58,8 +58,8 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
       return { action: 'deselect' };
     }
 
-    // Check if clicked on an empty tile (no creature present)
-    const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY);
+    // Check if clicked on an empty tile (no living creature present)
+    const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY && c.isAlive());
     if (!creatureAtPosition && selectedCreatureId) {
       // Check if this is a highlighted movement tile - if so, don't deselect
       const reachableKeySet = new Set(reachable.tiles.map((t: { x: number; y: number }) => `${t.x},${t.y}`));

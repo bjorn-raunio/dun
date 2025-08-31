@@ -9,6 +9,7 @@ import { updateCombatStates } from '../utils/combatStateUtils';
 import { calculateMovementCost } from '../utils/movementCost';
 import { MovementResult, MovementStatus } from '../game/movement';
 import { MapDefinition } from '../maps/types';
+import { logMovement } from '../utils';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement implements ICreatureMovement {
@@ -43,7 +44,6 @@ export class CreatureMovement implements ICreatureMovement {
         totalPathLength: 0
       };
     }
-
     // Validate that the path starts from the creature's current position
     const startTile = path[0];
     if (startTile.x !== creature.x || startTile.y !== creature.y) {

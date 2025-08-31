@@ -59,8 +59,7 @@ export function EquipmentSlot({
         padding: 8,
         border: `1px solid ${COLORS.border}`,
         borderRadius: 4,
-        background: isUnarmedWeapon ? COLORS.backgroundLight : COLORS.backgroundLight,
-        opacity: isUnarmedWeapon ? 0.8 : 1
+        background: COLORS.backgroundLight
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
           {!shouldShowAttackButton && (
@@ -97,10 +96,9 @@ export function EquipmentSlot({
           <div style={{ 
             fontWeight: 600, 
             fontSize: 14,
-            color: isUnarmedWeapon ? COLORS.textMuted : COLORS.text
+            color: COLORS.text
           }}>
             {displayItem.name}
-            {isUnarmedWeapon && <span style={{ fontSize: 12, color: COLORS.textMuted, marginLeft: 8 }}>(Unarmed)</span>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
