@@ -76,7 +76,7 @@ export class CombatSkillTriggerManager {
   ): void {
     if (dice && dice.length === 2) {
       const [die1, die2] = dice;
-      if (isDoubleResult(die1, die2) || true) {
+      if (isDoubleResult(die1, die2)) {
         const doubleValue = getDoubleResultValue(die1, die2);
         console.log(`${attacker.name} rolled doubles: ${doubleValue}&${doubleValue}`);
         

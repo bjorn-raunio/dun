@@ -57,7 +57,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         attributeModifiers: {
           ...standardAttributeModifiers
         },
-        onTurnStart: (creature: Creature) => {
+        onTurnStart: (creature: Creature) => {          
           // Roll d6 for stun recovery - recover on 4+
           const recoveryRoll = Math.floor(Math.random() * 6) + 1;
           if (recoveryRoll >= 4) {
