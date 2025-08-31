@@ -12,12 +12,16 @@ export function addMessage(
 }
 
 export function addCombatMessage(
-  combatResult: { message: string; targetDefeated: boolean },
+  combatResult: { messages: string[]; targetDefeated: boolean },
   targetName: string,
   dispatch: React.Dispatch<any>
 ) {
-  // Add combat message
-  addMessage(combatResult.message, dispatch);
+  // Add combat messages
+  if (combatResult.messages && combatResult.messages.length > 0) {
+    combatResult.messages.forEach(message => {
+      addMessage(message, dispatch);
+    });
+  }
   
   // Add defeat message if target was defeated
   if (combatResult.targetDefeated) {

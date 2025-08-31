@@ -4,13 +4,9 @@ import { BaseValidationResult } from '../types';
 
 export interface CombatResult {
   success: boolean;
-  message: string;
   damage: number;
   targetDefeated: boolean;
-  toHitMessage?: string;
-  blockMessage?: string;
-  damageMessage?: string;
-  shieldBlockMessage?: string;
+  messages: string[]; // Array containing to hit, block, and damage messages (if applicable)
 }
 
 export interface CombatValidationResult extends BaseValidationResult { }
@@ -25,8 +21,6 @@ export interface ToHitResult {
   attackerDoubleCritical: boolean;
   defenderDoubleCritical: boolean;
   criticalHit: boolean;
-  attackerModifiers: string[];
-  defenderModifiers: string[];
   attackerDice: number[];  // Individual dice results for attacker
   defenderDice: number[];  // Individual dice results for defender
 }
@@ -34,7 +28,6 @@ export interface ToHitResult {
 export interface RangedToHitResult {
   hit: boolean;
   toHitMessage: string;
-  toHitRoll: number;
   attackerDoubleCritical: boolean;
   criticalHit: boolean;
   attackerDice: number[];  // Individual dice results for attacker

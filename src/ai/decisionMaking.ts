@@ -199,7 +199,7 @@ export function makeAIDecision(context: AIContext): AIActionResult {
 export function executeAIDecision(
   decision: AIDecision,
   context: AIContext
-): { success: boolean; message: string; newState: AIState; targetDefeated?: boolean } {
+): { success: boolean; messages: string[]; newState: AIState; targetDefeated?: boolean } {
   const { ai, creature, allCreatures, mapData, mapDefinition } = context;
   
   switch (decision.type) {
@@ -219,7 +219,7 @@ export function executeAIDecision(
         
         return {
           success: true,
-          message: attackResult.message,
+          messages: attackResult.messages && attackResult.messages.length > 0 ? attackResult.messages : ['Attack completed'],
           newState,
           targetDefeated: attackResult.targetDefeated
         };
@@ -235,12 +235,12 @@ export function executeAIDecision(
         const path = pathMap.get(destKey);
         
         if (!path) {
-          return {
-            success: false,
-            message: `No path found to destination (${decision.destination.x}, ${decision.destination.y})`,
-            newState: ai,
-            targetDefeated: false
-          };
+                  return {
+          success: false,
+          messages: [`No path found to destination (${decision.destination.x}, ${decision.destination.y})`],
+          newState: ai,
+          targetDefeated: false
+        };
         }
         
         // Use the same movement validation and execution as heroes
@@ -263,14 +263,14 @@ export function executeAIDecision(
           
           return {
             success: true,
-            message,
+            messages: [message],
             newState,
             targetDefeated: false
           };
         } else {
           return {
             success: false,
-            message: moveResult.message || AI_MESSAGES.cannotMove(creature.name),
+            messages: [moveResult.message || AI_MESSAGES.cannotMove(creature.name)],
             newState: ai,
             targetDefeated: false
           };
@@ -282,7 +282,7 @@ export function executeAIDecision(
       // For now, fleeing just means ending the turn
       return {
         success: true,
-        message: AI_MESSAGES.flee(creature.name),
+        messages: [AI_MESSAGES.flee(creature.name)],
         newState: ai,
         targetDefeated: false
       };
@@ -290,7 +290,7 @@ export function executeAIDecision(
     case 'wait':
       return {
         success: true,
-        message: AI_MESSAGES.wait(creature.name),
+        messages: [AI_MESSAGES.wait(creature.name)],
         newState: ai,
         targetDefeated: false
       };
@@ -299,7 +299,7 @@ export function executeAIDecision(
       // Handle special abilities (to be implemented)
       return {
         success: true,
-        message: AI_MESSAGES.specialAbility(creature.name),
+        messages: [AI_MESSAGES.specialAbility(creature.name)],
         newState: ai,
         targetDefeated: false
       };
@@ -307,7 +307,7 @@ export function executeAIDecision(
   
   return {
     success: false,
-    message: AI_MESSAGES.unknownAction(decision.type),
+    messages: [AI_MESSAGES.unknownAction(decision.type)],
     newState: ai,
     targetDefeated: false
   };

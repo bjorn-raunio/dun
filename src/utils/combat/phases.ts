@@ -14,7 +14,6 @@ import {
   isBackAttack, 
   checkShieldBlock, 
   calculateCriticalDamage, 
-  generateCriticalHitText,
   calculateEffectiveArmor,
   calculateElevationBonus,
   calculateDamage
@@ -31,49 +30,22 @@ export function executeToHitRollMelee(
   target: Creature,
   mapDefinition?: any
 ): ToHitResult {
+  // Create EquipmentSystem instances once and reuse
   const attackerEquipment = new EquipmentSystem(attacker.equipment);
   const targetEquipment = new EquipmentSystem(target.equipment);
+  
   let attackerBonus = attackerEquipment.getAttackBonus(attacker.combat, attacker.ranged);
   let defenderBonus = targetEquipment.getAttackBonus(target.combat, target.ranged);
-
-  // Track modifiers for display
-  const attackerModifiers: string[] = [];
-  const defenderModifiers: string[] = [];
-
-  // Add weapon combat modifier display for attacker
-  const attackerWeapon = attackerEquipment.getMainWeapon();
-  const attackerWeaponModifier = attackerWeapon instanceof Weapon ? (attackerWeapon.combatModifier ?? 0) : 0;
-  if (attackerWeaponModifier !== 0) {
-    const modifierText = attackerWeaponModifier > 0 ? `+${attackerWeaponModifier}` : `${attackerWeaponModifier}`;
-    attackerModifiers.push(`weapon ${modifierText}`);
-  }
-
-  // Add weapon combat modifier display for defender
-  const defenderWeapon = targetEquipment.getMainWeapon();
-  const defenderWeaponModifier = defenderWeapon instanceof Weapon ? (defenderWeapon.combatModifier ?? 0) : 0;
-  if (defenderWeaponModifier !== 0) {
-    const modifierText = defenderWeaponModifier > 0 ? `+${defenderWeaponModifier}` : `${defenderWeaponModifier}`;
-    defenderModifiers.push(`weapon ${modifierText}`);
-  }
 
   // Check for back attack bonus
   if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
     attackerBonus += COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
-    attackerModifiers.push(`back attack +${COMBAT_CONSTANTS.BACK_ATTACK_BONUS}`);
-    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind! (+${COMBAT_CONSTANTS.BACK_ATTACK_BONUS} bonus)`);
   }
 
   // Check for elevation bonus
   const elevationBonus = calculateElevationBonus(attacker, target, mapDefinition);
   attackerBonus += elevationBonus.attackerBonus;
   defenderBonus += elevationBonus.defenderBonus;
-  
-  if (elevationBonus.attackerBonus > 0) {
-    attackerModifiers.push("elevation +1");
-  }
-  if (elevationBonus.defenderBonus > 0) {
-    defenderModifiers.push("elevation +1");
-  }
 
   // Roll for combat
   const attackerRollResult = calculateCombatRoll(attackerBonus);
@@ -118,20 +90,7 @@ export function executeToHitRollMelee(
     );
   }
 
-  // Generate to-hit message with modifiers
-  const attackerModifierText = attackerModifiers.length > 0 ? ` (${attackerModifiers.join(', ')})` : '';
-  const defenderModifierText = defenderModifiers.length > 0 ? ` (${defenderModifiers.join(', ')})` : '';
-
-  let toHitMessage: string;
-  if (attackerDoubleCritical && defenderDoubleCritical) {
-    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} (DOUBLE CRITICAL!) vs ${defenderRoll}${defenderModifierText} (DOUBLE CRITICAL!) - EPIC CLASH!`;
-  } else if (attackerDoubleCritical) {
-    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} (DOUBLE CRITICAL!) vs ${defenderRoll}${defenderModifierText} - AUTOMATIC HIT!`;
-  } else if (defenderDoubleCritical) {
-    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} vs ${defenderRoll}${defenderModifierText} (DOUBLE CRITICAL!)`;
-  } else {
-    toHitMessage = `${attacker.name} attacks ${target.name}: ${attackerRoll}${attackerModifierText} vs ${defenderRoll}${defenderModifierText}`;
-  }
+  let toHitMessage: string = `${attacker.name} attacks ${target.name}: ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} ${displayHitMessage(hit, criticalHit, attackerDoubleCritical)}`;
 
   return {
     hit,
@@ -141,8 +100,6 @@ export function executeToHitRollMelee(
     attackerDoubleCritical,
     defenderDoubleCritical,
     criticalHit,
-    attackerModifiers,
-    defenderModifiers,
     attackerDice: attackerRollResult.dice,
     defenderDice: defenderRollResult.dice
   };
@@ -155,29 +112,14 @@ export function executeToHitRollRanged(
   attacker: Creature,
   target: Creature
 ): RangedToHitResult {
-  const toHitRollResult = calculateCombatRoll(attacker.ranged);
-  const toHitRoll = toHitRollResult.total;
-  let attackerDoubleCritical = isDoubleCritical(toHitRollResult.dice);
-  let criticalHit = isCriticalHit(toHitRollResult.dice);
-
-  // Check if target is more than half the weapon's range away
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
-  const weaponRange = attackerEquipment.getWeaponRange('normal') as number;
-  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-  const halfRange = Math.ceil(weaponRange / 2);
-
-  // If target is more than half range away, critical hits and double criticals are not possible
-  if (distance > halfRange) {
-    attackerDoubleCritical = false;
-    criticalHit = false;
-  }
-
+  
   // Check for back attack bonus
   let backAttackBonus = 0;
   if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
     backAttackBonus = COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
-    logCombat(`Back attack detected: ${attacker.name} was behind ${target.name} at turn start and is attacking from behind with ranged weapon! (+${COMBAT_CONSTANTS.BACK_ATTACK_BONUS} bonus)`);
   }
+
+  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
 
   // Apply range penalty: -1 over 3, -2 over 6, -3 over 9
   let rangePenalty = 0;
@@ -209,19 +151,31 @@ export function executeToHitRollRanged(
       movementPenalty = -2;
     }
   }
-  
-  // Ranged attacks hit on 10 or greater (with all penalties and bonuses), but double criticals always hit
-  const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
-  const hit = attackerDoubleCritical || (toHitRoll + totalModifier) >= 10;
 
-  const toHitMessage = attackerDoubleCritical
-    ? `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged) (DOUBLE CRITICAL!) - AUTOMATIC HIT!`
-    : `${attacker.name} makes a ranged attack at ${target.name}: ${toHitRoll} (2d6 + ${attacker.ranged} ranged)${totalModifier !== 0 ? ` (total modifier ${totalModifier > 0 ? '+' : ''}${totalModifier})` : ''}`;
+  const totalModifier = attacker.ranged + backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
+  const toHitRollResult = calculateCombatRoll(totalModifier);
+  let attackerDoubleCritical = isDoubleCritical(toHitRollResult.dice);
+  let criticalHit = isCriticalHit(toHitRollResult.dice);
+
+  // Check if target is more than half the weapon's range away
+  const attackerEquipment = new EquipmentSystem(attacker.equipment);
+  const weaponRange = attackerEquipment.getWeaponRange('normal') as number;
+  const halfRange = Math.ceil(weaponRange / 2);
+
+  // If target is more than half range away, critical hits and double criticals are not possible
+  if (distance > halfRange) {
+    attackerDoubleCritical = false;
+    criticalHit = false;
+  }
+
+  // Ranged attacks hit on 10 or greater (with all penalties and bonuses), but double criticals always hit
+  const hit = attackerDoubleCritical || toHitRollResult.total >= 10;
+
+  const toHitMessage = `${attacker.name} makes a ranged attack at ${target.name}: ${displayDiceSum(toHitRollResult, totalModifier)} ${displayHitMessage(hit, criticalHit, attackerDoubleCritical)}`;
 
   return {
     hit,
     toHitMessage,
-    toHitRoll,
     attackerDoubleCritical,
     criticalHit,
     attackerDice: toHitRollResult.dice
@@ -240,32 +194,57 @@ export function executeBlockRoll(
   criticalHit: boolean
 ): BlockResult {
   const targetEquipment = new EquipmentSystem(target.equipment);
-  let blockMessage = '';
-  let blockSuccess = false;
-
+  
   // Check if this is a back attack (shields can't block back attacks)
   const isBackAttackFromAttacker = isBackAttack(attacker, target);
 
   // Double criticals are unblockable
-  if (!attackerDoubleCritical && targetEquipment.hasShield(isBackAttackFromAttacker)) {
-    let shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttackFromAttacker);
-
-    // Critical hits make shields harder to use (increase block value by 1)
-    if (criticalHit) {
-      shieldBlockValue += 1;
-    }
-
-    const shieldResult = checkShieldBlock(shieldBlockValue);
-    const criticalShieldText = criticalHit ? " (critical hit +1)" : "";
-    blockMessage = `${target.name}'s shield: ${shieldResult.message}${criticalShieldText}`;
-    blockSuccess = shieldResult.blocked;
-  } else if (attackerDoubleCritical) {
-    blockMessage = `${target.name}'s shield: Cannot block double critical!`;
-  } else if (targetEquipment.hasShield(false) && isBackAttackFromAttacker) {
-    blockMessage = `${target.name}'s shield: Cannot block back attack!`;
+  if (attackerDoubleCritical) {
+    return {
+      blockMessage: ``,
+      blockSuccess: false
+    };
   }
 
-  return { blockMessage, blockSuccess };
+  // Shields can't block back attacks
+  if (targetEquipment.hasShield(false) && isBackAttackFromAttacker) {
+    return {
+      blockMessage: ``,
+      blockSuccess: false
+    };
+  }
+
+  // Process shield block if available
+  if (targetEquipment.hasShield(isBackAttackFromAttacker)) {
+    return processShieldBlock(target, targetEquipment, isBackAttackFromAttacker, criticalHit);
+  }
+
+  return { blockMessage: '', blockSuccess: false };
+}
+
+/**
+ * Process shield block attempt
+ */
+function processShieldBlock(
+  target: Creature,
+  targetEquipment: EquipmentSystem,
+  isBackAttack: boolean,
+  criticalHit: boolean
+): BlockResult {
+  let shieldBlockValue = targetEquipment.getShieldBlockValue(isBackAttack);
+
+  // Critical hits make shields harder to use (increase block value by 1)
+  if (criticalHit) {
+    shieldBlockValue += 1;
+  }
+
+  const shieldResult = checkShieldBlock(shieldBlockValue);
+  const blockMessage = shieldResult.blocked ? `${target.name} blocks: ${displayDiceRoll([shieldResult.roll])}` : '';
+  
+  return {
+    blockMessage,
+    blockSuccess: shieldResult.blocked
+  };
 }
 
 // --- Combat Phase 3: Damage Roll ---
@@ -299,8 +278,7 @@ export function executeDamageRoll(
   const damage = calculateDamage(diceRolls, armorValue);
 
   // Generate damage message
-  const criticalHitText = generateCriticalHitText(attackerDoubleCritical, criticalHit);
-  const damageMessage = `Damage: ${damage} [${diceRolls.join(',')}] vs armor ${armorValue}${criticalHitText}`;
+  const damageMessage = `${attacker.name} deals ${damage} damage: ${displayDiceRoll(diceRolls)} vs ${armorValue} Armor`;
 
   return { damage, damageMessage, diceRolls, armorValue };
 }
@@ -324,4 +302,16 @@ function determineHit(
   // Agility tie - check shields
   if (defenderHasShield && !attackerHasShield) return false;
   return true; // Attacker wins if both have shields or neither has shield
+}
+
+function displayDiceRoll(dice: number[]): string {
+  return `${dice.map(d => `[${d}]`).join('')}`;
+}
+
+function displayDiceSum(roll: { total: number; dice: number[] }, modifier?: number): string {
+  return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier}`}` : ''} = ${roll.total}`;
+}
+
+function displayHitMessage(hit: boolean, criticalHit: boolean, doubleCritical: boolean): string {
+  return hit ? `${doubleCritical ? '(Double Critical)' : criticalHit ? '(Critical Hit)' : '(Hit)'}` : '(Miss)';
 }

@@ -70,8 +70,6 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       attackerId: attackingCreature.id,
       message: `Select a target for ${attackingCreature.name}'s attack`
     });
-
-    addMessage(`Targeting mode: Click on an enemy to attack with ${attackingCreature.name}`, gameActions.dispatch);
   }, [creatures, setTargetingMode]);
 
   // Check if creature can attack

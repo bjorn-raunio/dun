@@ -18,16 +18,10 @@ export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
     const combatResult = attacker.attack(target, creatures, mapDefinition, mapData);
 
     // Add combat messages
-    if (combatResult.toHitMessage) {
-      addMessage(combatResult.toHitMessage, dispatch);
-    }
-
-    if (combatResult.blockMessage) {
-      addMessage(combatResult.blockMessage, dispatch);
-    }
-
-    if (combatResult.damageMessage) {
-      addMessage(combatResult.damageMessage, dispatch);
+    if (combatResult.messages && combatResult.messages.length > 0) {
+      combatResult.messages.forEach(message => {
+        addMessage(message, dispatch);
+      });
     }
 
     if (combatResult.targetDefeated) {

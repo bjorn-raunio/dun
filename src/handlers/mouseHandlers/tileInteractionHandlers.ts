@@ -46,7 +46,6 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
         if (!creatureAtPosition) {
           // Clicked on empty space - cancel targeting mode
           setTargetingMode({ isActive: false, attackerId: null, message: '' });
-          addMessage('Targeting mode cancelled', dispatch);
           return { action: 'targeting_cancelled' };
         }
       }

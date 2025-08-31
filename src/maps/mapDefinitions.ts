@@ -68,15 +68,15 @@ export const mapDefinition: MapDefinition = {
       image: "creatures/knight.png",
       attributes: {
         movement: 5,
-        combat: 4,
-        ranged: 2,
+        combat: 5,
+        ranged: 5,
         strength: 4,
         agility: 3,
         courage: 3,
         intelligence: 3,
       },
       actions: 1,
-      size: 2, // medium
+      size: 2,
       facing: 2,
       inventory: [
         createRangedWeapon("longbow"),

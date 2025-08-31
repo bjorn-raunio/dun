@@ -9,6 +9,7 @@ import { logCombat } from '../logging';
 import { MapDefinition } from '../../maps/types';
 
 // --- Combat Calculation Utilities ---
+// Streamlined calculations with optimized object creation
 
 /**
  * Calculate targets in range for a creature
@@ -81,15 +82,11 @@ export function isBackAttack(attacker: Creature, target: Creature): boolean {
 /**
  * Check if a shield blocks an attack
  */
-export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; message: string } {
+export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; roll: number } {
   const roll = rollD6();
   const blocked = roll >= shieldBlockValue;
 
-  const message = blocked
-    ? `Shield blocks! (${roll} >= ${shieldBlockValue})`
-    : `Shield fails to block (${roll} < ${shieldBlockValue})`;
-
-  return { blocked, message };
+  return { blocked, roll };
 }
 
 /**
@@ -99,15 +96,6 @@ export function calculateCriticalDamage(baseDamage: number, attackerDoubleCritic
   if (attackerDoubleCritical) return baseDamage + 2;
   if (criticalHit) return baseDamage + 1;
   return baseDamage;
-}
-
-/**
- * Generate critical hit text for display
- */
-export function generateCriticalHitText(attackerDoubleCritical: boolean, criticalHit: boolean): string {
-  if (attackerDoubleCritical) return " (DOUBLE CRITICAL!)";
-  if (criticalHit) return " (CRITICAL HIT!)";
-  return "";
 }
 
 /**

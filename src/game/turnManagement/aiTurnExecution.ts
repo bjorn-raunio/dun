@@ -155,11 +155,14 @@ function executeSingleAIAction(
     (creature as any).updateAIState(executionResult.newState);
   }
   
-  // Add message to console for movement, to message system for other actions
-  if (decisionResult.action.type === 'move') {
-    logAI(executionResult.message);
+  if (decisionResult.action.type === 'move' || decisionResult.action.type === 'wait') {
+    executionResult.messages.forEach(message => {
+      logAI(message);
+    }); 
   } else {
-    addMessage(executionResult.message, context.dispatch);
+    executionResult.messages.forEach(message => {
+      addMessage(message, context.dispatch);
+    }); 
   }
   
   return {

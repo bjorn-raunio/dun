@@ -25,7 +25,6 @@ export function createKeyboardHandlers(
       // Handle Escape key to cancel targeting mode
       if (e.key === 'Escape' && targetingMode?.isActive) {
         setTargetingMode({ isActive: false, attackerId: null, message: '' });
-        setMessages(prev => ['Targeting mode cancelled', ...prev].slice(0, 50));
         return;
       }
 

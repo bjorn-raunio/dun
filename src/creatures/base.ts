@@ -130,49 +130,37 @@ export abstract class Creature implements ICreature {
   set facing(value: number) { this.positionManager.setFacing(value); }
 
   // --- State Delegation ---
-  get remainingMovement(): number { 
-    const baseRemaining = this.stateManager.getState().remainingMovement;
+  private getModifiedRemaining(baseValue: number, modifierType: 'movementModifier' | 'actionModifier' | 'quickActionModifier'): number {
     const statusEffects = this.getActiveStatusEffects();
     
-    // Apply status effect movement modifiers
-    let modifiedRemaining = baseRemaining;
+    // Apply status effect modifiers
+    let modifiedValue = baseValue;
     for (const effect of statusEffects) {
-      if (effect.movementModifier) {
-        modifiedRemaining += effect.movementModifier;
+      const modifier = effect[modifierType];
+      if (modifier) {
+        modifiedValue += modifier;
       }
     }
+    if(this.isDead()) {
+      modifiedValue = 0;
+    }
     
-    return Math.max(0, modifiedRemaining);
+    return Math.max(0, modifiedValue);
+  }
+
+  get remainingMovement(): number { 
+    const baseRemaining = this.stateManager.getState().remainingMovement;
+    return this.getModifiedRemaining(baseRemaining, 'movementModifier');
   }
   
   get remainingActions(): number { 
     const baseRemaining = this.stateManager.getState().remainingActions;
-    const statusEffects = this.getActiveStatusEffects();
-    
-    // Apply status effect action modifiers
-    let modifiedRemaining = baseRemaining;
-    for (const effect of statusEffects) {
-      if (effect.actionModifier) {
-        modifiedRemaining += effect.actionModifier;
-      }
-    }
-    
-    return Math.max(0, modifiedRemaining);
+    return this.getModifiedRemaining(baseRemaining, 'actionModifier');
   }
   
   get remainingQuickActions(): number { 
     const baseRemaining = this.stateManager.getState().remainingQuickActions;
-    const statusEffects = this.getActiveStatusEffects();
-    
-    // Apply status effect quick action modifiers
-    let modifiedRemaining = baseRemaining;
-    for (const effect of statusEffects) {
-      if (effect.quickActionModifier) {
-        modifiedRemaining += effect.quickActionModifier;
-      }
-    }
-    
-    return Math.max(0, modifiedRemaining);
+    return this.getModifiedRemaining(baseRemaining, 'quickActionModifier');
   }
   get remainingVitality(): number { return this.stateManager.getState().remainingVitality; }
   get remainingMana(): number { return this.stateManager.getState().remainingMana; }
@@ -429,11 +417,8 @@ export abstract class Creature implements ICreature {
     return {
       success: result.success,
       damage: result.damage,
-      message: result.message,
       targetDefeated: result.targetDefeated,
-      toHitMessage: result.toHitMessage,
-      blockMessage: result.blockMessage,
-      damageMessage: result.damageMessage
+      messages: result.messages
     };
   }
 

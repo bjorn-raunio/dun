@@ -207,7 +207,7 @@ export function resetAllTurns(
   // Batch update creatures and add message
   dispatch({ type: 'BATCH_UPDATE', payload: [
     { type: 'SET_CREATURES', payload: updatedCreatures },
-    { type: 'ADD_MESSAGE', payload: 'New turn begins!' }
+    { type: 'ADD_MESSAGE', payload: 'End turn' }
   ]});
   
   // Reset last movement tracking
