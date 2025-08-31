@@ -4,7 +4,7 @@ import { CreatureHeader } from './CreatureHeader';
 import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
-import { SkillsSection } from './SkillsSection';
+import { SkillsSection, StatusEffectsSection } from './SkillsSection';
 import { HeroSelector } from './HeroSelector';
 
 import { COMMON_STYLES } from '../styles';
@@ -43,6 +43,7 @@ export function CreaturePanel({
     <div style={PANEL_STYLES}>
       <CreatureHeader creature={selectedCreature} />
       <CreatureStats creature={selectedCreature} />
+      <StatusEffectsSection creature={selectedCreature} />
       <SkillsSection creature={selectedCreature} />
       <EquipmentSection 
         creature={selectedCreature} 

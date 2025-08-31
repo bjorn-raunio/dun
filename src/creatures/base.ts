@@ -8,12 +8,16 @@ import {
   DEFAULT_ATTRIBUTES,
   Skills,
   Skill,
-  SkillType
+  SkillType,
+  StatusEffect,
+  StatusEffectType
 } from './types';
 import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
 import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
+import { CreatureStatusEffectManager } from './statusEffects';
+import { SkillProcessor } from './skillProcessor';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
 import { Item } from '../items';
 import { Weapon, RangedWeapon } from '../items/types';
@@ -52,6 +56,7 @@ export abstract class Creature implements ICreature {
   private positionManager: ICreaturePositionManager;
   private combatManager: ICreatureCombatManager;
   private relationshipsManager: ICreatureRelationshipsManager;
+  private statusEffectManager: CreatureStatusEffectManager;
 
   constructor(params: CreatureConstructorParams) {
     this.id = params.id ?? generateCreatureId();
@@ -108,6 +113,9 @@ export abstract class Creature implements ICreature {
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
     
+    // Initialize status effect manager
+    this.statusEffectManager = new CreatureStatusEffectManager(this);
+    
     // Initialize the creature's turn state with effective movement including skill modifiers
     this.resetTurn();
   }
@@ -125,9 +133,50 @@ export abstract class Creature implements ICreature {
   set facing(value: number) { this.positionManager.setFacing(value); }
 
   // --- State Delegation ---
-  get remainingMovement(): number { return this.stateManager.getState().remainingMovement; }
-  get remainingActions(): number { return this.stateManager.getState().remainingActions; }
-  get remainingQuickActions(): number { return this.stateManager.getState().remainingQuickActions; }
+  get remainingMovement(): number { 
+    const baseRemaining = this.stateManager.getState().remainingMovement;
+    const statusEffects = this.getActiveStatusEffects();
+    
+    // Apply status effect movement modifiers
+    let modifiedRemaining = baseRemaining;
+    for (const effect of statusEffects) {
+      if (effect.movementModifier) {
+        modifiedRemaining += effect.movementModifier;
+      }
+    }
+    
+    return Math.max(0, modifiedRemaining);
+  }
+  
+  get remainingActions(): number { 
+    const baseRemaining = this.stateManager.getState().remainingActions;
+    const statusEffects = this.getActiveStatusEffects();
+    
+    // Apply status effect action modifiers
+    let modifiedRemaining = baseRemaining;
+    for (const effect of statusEffects) {
+      if (effect.actionModifier) {
+        modifiedRemaining += effect.actionModifier;
+      }
+    }
+    
+    return Math.max(0, modifiedRemaining);
+  }
+  
+  get remainingQuickActions(): number { 
+    const baseRemaining = this.stateManager.getState().remainingQuickActions;
+    const statusEffects = this.getActiveStatusEffects();
+    
+    // Apply status effect quick action modifiers
+    let modifiedRemaining = baseRemaining;
+    for (const effect of statusEffects) {
+      if (effect.quickActionModifier) {
+        modifiedRemaining += effect.quickActionModifier;
+      }
+    }
+    
+    return Math.max(0, modifiedRemaining);
+  }
   get remainingVitality(): number { return this.stateManager.getState().remainingVitality; }
   get remainingMana(): number { return this.stateManager.getState().remainingMana; }
   get remainingFortune(): number { return this.stateManager.getState().remainingFortune; }
@@ -135,31 +184,31 @@ export abstract class Creature implements ICreature {
 
   // --- Backward Compatibility Getters/Setters ---
   get movement(): number { 
-    return this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('movement');
   }
   get combat(): number { 
-    return this.combatManager.getEffectiveCombat(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('combat');
   }
   get ranged(): number { 
-    return this.combatManager.getEffectiveRanged(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('ranged');
   }
   get strength(): number { 
-    return this.combatManager.getEffectiveStrength(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('strength');
   }
   get agility(): number { 
-    return this.combatManager.getEffectiveAgility(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('agility');
   }
   get courage(): number { 
-    return this.combatManager.getEffectiveCourage(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('courage');
   }
   get intelligence(): number { 
-    return this.combatManager.getEffectiveIntelligence(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('intelligence');
   }
   get perception(): number { 
-    return this.combatManager.getEffectivePerception(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('perception');
   }
   get dexterity(): number { 
-    return this.combatManager.getEffectiveDexterity(this.stateManager.isWounded(this.size)); 
+    return this.getEffectiveAttribute('dexterity');
   }
 
   set movement(value: number) { this.attributes.movement = value; }
@@ -177,11 +226,13 @@ export abstract class Creature implements ICreature {
   isDead(): boolean { return this.stateManager.isDead(); }
   isWounded(): boolean { return this.stateManager.isWounded(this.size); }
   hasMoved(): boolean { 
-    // Calculate effective movement including skill modifiers
-    const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size));
-    return this.stateManager.hasMoved(effectiveMovement); 
+    // Check if the creature has moved considering status effects
+    return this.effectiveMovement > 0 && this.stateManager.hasMoved(this.effectiveMovement); 
   }
-  hasActionsRemaining(): boolean { return this.stateManager.hasActionsRemaining(); }
+  hasActionsRemaining(): boolean { 
+    // Check if the creature has any effective actions remaining (considering status effects)
+    return this.effectiveActions > 0 && this.stateManager.hasActionsRemaining();
+  }
   hasMana(amount: number): boolean { return this.stateManager.hasMana(amount); }
   hasTakenActionsThisTurn(): boolean { return this.stateManager.hasTakenActionsThisTurn(); }
   hasFortune(amount: number): boolean { return this.stateManager.hasFortune(amount); }
@@ -304,9 +355,21 @@ export abstract class Creature implements ICreature {
   resetTurn(): void { 
     // Reset turn state first
     this.stateManager.resetTurn();
+    
+    // Process status effects at turn start
+    this.statusEffectManager.updateEffects();
+    
+    // Apply turn-start effects
+    const activeEffects = this.statusEffectManager.getAllActiveEffects();
+    activeEffects.forEach(effect => {
+      if (effect.onTurnStart) {
+        effect.onTurnStart(this);
+      }
+    });
+    
     // Only set effective movement if the creature is alive
     if (!this.stateManager.isDead()) {
-      const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size));
+      const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size), this.getActiveStatusEffects());
       this.stateManager.setRemainingMovement(effectiveMovement);
     }
   }
@@ -386,6 +449,41 @@ export abstract class Creature implements ICreature {
     return Object.values(this.skills);
   }
 
+  // --- Status Effects ---
+  getStatusEffectManager(): CreatureStatusEffectManager {
+    return this.statusEffectManager;
+  }
+
+  addStatusEffect(effect: StatusEffect): void {
+    this.statusEffectManager.addEffect(effect);
+  }
+
+  removeStatusEffect(effectId: string): void {
+    this.statusEffectManager.removeEffect(effectId);
+  }
+
+  hasStatusEffect(type: StatusEffectType): boolean {
+    return this.statusEffectManager.hasEffect(type);
+  }
+
+  getStatusEffect(type: StatusEffectType): StatusEffect | null {
+    return this.statusEffectManager.getEffect(type);
+  }
+
+  getActiveStatusEffects(): StatusEffect[] {
+    return this.statusEffectManager.getAllActiveEffects();
+  }
+
+  // --- Health Management ---
+  heal(amount: number): void {
+    const newVitality = Math.min(this.remainingVitality + amount, this.vitality);
+    this.stateManager.setRemainingVitality(newVitality);
+  }
+
+  setRemainingVitality(value: number): void {
+    this.stateManager.setRemainingVitality(value);
+  }
+
   // --- Cloning ---
   clone(overrides?: Partial<Creature>): Creature {
     const params = {
@@ -419,4 +517,58 @@ export abstract class Creature implements ICreature {
 
   // --- Abstract Factory Method ---
   protected abstract createInstance(params: any): Creature;
+
+  // Get effective actions and quick actions with status effect modifiers
+  get effectiveActions(): number {
+    const statusEffects = this.getActiveStatusEffects();
+    let effectiveActions = this.actions;
+    
+    for (const effect of statusEffects) {
+      if (effect.actionModifier) {
+        effectiveActions += effect.actionModifier;
+      }
+    }
+    
+    return Math.max(0, effectiveActions);
+  }
+
+  get effectiveQuickActions(): number {
+    const statusEffects = this.getActiveStatusEffects();
+    let effectiveQuickActions = this.quickActions;
+    
+    for (const effect of statusEffects) {
+      if (effect.quickActionModifier) {
+        effectiveQuickActions += effect.quickActionModifier;
+      }
+    }
+    
+    return Math.max(0, effectiveQuickActions);
+  }
+
+  // Get effective movement with status effect modifiers
+  get effectiveMovement(): number {
+    const statusEffects = this.getActiveStatusEffects();
+    let effectiveMovement = this.getEffectiveAttribute('movement');
+    
+    for (const effect of statusEffects) {
+      if (effect.movementModifier) {
+        effectiveMovement += effect.movementModifier;
+      }
+    }
+    
+    return Math.max(0, effectiveMovement);
+  }
+
+  /**
+   * Get the effective value of an attribute considering skill modifiers and status effects
+   */
+  private getEffectiveAttribute(attributeName: keyof Attributes): number {
+    return SkillProcessor.getEffectiveAttribute(
+      this.attributes[attributeName] ?? 0,
+      attributeName,
+      this.skills,
+      this.isWounded(),
+      this.getActiveStatusEffects()
+    );
+  }
 }

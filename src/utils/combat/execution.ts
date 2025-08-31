@@ -3,6 +3,7 @@ import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
 import { CombatResult } from './types';
+import { CombatSkillTriggerManager } from '../../creatures/combatSkillTriggers';
 import { 
   executeToHitRollMelee, 
   executeToHitRollRanged, 
@@ -69,6 +70,15 @@ function executeCombatPhase(
   attacker.setRemainingActions(attacker.remainingActions - 1);
 
   if (!toHitResult.hit) {
+    // Process miss triggers
+    CombatSkillTriggerManager.processAttackMiss(attacker, target, {
+      success: true,
+      message: `${toHitResult.toHitMessage} - Miss!`,
+      toHitMessage: toHitResult.toHitMessage,
+      damage: 0,
+      targetDefeated: false
+    });
+    
     const missMessage = isRanged ? " - Miss! (needs 10+)" : " - Miss!";
     return {
       success: true,
@@ -77,6 +87,61 @@ function executeCombatPhase(
       damage: 0,
       targetDefeated: false
     };
+  }
+
+  // Process hit triggers
+  CombatSkillTriggerManager.processAttackHit(attacker, target, {
+    success: true,
+    message: `${toHitResult.toHitMessage} - Hit!`,
+    toHitMessage: toHitResult.toHitMessage,
+    damage: 0,
+    targetDefeated: false
+  });
+
+  // Process critical hit triggers
+  if (toHitResult.criticalHit) {
+    CombatSkillTriggerManager.processCriticalHit(attacker, target, {
+      success: true,
+      message: `${toHitResult.toHitMessage} - Critical Hit!`,
+      toHitMessage: toHitResult.toHitMessage,
+      damage: 0,
+      targetDefeated: false
+    });
+  }
+
+  // Process double critical triggers
+  if (toHitResult.attackerDoubleCritical) {
+    CombatSkillTriggerManager.processDoubleCritical(attacker, target, {
+      success: true,
+      message: `${toHitResult.toHitMessage} - Double Critical!`,
+      toHitMessage: toHitResult.toHitMessage,
+      damage: 0,
+      targetDefeated: false
+    });
+
+    // Universal rule: Double critical hits apply knocked down status unless target has greater size
+    if (target.size <= attacker.size) {
+      const { applyStatusEffect } = require('../../utils/statusEffects');
+      const { CommonStatusEffects } = require('../../creatures/presets/statusEffectPresets');
+      
+      const knockedDownEffect = CommonStatusEffects.knockedDown(target);
+      applyStatusEffect(target, knockedDownEffect);
+      
+      console.log(`${attacker.name}'s double critical hit knocks down ${target.name}!`);
+    } else {
+      console.log(`${attacker.name}'s double critical hit cannot knock down ${target.name} (target is larger)`);
+    }
+  }
+
+  // Process double result triggers (any doubles: 2&2, 3&3, 4&4, 5&5, 6&6)
+  if (toHitResult.attackerDice) {
+    CombatSkillTriggerManager.processDoubleResultFromDice(attacker, target, {
+      success: true,
+      message: `${toHitResult.toHitMessage} - Hit!`,
+      toHitMessage: toHitResult.toHitMessage,
+      damage: 0,
+      targetDefeated: false
+    }, toHitResult.attackerDice);
   }
 
   // === PART 2: BLOCK ROLL ===
@@ -108,6 +173,19 @@ function executeCombatPhase(
 
   // Check if target is defeated
   const targetDefeated = target.isDead();
+
+  // Process target defeated triggers
+  if (targetDefeated) {
+    CombatSkillTriggerManager.processTargetDefeated(attacker, target, {
+      success: true,
+      message: `${toHitResult.toHitMessage} - Hit! ${blockResult.blockMessage} ${damageResult.damageMessage}`,
+      toHitMessage: toHitResult.toHitMessage,
+      blockMessage: blockResult.blockMessage,
+      damageMessage: damageResult.damageMessage,
+      damage: damageResult.damage,
+      targetDefeated
+    });
+  }
 
   return {
     success: true,

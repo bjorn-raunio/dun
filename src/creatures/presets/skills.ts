@@ -1,4 +1,5 @@
 import { Skill, SkillType } from '../types';
+import { CombatTriggerEffects } from '../combatSkillTriggers';
 
 // --- Skill Presets ---
 export const SKILL_PRESETS: { [key: string]: Skill } = {
@@ -12,6 +13,9 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
     name: "Dirty Fighter",
     type: "combat",
     description: "stun on doubles during an attack",
+    combatTriggers: [
+      CombatTriggerEffects.applyStatusEffectOnDoubleResult('stunned', null, "Stuns target when rolling doubles")
+    ]
   },
 
   // Stealth Skills

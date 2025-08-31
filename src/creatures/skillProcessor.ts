@@ -5,13 +5,14 @@ import { Attributes, Skill, Skills } from './types';
 
 export class SkillProcessor {
   /**
-   * Calculate the effective value of an attribute considering skill modifiers
+   * Calculate the effective value of an attribute considering skill modifiers and status effects
    */
   static getEffectiveAttribute(
     baseValue: number,
     attributeName: keyof Attributes,
     skills: Skills,
-    isWounded: boolean = false
+    isWounded: boolean = false,
+    statusEffects: any[] = []
   ): number {
     let effectiveValue = baseValue;
     
@@ -20,6 +21,13 @@ export class SkillProcessor {
     
     for (const modifier of modifiers) {
       effectiveValue += modifier.value;
+    }
+    
+    // Apply status effect modifiers
+    for (const effect of statusEffects) {
+      if (effect.attributeModifiers && effect.attributeModifiers[attributeName]) {
+        effectiveValue += effect.attributeModifiers[attributeName];
+      }
     }
     
     // Apply wounding penalty (minimum of 1)

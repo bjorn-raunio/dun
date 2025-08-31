@@ -168,6 +168,10 @@ export class CreatureStateManager {
     this.state.remainingFortune = Math.max(0, value);
   }
 
+  setRemainingVitality(value: number): void {
+    this.state.remainingVitality = Math.max(0, Math.min(value, this.maxVitality));
+  }
+
   // --- Turn Management ---
 
   resetTurn(): void {

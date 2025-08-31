@@ -4,6 +4,7 @@
 
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
 import { MovementResult } from '../game/movement';
+import { StatusEffectManager } from './types';
 
 // --- Core Creature Interfaces ---
 
@@ -63,6 +64,7 @@ export interface ICreature {
   useQuickAction(): void;
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
+  setRemainingVitality(value: number): void;
   resetTurn(): void;
   resetRemainingActions(): void;
   
@@ -87,6 +89,17 @@ export interface ICreature {
   
   // Cloning
   clone(overrides?: Partial<any>): any;
+  
+  // Status Effects
+  getStatusEffectManager(): StatusEffectManager;
+  addStatusEffect(effect: any): void;
+  removeStatusEffect(effectId: string): void;
+  hasStatusEffect(type: string): boolean;
+  getStatusEffect(type: string): any;
+  getActiveStatusEffects(): any[];
+  
+  // Health Management
+  heal(amount: number): void;
 }
 
 // --- Manager Interfaces ---
@@ -115,6 +128,7 @@ export interface ICreatureStateManager {
   setRemainingActions(value: number): void;
   setRemainingQuickActions(value: number): void;
   setRemainingFortune(value: number): void;
+  setRemainingVitality(value: number): void;
   recordTurnStartPosition(position: any): void;
 }
 
@@ -146,15 +160,15 @@ export interface ICreatureCombatManager {
   getZoneOfControlRange(): number;
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean;
   wasBehindTargetAtTurnStart(targetX: number, targetY: number, targetTurnStartFacing: number, attackerTurnStartX: number, attackerTurnStartY: number): boolean;
-  getEffectiveMovement(isWounded: boolean): number;
-  getEffectiveCombat(isWounded: boolean): number;
-  getEffectiveRanged(isWounded: boolean): number;
-  getEffectiveStrength(isWounded: boolean): number;
-  getEffectiveAgility(isWounded: boolean): number;
-  getEffectiveCourage(isWounded: boolean): number;
-  getEffectiveIntelligence(isWounded: boolean): number;
-  getEffectivePerception(isWounded: boolean): number;
-  getEffectiveDexterity(isWounded: boolean): number;
+  getEffectiveMovement(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveCombat(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveRanged(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveStrength(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveAgility(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveCourage(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveIntelligence(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectivePerception(isWounded: boolean, statusEffects?: any[]): number;
+  getEffectiveDexterity(isWounded: boolean, statusEffects?: any[]): number;
 }
 
 export interface ICreatureRelationshipsManager {

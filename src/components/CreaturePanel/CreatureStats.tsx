@@ -29,8 +29,8 @@ export function CreatureStats({ creature }: CreatureStatsProps) {
         <div>Dexterity: <strong>{creature.dexterity}</strong></div>
         <div>Fortune: <strong>{creature.remainingFortune}/{creature.fortune}</strong></div>
       </div>
-      <div>Actions: <strong>{creature.remainingActions}/{creature.actions}</strong></div>
-      <div>Quick Actions: <strong>{creature.remainingQuickActions}/{creature.quickActions}</strong></div>
+      <div>Actions: <strong>{creature.remainingActions}/{creature.effectiveActions}</strong></div>
+      <div>Quick Actions: <strong>{creature.remainingQuickActions}/{creature.effectiveQuickActions}</strong></div>
     </div>
   );
 }

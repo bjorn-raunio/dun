@@ -83,7 +83,7 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
                   }}>
                     {hero.remainingVitality}
                   </strong> |
-                  Actions: <strong>{hero.remainingActions ?? hero.actions}</strong> |
+                  Actions: <strong>{hero.remainingActions ?? hero.effectiveActions}</strong> |
                   Movement: <strong>{hero.remainingMovement ?? hero.movement}</strong> |
                   Quick: <strong>{hero.remainingQuickActions ?? hero.quickActions}</strong>
                 </div>

@@ -26,10 +26,7 @@ export function endTurnWithAI(
   currentTurnState: TurnState,
   mapDefinition?: any
 ) {
-  // Reset all turns first
-  resetAllTurns(creatures, setCreatures, setMessages, lastMovement);
-  
-  // Advance to next turn
+  // Advance to next turn (this will reset all turns internally)
   const newTurnState = advanceTurnLogic(currentTurnState, creatures, setCreatures, setMessages, lastMovement);
   setTurnState(() => newTurnState);
   

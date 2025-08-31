@@ -99,8 +99,9 @@ export function resetAllTurns(
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
 ): void {
   setCreatures(prev => prev.map(c => {
-    // Reset turn for the existing creature instead of cloning
+    // Reset turn for the existing creature (includes status effect processing)
     c.resetTurn();
+    
     return c;
   }));
   

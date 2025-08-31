@@ -83,7 +83,7 @@ export const mapDefinition: MapDefinition = {
       naturalArmor: 3,
       group: CREATURE_GROUPS.PLAYER,
       skills: [
-        SKILL_PRESETS.lostInTheDark
+        SKILL_PRESETS.lostInTheDark,
       ]
     }),
   ],

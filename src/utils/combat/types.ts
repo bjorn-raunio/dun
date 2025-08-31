@@ -27,6 +27,8 @@ export interface ToHitResult {
   criticalHit: boolean;
   attackerModifiers: string[];
   defenderModifiers: string[];
+  attackerDice: number[];  // Individual dice results for attacker
+  defenderDice: number[];  // Individual dice results for defender
 }
 
 export interface RangedToHitResult {
@@ -35,6 +37,7 @@ export interface RangedToHitResult {
   toHitRoll: number;
   attackerDoubleCritical: boolean;
   criticalHit: boolean;
+  attackerDice: number[];  // Individual dice results for attacker
 }
 
 export interface BlockResult {

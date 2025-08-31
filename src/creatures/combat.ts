@@ -85,70 +85,71 @@ export class CreatureCombatManager {
   // --- Effective Attributes ---
 
   /**
-   * Generic method to get effective attribute value with skill modifiers and wounding penalty
+   * Generic method to get effective attribute value with skill modifiers, status effects, and wounding penalty
    */
   private getEffectiveAttribute(
     attributeName: keyof Attributes,
-    isWounded: boolean
+    isWounded: boolean,
+    statusEffects: any[] = []
   ): number {
     const baseValue = this.attributes[attributeName] ?? 0;
-    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.skills, isWounded);
+    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.skills, isWounded, statusEffects);
   }
 
   /**
    * Get effective movement attribute
    */
-  getEffectiveMovement(isWounded: boolean): number {
-    return this.getEffectiveAttribute("movement", isWounded);
+  getEffectiveMovement(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("movement", isWounded, statusEffects);
   }
 
   /**
    * Get effective combat attribute
    */
-  getEffectiveCombat(isWounded: boolean): number {
-    return this.getEffectiveAttribute("combat", isWounded);
+  getEffectiveCombat(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("combat", isWounded, statusEffects);
   }
 
   /**
    * Get effective ranged attribute
    */
-  getEffectiveRanged(isWounded: boolean): number {
-    return this.getEffectiveAttribute("ranged", isWounded);
+  getEffectiveRanged(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("ranged", isWounded, statusEffects);
   }
 
   /**
    * Get effective strength attribute
    */
-  getEffectiveStrength(isWounded: boolean): number {
-    return this.getEffectiveAttribute("strength", isWounded);
+  getEffectiveStrength(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("strength", isWounded, statusEffects);
   }
 
   /**
    * Get effective agility attribute
    */
-  getEffectiveAgility(isWounded: boolean): number {
-    return this.getEffectiveAttribute("agility", isWounded);
+  getEffectiveAgility(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("agility", isWounded, statusEffects);
   }
 
   /**
    * Get effective courage attribute
    */
-  getEffectiveCourage(isWounded: boolean): number {
-    return this.getEffectiveAttribute("courage", isWounded);
+  getEffectiveCourage(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("courage", isWounded, statusEffects);
   }
 
   /**
    * Get effective intelligence attribute
    */
-  getEffectiveIntelligence(isWounded: boolean): number {
-    return this.getEffectiveAttribute("intelligence", isWounded);
+  getEffectiveIntelligence(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("intelligence", isWounded, statusEffects);
   }
 
-  getEffectivePerception(isWounded: boolean): number {
-    return this.getEffectiveAttribute("perception", isWounded);
+  getEffectivePerception(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("perception", isWounded, statusEffects);
   }
 
-  getEffectiveDexterity(isWounded: boolean): number {
-    return this.getEffectiveAttribute("dexterity", isWounded);
+  getEffectiveDexterity(isWounded: boolean, statusEffects: any[] = []): number {
+    return this.getEffectiveAttribute("dexterity", isWounded, statusEffects);
   }
 }

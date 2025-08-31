@@ -142,7 +142,9 @@ export function executeToHitRollMelee(
     defenderDoubleCritical,
     criticalHit,
     attackerModifiers,
-    defenderModifiers
+    defenderModifiers,
+    attackerDice: attackerRollResult.dice,
+    defenderDice: defenderRollResult.dice
   };
 }
 
@@ -221,7 +223,8 @@ export function executeToHitRollRanged(
     toHitMessage,
     toHitRoll,
     attackerDoubleCritical,
-    criticalHit
+    criticalHit,
+    attackerDice: toHitRollResult.dice
   };
 }
 
