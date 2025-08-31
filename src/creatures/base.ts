@@ -337,6 +337,31 @@ export abstract class Creature implements ICreature {
   setRemainingMovement(value: number): void { this.stateManager.setRemainingMovement(value); }
   setRemainingActions(value: number): void { this.stateManager.setRemainingActions(value); }
   setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
+
+  // --- Actions ---
+  run(): boolean {
+    if (!this.isAlive() || !this.hasActionsRemaining()) {
+      return false;
+    }
+    
+    // Use an action to run (double movement for this turn)
+    this.useAction();
+    this.setRemainingMovement(this.remainingMovement * 2);
+    return true;
+  }
+
+  search(): boolean {
+    if (!this.isAlive() || !this.hasActionsRemaining()) {
+      return false;
+    }
+    
+    // Use an action to search (could reveal hidden items, traps, or enemies)
+    this.useAction();
+    
+    // TODO: Implement actual search logic (reveal hidden items, traps, etc.)
+    // For now, just return success
+    return true;
+  }
   resetTurn(): void { 
     // Reset turn state first
     this.stateManager.resetTurn();

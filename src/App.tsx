@@ -6,7 +6,7 @@ import { GameProvider, useGameContext } from './game/GameContext';
 import { MapView, GameUI, TurnTracker } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom, useActions } from './game/hooks';
 import { findCreatureById } from './utils/pathfinding';
 import { addMessage } from './game/messageSystem';
 import { VALIDATION_MESSAGES } from './validation/messages';
@@ -46,6 +46,43 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
 
   // Turn advancement hook
   useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
+
+  // Actions hook (unused but kept for future use)
+  const { handleRun, handleSearch } = useActions(
+    (creature) => {
+      // Update the creature in the creatures array
+      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
+    }
+  );
+
+  // Enhanced action handlers with messages
+  const handleRunWithMessage = React.useCallback((creature: Creature) => {
+    const success = creature.run();
+    if (success) {
+      addMessage(`${creature.name} used an action to run! Movement doubled for this turn.`, gameActions.dispatch);
+      // Update the creature in the creatures array
+      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
+    } else {
+      addMessage(`${creature.name} cannot run right now`, gameActions.dispatch);
+    }
+  }, [gameActions]);
+
+  const handleSearchWithMessage = React.useCallback((creature: Creature) => {
+    const success = creature.search();
+    if (success) {
+      addMessage(`${creature.name} used an action to search the area...`, gameActions.dispatch);
+      // Update the creature in the creatures array
+      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
+      
+      // TODO: Implement actual search logic (reveal hidden items, traps, etc.)
+      // For now, just add a placeholder message
+      setTimeout(() => {
+        addMessage(`Search complete. No hidden items or traps found.`, gameActions.dispatch);
+      }, 1000);
+    } else {
+      addMessage(`${creature.name} cannot search right now`, gameActions.dispatch);
+    }
+  }, [gameActions]);
 
   // Attack function for equipment panel - enters targeting mode
   const handleAttack = React.useCallback((attackingCreature: Creature) => {
@@ -142,6 +179,8 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         }}
         onAttack={handleAttack}
         canAttack={canAttack}
+        onRun={handleRunWithMessage}
+        onSearch={handleSearchWithMessage}
       />
     </div>
   );

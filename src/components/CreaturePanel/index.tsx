@@ -6,6 +6,7 @@ import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
 import { SkillsSection, StatusEffectsSection } from './SkillsSection';
 import { HeroSelector } from './HeroSelector';
+import { ActionPanel } from './ActionPanel';
 
 import { COMMON_STYLES } from '../styles';
 
@@ -17,6 +18,8 @@ interface CreaturePanelProps {
   onCreatureUpdate?: (creature: Creature) => void;
   onAttack?: (creature: Creature) => void;
   canAttack?: (creature: Creature) => boolean;
+  onRun?: (creature: Creature) => void;
+  onSearch?: (creature: Creature) => void;
 }
 
 export function CreaturePanel({ 
@@ -26,7 +29,9 @@ export function CreaturePanel({
   onSelectCreature, 
   onCreatureUpdate,
   onAttack,
-  canAttack
+  canAttack,
+  onRun,
+  onSearch
 }: CreaturePanelProps) {
   if (!selectedCreature) {
     return (
@@ -44,6 +49,11 @@ export function CreaturePanel({
       <CreatureHeader creature={selectedCreature} />
       <CreatureStats creature={selectedCreature} />
       <StatusEffectsSection creature={selectedCreature} />
+      <ActionPanel 
+        creature={selectedCreature}
+        onRun={onRun ? () => onRun(selectedCreature) : undefined}
+        onSearch={onSearch ? () => onSearch(selectedCreature) : undefined}
+      />
       <SkillsSection creature={selectedCreature} />
       <EquipmentSection 
         creature={selectedCreature} 

@@ -49,4 +49,16 @@ export const COMMON_STYLES = {
     borderRadius: 6,
     padding: 8,
   },
+  section: {
+    background: "rgba(255,255,255,0.05)",
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 6,
+    padding: 12,
+  },
+  sectionHeader: {
+    color: COLORS.text,
+    fontSize: "16px",
+    fontWeight: "bold",
+    margin: 0,
+  },
 } as const;

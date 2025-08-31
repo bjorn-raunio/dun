@@ -61,6 +61,10 @@ export interface ICreature {
   // Combat
   attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
   
+  // Actions
+  run(): boolean;
+  search(): boolean;
+  
   // State modifiers
   takeDamage(damage: number): number;
   useMovement(points: number): void;

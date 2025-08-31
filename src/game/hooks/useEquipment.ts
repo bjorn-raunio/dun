@@ -111,7 +111,6 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
     // Prevent equipment changes for AI-controlled creatures
     if (creature.isAIControlled()) {
       const item = creature.equipment[slot];
-      alert(`Cannot unequip ${item ? item.name : 'item'}: Equipment cannot be changed for AI-controlled creatures`);
       return;
     }
 
@@ -125,7 +124,6 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
 
     // Check combat state for armor unequips
     if (isArmorUnequip && creature.getCombatState()) {
-      alert(`Cannot unequip ${item.name}: Cannot unequip armor while in combat`);
       return;
     }
 
