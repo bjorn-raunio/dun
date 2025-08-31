@@ -146,6 +146,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: any):
     setTurnState,
     setZoom,
     setTargetingMode,
+    dispatch: () => {}, // Placeholder - implement actual dispatch logic if needed
   };
 
   return [gameState, gameRefs, gameActions];

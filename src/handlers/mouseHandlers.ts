@@ -29,7 +29,7 @@ export function createMouseHandlers(
   mapDefinition?: any,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): MouseHandlers {
-  const { setDragging, setPan, setCreatures, setMessages, setReachableKey, setTargetsInRangeKey, setTargetingMode } = gameActions;
+  const { setDragging, setPan, setCreatures, setReachableKey, setTargetsInRangeKey, setTargetingMode, dispatch } = gameActions;
   const { dragStart, panStart, panRef, livePan, rafId, viewportRef, dragMoved, lastMovement, updateTransform } = gameRefs;
 
   // Mouse down handler for panning
@@ -81,7 +81,7 @@ export function createMouseHandlers(
         if (!creatureAtPosition) {
           // Clicked on empty space - cancel targeting mode
           setTargetingMode({ isActive: false, attackerId: null, message: '' });
-          addMessage('Targeting mode cancelled', setMessages);
+          addMessage('Targeting mode cancelled', dispatch);
           return;
         }
       }
@@ -253,7 +253,7 @@ export function createMouseHandlers(
       if (attacker.isHostileTo(creature) && creature.isAlive()) {
         // Check if target is in range
         if (!targetsInRangeIds.has(creature.id)) {
-          addMessage(`Cannot reach target: ${attacker.name} cannot reach ${creature.name}`, setMessages);
+          addMessage(`Cannot reach target: ${attacker.name} cannot reach ${creature.name}`, dispatch);
           return;
         }
 
@@ -262,22 +262,22 @@ export function createMouseHandlers(
 
         // Add to-hit message
         if (combatResult.toHitMessage) {
-          addMessage(combatResult.toHitMessage!, setMessages);
+          addMessage(combatResult.toHitMessage!, dispatch);
         }
 
         // Add block message if present
         if (combatResult.blockMessage) {
-          addMessage(combatResult.blockMessage!, setMessages);
+          addMessage(combatResult.blockMessage!, dispatch);
         }
 
         // Add damage message if hit
         if (combatResult.damageMessage) {
-          addMessage(combatResult.damageMessage!, setMessages);
+          addMessage(combatResult.damageMessage!, dispatch);
         }
 
         // Add defeat message if target was defeated
         if (combatResult.targetDefeated) {
-          addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
+          addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), dispatch);
         }
 
         // Update creatures state to reflect the attack
@@ -302,7 +302,7 @@ export function createMouseHandlers(
       } else {
         // Invalid target - cancel targeting mode
         setTargetingMode({ isActive: false, attackerId: null, message: '' });
-        addMessage(`Invalid target: ${creature.name} is not a valid target for ${attacker.name}`, setMessages);
+        addMessage(`Invalid target: ${creature.name} is not a valid target for ${attacker.name}`, dispatch);
         return;
       }
     }
@@ -323,25 +323,25 @@ export function createMouseHandlers(
       // Perform the attack using the creature's attack method
       const combatResult = currentCreature.attack(creature, creatures, mapDefinition, mapData);
 
-      // Add to-hit message
-      if (combatResult.toHitMessage) {
-        addMessage(combatResult.toHitMessage!, setMessages);
-      }
+              // Add to-hit message
+        if (combatResult.toHitMessage) {
+          addMessage(combatResult.toHitMessage!, dispatch);
+        }
 
-      // Add block message if present
-      if (combatResult.blockMessage) {
-        addMessage(combatResult.blockMessage!, setMessages);
-      }
+        // Add block message if present
+        if (combatResult.blockMessage) {
+          addMessage(combatResult.blockMessage!, dispatch);
+        }
 
-      // Add damage message if hit
-      if (combatResult.damageMessage) {
-        addMessage(combatResult.damageMessage!, setMessages);
-      }
+        // Add damage message if hit
+        if (combatResult.damageMessage) {
+          addMessage(combatResult.damageMessage!, dispatch);
+        }
 
-      // Add defeat message if target was defeated
-      if (combatResult.targetDefeated) {
-        addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), setMessages);
-      }
+        // Add defeat message if target was defeated
+        if (combatResult.targetDefeated) {
+          addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(creature.name), dispatch);
+        }
 
       // Update creatures state to reflect the attack
       // Use the modified creatures directly since attack() modifies them in place

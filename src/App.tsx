@@ -1,7 +1,8 @@
 import React from "react";
 import './App.css';
 import { mapDefinition, generateMapTiles } from './maps';
-import { useGameState, endTurnWithAI } from './game';
+import { endTurnWithAI } from './game';
+import { GameProvider, useGameContext } from './game/GameContext';
 import { MapView, GameUI, TurnTracker } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
@@ -19,8 +20,8 @@ const tileMapData = {
 };
 
 function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
-  // Game state management (extracted)
-  const [gameState, gameRefs, gameActions] = useGameState(mapDefinition.creatures, mapDefinition);
+  // Game state management using context
+  const { state: gameState, actions: gameActions, refs: gameRefs } = useGameContext();
   const { creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode } = gameState;
   const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState, setTurnState, setTargetingMode } = gameActions;
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
@@ -43,7 +44,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   const { onWheel } = useZoom(gameActions, gameRefs, gameState.viewport);
 
   // Turn advancement hook
-  useTurnAdvancement(turnState, creatures, setTurnState);
+  useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
 
   // Attack function for equipment panel - enters targeting mode
   const handleAttack = React.useCallback((attackingCreature: any) => {
@@ -51,14 +52,14 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     if (!attackingCreature.isPlayerControlled() || 
         !attackingCreature.isAlive() || 
         !attackingCreature.hasActionsRemaining()) {
-      addMessage(`${attackingCreature.name} cannot attack right now`, setMessages);
+      addMessage(`${attackingCreature.name} cannot attack right now`, gameActions.dispatch);
       return;
     }
 
     // Check if there are any hostile creatures
     const hostileCreatures = attackingCreature.getHostileCreatures(creatures);
     if (hostileCreatures.length === 0) {
-      addMessage(`No enemies to attack`, setMessages);
+      addMessage(`No enemies to attack`, gameActions.dispatch);
       return;
     }
 
@@ -69,8 +70,8 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       message: `Select a target for ${attackingCreature.name}'s attack`
     });
 
-    addMessage(`Targeting mode: Click on an enemy to attack with ${attackingCreature.name}`, setMessages);
-  }, [creatures, setMessages, setTargetingMode]);
+    addMessage(`Targeting mode: Click on an enemy to attack with ${attackingCreature.name}`, gameActions.dispatch);
+  }, [creatures, setTargetingMode]);
 
   // Check if creature can attack
   const canAttack = React.useCallback((creature: any) => {
@@ -123,7 +124,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       <GameUI
         messages={messages}
         onEndTurn={() => {
-          endTurnWithAI(creatures, tileMapData, setCreatures, setMessages, setAITurnState, setTurnState, lastMovement, turnState, mapDefinition);
+          endTurnWithAI(creatures, tileMapData, gameActions.dispatch, lastMovement, turnState, mapDefinition);
         }}
         isAITurnActive={aiTurnState.isAITurnActive}
         turnState={turnState}
@@ -138,7 +139,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         onSelectCreature={(creature) => setSelectedCreatureId(creature.id)}
         onCreatureUpdate={(creature) => {
           // Update the creature in the creatures array
-          setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
+          gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
         }}
         onAttack={handleAttack}
         canAttack={canAttack}
@@ -149,9 +150,11 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
 
 function App() {
   return (
-    <div className="App">
-      <TileMapView mapData={tileMapData} />
-    </div>
+    <GameProvider initialCreatures={mapDefinition.creatures} mapDefinition={mapDefinition}>
+      <div className="App">
+        <TileMapView mapData={tileMapData} />
+      </div>
+    </GameProvider>
   );
 }
 

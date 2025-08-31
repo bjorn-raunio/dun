@@ -14,7 +14,7 @@ export function executeAITurnForCreature(
   creature: Creature,
   context: TurnExecutionContext
 ): boolean {
-  const { creatures, mapData, setCreatures, setMessages, mapDefinition } = context;
+  const { creatures, mapData, mapDefinition } = context;
   
   // Get AI state from the creature (assuming it's a Monster)
   const aiState = (creature as any).getAIState?.() || null;
@@ -115,7 +115,7 @@ function executeSingleAIAction(
   aiState: any,
   context: TurnExecutionContext
 ): { success: boolean; actionType?: string; targetDefeated?: boolean } {
-  const { creatures, mapData, setCreatures, setMessages, mapDefinition } = context;
+  const { creatures, mapData, mapDefinition } = context;
   
   // Get updated reachable tiles and targets in range
   const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = 
@@ -158,7 +158,7 @@ function executeSingleAIAction(
   if (decisionResult.action.type === 'move') {
     logAI(executionResult.message);
   } else {
-    addMessage(executionResult.message, setMessages);
+    addMessage(executionResult.message, context.dispatch);
   }
   
   return {

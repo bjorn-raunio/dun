@@ -94,18 +94,21 @@ export function executeMovement(
  */
 export function resetAllTurns(
   creatures: Creature[],
-  setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void,
+  dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
 ): void {
-  setCreatures(prev => prev.map(c => {
+  // Reset all creatures' turns
+  const updatedCreatures = creatures.map(c => {
     // Reset turn for the existing creature (includes status effect processing)
     c.resetTurn();
-    
     return c;
-  }));
+  });
   
-  setMessages(prev => ['New turn begins!', ...prev].slice(0, 50));
+  // Batch update creatures and add message
+  dispatch({ type: 'BATCH_UPDATE', payload: [
+    { type: 'SET_CREATURES', payload: updatedCreatures },
+    { type: 'ADD_MESSAGE', payload: 'New turn begins!' }
+  ]});
   
   // Reset last movement tracking
   lastMovement.current = null;

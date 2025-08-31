@@ -59,4 +59,5 @@ export type GameActions = {
   setTurnState: (updater: (prev: TurnState) => TurnState) => void;
   setZoom: (zoom: number) => void;
   setTargetingMode: (targetingMode: TargetingMode) => void;
+  dispatch: React.Dispatch<any>;
 };

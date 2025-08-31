@@ -48,12 +48,11 @@ export function getNextCreature(
 export function advanceTurn(
   turnState: TurnState,
   creatures: Creature[],
-  setCreatures: (updater: (prev: Creature[]) => Creature[]) => void,
-  setMessages: (updater: (prev: string[]) => string[]) => void,
+  dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
 ): TurnState {
   // Reset all creatures for new turn
-  resetAllTurns(creatures, setCreatures, setMessages, lastMovement);
+  resetAllTurns(creatures, dispatch, lastMovement);
   
   // Recalculate turn order (in case creatures died)
   const newTurnOrder = getTurnOrderIds(getLivingCreatures(creatures));

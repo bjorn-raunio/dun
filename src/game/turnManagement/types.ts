@@ -24,7 +24,6 @@ export interface TurnOrderConfig {
 export interface TurnExecutionContext {
   creatures: Creature[];
   mapData: { tiles: string[][] };
-  setCreatures: (updater: (prev: Creature[]) => Creature[]) => void;
-  setMessages: (updater: (prev: string[]) => string[]) => void;
+  dispatch: React.Dispatch<any>;
   mapDefinition?: any;
 }

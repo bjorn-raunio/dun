@@ -6,7 +6,7 @@ export type {
   GameRefs, 
   GameActions 
 } from './types';
-export * from './gameState';
+export * from './GameContext';
 export * from './turnManager';
 export * from './messageSystem';
 

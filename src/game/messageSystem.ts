@@ -6,36 +6,36 @@ import { logGame } from '../utils/logging';
 
 export function addMessage(
   message: string, 
-  setMessages: GameActions['setMessages']
+  dispatch: React.Dispatch<any>
 ) {
-  setMessages(m => [message, ...m].slice(0, 50));
+  dispatch({ type: 'ADD_MESSAGE', payload: message });
 }
 
 export function addCombatMessage(
   combatResult: { message: string; targetDefeated: boolean },
   targetName: string,
-  setMessages: GameActions['setMessages']
+  dispatch: React.Dispatch<any>
 ) {
   // Add combat message
-  addMessage(combatResult.message, setMessages);
+  addMessage(combatResult.message, dispatch);
   
   // Add defeat message if target was defeated
   if (combatResult.targetDefeated) {
-    addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(targetName), setMessages);
+    addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(targetName), dispatch);
   }
 }
 
 export function addMovementMessage(
   creatureName: string, 
   facingDirection: string,
-  setMessages: GameActions['setMessages']
+  dispatch: React.Dispatch<any>
 ) {
   logGame(`${creatureName} faces ${facingDirection}`);
 }
 
 export function addErrorMessage(
   message: string,
-  setMessages: GameActions['setMessages']
+  dispatch: React.Dispatch<any>
 ) {
-  addMessage(message, setMessages);
+  addMessage(message, dispatch);
 }
