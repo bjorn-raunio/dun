@@ -54,3 +54,14 @@ export function terrainHeightAt(tx: number, ty: number, mapDefinition: MapDefini
   }
   return h;
 }
+
+// Helper: terrain movement cost at tile
+export function terrainMovementCostAt(tx: number, ty: number, mapDefinition: MapDefinition): number {
+  let cost = 1; // Default movement cost
+  for (const t of mapDefinition.terrain) {
+    if (t.isTileWithinTerrain(tx, ty)) {
+      cost = Math.max(cost, t.getMovementCostAt(tx, ty));
+    }
+  }
+  return cost;
+}

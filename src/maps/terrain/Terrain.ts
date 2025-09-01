@@ -9,6 +9,7 @@ export class Terrain {
   rotatedHeight: number; // Height after rotation is applied
   image: string;
   height: number;
+  movementCost: number; // Movement cost multiplier for this terrain type
 
   constructor(
     type: string,
@@ -19,6 +20,7 @@ export class Terrain {
     image: string,
     height: number = 0,
     rotation: 0 | 90 | 180 | 270 = 0,
+    movementCost: number = 1, // Default movement cost multiplier
   ) {
     this.type = type;
     this.x = x;
@@ -28,6 +30,7 @@ export class Terrain {
     this.image = image;
     this.height = height;
     this.rotation = rotation;
+    this.movementCost = movementCost;
     // Automatically apply rotation to width and height
     const isRotated = rotation === 90 || rotation === 270;
     this.rotatedWidth = isRotated ? mapHeight : mapWidth;
@@ -50,6 +53,16 @@ export class Terrain {
       return this.height;
     }
     return 0;
+  }
+
+  /**
+   * Get the terrain movement cost at a specific position
+   */
+  getMovementCostAt(x: number, y: number): number {
+    if (this.isTileWithinTerrain(x, y)) {
+      return this.movementCost;
+    }
+    return 1; // Default cost for non-terrain tiles
   }
 
   /**

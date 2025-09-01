@@ -11,28 +11,6 @@ export const terrainPresetsByCategory: Record<string, TerrainPresetCategory> = {
         mapHeight: 2,
         height: 4,
       },
-      forest: {
-        image: "",
-        mapWidth: 1,
-        mapHeight: 1,
-        height: 4,
-      },
-    }
-  },
-  structures: {
-    presets: {
-      wall: {
-        image: "",
-        mapWidth: 1,
-        mapHeight: 1,
-        height: 3,
-      },
-      building: {
-        image: "",
-        mapWidth: 4,
-        mapHeight: 4,
-        height: 4,
-      },
     }
   },
   vehicles: {
@@ -47,23 +25,8 @@ export const terrainPresetsByCategory: Record<string, TerrainPresetCategory> = {
         image: "horse.jpg",
         mapWidth: 1,
         mapHeight: 2,
-        height: 1,
-      },
-    }
-  },
-  natural: {
-    presets: {
-      mountain: {
-        image: "",
-        mapWidth: 3,
-        mapHeight: 3,
-        height: 5,
-      },
-      rock: {
-        image: "",
-        mapWidth: 1,
-        mapHeight: 1,
         height: 2,
+        movementCost: Infinity, 
       },
     }
   },

@@ -5,6 +5,7 @@ export type TerrainPreset = {
   mapWidth: number;
   mapHeight: number;
   height: number;
+  movementCost?: number; // Movement cost multiplier for this terrain type
   // Future extensibility
   properties?: Record<string, any>;
 };

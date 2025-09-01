@@ -1,5 +1,5 @@
 import { Creature, ICreature } from '../creatures/index';
-import { terrainHeightAt } from '../maps/mapRenderer';
+import { terrainHeightAt, terrainMovementCostAt } from '../maps/mapRenderer';
 import { validateEngagementMovement } from '../validation/movement';
 import { validatePositionStandable } from '../validation/map';
 import { getEngagingCreaturesAtPosition } from './zoneOfControl';
@@ -13,13 +13,13 @@ function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: MapDefinition
   if (!mapDefinition) {
     return false;
   }
-  
+
   for (const room of mapDefinition.rooms) {
     if (room.isTileWithinRoom(x, y)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -31,13 +31,13 @@ function isTileWithinAnyTerrain(x: number, y: number, mapDefinition?: MapDefinit
   if (!mapDefinition) {
     return false;
   }
-  
+
   for (const terrain of mapDefinition.terrain) {
     if (terrain.isTileWithinTerrain(x, y)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -110,16 +110,16 @@ export function calculateMovementCost(
   // Use validatePositionStandable for basic position validation (bounds, creatures, terrain, rooms)
   // Note: We'll use a custom elevation check later since validatePositionStandable uses a fixed limit of 1
   const basicValidation = validatePositionStandable(
-    toX, 
-    toY, 
-    areaDimensions, 
-    allCreatures, 
-    mapData, 
+    toX,
+    toY,
+    areaDimensions,
+    allCreatures,
+    mapData,
     mapDefinition, // Now pass mapDefinition since it handles room validation
     considerCreatures,
     movingCreature?.id
   );
-  
+
   if (!basicValidation) {
     return returnInfinityForBlocked ? Infinity : 0;
   }
@@ -132,7 +132,7 @@ export function calculateMovementCost(
         const cx = toX + ox;
         const cy = toY + oy;
         const height = terrainHeightAt(cx, cy, mapDefinition);
-        
+
         // Check if elevation exceeds the configurable limit
         if (height > maxElevationDifference) {
           return returnInfinityForBlocked ? Infinity : 0;
@@ -152,14 +152,14 @@ export function calculateMovementCost(
       const verticalY = toY;
 
       // Check if horizontal adjacent tile is passable
-      const horizontalTerrainCost = getTerrainCost(horizontalX, horizontalY, mapData, mapDefinition, fromX, fromY, {
+      const horizontalTerrainCost = getTileCost(horizontalX, horizontalY, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference,
         climbingCostPenalty,
         returnInfinityForBlocked
       });
 
       // Check if vertical adjacent tile is passable
-      const verticalTerrainCost = getTerrainCost(verticalX, verticalY, mapData, mapDefinition, fromX, fromY, {
+      const verticalTerrainCost = getTileCost(verticalX, verticalY, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference,
         climbingCostPenalty,
         returnInfinityForBlocked
@@ -183,7 +183,7 @@ export function calculateMovementCost(
       const cy = toY + oy;
 
       // Check basic terrain cost (elevation validation already done above)
-      const terrainCost = getTerrainCost(cx, cy, mapData, mapDefinition, fromX, fromY, {
+      const terrainCost = getTileCost(cx, cy, mapData, mapDefinition, fromX, fromY, {
         maxElevationDifference: Infinity, // Skip elevation check since we did it above
         climbingCostPenalty: 0, // Don't apply climbing cost here, handle it separately
         returnInfinityForBlocked
@@ -193,6 +193,7 @@ export function calculateMovementCost(
         return returnInfinityForBlocked ? Infinity : 0;
       }
 
+      // Add terrain cost (terrainCost already includes the base cost of 1 for normal terrain)
       totalCost += terrainCost;
 
       // Track elevation for multi-tile creatures (room validation now handled by validatePositionStandable)
@@ -242,7 +243,7 @@ export function calculateMovementCost(
       totalCost += climbingCostPenalty;
     }
   }
-  
+
   //Moving in enemy zone of control
   if (movingCreature && mapDefinition) {
     const engagingCreatures = getEngagingCreaturesAtPosition(movingCreature, allCreatures, fromX, fromY);
@@ -272,7 +273,7 @@ export function calculateMovementCost(
   if (movingCreature && mapDefinition) {
     const engagingCreaturesAtDestination = getEngagingCreaturesAtPosition(movingCreature, allCreatures, toX, toY);
     const engagingCreaturesAtSource = getEngagingCreaturesAtPosition(movingCreature, allCreatures, fromX, fromY);
-    
+
     // If destination is in enemy engagement zone but source is not, this is entering engagement
     if (engagingCreaturesAtDestination.length > 0 && engagingCreaturesAtSource.length === 0) {
       // Calculate remaining movement at the source position
@@ -281,13 +282,14 @@ export function calculateMovementCost(
     }
   }
 
-  return baseCost + totalCost;
+  // Return total cost (terrain costs already include base cost, no need to add baseCost again)
+  return totalCost;
 }
 
 /**
  * Get terrain movement cost for a tile with flexible options
  */
-export function getTerrainCost(
+export function getTileCost(
   x: number,
   y: number,
   mapData: { tiles: string[][] },
@@ -306,17 +308,19 @@ export function getTerrainCost(
     return returnInfinityForBlocked ? Infinity : 0;
   }
 
-  const tile = mapData.tiles[y]?.[x];
-  if (!tile || tile === "empty.jpg") {
-    // Check if the tile is within a room or terrain - if not, it blocks movement
-    if (!isTileWithinAnyRoom(x, y, mapDefinition) && !isTileWithinAnyTerrain(x, y, mapDefinition)) {
-      return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms and terrain block movement
-    }
+  if (!isTileWithinAnyRoom(x, y, mapDefinition) && !isTileWithinAnyTerrain(x, y, mapDefinition)) {
+    return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms and terrain block movement
   }
 
-  // Check terrain height and other properties
+  // Check terrain height and movement cost
   if (mapDefinition) {
     const height = terrainHeightAt(x, y, mapDefinition);
+    const terrainCost = terrainMovementCostAt(x, y, mapDefinition);
+
+    // If terrain has infinite movement cost, block movement
+    if (terrainCost === Infinity) {
+      return returnInfinityForBlocked ? Infinity : 0;
+    }
 
     if (fromX !== undefined && fromY !== undefined) {
       // We have starting coordinates, so we can calculate elevation differences
@@ -327,7 +331,7 @@ export function getTerrainCost(
         return returnInfinityForBlocked ? Infinity : 0;
       }
       if (height > fromHeight) {
-        return climbingCostPenalty; // Climbing costs extra movement
+        return climbingCostPenalty + terrainCost; // Climbing costs extra movement + terrain cost
       }
     } else {
       // No starting coordinates - this is a general accessibility check
@@ -336,13 +340,16 @@ export function getTerrainCost(
         return returnInfinityForBlocked ? Infinity : 0;
       }
       if (height > 0) {
-        return climbingCostPenalty; // Elevated terrain costs extra movement
+        return climbingCostPenalty + terrainCost; // Elevated terrain costs extra movement + terrain cost
       }
     }
+
+    // Return terrain cost (which includes base cost of 1 for normal terrain)
+    return terrainCost;
   }
 
   // Default terrain cost
-  return 0;
+  return 1;
 }
 
 

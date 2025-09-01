@@ -1,6 +1,6 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions';
-import { getTerrainCost } from '../movementCost';
+import { getTileCost } from '../movementCost';
 import { DistanceOptions } from './types';
 import { PathfindingSystem } from './core';
 import { MapDefinition } from '../../maps/types';
@@ -326,7 +326,7 @@ export class DistanceSystem {
 
     // Check terrain cost (if map definition provided)
     if (mapDefinition) {
-      const terrainCost = getTerrainCost(x, y, mapData, mapDefinition);
+      const terrainCost = getTileCost(x, y, mapData, mapDefinition);
       if (!isFinite(terrainCost)) {
         return false;
       }
@@ -366,7 +366,7 @@ export class DistanceSystem {
 
     // Check terrain cost (if map definition provided)
     if (mapDefinition) {
-      const terrainCost = getTerrainCost(x, y, mapData, mapDefinition);
+      const terrainCost = getTileCost(x, y, mapData, mapDefinition);
       if (!isFinite(terrainCost)) {
         return false;
       }

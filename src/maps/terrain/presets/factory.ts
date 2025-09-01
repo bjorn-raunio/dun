@@ -20,6 +20,7 @@ export function createTerrain(
     mapHeight?: number;
     height?: number;
     image?: string;
+    movementCost?: number;
   }
 ): Terrain {
   const preset = terrainPresets[presetId];
@@ -33,6 +34,7 @@ export function createTerrain(
   const height = overrides?.height ?? preset.height;
   const rotation = overrides?.rotation ?? 0;
   const image = overrides?.image ?? preset.image;
+  const movementCost = overrides?.movementCost ?? preset.movementCost;
 
   return new Terrain(
     presetId, // Use presetId as the type
@@ -42,7 +44,8 @@ export function createTerrain(
     mapHeight,
     image,
     height,
-    rotation
+    rotation,
+    movementCost
   );
 }
 
