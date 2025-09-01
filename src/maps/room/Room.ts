@@ -7,6 +7,7 @@ export class Room {
   rotation: 0 | 90 | 180 | 270; // Rotation property
   rotatedWidth: number; // Width after rotation is applied
   rotatedHeight: number; // Height after rotation is applied
+  outdoors: boolean;
 
   constructor(
     type: string,
@@ -14,7 +15,8 @@ export class Room {
     y: number,
     mapWidth: number,
     mapHeight: number,
-    rotation: 0 | 90 | 180 | 270 = 0
+    rotation: 0 | 90 | 180 | 270 = 0,
+    outdoors: boolean = false
   ) {
     this.type = type;
     this.x = x;
@@ -22,7 +24,7 @@ export class Room {
     this.mapWidth = mapWidth;
     this.mapHeight = mapHeight;
     this.rotation = rotation;
-    
+    this.outdoors = outdoors;
     // Automatically apply rotation to width and height
     const isRotated = rotation === 90 || rotation === 270;
     this.rotatedWidth = isRotated ? mapHeight : mapWidth;

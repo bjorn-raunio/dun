@@ -5,7 +5,6 @@ import { MapDefinition } from '../../maps/types';
 export interface MapViewProps {
   mapData: {
     name: string;
-    description: string;
     tiles: string[][];
   };
   mapDefinition: MapDefinition;

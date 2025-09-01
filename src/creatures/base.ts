@@ -284,27 +284,9 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Combat State Management ---
-  private isInCombat: boolean = false;
-
-  checkCombatState(allCreatures: ICreature[]): boolean {
-    const hostileCreatures = this.getHostileCreatures(allCreatures);
-
-    for (const enemy of hostileCreatures) {
-      const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
-      if (distance <= 12) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  updateCombatState(allCreatures: ICreature[]): void {
-    this.isInCombat = this.checkCombatState(allCreatures);
-  }
-
+  // Combat state is now managed at the group level
   getCombatState(): boolean {
-    return this.isInCombat;
+    return this.group.isInCombat();
   }
 
   // Get all enemies within combat range (12 tiles)

@@ -27,7 +27,6 @@ export type TerrainType = {
 
 export type MapDefinition = {
   name: string;
-  description: string;
   width: number;
   height: number;
   rooms: Room[];

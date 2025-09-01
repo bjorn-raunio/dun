@@ -1,4 +1,5 @@
 import { ICreature } from './interfaces';
+import { calculateDistanceBetween } from '../utils/pathfinding';
 
 // CreatureGroup class definition
 export class CreatureGroup {
@@ -8,6 +9,7 @@ export class CreatureGroup {
 
   name: string;
   private creatures: ICreature[];
+  private _isInCombat: boolean = false;
 
   constructor(name: string) {
     this.name = name;
@@ -74,6 +76,42 @@ export class CreatureGroup {
     this.creatures.forEach(creature => {
       creature.endTurn();
     });
+  }
+
+  // --- Combat State Management ---
+  
+  /**
+   * Check if any member of this group is within 12 tiles of an enemy
+   */
+  checkCombatState(allCreatures: ICreature[]): boolean {
+    const livingCreatures = this.getLivingCreatures();
+    
+    for (const creature of livingCreatures) {
+      const hostileCreatures = creature.getHostileCreatures(allCreatures);
+      
+      for (const enemy of hostileCreatures) {
+        const distance = calculateDistanceBetween(creature.x, creature.y, enemy.x, enemy.y);
+        if (distance <= 12) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Update the combat state for this group
+   */
+  updateCombatState(allCreatures: ICreature[]): void {
+    this._isInCombat = this.checkCombatState(allCreatures);
+  }
+
+  /**
+   * Get the current combat state of this group
+   */
+  isInCombat(): boolean {
+    return this._isInCombat;
   }
 }
 

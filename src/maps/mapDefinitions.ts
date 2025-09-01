@@ -1,17 +1,16 @@
 import { MapDefinition, Terrain } from './types';
 import { Room } from './room';
+import { createRoom, roomPresets } from './room/presets';
 import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
 import { SKILL_PRESETS } from '../skills';
 
 // --- Generate tiles from map definition ---
-export const typeToImage: Record<string, string> = {
-  room1: "room1.jpg",
-  room2: "room2.jpg",
-  room3: "room3.jpg",
-  room4: "room4.jpg",
-  corridor: "corridor1.jpg",
-};
+// Generate typeToImage mapping from room presets
+export const typeToImage: Record<string, string> = Object.entries(roomPresets).reduce((acc, [presetId, preset]) => {
+  acc[presetId] = preset.image;
+  return acc;
+}, {} as Record<string, string>);
 
 // Reusable terrain presets (use Terrain type)
 export const terrainPresets: Record<string, Terrain> = {
@@ -22,12 +21,12 @@ export const terrainPresets: Record<string, Terrain> = {
 
 export const mapDefinition: MapDefinition = {
   name: "Exempelkarta med rumstyper",
-  description: "En karta med olika rumstyper och korridorer.",
   width: 40,
   height: 30,
   rooms: [
-    new Room("room3", 0, 0, 8, 10, 270),
-    new Room("room4", 10, 0, 8, 10, 90),
+    // Using room presets with different configurations
+    createRoom("forest1", 0, 0, { rotation: 270 }),
+    createRoom("forest2", 10, 0, { rotation: 90 }),
   ],
   terrain: [
     { preset: "tree", x: 10, y: 5 },

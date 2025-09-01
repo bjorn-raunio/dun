@@ -18,7 +18,6 @@ import { displayDiceRoll } from "./utils";
 
 const tileMapData = {
   name: mapDefinition.name,
-  description: mapDefinition.description,
   tiles: generateMapTiles(mapDefinition).tiles,
 };
 

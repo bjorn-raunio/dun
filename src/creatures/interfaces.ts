@@ -85,7 +85,6 @@ export interface ICreature {
   getMaxAttackRange(): number;
   getZoneOfControlRange(): number;
   getCombatState(): boolean;
-  updateCombatState(allCreatures: ICreature[]): void;
   getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[];
   
   // Relationships
