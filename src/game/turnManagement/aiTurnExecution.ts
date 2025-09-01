@@ -36,7 +36,7 @@ export function executeAITurnForCreature(
       getVisibleCreatures(
         creature.x,
         creature.y,
-        groups.flatMap(group => group.getLivingCreatures()),
+        groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined),
         mapData,
         cols,
         rows,
@@ -81,7 +81,7 @@ function executeAITurnLoop(
     
     // Check if we should continue after an attack
     if (actionResult.actionType === 'attack' && actionResult.targetDefeated) {
-      if (!shouldContinueTurnAfterKill(creature, context.groups.flatMap(group => group.getLivingCreatures()))) {
+      if (!shouldContinueTurnAfterKill(creature, context.groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined))) {
         break;
       }
       logTurn(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
@@ -122,11 +122,11 @@ function executeSingleAIAction(
   // Get updated reachable tiles and targets in range
   const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = 
     creatureServices.getMovementService().getReachableTiles(
-      creature, groups.flatMap(group => group.getLivingCreatures()), mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition
+      creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined), mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition
     );
   
-  const targetsInRangeIds = calculateTargetsInRange(creature, groups.flatMap(group => group.getLivingCreatures()));
-  const targetsInRange = groups.flatMap(group => group.getLivingCreatures()).filter(c => targetsInRangeIds.has(c.id));
+  const targetsInRangeIds = calculateTargetsInRange(creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined));
+  const targetsInRange = groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined).filter(c => targetsInRangeIds.has(c.id));
 
   // Create AI context
   const aiContext = {

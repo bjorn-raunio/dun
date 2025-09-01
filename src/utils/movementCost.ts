@@ -23,6 +23,24 @@ function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: MapDefinition
   return false;
 }
 
+/**
+ * Check if a tile is within any terrain in the map definition
+ * (Local copy for use in getTerrainCost function)
+ */
+function isTileWithinAnyTerrain(x: number, y: number, mapDefinition?: MapDefinition): boolean {
+  if (!mapDefinition) {
+    return false;
+  }
+  
+  for (const terrain of mapDefinition.terrain) {
+    if (terrain.isTileWithinTerrain(x, y)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 
 
 // --- Centralized Movement Cost Calculation Service ---
@@ -290,9 +308,9 @@ export function getTerrainCost(
 
   const tile = mapData.tiles[y]?.[x];
   if (!tile || tile === "empty.jpg") {
-    // Check if the tile is within a room - if not, it blocks movement
-    if (!isTileWithinAnyRoom(x, y, mapDefinition)) {
-      return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms block movement
+    // Check if the tile is within a room or terrain - if not, it blocks movement
+    if (!isTileWithinAnyRoom(x, y, mapDefinition) && !isTileWithinAnyTerrain(x, y, mapDefinition)) {
+      return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms and terrain block movement
     }
   }
 

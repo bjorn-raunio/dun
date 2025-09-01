@@ -26,7 +26,10 @@ import { GAME_SETTINGS } from '../constants';
  * 3. **Smooth Diagonal Lines**: Diagonal line-of-sight calculations are now
  *    smooth and accurate, not limited to discrete tile steps.
  * 
- * 4. **Backward Compatibility**: Still supports tile-based coordinates through
+ * 4. **Source/Target Exclusion**: Source and target tiles never block line of sight,
+ *    ensuring creatures can always see from their own position and to their target.
+ * 
+ * 5. **Backward Compatibility**: Still supports tile-based coordinates through
  *    automatic conversion.
  * 
  * BENEFITS:
@@ -145,8 +148,9 @@ export class LineOfSightSystem {
       const points = this.getLinePoints(fromX, fromY, toX, toY);
 
       for (const point of points) {
-        // Skip the starting point
-        if (point.x === fromX && point.y === fromY) {
+        // Skip both source and target tiles - they should not block line of sight
+        if ((point.x === fromX && point.y === fromY) ||
+            (point.x === toX && point.y === toY)) {
           continue;
         }
 
@@ -193,8 +197,9 @@ export class LineOfSightSystem {
     const path = this.getLinePoints(fromX, fromY, toX, toY);
 
     for (const point of path) {
-      // Skip the starting point
-      if (point.x === fromX && point.y === fromY) {
+      // Skip both source and target tiles - they should not block line of sight
+      if ((point.x === fromX && point.y === fromY) ||
+          (point.x === toX && point.y === toY)) {
         continue;
       }
 
@@ -284,17 +289,21 @@ export class LineOfSightSystem {
       // Convert current pixel position to tile coordinates
       const currentTile = this.pixelToTile(currentPixelX, currentPixelY);
 
-      if (currentTile.tileX !== toX || currentTile.tileY !== toY) {
-        // Check if this position blocks line of sight
-        if (this.isPixelPositionBlocking(
-          currentPixelX, currentPixelY, currentTile.tileX, currentTile.tileY,
-          mapData, cols, rows, mapDefinition,
-          fromPixel.pixelX, fromPixel.pixelY, toPixel.pixelX, toPixel.pixelY,
-          fromElevation, toElevation, fromSize, toSize,
-          allCreatures
-        )) {
-          return false;
-        }
+      // Skip both source and target tiles - they should not block line of sight
+      if ((currentTile.tileX === fromX && currentTile.tileY === fromY) ||
+          (currentTile.tileX === toX && currentTile.tileY === toY)) {
+        continue;
+      }
+      
+      // Check if this position blocks line of sight
+      if (this.isPixelPositionBlocking(
+        currentPixelX, currentPixelY, currentTile.tileX, currentTile.tileY,
+        mapData, cols, rows, mapDefinition,
+        fromPixel.pixelX, fromPixel.pixelY, toPixel.pixelX, toPixel.pixelY,
+        fromElevation, toElevation, fromSize, toSize,
+        allCreatures
+      )) {
+        return false;
       }
     }
 
@@ -303,6 +312,8 @@ export class LineOfSightSystem {
 
   /**
    * Check if a pixel position blocks line of sight
+   * Note: This function is called for intermediate positions only.
+   * Source and target tiles are excluded from blocking checks by the calling functions.
    */
   private static isPixelPositionBlocking(
     pixelX: number, pixelY: number, tileX: number, tileY: number,
@@ -370,17 +381,10 @@ export class LineOfSightSystem {
           const creatureElevation = mapDefinition ? terrainHeightAt(creature.x, creature.y, mapDefinition) : 0;
           const creatureEffectiveHeight = creatureElevation + creature.size;
 
-          // Calculate the line of sight height at this pixel position
           const totalDistance = Math.sqrt((toPixelX - fromPixelX) ** 2 + (toPixelY - fromPixelY) ** 2);
           if (totalDistance > 0) {
-            const currentDistance = Math.sqrt((pixelX - fromPixelX) ** 2 + (pixelY - fromPixelY) ** 2);
-            const ratio = currentDistance / totalDistance;
-
-            // Interpolate the line of sight height
-            const lineOfSightHeight = (fromElevation + fromSize) + ((toElevation + toSize) - (fromElevation + fromSize)) * ratio;
-
             // Creature blocks line of sight if it's taller than the line of sight
-            if (creatureEffectiveHeight > lineOfSightHeight) {
+            if (creatureEffectiveHeight >= (fromElevation + fromSize) && creatureEffectiveHeight >= (toElevation + toSize)) {
               return true;
             }
           }
@@ -457,6 +461,8 @@ export class LineOfSightSystem {
   /**
    * Check if terrain at a position blocks line of sight
    * Now considers elevation and creature sizes for realistic blocking
+   * Note: This function is called for intermediate positions only.
+   * Source and target tiles are excluded from blocking checks by the calling functions.
    */
   private static isTerrainBlocking(
     x: number,

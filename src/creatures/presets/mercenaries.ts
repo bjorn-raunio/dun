@@ -9,7 +9,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     image: "creatures/civilian.png",
     attributes: {
       movement: 4,
-      combat: 2,
+      combat: 6,
       ranged: 2,
       strength: 2,
       agility: 2,
@@ -19,7 +19,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     size: 2,
     inventory: [],
     equipment: {},
-    vitality: 4,
+    vitality: 400,
     hireCost: 75,
     skills: [
       SKILL_PRESETS.lostInTheDark,

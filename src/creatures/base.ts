@@ -2,11 +2,9 @@ import {
   CreatureConstructorParams,
   CreaturePosition,
   CreatureState,
-  DEFAULT_ATTRIBUTES,
-  Skills,
-  Skill,
-  SkillType
+  DEFAULT_ATTRIBUTES
 } from './types';
+import { Skills, Skill, SkillType } from '../skills';
 import { CreatureGroup } from './CreatureGroup';
 import {
   Attributes,

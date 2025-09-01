@@ -129,12 +129,12 @@ export function evaluateMovementOption(
     // The goal is to reach the target with minimal total movement, not minimal immediate movement
 
     // Add a small penalty for positions that are dead ends (limited future movement options)
-    if (benefits.closerToTarget && mapData && cols !== undefined && rows !== undefined) {
+    /*if (benefits.closerToTarget && mapData && cols !== undefined && rows !== undefined) {
       const accessibleNeighbors = countAccessibleNeighbors(x, y, allCreatures, mapData, cols, rows, mapDefinition);
       if (accessibleNeighbors <= 2) {
         score -= 10; // Penalty for positions with very limited movement options
       }
-    }
+    }*/
   }
 
   return {

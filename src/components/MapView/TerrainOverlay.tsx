@@ -1,9 +1,9 @@
 import React from 'react';
 import { TILE_SIZE } from '../styles';
-import { resolveTerrain } from '../../maps';
 import { getRotatedDimensions } from '../../utils/dimensions';
 import { TerrainItem } from './types';
-import { MapDefinition, Terrain } from '../../maps/types';
+import { MapDefinition } from '../../maps/types';
+import { Terrain } from '../../maps/terrain';
 
 interface TerrainOverlayProps {
   mapDefinition: MapDefinition;
@@ -23,25 +23,24 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
       }}
     >
       {mapDefinition.terrain.map((t: Terrain, index: number) => {
-        const rt = resolveTerrain(t);
         const { width: blockWidth, height: blockHeight } = getRotatedDimensions(
-          rt.mapWidth, 
-          rt.mapHeight, 
-          rt.rotation
+          t.mapWidth, 
+          t.mapHeight, 
+          t.rotation
         );
         const wrapperWidth = TILE_SIZE * blockWidth;
         const wrapperHeight = TILE_SIZE * blockHeight;
         // Inner wrapper size before rotation
-        const innerWidth = (rt.rotation === 90 || rt.rotation === 270) ? wrapperHeight : wrapperWidth;
-        const innerHeight = (rt.rotation === 90 || rt.rotation === 270) ? wrapperWidth : wrapperHeight;
+        const innerWidth = (t.rotation === 90 || t.rotation === 270) ? wrapperHeight : wrapperWidth;
+        const innerHeight = (t.rotation === 90 || t.rotation === 270) ? wrapperWidth : wrapperHeight;
         
         return (
           <div
             key={`terrain-${index}`}
             style={{
               position: "absolute",
-              left: rt.x * TILE_SIZE,
-              top: rt.y * TILE_SIZE,
+              left: t.x * TILE_SIZE,
+              top: t.y * TILE_SIZE,
               width: wrapperWidth,
               height: wrapperHeight,
               overflow: "hidden",
@@ -56,11 +55,11 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 transform:
-                  rt.rotation === 90
+                  t.rotation === 90
                     ? `rotate(90deg)`
-                    : rt.rotation === 180
+                    : t.rotation === 180
                     ? `rotate(180deg)`
-                    : rt.rotation === 270
+                    : t.rotation === 270
                     ? `rotate(270deg)`
                     : undefined,
                 transformOrigin: "center",
@@ -71,8 +70,8 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
               }}
             >
               <img
-                src={process.env.PUBLIC_URL + "/" + (rt.image || "terrain_unknown.png")}
-                alt={rt.key}
+                src={process.env.PUBLIC_URL + "/" + (t.image || "terrain_unknown.png")}
+                alt={t.type}
                 draggable={false}
                 style={{
                   width: "100%",

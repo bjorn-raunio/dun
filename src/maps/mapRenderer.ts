@@ -1,21 +1,18 @@
-import { Terrain, ResolvedTerrain, MapDefinition } from './types';
-import { terrainPresets } from './mapDefinitions';
+import { ResolvedTerrain, MapDefinition } from './types';
+import { Terrain } from './terrain';
 import { getRotatedDimensions } from '../utils/dimensions';
 
 // Resolve terrain definition to concrete values
 export function resolveTerrain(t: Terrain): ResolvedTerrain {
-  const preset = t.preset ? terrainPresets[t.preset] : null;
-  const key = t.preset || t.type || "unknown";
-  
   return {
-    key,
-    x: t.x ?? preset?.x ?? 0,
-    y: t.y ?? preset?.y ?? 0,
-    mapWidth: t.mapWidth ?? preset?.mapWidth ?? 1,
-    mapHeight: t.mapHeight ?? preset?.mapHeight ?? 1,
-    rotation: t.rotation ?? preset?.rotation ?? 0,
-    image: t.image ?? preset?.image ?? "terrain_unknown.png",
-    height: t.height ?? preset?.height ?? 0,
+    key: t.type,
+    x: t.x,
+    y: t.y,
+    mapWidth: t.mapWidth,
+    mapHeight: t.mapHeight,
+    rotation: t.rotation,
+    image: t.image,
+    height: t.height,
   };
 }
 
@@ -53,11 +50,7 @@ export function generateMapTiles(mapDefinition: MapDefinition) {
 export function terrainHeightAt(tx: number, ty: number, mapDefinition: MapDefinition): number {
   let h = 0;
   for (const t of mapDefinition.terrain) {
-    const rt = resolveTerrain(t);
-    const { width: w, height: hgt } = getRotatedDimensions(rt.mapWidth, rt.mapHeight, rt.rotation);
-    if (tx >= rt.x && tx < rt.x + w && ty >= rt.y && ty < rt.y + hgt) {
-      h = Math.max(h, rt.height ?? 1);
-    }
+    h = Math.max(h, t.getHeightAt(tx, ty));
   }
   return h;
 }

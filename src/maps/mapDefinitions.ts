@@ -1,6 +1,7 @@
 import { MapDefinition, Terrain } from './types';
 import { Room } from './room';
 import { createRoom, roomPresets } from './room/presets';
+import { createTerrain, terrainPresets } from './terrain';
 import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
 import { SKILL_PRESETS } from '../skills';
@@ -12,12 +13,7 @@ export const typeToImage: Record<string, string> = Object.entries(roomPresets).r
   return acc;
 }, {} as Record<string, string>);
 
-// Reusable terrain presets (use Terrain type)
-export const terrainPresets: Record<string, Terrain> = {
-  tree: { image: "", mapWidth: 2, mapHeight: 2, height: 4 },
-  wagon: { image: "wagon.jpg", mapWidth: 1, mapHeight: 2, height: 1 },
-  horse: { image: "horse.jpg", mapWidth: 1, mapHeight: 2, height: 1 },
-};
+// Terrain presets are now imported from the terrain module
 
 export const mapDefinition: MapDefinition = {
   name: "Free the Merchants",
@@ -28,20 +24,16 @@ export const mapDefinition: MapDefinition = {
     createRoom("forest2", 10, 0, { rotation: 90 }),
   ],
   terrain: [
-    { preset: "tree", x: 10, y: 5 },
-    { preset: "tree", x: 12, y: 1 },
-    { preset: "tree", x: 17, y: 1 },
-    { preset: "wagon", x: 16, y: 4, rotation: 90 },
-    { preset: "horse", x: 18, y: 4, rotation: 270 },
+    createTerrain("tree", 10, 5),
+    createTerrain("tree", 12, 1),
+    createTerrain("tree", 17, 1),
+    createTerrain("wagon", 16, 4, { rotation: 90 }),
+    createTerrain("horse", 18, 4, { rotation: 270 }),
   ],
   terrainTypes: {
     "tree": { blocksLineOfSight: true, height: 4, mapWidth: 2, mapHeight: 2 },
     "wagon": { blocksLineOfSight: false, height: 1, mapWidth: 1, mapHeight: 2 },
     "horse": { blocksLineOfSight: false, height: 1, mapWidth: 1, mapHeight: 2 },
-    "wall": { blocksLineOfSight: true, height: 3 },
-    "mountain": { blocksLineOfSight: true, height: 5 },
-    "forest": { blocksLineOfSight: true, height: 4 },
-    "building": { blocksLineOfSight: true, height: 4 },
   },
   startingTiles: [
     { x: 0, y: 1 },
@@ -79,12 +71,13 @@ export const mapDefinition: MapDefinition = {
         offHand: createShield("shield"),
         armor: createArmor("chainMail"),
       },
-      vitality: 5,
+      vitality: 4,
       mana: 0,
       fortune: 3,
       group: CREATURE_GROUPS.PLAYER,
       skills: [
         SKILL_PRESETS.lostInTheDark,
+        SKILL_PRESETS.ironWill,
       ]
     }),
   ],

@@ -16,7 +16,9 @@ export function filterValidTargets(
   return allCreatures.filter(target => 
     target.isAlive() && 
     target.id !== creature.id && 
-    creature.isHostileTo(target)
+    creature.isHostileTo(target) &&
+    target.x !== undefined && 
+    target.y !== undefined
   );
 }
 

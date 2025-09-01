@@ -77,8 +77,11 @@ export function updateTargetInformation(
 ): AIState {
   const newState = { ...ai };
 
+  // Filter out creatures with undefined positions
+  const validCreatures = allCreatures.filter(c => c.x !== undefined && c.y !== undefined);
+
   // Update last known positions of enemies
-  for (const target of allCreatures) {
+  for (const target of validCreatures) {
     if (target.isDead() || target.id === creature.id) {
       continue;
     }

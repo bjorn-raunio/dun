@@ -21,6 +21,14 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
   // Stealth Skills
 
   // Academic Skills
+  "ironWill": {
+    name: "Iron Will",
+    type: "academic",
+    description: "+1 courage",
+    attributeModifiers: [
+      { attribute: "courage", value: 1 }
+    ]
+  },
 
   // Natural Skills
   "lostInTheDark": {

@@ -1,6 +1,7 @@
 // --- Map and Terrain Type Definitions ---
 import { Creature } from '../creatures/index';
 import { Room } from './room';
+import { Terrain as TerrainClass } from './terrain';
 
 
 
@@ -17,20 +18,23 @@ export type Terrain = {
   height?: number; // optional vertical height/elevation of terrain
 };
 
+// Legacy terrain type for backward compatibility
 export type TerrainType = {
   blocksLineOfSight?: boolean;
-  height?: number;
+  height?: number
   image?: string;
   mapWidth?: number;
   mapHeight?: number;
 };
+
+
 
 export type MapDefinition = {
   name: string;
   width: number;
   height: number;
   rooms: Room[];
-  terrain: Terrain[];
+  terrain: TerrainClass[];
   creatures: Creature[]; // Array of creatures on the map
   startingTiles: Array<{ x: number; y: number; image?: string; }>; // Designated starting positions for heroes
   terrainTypes?: Record<string, TerrainType>; // Terrain type definitions for line of sight and other properties
