@@ -150,7 +150,7 @@ export class LineOfSightSystem {
       for (const point of points) {
         // Skip both source and target tiles - they should not block line of sight
         if ((point.x === fromX && point.y === fromY) ||
-            (point.x === toX && point.y === toY)) {
+          (point.x === toX && point.y === toY)) {
           continue;
         }
 
@@ -199,7 +199,7 @@ export class LineOfSightSystem {
     for (const point of path) {
       // Skip both source and target tiles - they should not block line of sight
       if ((point.x === fromX && point.y === fromY) ||
-          (point.x === toX && point.y === toY)) {
+        (point.x === toX && point.y === toY)) {
         continue;
       }
 
@@ -237,7 +237,7 @@ export class LineOfSightSystem {
       if (creature.isDead()) {
         continue;
       }
-      
+
       // Skip creatures that are not on the map (undefined position)
       if (creature.x === undefined || creature.y === undefined) {
         continue;
@@ -291,10 +291,10 @@ export class LineOfSightSystem {
 
       // Skip both source and target tiles - they should not block line of sight
       if ((currentTile.tileX === fromX && currentTile.tileY === fromY) ||
-          (currentTile.tileX === toX && currentTile.tileY === toY)) {
+        (currentTile.tileX === toX && currentTile.tileY === toY)) {
         continue;
       }
-      
+
       // Check if this position blocks line of sight
       if (this.isPixelPositionBlocking(
         currentPixelX, currentPixelY, currentTile.tileX, currentTile.tileY,
@@ -350,19 +350,9 @@ export class LineOfSightSystem {
         const fromEffectiveHeight = fromElevation + fromSize;
         const toEffectiveHeight = toElevation + toSize;
 
-        // Calculate the line of sight height at this pixel position
-        const totalDistance = Math.sqrt((toPixelX - fromPixelX) ** 2 + (toPixelY - fromPixelY) ** 2);
-        if (totalDistance > 0) {
-          const currentDistance = Math.sqrt((pixelX - fromPixelX) ** 2 + (pixelY - fromPixelY) ** 2);
-          const ratio = currentDistance / totalDistance;
-
-          // Interpolate the line of sight height
-          const lineOfSightHeight = fromEffectiveHeight + (toEffectiveHeight - fromEffectiveHeight) * ratio;
-
-          // Terrain only blocks if it's taller than the line of sight
-          if (terrainHeight > lineOfSightHeight) {
-            return true;
-          }
+        // Terrain only blocks if it's taller than the line of sight
+        if (terrainHeight >= fromEffectiveHeight && terrainHeight >= toEffectiveHeight) {
+          return true;
         }
       }
     }
@@ -536,7 +526,7 @@ export class LineOfSightSystem {
 
       for (const creature of allCreatures) {
         if (creature.isDead()) continue; // Dead creatures don't block
-        
+
         // Skip creatures that are not on the map (undefined position)
         if (creature.x === undefined || creature.y === undefined) continue;
 
