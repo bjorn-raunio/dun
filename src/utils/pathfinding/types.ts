@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { MapDefinition } from '../../maps/types';
 
 // Core pathfinding types
@@ -21,6 +21,8 @@ export interface LineOfSightOptions {
   includeCreatures?: boolean;
   /** Algorithm to use for line-of-sight calculations */
   algorithm?: 'dda' | 'raybox' | 'bresenham';
+  /** Use pixel-based calculations instead of tile-based (default: true) */
+  usePixelCalculations?: boolean;
 }
 
 // Distance calculation types
@@ -35,7 +37,7 @@ export interface DistanceOptions {
   /** Map definition for terrain costs */
   mapDefinition?: MapDefinition;
   /** All creatures for obstacle checking */
-  allCreatures?: Creature[];
+  allCreatures?: ICreature[];
   /** Cost map for path-based distance calculation */
   costMap?: Map<string, number>;
   /** Distance metric to use for simple calculations */

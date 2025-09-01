@@ -1,7 +1,7 @@
 import { Creature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { Weapon } from '../../items/types';
-import { calculateCombatRoll, calculateDamageRoll, isCriticalHit, isDoubleCritical } from '../dice';
+import { calculateAttributeRoll, calculateDamageRoll, displayDiceRoll, displayDiceSum, isCriticalHit } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
 import { logCombat } from '../logging';
 import { 
@@ -48,14 +48,12 @@ export function executeToHitRollMelee(
   defenderBonus += elevationBonus.defenderBonus;
 
   // Roll for combat
-  const attackerRollResult = calculateCombatRoll(attackerBonus);
-  const defenderRollResult = calculateCombatRoll(defenderBonus);
+  const attackerRollResult = calculateAttributeRoll(attackerBonus);
+  const defenderRollResult = calculateAttributeRoll(defenderBonus);
   const attackerRoll = attackerRollResult.total;
   const defenderRoll = defenderRollResult.total;
 
   // Check for double criticals and critical hits
-  const attackerDoubleCritical = isDoubleCritical(attackerRollResult.dice);
-  const defenderDoubleCritical = isDoubleCritical(defenderRollResult.dice);
   const criticalHit = isCriticalHit(attackerRollResult.dice);
 
   // Check if attack hits
@@ -65,7 +63,7 @@ export function executeToHitRollMelee(
 
   // Double criticals always hit unless defender also rolls double 6
   let hit: boolean;
-  if (attackerDoubleCritical && defenderDoubleCritical) {
+  if (attackerRollResult.criticalSuccess && defenderRollResult.criticalSuccess) {
     // Epic tie - both rolled double 6s, use normal hit determination
     hit = determineHit(
       attackerRoll,
@@ -75,7 +73,7 @@ export function executeToHitRollMelee(
       attackerHasShield,
       defenderHasShield
     );
-  } else if (attackerDoubleCritical) {
+  } else if (attackerRollResult.criticalSuccess) {
     // Attacker double critical - automatic hit
     hit = true;
   } else {
@@ -90,15 +88,15 @@ export function executeToHitRollMelee(
     );
   }
 
-  let toHitMessage: string = `${attacker.name} attacks ${target.name}: ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} ${displayHitMessage(hit, criticalHit, attackerDoubleCritical)}`;
+  let toHitMessage: string = `${attacker.name} attacks ${target.name}: ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} ${displayHitMessage(hit, criticalHit, attackerRollResult.criticalSuccess)}`;
 
   return {
     hit,
     toHitMessage,
     attackerRoll,
     defenderRoll,
-    attackerDoubleCritical,
-    defenderDoubleCritical,
+    attackerDoubleCritical: attackerRollResult.criticalSuccess,
+    defenderDoubleCritical: defenderRollResult.criticalSuccess,
     criticalHit,
     attackerDice: attackerRollResult.dice,
     defenderDice: defenderRollResult.dice
@@ -152,9 +150,8 @@ export function executeToHitRollRanged(
     }
   }
 
-  const totalModifier = attacker.ranged + backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
-  const toHitRollResult = calculateCombatRoll(totalModifier);
-  let attackerDoubleCritical = isDoubleCritical(toHitRollResult.dice);
+  const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
+  const toHitRollResult = attacker.performAttributeTest('ranged', totalModifier);
   let criticalHit = isCriticalHit(toHitRollResult.dice);
 
   // Check if target is more than half the weapon's range away
@@ -164,19 +161,16 @@ export function executeToHitRollRanged(
 
   // If target is more than half range away, critical hits and double criticals are not possible
   if (distance > halfRange) {
-    attackerDoubleCritical = false;
+    toHitRollResult.criticalSuccess = false;
     criticalHit = false;
   }
 
-  // Ranged attacks hit on 10 or greater (with all penalties and bonuses), but double criticals always hit
-  const hit = attackerDoubleCritical || toHitRollResult.total >= 10;
-
-  const toHitMessage = `${attacker.name} makes a ranged attack at ${target.name}: ${displayDiceSum(toHitRollResult, totalModifier)} ${displayHitMessage(hit, criticalHit, attackerDoubleCritical)}`;
+  const toHitMessage = `${attacker.name} makes a ranged attack at ${target.name}: ${displayDiceSum(toHitRollResult, toHitRollResult.modifier)} ${displayHitMessage(toHitRollResult.success, criticalHit, toHitRollResult.criticalSuccess)}`;
 
   return {
-    hit,
+    hit: toHitRollResult.success,
     toHitMessage,
-    attackerDoubleCritical,
+    attackerDoubleCritical: toHitRollResult.criticalSuccess,
     criticalHit,
     attackerDice: toHitRollResult.dice
   };
@@ -302,14 +296,6 @@ function determineHit(
   // Agility tie - check shields
   if (defenderHasShield && !attackerHasShield) return false;
   return true; // Attacker wins if both have shields or neither has shield
-}
-
-function displayDiceRoll(dice: number[]): string {
-  return `${dice.map(d => `[${d}]`).join('')}`;
-}
-
-function displayDiceSum(roll: { total: number; dice: number[] }, modifier?: number): string {
-  return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier}`}` : ''} = ${roll.total}`;
 }
 
 function displayHitMessage(hit: boolean, criticalHit: boolean, doubleCritical: boolean): string {

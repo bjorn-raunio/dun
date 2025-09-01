@@ -1,5 +1,4 @@
 import { Weapon, RangedWeapon, Armor, Shield } from '../types';
-import { GAME_SETTINGS } from '../../utils/constants';
 
 // --- Combat Calculator ---
 
@@ -7,8 +6,8 @@ export class CombatCalculator {
   /**
    * Get effective armor value (equipped armor or natural armor)
    */
-  static getEffectiveArmor(armor?: Armor, naturalArmor: number = GAME_SETTINGS.DEFAULT_NATURAL_ARMOR): number {
-    return armor?.armor ?? naturalArmor;
+  static getEffectiveArmor(naturalArmor: number, armor?: Armor): number {
+    return naturalArmor + (armor?.armor ?? 0);
   }
 
   /**

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { calculateTargetsInRange } from '../../utils/combat';
 import { findCreatureById, isCreatureVisible } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
@@ -8,7 +8,7 @@ import { MapDefinition } from '../../maps/types';
 // --- Targets in Range Hook ---
 
 export function useTargetsInRange(
-  creatures: Creature[],
+  creatures: ICreature[],
   selectedCreatureId: string | null,
   targetsInRangeKey: number,
   mapData?: { tiles: string[][] },

@@ -4,7 +4,6 @@ export * from './core';
 export * from './creature';
 export * from './combat';
 export * from './movement';
-export * from './equipment';
 export * from './map';
 export * from './utility';
 

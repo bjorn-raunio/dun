@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, CreatureGroup, ICreature } from '../../creatures/index';
 import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../../ai/decisionMaking';
 import { calculateTargetsInRange } from '../../utils/combat';
 import { addMessage } from '../messageSystem';
@@ -12,10 +12,10 @@ import { AIState } from '../../ai/types';
  * Execute AI turn for a single creature
  */
 export function executeAITurnForCreature(
-  creature: Creature,
+  creature: ICreature,
   context: TurnExecutionContext
 ): boolean {
-  const { creatures, mapData, mapDefinition } = context;
+  const { groups, mapData, mapDefinition } = context;
   
   // Get AI state from the creature (assuming it's a Monster)
   const aiState = (creature as any).getAIState?.() || null;
@@ -35,15 +35,15 @@ export function executeAITurnForCreature(
     const visibleCreatures = getVisibleCreatures(
       creature.x,
       creature.y,
-      creatures,
+      groups.flatMap(group => group.getLivingCreatures()),
       mapData,
       cols,
       rows,
       mapDefinition
     );
     
-    const visibleHostileCreatures = visibleCreatures.filter((c: Creature) => creature.isHostileTo(c));
-    logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: Creature) => c.name).join(', ')}`);
+    const visibleHostileCreatures = visibleCreatures.filter((c: ICreature) => creature.isHostileTo(c));
+    logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);
   }
 
   return executeAITurnLoop(creature, aiState, context);
@@ -53,7 +53,7 @@ export function executeAITurnForCreature(
  * Execute the main AI turn loop
  */
 function executeAITurnLoop(
-  creature: Creature,
+  creature: ICreature,
   aiState: AIState,
   context: TurnExecutionContext
 ): boolean {
@@ -80,7 +80,7 @@ function executeAITurnLoop(
     
     // Check if we should continue after an attack
     if (actionResult.actionType === 'attack' && actionResult.targetDefeated) {
-      if (!shouldContinueTurnAfterKill(creature, context.creatures)) {
+      if (!shouldContinueTurnAfterKill(creature, context.groups.flatMap(group => group.getLivingCreatures()))) {
         break;
       }
       logTurn(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
@@ -112,26 +112,26 @@ function executeAITurnLoop(
  * Execute a single AI action
  */
 function executeSingleAIAction(
-  creature: Creature,
+  creature: ICreature,
   aiState: AIState,
   context: TurnExecutionContext
 ): { success: boolean; actionType?: string; targetDefeated?: boolean } {
-  const { creatures, mapData, mapDefinition } = context;
+  const { groups, mapData, mapDefinition } = context;
   
   // Get updated reachable tiles and targets in range
   const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = 
     creatureServices.getMovementService().getReachableTiles(
-      creature, creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition
+      creature, groups.flatMap(group => group.getLivingCreatures()), mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition
     );
   
-  const targetsInRangeIds = calculateTargetsInRange(creature, creatures);
-  const targetsInRange = creatures.filter(c => targetsInRangeIds.has(c.id));
+  const targetsInRangeIds = calculateTargetsInRange(creature, groups.flatMap(group => group.getLivingCreatures()));
+  const targetsInRange = groups.flatMap(group => group.getLivingCreatures()).filter(c => targetsInRangeIds.has(c.id));
 
   // Create AI context
   const aiContext = {
     ai: aiState,
     creature,
-    allCreatures: creatures,
+    allCreatures: groups.flatMap(group => group.getLivingCreatures()),
     mapData,
     mapDefinition,
     currentTurn: 1, // TODO: Get actual turn number
@@ -176,7 +176,7 @@ function executeSingleAIAction(
  * Check if progress has been made in the AI turn
  */
 function hasProgressBeenMade(
-  creature: Creature,
+  creature: ICreature,
   previousActions: number,
   previousMovement: number,
   previousQuickActions: number

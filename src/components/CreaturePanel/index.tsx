@@ -1,25 +1,26 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { CreatureHeader } from './CreatureHeader';
 import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
-import { SkillsSection, StatusEffectsSection } from './SkillsSection';
+import { SkillsSection } from './SkillsSection';
 import { HeroSelector } from './HeroSelector';
 import { ActionPanel } from './ActionPanel';
 
 import { COMMON_STYLES } from '../styles';
 
 interface CreaturePanelProps {
-  selectedCreature: Creature | null;
-  creatures: Creature[];
+  selectedCreature: ICreature | null;
+  creatures: ICreature[];
   onDeselect: () => void;
-  onSelectCreature?: (creature: Creature) => void;
-  onCreatureUpdate?: (creature: Creature) => void;
-  onAttack?: (creature: Creature) => void;
-  canAttack?: (creature: Creature) => boolean;
-  onRun?: (creature: Creature) => void;
-  onSearch?: (creature: Creature) => void;
+  onSelectCreature?: (creature: ICreature) => void;
+  onCreatureUpdate?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature) => void;
+  canAttack?: (creature: ICreature) => boolean;
+  onRun?: (creature: ICreature) => void;
+  onSearch?: (creature: ICreature) => void;
+  onDisengage?: (creature: ICreature) => void;
 }
 
 export function CreaturePanel({ 
@@ -31,13 +32,14 @@ export function CreaturePanel({
   onAttack,
   canAttack,
   onRun,
-  onSearch
+  onSearch,
+  onDisengage
 }: CreaturePanelProps) {
   if (!selectedCreature) {
     return (
       <div style={PANEL_STYLES}>
         <HeroSelector 
-          heroes={creatures.filter(c => c.isHeroGroup())} 
+          heroes={creatures.filter(c => c.isPlayerControlled())} 
           onSelect={onSelectCreature} 
         />
       </div>
@@ -48,13 +50,13 @@ export function CreaturePanel({
     <div style={PANEL_STYLES}>
       <CreatureHeader creature={selectedCreature} />
       <CreatureStats creature={selectedCreature} />
-      <StatusEffectsSection creature={selectedCreature} />
+      <SkillsSection creature={selectedCreature} />
       <ActionPanel 
         creature={selectedCreature}
         onRun={onRun ? () => onRun(selectedCreature) : undefined}
         onSearch={onSearch ? () => onSearch(selectedCreature) : undefined}
+        onDisengage={onDisengage ? () => onDisengage(selectedCreature) : undefined}
       />
-      <SkillsSection creature={selectedCreature} />
       <EquipmentSection 
         creature={selectedCreature} 
         onUpdate={onCreatureUpdate}

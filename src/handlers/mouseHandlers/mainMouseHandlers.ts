@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { MapDefinition } from '../../maps/types';
 import { tileFromPointer } from '../../utils';
@@ -68,7 +68,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   }
 
   // Handle targeting mode attack
-  function handleTargetingModeAttack(attacker: Creature, target: Creature) {
+  function handleTargetingModeAttack(attacker: ICreature, target: ICreature) {
     if (!targetsInRangeIds.has(target.id)) {
       addMessage(`Cannot reach target: ${attacker.name} cannot reach ${target.name}`, gameActions.dispatch);
       return false;
@@ -79,7 +79,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   }
 
   // Handle regular attack
-  function handleAttack(attacker: Creature, target: Creature) {
+  function handleAttack(attacker: ICreature, target: ICreature) {
     if (!targetsInRangeIds.has(target.id)) {
       logGame(`Cannot reach target: ${attacker.name} cannot reach ${target.name}`);
       return false;
@@ -90,7 +90,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   }
 
   // Handle creature selection and line of sight calculation
-  function handleCreatureSelection(creature: Creature) {
+  function handleCreatureSelection(creature: ICreature) {
     setSelectedCreatureId(creature.id);
     
     if (creature.isPlayerControlled() && mapData?.tiles?.length > 0) {
@@ -109,13 +109,13 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
         mapDefinition
       );
       
-      const visibleHostileCreatures = visibleCreatures.filter((c: Creature) => creature.isHostileTo(c));
-      logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: Creature) => c.name).join(', ')}`);
+      const visibleHostileCreatures = visibleCreatures.filter((c: ICreature) => creature.isHostileTo(c));
+      logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);
     }
   }
 
   // Creature click handler
-  function onCreatureClick(creature: Creature, e: React.MouseEvent) {
+  function onCreatureClick(creature: ICreature, e: React.MouseEvent) {
     e.stopPropagation();
     
     // Handle targeting mode

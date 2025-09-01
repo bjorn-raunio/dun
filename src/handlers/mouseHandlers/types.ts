@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { MapDefinition } from '../../maps/types';
 import { PanningHandlers } from './panningHandlers';
@@ -7,14 +7,14 @@ import { MovementHandlers } from './movementHandlers';
 import { TileInteractionHandlers } from './tileInteractionHandlers';
 
 export interface MouseHandlers extends PanningHandlers {
-  onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
+  onCreatureClick: (creature: ICreature, e: React.MouseEvent) => void;
   handleTileInteraction: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export interface MouseHandlerDependencies {
   gameActions: GameActions;
   gameRefs: GameRefs;
-  creatures: Creature[];
+  creatures: ICreature[];
   selectedCreatureId: string | null;
   reachable: { 
     tiles: Array<{ x: number; y: number }>; 

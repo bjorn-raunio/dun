@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
 import { GameActions, GameRefs } from '../game/types';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
@@ -18,7 +18,7 @@ export interface EventHandlers {
 export function useEventHandlers(
   gameActions: GameActions,
   gameRefs: GameRefs,
-  creatures: Creature[],
+  creatures: ICreature[],
   selectedCreatureId: string | null,
   reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
   targetsInRangeIds: Set<string>,
@@ -43,7 +43,7 @@ export function useEventHandlers(
     });
 
     // Override the creature click handler to handle both targeting mode and creature selection
-    handlers.onCreatureClick = (creature: Creature, e: React.MouseEvent) => {
+    handlers.onCreatureClick = (creature: ICreature, e: React.MouseEvent) => {
       // If we're in targeting mode, let the original handler deal with it
       if (targetingMode?.isActive) {
         // Call the original handler for targeting mode
@@ -84,8 +84,8 @@ export function useEventHandlers(
           mapDefinition
         );
         
-        const visibleHostileCreatures = visibleCreatures.filter((c: Creature) => creature.isHostileTo(c));
-        logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: Creature) => c.name).join(', ')}`);
+        const visibleHostileCreatures = visibleCreatures.filter((c: ICreature) => creature.isHostileTo(c));
+        logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);
       }
     };
 

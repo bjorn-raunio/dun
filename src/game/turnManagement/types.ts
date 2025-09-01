@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, CreatureGroup } from '../../creatures/index';
 import { MapDefinition } from '../../maps/types';
 
 export interface TurnState {
@@ -10,8 +10,8 @@ export interface TurnState {
 
 export interface AITurnState {
   isAITurnActive: boolean;
-  currentGroup: string | null;
-  groupTurnOrder: string[];
+  currentGroup: CreatureGroup | null;
+  groupTurnOrder: CreatureGroup[];
   groupTurnIndex: number;
   processedCreatures: Set<string>;
 }
@@ -23,7 +23,7 @@ export interface TurnOrderConfig {
 }
 
 export interface TurnExecutionContext {
-  creatures: Creature[];
+  groups: CreatureGroup[];
   mapData: { tiles: string[][] };
   dispatch: React.Dispatch<any>;
   mapDefinition?: MapDefinition;

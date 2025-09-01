@@ -4,7 +4,7 @@ import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
 import { CombatResult } from './types';
 import { CombatSkillTriggerManager } from '../../skills';
-import { applyStatusEffect, CommonStatusEffects } from '../../statusEffects';
+import { applyStatusEffect, STATUS_EFFECT_PRESETS } from '../../statusEffects';
 import { logCombat } from '../logging';
 import {
   executeToHitRollMelee,
@@ -12,6 +12,12 @@ import {
   executeBlockRoll,
   executeDamageRoll
 } from './phases';
+import { getDirectionFromTo } from '../geometry';
+import { isAreaStandable } from '../pathfinding/helpers';
+import { rollXd6 } from '../dice';
+import { DIRECTIONS } from '../constants';
+import { MapDefinition } from '../../maps/types';
+import { RangedWeapon } from '../../items/types';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building
@@ -29,24 +35,36 @@ export function executeCombat(
   // Face the target when attacking
   attacker.faceTowards(target.x, target.y);
 
+  // Determine the weapon being used for the attack
+  const equipment = new EquipmentSystem(attacker.equipment);
+  const weapon = equipment.getMainWeapon();
+  
+  if (!weapon) {
+    return {
+      success: false,
+      damage: 0,
+      targetDefeated: false,
+      messages: [`${attacker.name} has no weapon equipped.`]
+    };
+  }
+
   // Use consolidated validation
-  const validation = validateCombat(attacker, target, allCreatures, mapDefinition, mapData);
+  const validation = validateCombat(attacker, target, weapon, allCreatures, mapDefinition, mapData);
 
   if (!validation.isValid) {
     return {
       success: false,
       damage: 0,
       targetDefeated: false,
-      messages: [validation.reason || `${attacker.name} cannot attack ${target.name}.`]
+      messages: [validation.reason || ``]
     };
   }
 
-  // Check if this is a ranged attack - create EquipmentSystem once and reuse
-  const equipment = new EquipmentSystem(attacker.equipment);
-  const isRanged = equipment.hasRangedWeapon();
+  // Check if this is a ranged attack
+  const isRanged = weapon instanceof RangedWeapon;
 
   // Execute unified combat
-  const result = executeCombatPhase(attacker, target, isRanged, allCreatures, mapDefinition);
+  const result = executeCombatPhase(attacker, target, isRanged, allCreatures, mapDefinition, mapData);
 
   // Update combat states for all creatures after combat
   updateCombatStates(allCreatures);
@@ -62,7 +80,8 @@ function executeCombatPhase(
   target: Creature,
   isRanged: boolean,
   allCreatures: Creature[],
-  mapDefinition?: any
+  mapDefinition?: MapDefinition,
+  mapData?: { tiles: string[][] }
 ): CombatResult {
   const messages = [];
   // === PART 1: TO-HIT ROLL ===
@@ -108,8 +127,12 @@ function executeCombatPhase(
 
     // Universal rule: Double critical hits apply knocked down status unless target has greater size
     if (target.size <= attacker.size) {
-      const knockedDownEffect = CommonStatusEffects.knockedDown(target);
-      applyStatusEffect(target, knockedDownEffect);
+      const knockedDownEffect = STATUS_EFFECT_PRESETS.knockedDown.createEffect();
+      applyStatusEffect(target, knockedDownEffect, (msg: string) => {
+        if (hitResult && hitResult.messages) {
+          hitResult.messages.push(msg);
+        }
+      });
     }
   }
 
@@ -145,6 +168,10 @@ function executeCombatPhase(
   // Apply damage using the proper method
   target.takeDamage(damageResult.damage);
 
+  if (!isRanged) {
+    pushback(attacker, target, allCreatures, true, mapData, mapDefinition);
+  }
+
   // Check if target is defeated
   const targetDefeated = target.isDead();
 
@@ -162,4 +189,65 @@ function executeCombatPhase(
   }
 
   return finalResult;
+}
+
+function pushback(attacker: Creature, target: Creature, allCreatures: Creature[], takePosition: boolean, mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition) {
+  if (attacker.size >= target.size && mapData) {
+    if (!target.isDead()) {
+      // Calculate direction from attacker to target
+      const direction = getDirectionFromTo(attacker.x, attacker.y, target.x, target.y);
+      const backArcLeft = (direction + 7) % 8;
+      const backArcRight = (direction + 1) % 8;
+      // Direction deltas (dx, dy) for each direction
+      const directionDeltas = [
+        [0, -1],  // N
+        [1, -1],  // NE
+        [1, 0],   // E
+        [1, 1],   // SE
+        [0, 1],   // S
+        [-1, 1],  // SW
+        [-1, 0],  // W
+        [-1, -1], // NW
+      ];
+      // Get possible pushback positions
+      const candidateDirs = [direction, backArcLeft, backArcRight];
+      const targetDims = target.getDimensions();
+      const mapRows = mapData.tiles.length;
+      const mapCols = mapData.tiles[0].length;
+      const validPositions = candidateDirs.map(dir => {
+        const [dx, dy] = directionDeltas[dir];
+        return {
+          x: target.x + dx,
+          y: target.y + dy,
+          dir
+        };
+      }).filter(pos =>
+        isAreaStandable(
+          pos.x,
+          pos.y,
+          targetDims,
+          true,
+          allCreatures,
+          mapCols,
+          mapRows,
+          mapData,
+          mapDefinition
+        )
+      );
+      if (validPositions.length > 0) {
+        // Pick one at random
+        const idx = Math.floor(Math.random() * validPositions.length);
+        const chosen = validPositions[idx];
+        if (takePosition) {
+          attacker.x = target.x;
+          attacker.y = target.y;
+        }
+        target.x = chosen.x;
+        target.y = chosen.y;
+      }
+    } else if (takePosition) {
+      attacker.x = target.x;
+      attacker.y = target.y;
+    }
+  }
 }

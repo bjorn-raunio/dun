@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { MapDefinition } from '../../maps/types';
 import { tileFromPointer, GAME_SETTINGS } from '../../utils';
@@ -9,7 +9,7 @@ export interface TileInteractionHandlers {
   handleTileClick: (
     e: React.MouseEvent<HTMLDivElement>,
     selectedCreatureId: string | null,
-    creatures: Creature[],
+    creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
     mapData: { tiles: string[][] },
     mapDefinition?: MapDefinition,
@@ -24,7 +24,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
   function handleTileClick(
     e: React.MouseEvent<HTMLDivElement>,
     selectedCreatureId: string | null,
-    creatures: Creature[],
+    creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
     mapData: { tiles: string[][] },
     mapDefinition?: MapDefinition,

@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature, CreatureGroup } from '../../creatures/index';
 import { TurnState } from './types';
 import { getLivingCreatures } from '../../validation/creature';
 import { findCreatureById } from '../../utils/pathfinding';
@@ -7,9 +7,9 @@ import { getTurnOrderIds } from './turnOrder';
 /**
  * Initialize turn state for a new game
  */
-export function initializeTurnState(creatures: Creature[]): TurnState {
+export function initializeTurnState(creatures: ICreature[]): TurnState {
   const turnOrder = getTurnOrderIds(getLivingCreatures(creatures));
-  
+
   return {
     currentTurn: 1,
     activeCreatureId: turnOrder.length > 0 ? turnOrder[0] : null,
@@ -23,20 +23,20 @@ export function initializeTurnState(creatures: Creature[]): TurnState {
  */
 export function getNextCreature(
   turnState: TurnState,
-  creatures: Creature[]
-): Creature | null {
+  creatures: ICreature[]
+): ICreature | null {
   const livingCreatures = getLivingCreatures(creatures);
-  
+
   if (livingCreatures.length === 0) {
     return null; // No living creatures
   }
-  
+
   // Find next creature in turn order
   let nextIndex = turnState.turnIndex + 1;
   if (nextIndex >= turnState.turnOrder.length) {
     nextIndex = 0; // Wrap around to first creature
   }
-  
+
   const nextCreatureId = turnState.turnOrder[nextIndex];
   return findCreatureById(creatures, nextCreatureId);
 }
@@ -44,18 +44,33 @@ export function getNextCreature(
 /**
  * Advance to the next turn
  */
-export function advanceTurn(
+export function newTurn(
   turnState: TurnState,
-  creatures: Creature[],
+  groups: CreatureGroup[],
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
 ): TurnState {
-  // Reset all creatures for new turn
-  resetAllTurns(creatures, dispatch, lastMovement);
+  const updatedCreatures: ICreature[] = [];
+  groups.forEach(group => {
+    group.getCreatures().forEach(creature => {
+      updatedCreatures.push(creature);
+    });
+  });
   
+  // Batch update creatures and add message
+  dispatch({
+    type: 'BATCH_UPDATE', payload: [
+      { type: 'SET_CREATURES', payload: updatedCreatures },
+      { type: 'ADD_MESSAGE', payload: 'New turn' }
+    ]
+  });
+
+  // Reset last movement tracking
+  lastMovement.current = null;
+
   // Recalculate turn order (in case creatures died)
-  const newTurnOrder = getTurnOrderIds(getLivingCreatures(creatures));
-  
+  const newTurnOrder = getTurnOrderIds(groups.flatMap(group => group.getLivingCreatures()));
+
   return {
     currentTurn: turnState.currentTurn + 1,
     activeCreatureId: newTurnOrder.length > 0 ? newTurnOrder[0] : null,
@@ -67,15 +82,15 @@ export function advanceTurn(
 /**
  * Check if a creature can take actions
  */
-export function canTakeActions(creature: Creature): boolean {
-  return creature.isAlive() && 
-         (creature.remainingMovement > 0 || creature.remainingActions > 0);
+export function canTakeActions(creature: ICreature): boolean {
+  return creature.isAlive() &&
+    (creature.remainingMovement > 0 || creature.remainingActions > 0);
 }
 
 /**
  * Check if all creatures have finished their turns
  */
-export function allCreaturesFinished(creatures: Creature[]): boolean {
+export function allCreaturesFinished(creatures: ICreature[]): boolean {
   return getLivingCreatures(creatures)
     .every(c => !canTakeActions(c));
 }
@@ -85,8 +100,8 @@ export function allCreaturesFinished(creatures: Creature[]): boolean {
  */
 export function getActiveCreature(
   turnState: TurnState,
-  creatures: Creature[]
-): Creature | null {
+  creatures: ICreature[]
+): ICreature | null {
   if (!turnState.activeCreatureId) return null;
   return findCreatureById(creatures, turnState.activeCreatureId);
 }
@@ -109,20 +124,20 @@ export function setActiveCreature(
  */
 export function advanceToNextCreature(
   turnState: TurnState,
-  creatures: Creature[]
+  creatures: ICreature[]
 ): TurnState {
   const livingCreatures = getLivingCreatures(creatures);
-  
+
   if (livingCreatures.length === 0) {
     return {
       ...turnState,
       activeCreatureId: null
     };
   }
-  
+
   // Find current creature index
   const currentIndex = turnState.turnOrder.findIndex(id => id === turnState.activeCreatureId);
-  
+
   // Record the turn-end position of the current creature before advancing
   if (turnState.activeCreatureId && currentIndex >= 0) {
     const currentCreature = findCreatureById(creatures, turnState.activeCreatureId);
@@ -130,19 +145,19 @@ export function advanceToNextCreature(
       currentCreature.recordTurnEndPosition();
     }
   }
-  
+
   // Find next creature that can take actions
   let nextIndex = currentIndex + 1;
   if (nextIndex >= turnState.turnOrder.length) {
     nextIndex = 0; // Wrap around to first creature
   }
-  
+
   // Look for the next creature that can take actions
   let checkedCount = 0;
   while (checkedCount < turnState.turnOrder.length) {
     const nextCreatureId = turnState.turnOrder[nextIndex];
     const nextCreature = findCreatureById(creatures, nextCreatureId);
-    
+
     if (nextCreature && canTakeActions(nextCreature)) {
       return {
         ...turnState,
@@ -150,11 +165,11 @@ export function advanceToNextCreature(
         turnIndex: nextIndex
       };
     }
-    
+
     nextIndex = (nextIndex + 1) % turnState.turnOrder.length;
     checkedCount++;
   }
-  
+
   // If no creature can take actions, end the turn
   return {
     ...turnState,
@@ -167,7 +182,7 @@ export function advanceToNextCreature(
  */
 export function shouldEndTurn(
   turnState: TurnState,
-  creatures: Creature[]
+  creatures: ICreature[]
 ): boolean {
   const livingCreatures = getLivingCreatures(creatures);
   return livingCreatures.every(c => !canTakeActions(c));
@@ -178,7 +193,7 @@ export function shouldEndTurn(
  */
 export function recordTurnEndPositions(
   turnState: TurnState,
-  creatures: Creature[]
+  creatures: ICreature[]
 ): void {
   // Record the position of the currently active creature if there is one
   if (turnState.activeCreatureId) {
@@ -187,29 +202,4 @@ export function recordTurnEndPositions(
       currentCreature.recordTurnEndPosition();
     }
   }
-}
-
-/**
- * Reset all creatures' turns
- */
-export function resetAllTurns(
-  creatures: Creature[],
-  dispatch: React.Dispatch<any>,
-  lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
-): void {
-  // Reset all creatures' turns
-  const updatedCreatures = creatures.map(c => {
-    // Reset turn for the existing creature (includes status effect processing)
-    c.resetTurn();
-    return c;
-  });
-  
-  // Batch update creatures and add message
-  dispatch({ type: 'BATCH_UPDATE', payload: [
-    { type: 'SET_CREATURES', payload: updatedCreatures },
-    { type: 'ADD_MESSAGE', payload: 'End turn' }
-  ]});
-  
-  // Reset last movement tracking
-  lastMovement.current = null;
 }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
 import { gameReducer, GameAction, getInitialGameState } from './gameReducer';
 import { GameState, GameRefs, GameActions, TargetingMode } from './types';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
@@ -27,7 +27,7 @@ export function GameProvider({
   mapDefinition 
 }: {
   children: React.ReactNode;
-  initialCreatures: Creature[];
+  initialCreatures: ICreature[];
   mapDefinition?: MapDefinition;
 }) {
   const [state, dispatch] = useReducer(
@@ -75,7 +75,7 @@ export function GameProvider({
   }, []); // Only run once on mount
 
   // --- ACTIONS ---
-  const setCreatures = useCallback((updater: (prev: Creature[]) => Creature[]) => {
+  const setCreatures = useCallback((updater: (prev: ICreature[]) => ICreature[]) => {
     const newCreatures = updater(state.creatures);
     dispatch({ type: 'SET_CREATURES', payload: newCreatures });
   }, [state.creatures, dispatch]);

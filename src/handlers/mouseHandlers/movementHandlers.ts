@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { MapDefinition } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
@@ -21,7 +21,7 @@ interface MovementParams {
   selectedCreatureId: string;
   targetX: number;
   targetY: number;
-  creatures: Creature[];
+  creatures: ICreature[];
   reachable: ReachableData;
   mapData: MapData;
   mapDefinition?: MapDefinition;
@@ -43,7 +43,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
 
   // Helper function to validate and get fresh path if needed
   function getValidPath(
-    creature: Creature,
+    creature: ICreature,
     reachable: ReachableData,
     targetX: number,
     targetY: number,
@@ -82,7 +82,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
 
   // Helper function to calculate movement cost
   function calculateMovementCost(
-    creature: Creature,
+    creature: ICreature,
     reachable: ReachableData,
     targetX: number,
     targetY: number

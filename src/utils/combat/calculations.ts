@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { Weapon } from '../../items/types';
 import { rollD6 } from '../dice';
@@ -15,8 +15,8 @@ import { MapDefinition } from '../../maps/types';
  * Calculate targets in range for a creature
  */
 export function calculateTargetsInRange(
-  attacker: Creature,
-  allCreatures: Creature[]
+  attacker: ICreature,
+  allCreatures: ICreature[]
 ): Set<string> {
   const equipment = new EquipmentSystem(attacker.equipment);
   const rangeTiles = equipment.getAttackRange();
@@ -68,7 +68,7 @@ export function determineHit(
 /**
  * Check if attack is from behind (for back attack bonus)
  */
-export function isBackAttack(attacker: Creature, target: Creature): boolean {
+export function isBackAttack(attacker: ICreature, target: ICreature): boolean {
   const isBack = isInBackArc(target.x, target.y, target.facing, attacker.x, attacker.y);
 
   logCombat(`Back attack check: ${attacker.name} at (${attacker.x},${attacker.y}) attacking ${target.name} at (${target.x},${target.y})`, {
@@ -101,7 +101,7 @@ export function calculateCriticalDamage(baseDamage: number, attackerDoubleCritic
 /**
  * Calculate effective armor value for target
  */
-export function calculateEffectiveArmor(target: Creature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem): number {
+export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem): number {
   const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
   const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
   return baseArmorValue + weaponArmorModifier;

@@ -1,5 +1,5 @@
 import { Creature } from './base';
-import { CREATURE_GROUPS } from './types';
+import { CREATURE_GROUPS } from './CreatureGroup';
 import { AIState } from '../ai/types';
 import { createAIStateForCreature } from '../ai/decisionMaking';
 import { CreatureConstructorParams } from './types';

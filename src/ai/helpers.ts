@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { AIState, AIDecision, AITarget, AIBehaviorType } from './types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately } from '../utils/pathfinding';
@@ -10,9 +10,9 @@ import { MapDefinition } from '../maps/types';
  * Common target filtering logic used across AI systems
  */
 export function filterValidTargets(
-  creature: Creature,
-  allCreatures: Creature[]
-): Creature[] {
+  creature: ICreature,
+  allCreatures: ICreature[]
+): ICreature[] {
   return allCreatures.filter(target => 
     target.isAlive() && 
     target.id !== creature.id && 
@@ -24,10 +24,10 @@ export function filterValidTargets(
  * Common target evaluation logic with configurable scoring
  */
 export function evaluateTargetWithScoring(
-  target: Creature,
-  creature: Creature,
+  target: ICreature,
+  creature: ICreature,
   ai: AIState,
-  allCreatures: Creature[],
+  allCreatures: ICreature[],
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
@@ -92,7 +92,7 @@ export function evaluateTargetWithScoring(
 export function createAIDecision(
   type: AIDecision['type'],
   options: {
-    target?: Creature;
+    target?: ICreature;
     destination?: { x: number; y: number };
     priority?: number;
     reason?: string;
@@ -146,7 +146,7 @@ export function updateAIStateWithAction(
   ai: AIState,
   action: {
     type: 'attack' | 'move' | 'flee' | 'wait' | 'special';
-    target?: Creature;
+    target?: ICreature;
     destination?: { x: number; y: number };
     success?: boolean;
   }
@@ -189,9 +189,9 @@ export function updateAIStateWithAction(
  * Common validation patterns for AI actions
  */
 export function validateAIAction(
-  creature: Creature,
+  creature: ICreature,
   action: AIDecision,
-  allCreatures: Creature[],
+  allCreatures: ICreature[],
   mapData?: { tiles: string[][] },
   mapDefinition?: MapDefinition
 ): { isValid: boolean; reason?: string } {

@@ -65,27 +65,12 @@ export function calculateDamageRoll(baseDice: number, strength: number = 0): num
   return rollXd6(numDice);
 }
 
-/**
- * Calculate combat roll (2d6 + combat bonus)
- * This is the unified combat roll function - use this for all 2d6 + bonus rolls
- * 
- * @param combatBonus Combat bonus to add (attack bonus, defense bonus, etc.)
- * @returns Object containing total roll and individual dice results
- * 
- * @example
- * // For attack rolls
- * const attackRoll = calculateCombatRoll(attackBonus);
- * 
- * // For defense/block rolls
- * const blockRoll = calculateCombatRoll(defenseBonus);
- * 
- * // For any other 2d6 + bonus rolls
- * const skillCheck = calculateCombatRoll(skillBonus);
- */
-export function calculateCombatRoll(combatBonus: number): { total: number; dice: number[] } {
+export function calculateAttributeRoll(bonus: number): { total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
   const dice = rollXd6(2);
-  const total = dice.reduce((sum, roll) => sum + roll, 0) + combatBonus;
-  return { total, dice };
+  const total = dice.reduce((sum, roll) => sum + roll, 0) + bonus;
+  const fumble = dice.filter(roll => roll === 1).length >= 2;
+  const criticalSuccess = dice.filter(roll => roll === 6).length >= 2;
+  return { total, dice, fumble, criticalSuccess };
 }
 
 /**
@@ -98,15 +83,6 @@ export function isCriticalHit(diceResults: number[]): boolean {
 }
 
 /**
- * Check if a combat roll contains a double critical hit (both dice rolled 6)
- * @param diceResults Array of individual dice results from a combat roll
- * @returns True if both dice rolled 6 (double critical hit)
- */
-export function isDoubleCritical(diceResults: number[]): boolean {
-  return diceResults.length === 2 && diceResults.every(roll => roll === 6);
-}
-
-/**
  * Get a random element from an array
  * @param array The array to select from
  * @returns A random element from the array, or undefined if array is empty
@@ -115,4 +91,12 @@ export function getRandomElement<T>(array: T[]): T | undefined {
   if (array.length === 0) return undefined;
   const randomIndex = Math.floor(Math.random() * array.length);
   return array[randomIndex];
+}
+
+export function displayDiceRoll(dice: number[]): string {
+  return `${dice.map(d => `[${d}]`).join('')}`;
+}
+
+export function displayDiceSum(roll: { total: number; dice: number[] }, modifier?: number): string {
+  return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier}`}` : ''} = ${roll.total}`;
 }

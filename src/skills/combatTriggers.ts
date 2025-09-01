@@ -2,7 +2,7 @@ import { Creature } from '../creatures/index';
 import { CombatTrigger, CombatTriggerType } from './types';
 import { CombatResult } from '../utils/combat/types';
 import { applyStatusEffect } from '../statusEffects';
-import { CommonStatusEffects } from '../statusEffects';
+import { STATUS_EFFECT_PRESETS } from '../statusEffects';
 
 // --- Combat Skill Trigger System ---
 // This system handles triggering skills during combat based on specific events
@@ -45,11 +45,14 @@ export class CombatSkillTriggerManager {
           if (trigger.type === triggerType) {
             // Check if there's a condition and if it's met
             if (!trigger.condition || trigger.condition(attacker, target, combatResult)) {
+              // Add a message to combatResult.messages
+              if (combatResult && combatResult.messages) {
+                combatResult.messages.push(
+                  `${attacker.name}'s skill ${skill.name} activates`
+                );
+              }
               // Execute the trigger effect
               trigger.effect(attacker, target, combatResult);
-              
-              // Log the trigger activation
-              console.log(`${attacker.name}'s ${skill.name} triggered: ${trigger.description}`);
             }
           }
         }
@@ -77,9 +80,6 @@ export class CombatSkillTriggerManager {
     if (dice && dice.length === 2) {
       const [die1, die2] = dice;
       if (isDoubleResult(die1, die2)) {
-        const doubleValue = getDoubleResultValue(die1, die2);
-        console.log(`${attacker.name} rolled doubles: ${doubleValue}&${doubleValue}`);
-        
         // Process the double result triggers
         this.processCombatTriggers(attacker, target, combatResult, 'onDoubleResult');
       }
@@ -136,10 +136,12 @@ export const CombatTriggerEffects = {
     effect: (attacker: Creature, target: Creature, combatResult: CombatResult) => {
       // Create and apply the status effect to the target
       if (statusEffectType === 'stunned') {
-        const stunnedEffect = CommonStatusEffects.stunned(target, duration || undefined);
-        applyStatusEffect(target, stunnedEffect);
-      } else if (statusEffectType === 'weakened') {
-        
+        const stunnedEffect = STATUS_EFFECT_PRESETS.stunned.createEffect();
+        applyStatusEffect(target, stunnedEffect, (msg: string) => {
+          if (combatResult && combatResult.messages) {
+            combatResult.messages.push(msg);
+          }
+        });
       }
     },
     description

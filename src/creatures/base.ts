@@ -1,6 +1,4 @@
-import { 
-  CreatureGroup, 
-  CREATURE_GROUPS, 
+import {
   CreatureConstructorParams,
   CreaturePosition,
   CreatureState,
@@ -9,11 +7,13 @@ import {
   Skill,
   SkillType
 } from './types';
-import { 
+import { CreatureGroup } from './CreatureGroup';
+import {
   Attributes,
   StatusEffect,
   StatusEffectType,
-  CreatureStatusEffectManager 
+  CreatureStatusEffectManager,
+  STATUS_EFFECT_PRESETS
 } from '../statusEffects';
 import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
@@ -29,6 +29,7 @@ import { MovementResult } from '../game/movement';
 import { MapDefinition } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
+import { calculateAttributeRoll, displayDiceRoll, roll2d6 } from '../utils';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -50,6 +51,7 @@ export abstract class Creature implements ICreature {
   naturalArmor: number;
   group: CreatureGroup;
   skills: Skills;
+  running: boolean;
 
   // Manager instances - now using interfaces
   private stateManager: ICreatureStateManager;
@@ -75,6 +77,7 @@ export abstract class Creature implements ICreature {
     this.fortune = params.fortune;
     this.naturalArmor = params.naturalArmor ?? 3;
     this.group = params.group;
+    this.running = false;
     // Handle skills as either array or object
     if (Array.isArray(params.skills)) {
       // Convert array to object format for internal storage
@@ -112,9 +115,12 @@ export abstract class Creature implements ICreature {
       () => this.skills
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
-    
+
     // Initialize status effect manager
-    this.statusEffectManager = new CreatureStatusEffectManager(this);    
+    this.statusEffectManager = new CreatureStatusEffectManager(this);
+
+    // Add this creature to its group
+    this.group.addCreature(this);
   }
 
   // --- Abstract Methods ---
@@ -124,7 +130,7 @@ export abstract class Creature implements ICreature {
   get x(): number { return this.positionManager.getX(); }
   get y(): number { return this.positionManager.getY(); }
   get facing(): number { return this.positionManager.getFacing(); }
-  
+
   set x(value: number) { this.positionManager.setPosition(value, this.y); }
   set y(value: number) { this.positionManager.setPosition(this.x, value); }
   set facing(value: number) { this.positionManager.setFacing(value); }
@@ -132,7 +138,7 @@ export abstract class Creature implements ICreature {
   // --- State Delegation ---
   private getModifiedRemaining(baseValue: number, modifierType: 'movementModifier' | 'actionModifier' | 'quickActionModifier'): number {
     const statusEffects = this.getActiveStatusEffects();
-    
+
     // Apply status effect modifiers
     let modifiedValue = baseValue;
     for (const effect of statusEffects) {
@@ -141,24 +147,24 @@ export abstract class Creature implements ICreature {
         modifiedValue += modifier;
       }
     }
-    if(this.isDead()) {
+    if (this.isDead()) {
       modifiedValue = 0;
     }
-    
+
     return Math.max(0, modifiedValue);
   }
 
-  get remainingMovement(): number { 
+  get remainingMovement(): number {
     const baseRemaining = this.stateManager.getState().remainingMovement;
     return this.getModifiedRemaining(baseRemaining, 'movementModifier');
   }
-  
-  get remainingActions(): number { 
+
+  get remainingActions(): number {
     const baseRemaining = this.stateManager.getState().remainingActions;
     return this.getModifiedRemaining(baseRemaining, 'actionModifier');
   }
-  
-  get remainingQuickActions(): number { 
+
+  get remainingQuickActions(): number {
     const baseRemaining = this.stateManager.getState().remainingQuickActions;
     return this.getModifiedRemaining(baseRemaining, 'quickActionModifier');
   }
@@ -168,31 +174,31 @@ export abstract class Creature implements ICreature {
   get hasMovedWhileEngaged(): boolean { return this.stateManager.getState().hasMovedWhileEngaged; }
 
   // --- Backward Compatibility Getters/Setters ---
-  get movement(): number { 
+  get movement(): number {
     return this.getEffectiveAttribute('movement');
   }
-  get combat(): number { 
+  get combat(): number {
     return this.getEffectiveAttribute('combat');
   }
-  get ranged(): number { 
+  get ranged(): number {
     return this.getEffectiveAttribute('ranged');
   }
-  get strength(): number { 
+  get strength(): number {
     return this.getEffectiveAttribute('strength');
   }
-  get agility(): number { 
+  get agility(): number {
     return this.getEffectiveAttribute('agility');
   }
-  get courage(): number { 
+  get courage(): number {
     return this.getEffectiveAttribute('courage');
   }
-  get intelligence(): number { 
+  get intelligence(): number {
     return this.getEffectiveAttribute('intelligence');
   }
-  get perception(): number { 
+  get perception(): number {
     return this.getEffectiveAttribute('perception');
   }
-  get dexterity(): number { 
+  get dexterity(): number {
     return this.getEffectiveAttribute('dexterity');
   }
 
@@ -209,12 +215,12 @@ export abstract class Creature implements ICreature {
   // --- State Methods ---
   isAlive(): boolean { return this.stateManager.isAlive(); }
   isDead(): boolean { return this.stateManager.isDead(); }
-  isWounded(): boolean { return this.stateManager.isWounded(this.size); }
-  hasMoved(): boolean { 
+  isWounded(): boolean { return this.hasStatusEffect("wounded"); }
+  hasMoved(): boolean {
     // Check if the creature has moved considering status effects
-    return this.effectiveMovement > 0 && this.stateManager.hasMoved(this.effectiveMovement); 
+    return this.effectiveMovement > 0 && this.stateManager.hasMoved(this.effectiveMovement);
   }
-  hasActionsRemaining(): boolean { 
+  hasActionsRemaining(): boolean {
     // Check if the creature has any effective actions remaining (considering status effects)
     return this.effectiveActions > 0 && this.stateManager.hasActionsRemaining();
   }
@@ -235,7 +241,7 @@ export abstract class Creature implements ICreature {
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
 
   // --- Skill Management ---
-  
+
   /**
    * Get all skills the creature has
    */
@@ -247,7 +253,7 @@ export abstract class Creature implements ICreature {
    * Check if the creature has a specific skill
    */
   hasSkill(skillName: string): boolean {
-    return Object.values(this.skills).some(skill => 
+    return Object.values(this.skills).some(skill =>
       skill.name.toLowerCase() === skillName.toLowerCase()
     );
   }
@@ -264,7 +270,7 @@ export abstract class Creature implements ICreature {
    */
   getSkillEffectsSummary(): string[] {
     const effects: string[] = [];
-    
+
     for (const skill of Object.values(this.skills)) {
       if (skill.attributeModifiers) {
         for (const modifier of skill.attributeModifiers) {
@@ -273,23 +279,23 @@ export abstract class Creature implements ICreature {
         }
       }
     }
-    
+
     return effects;
   }
 
   // --- Combat State Management ---
   private isInCombat: boolean = false;
-  
+
   checkCombatState(allCreatures: ICreature[]): boolean {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
-    
+
     for (const enemy of hostileCreatures) {
       const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
       if (distance <= 12) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -304,7 +310,7 @@ export abstract class Creature implements ICreature {
   // Get all enemies within combat range (12 tiles)
   getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[] {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
-    
+
     return hostileCreatures.filter(enemy => {
       const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
       return distance <= 12;
@@ -321,16 +327,23 @@ export abstract class Creature implements ICreature {
   getDimensions(): { w: number; h: number } { return this.positionManager.getDimensions(this.size); }
 
   // --- Relationship Methods ---
-  isHeroGroup(): boolean { return this.relationshipsManager.isHeroGroup(); }
   isPlayerControlled(): boolean { return this.relationshipsManager.isPlayerControlled(); }
   isAIControlled(): boolean { return this.relationshipsManager.isAIControlled(); }
   isHostileTo(other: ICreature): boolean { return this.relationshipsManager.isHostileTo(other.group); }
   isFriendlyTo(other: ICreature): boolean { return this.relationshipsManager.isFriendlyTo(other.group); }
 
   // --- State Modifiers ---
-  takeDamage(damage: number): number { return this.stateManager.takeDamage(damage); }
+  takeDamage(damage: number): number {
+    const takenDamage = this.stateManager.takeDamage(damage);
+    this.updateWoundedStatus();
+    if (this.isDead()) {
+      this.removeAllStatusEffects();
+    }
+    return takenDamage;
+  }
   useMovement(points: number): void { this.stateManager.useMovement(points); }
   useAction(): void { this.stateManager.useAction(); }
+  canUseQuickAction(): boolean { return this.stateManager.canUseQuickAction(); }
   useQuickAction(): void { this.stateManager.useQuickAction(); }
   useMana(amount: number): boolean { return this.stateManager.useMana(amount); }
   setMovedWhileEngaged(value: boolean): void { this.stateManager.setMovedWhileEngaged(value); }
@@ -339,49 +352,97 @@ export abstract class Creature implements ICreature {
   setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
 
   // --- Actions ---
-  run(): boolean {
-    if (!this.isAlive() || !this.hasActionsRemaining()) {
-      return false;
+  canRun() {
+    return this.isAlive() &&
+      this.hasActionsRemaining() &&
+      !this.running && !this.hasMoved() &&
+      !this.hasStatusEffect("wounded") &&
+      !this.hasStatusEffect("stunned");
+  }
+
+  run(): { success: boolean, message: string } {
+    if (!this.canRun()) {
+      return { success: false, message: '' };
     }
-    
-    // Use an action to run (double movement for this turn)
+
     this.useAction();
-    this.setRemainingMovement(this.remainingMovement * 2);
-    return true;
+    this.running = true;
+    const roll = calculateAttributeRoll(0);
+    if (roll.fumble) {
+      this.setRemainingMovement(Math.floor(this.remainingMovement / 2));
+    } else {
+      if (roll.total > this.effectiveMovement) {
+        roll.total = this.effectiveMovement;
+      }
+      this.setRemainingMovement(this.remainingMovement + roll.total);
+    }
+    return { success: true, message: `${this.name} runs ${displayDiceRoll(roll.dice)}${roll.fumble ? ' (Fumble)' : ''}` };
+  }
+
+  canDisengage() {
+    return this.isAlive() &&
+      this.hasActionsRemaining();
+  }
+
+  disengage(): { success: boolean, message: string } {
+    if (!this.canDisengage()) {
+      return { success: false, message: '' };
+    }
+    this.endTurn();
+    return { success: true, message: `${this.name} disengages` };
+  }
+
+  canSearch() {
+    return this.isAlive() &&
+      this.hasActionsRemaining() &&
+      false;
   }
 
   search(): boolean {
-    if (!this.isAlive() || !this.hasActionsRemaining()) {
+    if (!this.canSearch()) {
       return false;
     }
-    
+
     // Use an action to search (could reveal hidden items, traps, or enemies)
     this.useAction();
-    
+
     // TODO: Implement actual search logic (reveal hidden items, traps, etc.)
     // For now, just return success
     return true;
   }
-  resetTurn(): void { 
-    // Reset turn state first
-    this.stateManager.resetTurn();
-    
+
+  performAttributeTest(attributeName: keyof Attributes, modifier: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
+    const attributeValue = this.getEffectiveAttribute(attributeName);
+    const totalModifier = attributeValue + modifier;
+    const testResult = calculateAttributeRoll(totalModifier);
+    if (testResult.fumble) {
+      return { success: false, modifier: totalModifier, ...testResult };
+    }
+    if(testResult.total >= 10) {
+      return { success: true, modifier: totalModifier, ...testResult };
+    }
+    return { success: false, modifier: totalModifier, ...testResult };
+  }
+
+  startTurn(): void {
+    this.running = false;
+    this.stateManager.startTurn();
+
     // Process status effects at turn start
     this.statusEffectManager.updateEffects();
-    
+
     // Apply turn-start effects
-    const activeEffects = this.statusEffectManager.getAllActiveEffects();
+    const activeEffects = this.statusEffectManager.getActiveEffects();
     activeEffects.forEach(effect => {
       if (effect.onTurnStart) {
         effect.onTurnStart(this);
       }
     });
-    
-    // Only set effective movement if the creature is alive
-    if (!this.stateManager.isDead()) {
-      const effectiveMovement = this.combatManager.getEffectiveMovement(this.stateManager.isWounded(this.size), this.getActiveStatusEffects());
-      this.stateManager.setRemainingMovement(effectiveMovement);
-    }
+  }
+
+  endTurn(): void {
+    // Reset turn state first
+    this.stateManager.endTurn();
   }
 
   recordTurnEndPosition(): void {
@@ -424,21 +485,18 @@ export abstract class Creature implements ICreature {
     );
   }
 
-  // --- Group Actions ---
-  resetGroupActions(allCreatures: ICreature[]): void { this.relationshipsManager.resetGroupActions(allCreatures); }
-
   // --- Movement and Combat Delegation ---
   getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult {
     return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
-  moveTo(path: Array<{x: number; y: number}>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
+  moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
   }
 
   attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult {
     const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, mapData);
-    
+
     return {
       success: result.success,
       damage: result.damage,
@@ -469,6 +527,10 @@ export abstract class Creature implements ICreature {
     this.statusEffectManager.removeEffect(effectId);
   }
 
+  removeAllStatusEffects(): void {
+    this.statusEffectManager.clearAllEffects();
+  }
+
   hasStatusEffect(type: StatusEffectType): boolean {
     return this.statusEffectManager.hasEffect(type);
   }
@@ -478,17 +540,40 @@ export abstract class Creature implements ICreature {
   }
 
   getActiveStatusEffects(): StatusEffect[] {
-    return this.statusEffectManager.getAllActiveEffects();
+    return this.statusEffectManager.getActiveEffects();
   }
 
   // --- Health Management ---
   heal(amount: number): void {
     const newVitality = Math.min(this.remainingVitality + amount, this.vitality);
     this.stateManager.setRemainingVitality(newVitality);
+    this.updateWoundedStatus();
   }
 
-  setRemainingVitality(value: number): void {
-    this.stateManager.setRemainingVitality(value);
+  restoreMana(amount: number): void {
+    const newMana = Math.min(this.remainingMana + amount, this.mana);
+    this.stateManager.setRemainingMana(newMana);
+  }
+
+  private updateWoundedStatus(): void {
+    const remainingVitality = this.stateManager.getState().remainingVitality;
+    let wounded = false;
+    if (remainingVitality > 0) {
+      if (this.size < 4) {
+        if (remainingVitality <= 1) {
+          wounded = true;
+        }
+      } else {
+        if (remainingVitality <= 5) {
+          wounded = true;
+        }
+      }
+    }
+    if (wounded) {
+      this.addStatusEffect(STATUS_EFFECT_PRESETS.wounded.createEffect());
+    } else {
+      this.removeStatusEffect("wounded");
+    }
   }
 
   // --- Cloning ---
@@ -516,6 +601,7 @@ export abstract class Creature implements ICreature {
       hasMovedWhileEngaged: this.hasMovedWhileEngaged,
       group: this.group,
       skills: { ...this.skills },
+      running: this.running,
       ...overrides
     };
 
@@ -526,45 +612,38 @@ export abstract class Creature implements ICreature {
   // --- Abstract Factory Method ---
   protected abstract createInstance(params: CreatureConstructorParams): Creature;
 
-  // Get effective actions and quick actions with status effect modifiers
-  get effectiveActions(): number {
+  /**
+   * Generic method to get effective value with status effect modifiers
+   */
+  private getEffectiveValue(
+    baseValue: number,
+    modifierType: 'actionModifier' | 'quickActionModifier' | 'movementModifier'
+  ): number {
     const statusEffects = this.getActiveStatusEffects();
-    let effectiveActions = this.actions;
-    
+    let effectiveValue = baseValue;
+
     for (const effect of statusEffects) {
-      if (effect.actionModifier) {
-        effectiveActions += effect.actionModifier;
+      const modifier = effect[modifierType];
+      if (modifier) {
+        effectiveValue += modifier;
       }
     }
-    
-    return Math.max(0, effectiveActions);
+
+    return Math.max(0, effectiveValue);
+  }
+
+  // Get effective actions and quick actions with status effect modifiers
+  get effectiveActions(): number {
+    return this.getEffectiveValue(this.actions, 'actionModifier');
   }
 
   get effectiveQuickActions(): number {
-    const statusEffects = this.getActiveStatusEffects();
-    let effectiveQuickActions = this.quickActions;
-    
-    for (const effect of statusEffects) {
-      if (effect.quickActionModifier) {
-        effectiveQuickActions += effect.quickActionModifier;
-      }
-    }
-    
-    return Math.max(0, effectiveQuickActions);
+    return this.getEffectiveValue(this.quickActions, 'quickActionModifier');
   }
 
   // Get effective movement with status effect modifiers
   get effectiveMovement(): number {
-    const statusEffects = this.getActiveStatusEffects();
-    let effectiveMovement = this.getEffectiveAttribute('movement');
-    
-    for (const effect of statusEffects) {
-      if (effect.movementModifier) {
-        effectiveMovement += effect.movementModifier;
-      }
-    }
-    
-    return Math.max(0, effectiveMovement);
+    return this.getEffectiveAttribute('movement');
   }
 
   /**
@@ -575,7 +654,6 @@ export abstract class Creature implements ICreature {
       this.attributes[attributeName] ?? 0,
       attributeName,
       this.skills,
-      this.isWounded(),
       this.getActiveStatusEffects()
     );
   }

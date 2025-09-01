@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { EquipmentSystem } from './system';
 import { EquipmentSlot, EquipmentValidation } from './validation';
 import { Item } from '../types';
@@ -9,14 +9,14 @@ import { Weapon, RangedWeapon, Shield, Armor } from '../types';
 export class EquipmentManager {
   private equipment: EquipmentSystem;
 
-  constructor(creature: Creature) {
+  constructor(creature: ICreature) {
     this.equipment = new EquipmentSystem(creature.equipment);
   }
 
   /**
    * Equip an item to a creature
    */
-  equip(creature: Creature, item: Item, slot: EquipmentSlot): EquipmentValidation {
+  equip(creature: ICreature, item: Item, slot: EquipmentSlot): EquipmentValidation {
     const validation = this.equipment.equip(item, slot, creature);
     if (validation.isValid) {      
       // Type assertion to ensure the item is compatible with the slot
@@ -34,7 +34,7 @@ export class EquipmentManager {
   /**
    * Unequip an item from a creature
    */
-  unequip(creature: Creature, slot: EquipmentSlot): Item | undefined {
+  unequip(creature: ICreature, slot: EquipmentSlot): Item | undefined {
     const item = this.equipment.unequip(slot, creature);
     if (item) {
       delete creature.equipment[slot];
@@ -52,7 +52,7 @@ export class EquipmentManager {
   /**
    * Update equipment from creature's current equipment
    */
-  updateFromCreature(creature: Creature): void {
+  updateFromCreature(creature: ICreature): void {
     this.equipment = new EquipmentSystem(creature.equipment);
   }
 }

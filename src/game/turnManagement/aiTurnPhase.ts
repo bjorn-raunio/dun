@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, CreatureGroup } from '../../creatures/index';
 import { shouldAITakeTurn } from '../../ai/decisionMaking';
 import { AITurnState, TurnExecutionContext } from './types';
 import { compareAICreaturesByBehavior } from './turnOrder';
@@ -20,44 +20,24 @@ export function initializeAITurnState(): AITurnState {
 /**
  * Get all AI-controlled creature groups
  */
-export function getAIControlledGroups(creatures: Creature[]): string[] {
-  const groups = new Set<string>();
-  creatures.forEach(creature => {
-    if (creature.isAIControlled() && creature.isAlive()) {
-      groups.add(creature.group);
-    }
-  });
-  return Array.from(groups);
-}
-
-/**
- * Get creatures in a specific group that can take actions
- */
-export function getAICreaturesInGroup(creatures: Creature[], group: string): Creature[] {
-  return creatures.filter(creature => 
-    creature.isAIControlled() && 
-    creature.group === group && 
-    creature.isAlive() && 
-    shouldAITakeTurn(creature, creatures)
-  );
+export function getAIControlledGroups(creatures: CreatureGroup[]): CreatureGroup[] {
+  return creatures.filter(creature => creature.isAIControlled());
 }
 
 /**
  * Execute AI turns for all creatures in a group
  */
 export function executeAITurnsForGroup(
-  group: string,
+  group: CreatureGroup,
   context: TurnExecutionContext
 ): void {
-  const { creatures } = context;
-  const groupCreatures = getAICreaturesInGroup(creatures, group);
-  
+  const allCreatures = context.groups.flatMap(group => group.getLivingCreatures());
   // Sort by behavior (ranged before melee) then by agility for turn order within group
-  groupCreatures.sort(compareAICreaturesByBehavior);
+  const sortedGroup = [...group.getLivingCreatures()].sort((a, b) => compareAICreaturesByBehavior(a, b));
   
   // Execute turns for each creature in the group
-  groupCreatures.forEach(creature => {
-    if (shouldAITakeTurn(creature, creatures)) {
+  sortedGroup.forEach(creature => {
+    if (shouldAITakeTurn(creature, allCreatures)) {
       executeAITurnForCreature(creature, context);
     }
   });
@@ -69,17 +49,16 @@ export function executeAITurnsForGroup(
 export function startAITurnPhase(
   context: TurnExecutionContext
 ): AITurnState {
-  const { creatures } = context;
-  const aiGroups = getAIControlledGroups(creatures);
+  const { groups } = context;
+  const aiGroups = getAIControlledGroups(groups);
   
   if (aiGroups.length === 0) {
     return initializeAITurnState();
   }
   
-  // Sort groups by priority (enemy first, then neutral)
   aiGroups.sort((a, b) => {
-    if (a === 'enemy' && b !== 'enemy') return -1;
-    if (b === 'enemy' && a !== 'enemy') return 1;
+    if (a.name === 'enemy' && b.name !== 'enemy') return -1;
+    if (b.name === 'enemy' && a.name !== 'enemy') return 1;
     return 0;
   });
   
@@ -120,11 +99,4 @@ export function continueAITurnPhase(
     currentGroup: aiTurnState.groupTurnOrder[nextGroupIndex],
     groupTurnIndex: nextGroupIndex
   };
-}
-
-/**
- * Check if AI turn phase is complete
- */
-export function isAITurnPhaseComplete(aiTurnState: AITurnState): boolean {
-  return !aiTurnState.isAITurnActive;
 }

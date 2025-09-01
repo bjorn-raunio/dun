@@ -1,9 +1,9 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { COLORS } from '../styles';
 
 interface CreatureStatsProps {
-  creature: Creature;
+  creature: ICreature;
 }
 
 export function CreatureStats({ creature }: CreatureStatsProps) {

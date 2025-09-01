@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { MapDefinition } from '../../maps/types';
 
 export interface MapViewProps {
@@ -9,7 +9,7 @@ export interface MapViewProps {
     tiles: string[][];
   };
   mapDefinition: MapDefinition;
-  creatures: Creature[];
+  creatures: ICreature[];
   selectedCreatureId: string | null;
   reachable: {
     tiles: Array<{ x: number; y: number }>;
@@ -22,7 +22,7 @@ export interface MapViewProps {
   onMouseUp: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onWheel: (e: React.WheelEvent<HTMLDivElement>) => void;
-  onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
+  onCreatureClick: (creature: ICreature, e: React.MouseEvent) => void;
   onTileClick: (pos: { tileX: number; tileY: number }) => void;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
   panRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -36,6 +36,8 @@ export interface MapBlock {
   mapWidth: number;
   mapHeight: number;
   rotation: number;
+  rotatedWidth: number;
+  rotatedHeight: number;
 }
 
 export interface TerrainItem {

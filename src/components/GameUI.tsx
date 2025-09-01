@@ -2,7 +2,7 @@ import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { TurnTracker } from './TurnTracker';
 import { TurnState } from '../game/turnManagement';
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
 
 // --- Game UI Component ---
 
@@ -11,8 +11,8 @@ interface GameUIProps {
   onEndTurn: () => void;
   isAITurnActive?: boolean;
   turnState: TurnState;
-  creatures: Creature[];
-  onCreatureClick?: (creature: Creature) => void;
+  creatures: ICreature[];
+  onCreatureClick?: (creature: ICreature) => void;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
 

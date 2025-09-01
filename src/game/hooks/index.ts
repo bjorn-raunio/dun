@@ -1,5 +1,6 @@
 // --- Game Hooks ---
 export { useActions } from './useActions';
+export { useConsumables } from './useConsumables';
 export { useEquipment } from './useEquipment';
 export { useKeyboardHandlers } from './useKeyboardHandlers';
 export { usePathHighlight } from './usePathHighlight';

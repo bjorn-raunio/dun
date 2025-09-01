@@ -1,38 +1,20 @@
 import { useCallback } from 'react';
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentManager, EquipmentValidator } from '../../items/equipment';
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items/types';
 import { EquipmentSlot } from '../../items/equipment';
 
-export function useEquipment(creature: Creature, onUpdate?: (creature: Creature) => void) {
+export function useEquipment(creature: ICreature, onUpdate?: (creature: ICreature) => void) {
   const handleEquip = useCallback((item: Item, slot: EquipmentSlot) => {
     // Prevent equipment changes for AI-controlled creatures
     if (creature.isAIControlled()) {
-      alert(`Cannot equip ${item.name}: Equipment cannot be changed for AI-controlled creatures`);
       return;
     }
 
-    // Check if this is a weapon/shield switch (equipping a weapon or shield to mainHand or offHand)
-    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') &&
-      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-
-    // Check if this is an armor equip
-    const isArmorEquip = slot === 'armor' && item instanceof Armor;
-
-    // Check combat state for armor equips
-    if (isArmorEquip && creature.getCombatState()) {
-      alert(`Cannot equip ${item.name}: Cannot equip armor while in combat`);
+    // Use the existing validator to check if the action is allowed
+    const actionValidation = EquipmentValidator.validateEquipmentAction('equip', item, slot, creature);
+    if (!actionValidation.isValid) {
       return;
-    }
-
-    // If it's a weapon/shield switch, check if we have any actions available (quick or regular)
-    if (isWeaponOrShieldSwitch && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
-      return; // Silently fail - button should be disabled
-    }
-
-    // If it's an armor equip, check if we have any actions available and haven't moved yet
-    if (isArmorEquip && (creature.remainingActions <= 0 || creature.remainingMovement < creature.movement)) {
-      return; // Silently fail - button should be disabled
     }
 
     const equipmentManager = new EquipmentManager(creature);
@@ -77,19 +59,16 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
         creature.inventory.splice(itemIndex, 1);
       }
 
-      // Consume an action if this was a weapon/shield switch
-      if (isWeaponOrShieldSwitch) {
-        if (creature.remainingQuickActions > 0) {
-          creature.useQuickAction();
-        } else {
-          creature.useAction();
-        }
+      // Consume actions based on validation results
+      if (actionValidation.requiresQuickAction) {
+        creature.useQuickAction();
+      } else if (actionValidation.requiresAction) {
+        creature.useAction();
       }
 
-      // Consume an action and prevent movement if this was an armor equip
-      if (isArmorEquip) {
-        creature.useAction();
-        creature.setRemainingMovement(0); // Prevent movement in the same turn
+      // Apply movement restrictions if needed
+      if (actionValidation.preventsMovement) {
+        creature.setRemainingMovement(0);
       }
 
       onUpdate?.(creature);
@@ -110,31 +89,14 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
   const handleUnequip = useCallback((slot: EquipmentSlot) => {
     // Prevent equipment changes for AI-controlled creatures
     if (creature.isAIControlled()) {
-      const item = creature.equipment[slot];
       return;
     }
 
-    // Check if this is unequipping a weapon or shield from mainHand or offHand
-    const item = creature.equipment[slot];
-    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') &&
-      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-
-    // Check if this is an armor unequip
-    const isArmorUnequip = item && slot === 'armor' && item instanceof Armor;
-
-    // Check combat state for armor unequips
-    if (isArmorUnequip && creature.getCombatState()) {
+    // Use the existing validator to check if the action is allowed
+    const actionValidation = EquipmentValidator.validateUnequipAction(slot, creature);
+    if (!actionValidation.isValid) {
+      alert(`Cannot unequip item: ${actionValidation.reason}`);
       return;
-    }
-
-    // If it's a weapon/shield unequip, check if we have any actions available (quick or regular)
-    if (isWeaponOrShieldUnequip && creature.remainingQuickActions <= 0 && creature.remainingActions <= 0) {
-      return; // Silently fail - button should be disabled
-    }
-
-    // If it's an armor unequip, check if we have any actions available and haven't moved yet
-    if (isArmorUnequip && (creature.remainingActions <= 0 || creature.remainingMovement < creature.movement)) {
-      return; // Silently fail - button should be disabled
     }
 
     const equipmentManager = new EquipmentManager(creature);
@@ -143,19 +105,16 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
       // Add item to inventory
       creature.inventory.push(unequippedItem);
 
-      // Consume an action if this was a weapon/shield unequip
-      if (isWeaponOrShieldUnequip) {
-        if (creature.remainingQuickActions > 0) {
-          creature.useQuickAction();
-        } else {
-          creature.useAction();
-        }
+      // Consume actions based on validation results
+      if (actionValidation.requiresQuickAction) {
+        creature.useQuickAction();
+      } else if (actionValidation.requiresAction) {
+        creature.useAction();
       }
 
-      // Consume an action and prevent movement if this was an armor unequip
-      if (isArmorUnequip) {
-        creature.useAction();
-        creature.setRemainingMovement(0); // Prevent movement in the same turn
+      // Apply movement restrictions if needed
+      if (actionValidation.preventsMovement) {
+        creature.setRemainingMovement(0);
       }
 
       onUpdate?.(creature);
@@ -163,69 +122,15 @@ export function useEquipment(creature: Creature, onUpdate?: (creature: Creature)
   }, [creature, onUpdate]);
 
   const canEquipToSlot = useCallback((item: Item, slot: EquipmentSlot): boolean => {
-    // Always allow armor to be shown as equippable, but the actual validation will be done in canSwitchWeaponOrShield
-    if (slot === 'armor' && item instanceof Armor) {
-      return true;
-    }
-
     return EquipmentValidator.validateEquip(item, slot, creature).isValid;
   }, [creature]);
 
   const canSwitchWeaponOrShield = useCallback((item: Item, slot: EquipmentSlot): boolean => {
-    // Check if this is a weapon/shield switch (equipping a weapon or shield to mainHand or offHand)
-    const isWeaponOrShieldSwitch = (slot === 'mainHand' || slot === 'offHand') &&
-      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-
-    // Check if this is an armor equip
-    const isArmorEquip = slot === 'armor' && item instanceof Armor;
-
-    // If it's not a weapon/shield switch or armor equip, allow it (shields, etc.)
-    if (!isWeaponOrShieldSwitch && !isArmorEquip) return true;
-
-    // Check combat state for armor equips
-    if (isArmorEquip && creature.getCombatState()) {
-      return false; // Cannot equip armor while in combat
-    }
-
-    // For weapon/shield switches, check if we have any actions available (quick or regular)
-    if (isWeaponOrShieldSwitch) {
-      return creature.remainingQuickActions > 0 || creature.remainingActions > 0;
-    }
-
-    // For armor equips, check if we have regular actions available and haven't moved yet
-    if (isArmorEquip) {
-      return creature.remainingActions > 0 && creature.remainingMovement === creature.movement;
-    }
-
-    return true;
+    return EquipmentValidator.canPerformEquipmentAction('equip', item, slot, creature);
   }, [creature]);
 
   const canUnequipWeaponOrShield = useCallback((slot: EquipmentSlot): boolean => {
-    const item = creature.equipment[slot];
-    const isWeaponOrShieldUnequip = item && (slot === 'mainHand' || slot === 'offHand') &&
-      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
-
-    const isArmorUnequip = item && slot === 'armor' && item instanceof Armor;
-
-    // If it's not a weapon/shield unequip or armor unequip, allow it
-    if (!isWeaponOrShieldUnequip && !isArmorUnequip) return true;
-
-    // Check combat state for armor unequips
-    if (isArmorUnequip && creature.getCombatState()) {
-      return false; // Cannot unequip armor while in combat
-    }
-
-    // For weapon/shield unequips, check if we have any actions available (quick or regular)
-    if (isWeaponOrShieldUnequip) {
-      return creature.remainingQuickActions > 0 || creature.remainingActions > 0;
-    }
-
-    // For armor unequips, check if we have regular actions available and haven't moved yet
-    if (isArmorUnequip) {
-      return creature.remainingActions > 0 && creature.remainingMovement === creature.movement;
-    }
-
-    return true;
+    return EquipmentValidator.canPerformUnequipAction(slot, creature);
   }, [creature]);
 
   return {

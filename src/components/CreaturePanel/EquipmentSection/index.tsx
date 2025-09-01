@@ -1,13 +1,13 @@
 import React from 'react';
-import { Creature } from '../../../creatures/index';
+import { Creature, ICreature } from '../../../creatures/index';
 import { EquipmentSlot } from './EquipmentSlot';
 import { useEquipment } from '../../../game/hooks/useEquipment';
 
 interface EquipmentSectionProps {
-  creature: Creature;
-  onUpdate?: (creature: Creature) => void;
-  onAttack?: (creature: Creature) => void;
-  canAttack?: (creature: Creature) => boolean;
+  creature: ICreature;
+  onUpdate?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature) => void;
+  canAttack?: (creature: ICreature) => boolean;
 }
 
 export function EquipmentSection({ creature, onUpdate, onAttack, canAttack }: EquipmentSectionProps) {

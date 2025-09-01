@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { AITarget, AIState, AIBehaviorType } from './types';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { filterValidTargets, evaluateTargetWithScoring } from './helpers';
@@ -12,8 +12,8 @@ import { MapDefinition } from '../maps/types';
  */
 export function evaluateTargets(
   ai: AIState,
-  creature: Creature,
-  allCreatures: Creature[],
+  creature: ICreature,
+  allCreatures: ICreature[],
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
@@ -34,13 +34,13 @@ export function evaluateTargets(
  */
 export function selectBestTarget(
   ai: AIState,
-  creature: Creature,
-  allCreatures: Creature[],
+  creature: ICreature,
+  allCreatures: ICreature[],
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
   mapDefinition?: MapDefinition
-): Creature | null {
+): ICreature | null {
   const targets = evaluateTargets(ai, creature, allCreatures, mapData, cols, rows, mapDefinition);
 
   if (targets.length === 0) {
@@ -68,8 +68,8 @@ export function selectBestTarget(
  */
 export function updateTargetInformation(
   ai: AIState,
-  creature: Creature,
-  allCreatures: Creature[],
+  creature: ICreature,
+  allCreatures: ICreature[],
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,

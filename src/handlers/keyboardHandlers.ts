@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
 import { GameActions } from '../game/types';
 import { DIRECTIONS } from '../utils/constants';
 import { findCreatureById } from '../utils/pathfinding';
@@ -12,7 +12,7 @@ export interface KeyboardHandlers {
 
 export function createKeyboardHandlers(
   gameActions: GameActions,
-  creatures: Creature[],
+  creatures: ICreature[],
   selectedCreatureId: string | null,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): KeyboardHandlers {

@@ -49,34 +49,17 @@ const StatusEffectsSection: React.FC<StatusEffectsSectionProps> = ({ creature })
             }}>
               <span>{effect.icon}</span>
               
-              {/* Stack count indicator */}
-              {effect.stackCount > 1 && (
-                <span style={{
-                  position: 'absolute',
-                  top: -3,
-                  right: -3,
-                  background: COLORS.border,
-                  color: 'white',
-                  fontSize: 8,
-                  fontWeight: 600,
-                  padding: '1px 3px',
-                  borderRadius: 5,
-                  minWidth: '12px',
-                  textAlign: 'center'
-                }}>
-                  {effect.stackCount}
-                </span>
-              )}
+
             </div>
 
             {/* Tooltip */}
             {hoveredEffect === effect.id && (
               <div style={{
                 position: 'absolute',
-                bottom: '100%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                marginBottom: 8,
+                top: '50%',
+                right: '100%',
+                transform: 'translateY(-50%)',
+                marginRight: 8,
                 background: COLORS.backgroundDark,
                 color: COLORS.text,
                 padding: '8px 12px',

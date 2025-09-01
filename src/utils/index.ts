@@ -3,7 +3,6 @@ export * from './geometry';
 export * from './constants';
 export * from './dice';
 export * from './combat';
-export * from './equipment';
 export * from './messageUtils';
 export * from './zoneOfControl';
 export * from './idGeneration';

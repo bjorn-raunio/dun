@@ -1,10 +1,11 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature, CreatureGroup } from '../creatures/index';
 import { TurnState, AITurnState } from './turnManagement';
 
 // --- Game State Types ---
 
 export type GameState = {
-  creatures: Creature[];
+  creatures: ICreature[];
+  groups: CreatureGroup[]; // NEW
   selectedCreatureId: string | null;
   messages: string[];
   viewport: ViewportState;
@@ -47,7 +48,7 @@ export type GameRefs = {
 };
 
 export type GameActions = {
-  setCreatures: (updater: (prev: Creature[]) => Creature[]) => void;
+  setCreatures: (updater: (prev: ICreature[]) => ICreature[]) => void;
   setSelectedCreatureId: (id: string | null) => void;
   setMessages: (updater: (prev: string[]) => string[]) => void;
   setViewport: (viewport: ViewportState) => void;

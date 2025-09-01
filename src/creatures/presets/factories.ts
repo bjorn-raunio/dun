@@ -1,4 +1,4 @@
-import { Monster, Mercenary, CREATURE_GROUPS } from '../index';
+import { Monster, Mercenary, CreatureGroup } from '../index';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../../items';
 import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
 import { monsterPresets } from './monsters';
@@ -189,10 +189,11 @@ export function createMonster(
     vitality: overrides?.vitality ?? p.vitality,
     mana: overrides?.mana ?? p.mana ?? 0,
     fortune: overrides?.fortune ?? p.fortune ?? 0,
-    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
-    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.ENEMY,
+    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
+    group: overrides?.group ?? CreatureGroup.ENEMY,
     faction: faction,
     skills: overrides?.skills ?? p.skills,
+    preset: effectivePreset,
   });
 }
 
@@ -237,8 +238,8 @@ export function createMercenary(
     vitality: overrides?.vitality ?? p.vitality,
     mana: overrides?.mana ?? p.mana ?? 0,
     fortune: overrides?.fortune ?? p.fortune ?? 0,
-    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor ?? 3,
-    group: overrides?.group ?? p.group ?? CREATURE_GROUPS.PLAYER,
+    naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
+    group: overrides?.group ?? CreatureGroup.PLAYER,
     skills: overrides?.skills ?? p.skills,
     // Mercenary-specific properties
     hireCost: overrides?.hireCost ?? p.hireCost,

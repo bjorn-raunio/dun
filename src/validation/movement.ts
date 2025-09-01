@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { BaseValidationResult } from '../utils/types';
 import { isWithinMapBounds } from '../utils/geometry';
 import { VALIDATION_MESSAGES } from './messages';
@@ -21,10 +21,10 @@ export interface MovementValidationResult extends BaseValidationResult {}
  * Validate if a creature can move to a specific position
  */
 export function validateMovement(
-  creature: Creature,
+  creature: ICreature,
   newX: number,
   newY: number,
-  allCreatures: Creature[],
+  allCreatures: ICreature[],
   mapData: { tiles: string[][] },
   stepCost: number,
   mapDefinition?: MapDefinition
@@ -67,10 +67,10 @@ export function validateMovement(
  * Check if position is standable for a creature
  */
 export function isPositionStandable(
-  creature: Creature,
+  creature: ICreature,
   x: number,
   y: number,
-  allCreatures: Creature[],
+  allCreatures: ICreature[],
   mapData: { tiles: string[][] },
   mapDefinition?: MapDefinition
 ): boolean {
@@ -82,10 +82,10 @@ export function isPositionStandable(
  * Validate movement considering engagement rules
  */
 export function validateEngagementMovement(
-  creature: Creature,
+  creature: ICreature,
   newX: number,
   newY: number,
-  allCreatures: Creature[]
+  allCreatures: ICreature[]
 ): MovementValidationResult {
   const engagingCreatures = getEngagingCreatures(creature, allCreatures);
   const currentlyEngaged = engagingCreatures.length > 0;

@@ -1,15 +1,16 @@
 import React from 'react';
 import { TILE_SIZE, COLORS } from '../styles';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { getLivingCreatures } from '../../validation/creature';
 import { getCreatureUIDimensions, getCreatureUIOffset } from '../../utils/dimensions';
 import { validateCombat } from '../../validation/combat';
 import { MapDefinition } from '../../maps/types';
+import { EquipmentSystem } from '../../items/equipment';
 
 interface CreatureOverlayProps {
-  creatures: Creature[];
+  creatures: ICreature[];
   selectedCreatureId: string | null;
-  onCreatureClick: (creature: Creature, e: React.MouseEvent) => void;
+  onCreatureClick: (creature: ICreature, e: React.MouseEvent) => void;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
   mapDefinition?: MapDefinition;
   mapData?: { tiles: string[][] };
@@ -45,7 +46,9 @@ export function CreatureOverlay({
             isEnemy = attacker.isHostileTo(cr);
             // Use validateCombat to check if the target is valid
             if (isEnemy) {
-              const validation = validateCombat(attacker, cr, creatures, mapDefinition, mapData);
+              const equipment = new EquipmentSystem(attacker.equipment);
+              const weapon = equipment.getMainWeapon();
+              const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition, mapData) : { isValid: false };
               isValidTarget = validation.isValid;
             }
           }
@@ -90,7 +93,7 @@ export function CreatureOverlay({
                   height: "100%",
                   objectFit: "cover",
                   borderRadius: "50%",
-                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
+                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isPlayerControlled() ? "2px solid #00ff00" : "2px solid #ff0000"),
                   boxSizing: "border-box",
                   pointerEvents: "none",
                   opacity: opacity,
@@ -102,8 +105,8 @@ export function CreatureOverlay({
                   width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
                   height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
                   borderRadius: "50%",
-                  background: cr.isDead() ? "#666" : (cr.isHeroGroup() ? COLORS.hero : COLORS.monster),
-                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isHeroGroup() ? "2px solid #00ff00" : "2px solid #ff0000"),
+                  background: cr.isDead() ? "#666" : (cr.isPlayerControlled() ? COLORS.hero : COLORS.monster),
+                  border: selectedCreatureId === cr.id ? "2px solid #00e5ff" : (cr.isPlayerControlled() ? "2px solid #00ff00" : "2px solid #ff0000"),
                   boxSizing: "border-box",
                   pointerEvents: "none",
                   opacity: opacity,
@@ -118,7 +121,7 @@ export function CreatureOverlay({
                 left: "50%",
                 transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
                 fontSize: "12px",
-                color: cr.isHeroGroup() ? COLORS.hero : COLORS.monster,
+                color: cr.isPlayerControlled() ? COLORS.hero : COLORS.monster,
                 fontWeight: "bold",
                 textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
                 pointerEvents: "none",

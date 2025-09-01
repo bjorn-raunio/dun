@@ -1,8 +1,7 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { terrainHeightAt } from '../../maps/mapRenderer';
 import { validatePositionStandable } from '../../validation/map';
-import { calculateMovementCost } from '../movementCost';
-import { DEFAULT_MOVEMENT_OPTIONS } from './constants';
+
 import { AreaStats } from './types';
 import { MapDefinition } from '../../maps/types';
 
@@ -47,7 +46,7 @@ export function isAreaStandable(
   ty: number, 
   dims: { w: number; h: number }, 
   considerCreatures: boolean, 
-  allCreatures: Creature[], 
+  allCreatures: ICreature[], 
   cols: number, 
   rows: number, 
   mapData?: { tiles: string[][] }, 
@@ -57,41 +56,7 @@ export function isAreaStandable(
   return validatePositionStandable(tx, ty, dims, allCreatures, mapData, mapDefinition, considerCreatures);
 }
 
-/**
- * Helper method to calculate movement cost
- * Now uses the consolidated movement cost calculation system
- */
-export function calculateMoveCostInto(
-  tx: number, 
-  ty: number, 
-  dims: { w: number; h: number }, 
-  mapData: { tiles: string[][] }, 
-  cols: number, 
-  rows: number, 
-  allCreatures: Creature[],
-  mapDefinition?: MapDefinition, 
-  fromX?: number, 
-  fromY?: number,
-  creature?: Creature
-): number {
-  // Use the consolidated movement cost calculation
-  return calculateMovementCost(
-    fromX || 0, 
-    fromY || 0, 
-    tx, 
-    ty, 
-    allCreatures,
-    mapData, 
-    mapDefinition,
-    {
-      ...DEFAULT_MOVEMENT_OPTIONS,
-      considerCreatures: false, // Don't check creatures in this context
-      areaDimensions: dims,
-      mapDimensions: { cols, rows }
-    },
-    creature
-  );
-}
+
 
 
 

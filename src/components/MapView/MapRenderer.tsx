@@ -1,7 +1,6 @@
 import React from 'react';
 import { TILE_SIZE, COLORS } from '../styles';
 import { typeToImage } from '../../maps';
-import { getRotatedDimensions } from '../../utils/dimensions';
 import { MapBlock } from './types';
 import { MapDefinition } from '../../maps/types';
 
@@ -38,12 +37,9 @@ export function MapRenderer({ mapData, mapDefinition }: MapRendererProps) {
       
       const block = getBlockAt(x, y);
       if (block) {
-        // Adjust width/height for rotation
-        const { width: blockWidth, height: blockHeight } = getRotatedDimensions(
-          block.mapWidth, 
-          block.mapHeight, 
-          block.rotation
-        );
+        // Use pre-calculated rotated dimensions
+        const blockWidth = block.rotatedWidth;
+        const blockHeight = block.rotatedHeight;
         
         // Mark all tiles in the block as rendered
         for (let dy = 0; dy < blockHeight; dy++) {

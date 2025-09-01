@@ -1,10 +1,10 @@
-import { Creature } from '../creatures/index';
+import { Creature, CreatureGroup } from '../creatures/index';
 import { GameActions } from './types';
 import { TurnState, TurnExecutionContext } from './turnManagement';
 import { 
   startAITurnPhase, 
   continueAITurnPhase,
-  advanceTurn as advanceTurnLogic,
+  newTurn,
   getNextCreature,
   setActiveCreature as setActiveCreatureLogic
 } from './turnManagement';
@@ -16,21 +16,23 @@ import { AITurnState } from './turnManagement/types';
 /**
  * End turn and start AI turn phase
  */
-export function endTurnWithAI(
-  creatures: Creature[],
+export function endTurn(
+  groups: CreatureGroup[],
   mapData: { tiles: string[][] },
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
   currentTurnState: TurnState,
   mapDefinition?: MapDefinition
 ) {
-  // Advance to next turn (this will reset all turns internally)
-  const newTurnState = advanceTurnLogic(currentTurnState, creatures, dispatch, lastMovement);
-  dispatch({ type: 'SET_TURN_STATE', payload: newTurnState });
-  
+  let playerControlledGroup = groups.find(group => group.isPlayerControlled());
+
+  if(playerControlledGroup) {
+    playerControlledGroup.endTurn();
+  }
+
   // Create context for AI turn phase
   const context: TurnExecutionContext = {
-    creatures,
+    groups,
     mapData,
     dispatch,
     mapDefinition
@@ -44,6 +46,15 @@ export function endTurnWithAI(
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
     executeNextAIGroup(newAITurnState, context, dispatch);
   }
+
+  if(playerControlledGroup) {
+    playerControlledGroup.startTurn();
+  }
+  
+  // Advance to next turn (this will reset all turns internally)
+  const newTurnState = newTurn(currentTurnState, groups, dispatch, lastMovement);
+  dispatch({ type: 'SET_TURN_STATE', payload: newTurnState });
+  
 }
 
 /**
@@ -54,36 +65,21 @@ export function executeNextAIGroup(
   context: TurnExecutionContext,
   dispatch: React.Dispatch<any>
 ) {
+  const group = aiTurnState.currentGroup;
+  if(group) {
+    group.startTurn();
+  }
+
   // Continue AI turn phase
   const newAITurnState = continueAITurnPhase(aiTurnState, context);
   dispatch({ type: 'SET_AI_TURN_STATE', payload: newAITurnState });
+
   
-  // If there are more groups to process, continue after a short delay
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
-    setTimeout(() => {
-      executeNextAIGroup(newAITurnState, context, dispatch);
-    }, 1000); // 1 second delay between groups
+    executeNextAIGroup(newAITurnState, context, dispatch);
   }
-}
 
-/**
- * Set the active creature (game-specific wrapper)
- */
-export function setActiveCreatureInGame(
-  turnState: TurnState,
-  creatureId: string | null,
-  setTurnState: GameActions['setTurnState']
-) {
-  const newTurnState = setActiveCreatureLogic(turnState, creatureId);
-  setTurnState(() => newTurnState);
-}
-
-/**
- * Get the next creature in turn order
- */
-export function getNextCreatureInOrder(
-  turnState: TurnState,
-  creatures: Creature[]
-): Creature | null {
-  return getNextCreature(turnState, creatures);
+  if(group) {
+    group.endTurn();
+  }
 }

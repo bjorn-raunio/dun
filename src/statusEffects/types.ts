@@ -5,7 +5,8 @@ export type StatusEffectType =
   | "poison" 
   | "wounded" 
   | "stunned"
-  | "knockedDown";
+  | "knockedDown"
+  | "strength";
 
 export interface StatusEffect {
   id: string;
@@ -14,8 +15,6 @@ export interface StatusEffect {
   description: string;
   duration: number | null; // null means permanent
   remainingTurns: number | null; // null for permanent effects
-  stackCount: number;
-  maxStacks: number;
   
   // Effect modifiers
   attributeModifiers?: Partial<Attributes>;
@@ -48,7 +47,6 @@ export interface StatusEffectManager {
   removeEffect(effectId: string): void;
   updateEffects(): void;
   getActiveEffects(): StatusEffect[];
-  getAllActiveEffects(): StatusEffect[]; // Includes automatic effects like wounded
   hasEffect(type: StatusEffectType): boolean;
   getEffect(type: StatusEffectType): StatusEffect | null;
   clearAllEffects(): void;

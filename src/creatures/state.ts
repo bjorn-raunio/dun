@@ -24,12 +24,12 @@ export class CreatureStateManager {
       remainingFortune: this.getMaxFortune(),
       hasMovedWhileEngaged: false
     };
-    
+
     this.turnStartPosition = { ...initialPosition };
   }
 
   // --- State Getters ---
-  
+
   getState(): CreatureState {
     return { ...this.state };
   }
@@ -45,20 +45,7 @@ export class CreatureStateManager {
   }
 
   isDead(): boolean {
-    return this.state.remainingVitality <= 0;
-  }
-
-  isWounded(size: number): boolean {
-    // Creatures with 0 or negative vitality are dead, not wounded
-    if (this.state.remainingVitality <= 0) {
-      return false;
-    }
-    
-    if (size < 4) {
-      return this.state.remainingVitality <= 1;
-    } else {
-      return this.state.remainingVitality <= 5;
-    }
+    return !this.isAlive();
   }
 
   hasMoved(effectiveMovement?: number): boolean {
@@ -92,9 +79,9 @@ export class CreatureStateManager {
     if (this.isDead()) {
       return false;
     }
-    return this.hasMoved() || 
-           this.state.remainingActions < this.getMaxActions() || 
-           this.state.remainingQuickActions < this.getMaxQuickActions();
+    return this.hasMoved() ||
+      this.state.remainingActions < this.getMaxActions() ||
+      this.state.remainingQuickActions < this.getMaxQuickActions();
   }
 
   // --- State Modifiers ---
@@ -122,14 +109,22 @@ export class CreatureStateManager {
     }
   }
 
-  useQuickAction(): void {
-    // Dead creatures cannot use quick actions
+  canUseQuickAction(): boolean {
     if (this.isDead()) {
+      return false;
+    }
+    return this.state.remainingQuickActions > 0 || this.state.remainingActions > 0;
+  }
+
+  useQuickAction(): void {
+    if (!this.canUseQuickAction()) {
       return;
     }
     if (this.state.remainingQuickActions > 0) {
       this.state.remainingQuickActions--;
-    }
+    } else {
+      this.useAction();
+    }    
   }
 
   useMana(amount: number): boolean {
@@ -172,53 +167,32 @@ export class CreatureStateManager {
     this.state.remainingVitality = Math.max(0, Math.min(value, this.getMaxVitality()));
   }
 
+  setRemainingMana(value: number): void {
+    this.state.remainingMana = Math.max(0, Math.min(value, this.getMaxMana()));
+  }
+
   // --- Turn Management ---
 
-  resetTurn(): void {
-    // If creature is dead, set movement, actions, and quick actions to 0
-    if (this.isDead()) {
-      this.state.remainingMovement = 0;
-      this.state.remainingActions = 0;
-      this.state.remainingQuickActions = 0;
-    } else {
-      // Reset to base maxMovement - effective movement will be set separately by the creature class
+  startTurn(): void {
+    if (!this.isDead()) {
       this.state.remainingMovement = this.getMaxMovement();
       this.state.remainingActions = this.getMaxActions();
       this.state.remainingQuickActions = this.getMaxQuickActions();
     }
-    this.state.remainingMana = this.getMaxMana();
-    this.state.remainingFortune = this.getMaxFortune();
     this.state.hasMovedWhileEngaged = false;
+  }
+
+  endTurn(): void {
+    this.state.remainingMovement = 0;
+    this.state.remainingActions = 0;
+    this.state.remainingQuickActions = 0;
   }
 
   resetRemainingActions(): void {
     this.state.remainingMovement = 0;
-    // Don't reset actions and quick actions - movement alone should not end a creature's turn
-    // this.state.remainingActions = 0;
-    // this.state.remainingQuickActions = 0;
   }
 
   recordTurnStartPosition(position: CreaturePosition): void {
     this.turnStartPosition = { ...position };
-  }
-
-  recordTurnEndPosition(): void {
-    // This method is a no-op in the state manager
-    // The base creature class handles recording the current position
-  }
-
-  // --- Updates ---
-
-  updateMaxValues(
-    maxMovement: number,
-    maxActions: number,
-    maxQuickActions: number,
-    maxVitality: number,
-    maxMana: number,
-    maxFortune: number
-  ): void {
-    // This method is now deprecated since we use function callbacks
-    // The values are retrieved dynamically when needed
-    // Keeping for backward compatibility but it's a no-op
   }
 }

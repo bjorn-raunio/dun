@@ -1,5 +1,6 @@
 import { MapDefinition, Terrain } from './types';
-import { createWeapon, createRangedWeapon, createArmor, createShield } from '../items';
+import { Room } from './room';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
 import { SKILL_PRESETS } from '../skills';
 
@@ -25,8 +26,8 @@ export const mapDefinition: MapDefinition = {
   width: 40,
   height: 30,
   rooms: [
-    { type: "room3", x: 0, y: 0, mapWidth: 8, mapHeight: 10, rotation: 270 },
-    { type: "room4", x: 10, y: 0, mapWidth: 8, mapHeight: 10, rotation: 90 },
+    new Room("room3", 0, 0, 8, 10, 270),
+    new Room("room4", 10, 0, 8, 10, 90),
   ],
   terrain: [
     { preset: "tree", x: 10, y: 5 },
@@ -60,36 +61,36 @@ export const mapDefinition: MapDefinition = {
       group: CREATURE_GROUPS.PLAYER, 
       facing: 6
     }),
-    createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
+    //createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
     new Hero({
-      name: "Knight",
+      name: "Herbod",
       x: 0,
       y: 1,
-      image: "creatures/knight.png",
+      image: "creatures/human.png",
       attributes: {
         movement: 5,
         combat: 5,
-        ranged: 5,
-        strength: 4,
-        agility: 3,
-        courage: 3,
-        intelligence: 3,
+        ranged: 3,
+        strength: 3,
+        agility: 4,
+        courage: 5,
+        intelligence: 4,
       },
       actions: 1,
       size: 2,
       facing: 2,
       inventory: [
-        createRangedWeapon("longbow"),
+        createConsumable("healingPotion"),
+        createConsumable("strengthPotion"),
       ],
       equipment: {
-        mainHand: createWeapon("dagger"),
+        mainHand: createWeapon("mace"),
         offHand: createShield("shield"),
         armor: createArmor("chainMail"),
       },
       vitality: 5,
       mana: 0,
       fortune: 3,
-      naturalArmor: 3,
       group: CREATURE_GROUPS.PLAYER,
       skills: [
         SKILL_PRESETS.lostInTheDark,

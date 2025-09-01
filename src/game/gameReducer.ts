@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { ICreature, CreatureGroup } from '../creatures/index';
 import { GameState, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, AITurnState } from './turnManagement';
 import { MapDefinition } from '../maps/types';
@@ -6,8 +6,8 @@ import { MapDefinition } from '../maps/types';
 // --- Game Action Types ---
 
 export type GameAction = 
-  | { type: 'SET_CREATURES'; payload: Creature[] }
-  | { type: 'UPDATE_CREATURE'; payload: { id: string; updates: Partial<Creature> } }
+  | { type: 'SET_CREATURES'; payload: ICreature[] }
+  | { type: 'UPDATE_CREATURE'; payload: { id: string; updates: Partial<ICreature> } }
   | { type: 'SET_SELECTED_CREATURE'; payload: string | null }
   | { type: 'ADD_MESSAGE'; payload: string }
   | { type: 'SET_MESSAGES'; payload: string[] }
@@ -34,7 +34,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         creatures: state.creatures.map(c => 
           c.id === action.payload.id 
-            ? { ...c, ...action.payload.updates } as Creature
+            ? { ...c, ...action.payload.updates } as ICreature
             : c
         )
       };
@@ -92,7 +92,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 // --- Initial State Helper ---
 
 export function getInitialGameState(
-  initialCreatures: Creature[], 
+  initialCreatures: ICreature[], 
   mapDefinition?: MapDefinition
 ): GameState {
   // Calculate initial pan position to center over a starting tile
@@ -112,6 +112,11 @@ export function getInitialGameState(
   
   return {
     creatures: initialCreatures,
+    groups: [
+      CreatureGroup.PLAYER,
+      CreatureGroup.ENEMY,
+      CreatureGroup.NEUTRAL
+    ],
     selectedCreatureId: null,
     messages: [],
     viewport: { 

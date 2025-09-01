@@ -2,10 +2,11 @@
 // This file contains interfaces that can be imported by other modules
 // without creating circular dependencies
 
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
 import { MovementResult } from '../game/movement';
 import { CreatureState, CreaturePosition } from './types';
-import { StatusEffectManager, StatusEffect } from '../statusEffects';
+import { CreatureGroup } from './CreatureGroup';
+import { StatusEffectManager, StatusEffect, Attributes } from '../statusEffects';
 import { MapDefinition } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
@@ -17,16 +18,40 @@ export interface ICreature {
   id: string;
   name: string;
   image?: string;
-  group: string;
+  attributes: Attributes;
+  actions: number;
+  quickActions: number;
+  mapWidth: number;
+  mapHeight: number;
   size: number;
+  inventory: Item[];
+  equipment: EquipmentSlots;
+  vitality: number;
+  mana: number;
+  fortune: number;
+  naturalArmor: number;
+  group: CreatureGroup; // CHANGED from string
   skills: { [key: string]: { name: string; type: string; description?: string } };
+  running: boolean;
   
   // Position
   x: number;
   y: number;
   facing: number;
   
-  // State
+  // Position methods
+  faceDirection(direction: number): void;
+  
+  // State properties
+  remainingMovement: number;
+  remainingActions: number;
+  remainingQuickActions: number;
+  remainingVitality: number;
+  remainingMana: number;
+  remainingFortune: number;
+  hasMovedWhileEngaged: boolean;
+  
+  // State methods
   isAlive(): boolean;
   isDead(): boolean;
   isWounded(): boolean;
@@ -35,6 +60,19 @@ export interface ICreature {
   hasMana(amount: number): boolean;
   hasFortune(amount: number): boolean;
   hasTakenActionsThisTurn(): boolean;
+  
+  // Attribute getters
+  get agility(): number;
+  get combat(): number;
+  get movement(): number;
+  get intelligence(): number;
+  get strength(): number;
+  get ranged(): number;
+  get courage(): number;
+  get perception(): number;
+  get dexterity(): number;
+  get effectiveActions(): number;
+  get effectiveQuickActions(): number;
   
   // Combat
   getArmorValue(): number;
@@ -46,9 +84,11 @@ export interface ICreature {
   getAttackRange(): number;
   getMaxAttackRange(): number;
   getZoneOfControlRange(): number;
+  getCombatState(): boolean;
+  updateCombatState(allCreatures: ICreature[]): void;
+  getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[];
   
   // Relationships
-  isHeroGroup(): boolean;
   isPlayerControlled(): boolean;
   isAIControlled(): boolean;
   isHostileTo(other: ICreature): boolean;
@@ -62,18 +102,24 @@ export interface ICreature {
   attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
   
   // Actions
-  run(): boolean;
+  run(): { success: boolean, message: string };
   search(): boolean;
+  canRun(): boolean;
+  canSearch(): boolean;
+  disengage(): { success: boolean, message: string };
+  canDisengage(): boolean;
   
   // State modifiers
   takeDamage(damage: number): number;
   useMovement(points: number): void;
   useAction(): void;
+  canUseQuickAction(): boolean;
   useQuickAction(): void;
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
-  setRemainingVitality(value: number): void;
-  resetTurn(): void;
+  restoreMana(amount: number): void;
+  startTurn(): void;
+  endTurn(): void;
   resetRemainingActions(): void;
   
   // Zone of control
@@ -92,9 +138,6 @@ export interface ICreature {
   get turnStartY(): number;
   get turnStartFacing(): number;
   
-  // Group actions
-  resetGroupActions(allCreatures: ICreature[]): void;
-  
   // Cloning
   clone(overrides?: Partial<ICreature>): ICreature;
   
@@ -102,12 +145,21 @@ export interface ICreature {
   getStatusEffectManager(): StatusEffectManager;
   addStatusEffect(effect: StatusEffect): void;
   removeStatusEffect(effectId: string): void;
+  removeAllStatusEffects(): void;
   hasStatusEffect(type: string): boolean;
   getStatusEffect(type: string): StatusEffect | null;
   getActiveStatusEffects(): StatusEffect[];
   
   // Health Management
   heal(amount: number): void;
+  
+  // Utility methods
+  getDimensions(): { w: number; h: number };
+  isEngagedWithAll(allCreatures: ICreature[]): boolean;
+  setRemainingMovement(value: number): void;
+  recordTurnEndPosition(): void;
+  getFacingShortName(): string;
+  getAllSkills(): Array<{ name: string; type: string; description?: string }>;
 }
 
 // --- Manager Interfaces ---
@@ -117,7 +169,6 @@ export interface ICreatureStateManager {
   getTurnStartPosition(): CreaturePosition;
   isAlive(): boolean;
   isDead(): boolean;
-  isWounded(size: number): boolean;
   hasMoved(effectiveMovement?: number): boolean;
   hasActionsRemaining(): boolean;
   hasMana(amount: number): boolean;
@@ -126,17 +177,19 @@ export interface ICreatureStateManager {
   takeDamage(damage: number): number;
   useMovement(points: number): void;
   useAction(): void;
+  canUseQuickAction(): boolean;
   useQuickAction(): void;
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
-  resetTurn(): void;
-  recordTurnEndPosition(): void;
+  startTurn(): void;
+  endTurn(): void;
   resetRemainingActions(): void;
   setRemainingMovement(value: number): void;
   setRemainingActions(value: number): void;
   setRemainingQuickActions(value: number): void;
   setRemainingFortune(value: number): void;
   setRemainingVitality(value: number): void;
+  setRemainingMana(value: number): void;
   recordTurnStartPosition(position: CreaturePosition): void;
 }
 
@@ -168,28 +221,17 @@ export interface ICreatureCombatManager {
   getZoneOfControlRange(): number;
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean;
   wasBehindTargetAtTurnStart(targetX: number, targetY: number, targetTurnStartFacing: number, attackerTurnStartX: number, attackerTurnStartY: number): boolean;
-  getEffectiveMovement(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveCombat(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveRanged(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveStrength(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveAgility(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveCourage(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveIntelligence(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectivePerception(isWounded: boolean, statusEffects?: StatusEffect[]): number;
-  getEffectiveDexterity(isWounded: boolean, statusEffects?: StatusEffect[]): number;
 }
 
 export interface ICreatureRelationshipsManager {
-  isHeroGroup(): boolean;
   isPlayerControlled(): boolean;
   isAIControlled(): boolean;
-  isHostileTo(otherGroup: string): boolean;
-  isFriendlyTo(otherGroup: string): boolean;
+  isHostileTo(otherGroup: CreatureGroup): boolean; // CHANGED from string
+  isFriendlyTo(otherGroup: CreatureGroup): boolean; // CHANGED from string
   getHostileCreatures(allCreatures: ICreature[]): ICreature[];
   getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
   isEngaged(hostileCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): boolean;
   getEngagingCreatures(allCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): ICreature[];
-  resetGroupActions(allCreatures: ICreature[]): void;
 }
 
 // --- Movement Interface ---

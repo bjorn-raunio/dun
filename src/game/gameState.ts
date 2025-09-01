@@ -1,5 +1,6 @@
 import React from 'react';
-import { Creature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
+import { CreatureGroup } from '../creatures/CreatureGroup';
 import { GameState, GameRefs, GameActions, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
@@ -8,7 +9,7 @@ import { MapDefinition } from '../maps/types';
 
 // --- Game State Management ---
 
-export function useGameState(initialCreatures: Creature[], mapDefinition?: MapDefinition): [GameState, GameRefs, GameActions] {
+export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapDefinition): [GameState, GameRefs, GameActions] {
   // --- VIEWPORT SIZE ---
     const [viewport, setViewport] = React.useState<ViewportState>({ 
     width: window.innerWidth, 
@@ -65,7 +66,12 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: MapDe
   }, []);
 
   // --- GAME STATE ---
-  const [creatures, setCreatures] = React.useState<Creature[]>(initialCreatures);
+  const [creatures, setCreatures] = React.useState<ICreature[]>(initialCreatures);
+  const [groups, setGroups] = React.useState<CreatureGroup[]>([
+    CreatureGroup.PLAYER,
+    CreatureGroup.ENEMY,
+    CreatureGroup.NEUTRAL
+  ]);
   const [selectedCreatureId, setSelectedCreatureId] = React.useState<string | null>(null);
   const [messages, setMessages] = React.useState<string[]>([]);
   const [reachableKey, setReachableKey] = React.useState<number>(0);
@@ -110,6 +116,7 @@ export function useGameState(initialCreatures: Creature[], mapDefinition?: MapDe
 
   const gameState: GameState = {
     creatures,
+    groups, // NEW
     selectedCreatureId,
     messages,
     viewport,

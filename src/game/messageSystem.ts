@@ -8,6 +8,9 @@ export function addMessage(
   message: string, 
   dispatch: React.Dispatch<any>
 ) {
+  if(message === '') {
+    return;
+  }
   dispatch({ type: 'ADD_MESSAGE', payload: message });
 }
 

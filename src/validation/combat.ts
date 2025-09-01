@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { ValidationResult } from './core';
 import { VALIDATION_MESSAGES } from './messages';
 import { validateCreatureAlive, validateActionsRemaining } from './creature';
@@ -6,14 +6,17 @@ import { calculateDistanceBetween } from '../utils/pathfinding';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { LineOfSightSystem } from '../utils/pathfinding/lineOfSight';
 import { MapDefinition } from '../maps/types';
+import { isEngaged } from '../utils/zoneOfControl';
+import { Weapon, RangedWeapon } from '../items/types';
 
 /**
  * Comprehensive combat validation - validates all aspects of an attack in one function
  */
 export function validateCombat(
-  attacker: Creature,
-  target: Creature,
-  allCreatures: Creature[],
+  attacker: ICreature,
+  target: ICreature,
+  weapon: Weapon | RangedWeapon,
+  allCreatures: ICreature[],
   mapDefinition?: MapDefinition,
   mapData?: { tiles: string[][] }
 ): ValidationResult {
@@ -48,13 +51,21 @@ export function validateCombat(
   }
 
   // Range check
-  const attackRange = attacker.hasRangedWeapon() ? attacker.getMaxAttackRange() : attacker.getAttackRange();
+  const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {
     return {
       isValid: false,
       reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, distance, attackRange)
+    };
+  }
+
+  // Check if ranged attack is being performed while engaged
+  if (weapon instanceof RangedWeapon && isEngaged(attacker, allCreatures)) {
+    return {
+      isValid: false,
+      reason: VALIDATION_MESSAGES.RANGED_ATTACK_WHILE_ENGAGED(attacker.name)
     };
   }
 
@@ -85,7 +96,7 @@ export function validateCombat(
   }
 
   // Elevation check for melee attacks
-  if (!attacker.hasRangedWeapon() && mapDefinition) {
+  if (weapon instanceof Weapon && mapDefinition) {
     const attackerHeight = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
     const targetHeight = terrainHeightAt(target.x, target.y, mapDefinition);
     const heightDifference = Math.abs(attackerHeight - targetHeight);
@@ -104,8 +115,8 @@ export function validateCombat(
 /**
  * Validate that a target is in range
  */
-export function validateTargetInRange(attacker: Creature, target: Creature): ValidationResult {
-  const attackRange = attacker.hasRangedWeapon() ? attacker.getMaxAttackRange() : attacker.getAttackRange();
+export function validateTargetInRange(attacker: ICreature, target: ICreature, weapon: Weapon | RangedWeapon): ValidationResult {
+  const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {

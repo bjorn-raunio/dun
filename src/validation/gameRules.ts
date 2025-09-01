@@ -127,52 +127,6 @@ export function validateCreatureStats(creature: Creature): GameRuleValidationRes
 }
 
 /**
- * Validate equipment rules
- */
-export function validateEquipmentRules(creature: Creature): GameRuleValidationResult {
-  // Check if equipment slots are valid
-  if (creature.equipment.mainHand && !isValidWeapon(creature.equipment.mainHand)) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.INVALID_MAIN_HAND(creature.name)
-    };
-  }
-
-  if (creature.equipment.offHand && !isValidOffHand(creature.equipment.offHand)) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.INVALID_OFF_HAND(creature.name)
-    };
-  }
-
-  if (creature.equipment.armor && !isValidArmor(creature.equipment.armor)) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.INVALID_ARMOR(creature.name)
-    };
-  }
-
-  return { isValid: true };
-}
-
-import { isValidWeapon, isValidOffHand, isValidArmor } from '../utils/equipment';
-
-/**
- * Check if weapon is valid
- */
-export { isValidWeapon };
-
-/**
- * Check if off-hand item is valid
- */
-export { isValidOffHand };
-
-/**
- * Check if armor is valid
- */
-export { isValidArmor };
-
-/**
  * Validate map consistency
  */
 export function validateMapConsistency(

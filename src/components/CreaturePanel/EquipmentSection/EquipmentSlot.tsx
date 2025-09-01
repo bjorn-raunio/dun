@@ -1,18 +1,19 @@
 import React from 'react';
-import { Creature } from '../../../creatures/index';
+import { Creature, ICreature } from '../../../creatures/index';
 import { EquipmentSlot as EquipmentSlotType } from '../../../items/equipment';
 import { Armor, Weapon, RangedWeapon } from '../../../items/types';
 import { EquipmentSystem } from '../../../items/equipment/system';
+import { EquipmentValidator } from '../../../items/equipment';
 import { COLORS, COMMON_STYLES } from '../../styles';
 
 interface EquipmentSlotProps {
   slot: EquipmentSlotType;
   label: string;
-  creature: Creature;
+  creature: ICreature;
   onUnequip: (slot: EquipmentSlotType) => void;
   canUnequip: (slot: EquipmentSlotType) => boolean;
-  onAttack?: (creature: Creature) => void;
-  canAttack?: (creature: Creature) => boolean;
+  onAttack?: (creature: ICreature) => void;
+  canAttack?: (creature: ICreature) => boolean;
 }
 
 export function EquipmentSlot({ 
@@ -86,9 +87,6 @@ export function EquipmentSlot({
                  opacity: canAttackWithWeapon ? 1 : 0.5,
                  cursor: canAttackWithWeapon ? 'pointer' : 'not-allowed'
                }}
-              title={canAttackWithWeapon ? 
-                "Attack with this weapon (uses action)" : 
-                "Cannot attack: no actions remaining or not player-controlled"}
             >
               ⚔️
             </button>
@@ -114,13 +112,6 @@ export function EquipmentSlot({
                 opacity: canUnequipSlot ? 1 : 0.5,
                 cursor: canUnequipSlot ? 'pointer' : 'not-allowed'
               }}
-              title={canUnequipSlot ?
-                (displayItem instanceof Armor ?
-                  "Unequip (uses action, prevents movement)" :
-                  "Unequip (uses quick action or regular action)") :
-                (displayItem instanceof Armor ?
-                  (creature.getCombatState() ? "Cannot unequip armor while in combat" : "Cannot unequip armor: must have actions and full movement") :
-                  "No actions remaining for unequip")}
             >
               Unequip
             </button>

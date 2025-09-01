@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { validateMovement } from '../validation/movement';
 import { VALIDATION_MESSAGES } from '../validation/messages';
 
@@ -20,9 +20,9 @@ export interface MovementResult {
  * Execute movement for a creature through a path
  */
 export function executeMovement(
-  creature: Creature,
+  creature: ICreature,
   path: Array<{x: number; y: number}>,
-  allCreatures: Creature[],
+  allCreatures: ICreature[],
   stepCost: number,
   mapData: { tiles: string[][] },
   mapDefinition?: any
@@ -66,10 +66,6 @@ export function executeMovement(
       totalPathLength: path.length - 1
     };
   }
-  
-  // Movement cost is already applied by moveTo function
-  // Don't reset group actions during movement - this should only happen when turns actually end
-  // creature.resetGroupActions(allCreatures);
   
   // Check if movement resulted in engagement
   const isEngaged = creature.isEngagedWithAll(allCreatures);

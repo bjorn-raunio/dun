@@ -1,15 +1,18 @@
 import React from 'react';
-import { Creature } from '../../../creatures/index';
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../../items/types';
+import { Creature, ICreature } from '../../../creatures/index';
+import { Item, Weapon, RangedWeapon, Armor, Shield, Consumable } from '../../../items/types';
 import { EquipmentSlot } from '../../../items/equipment';
 import { COLORS, COMMON_STYLES } from '../../styles';
+import { EquipmentValidator } from '../../../items/equipment';
+import { useConsumables } from '../../../game/hooks/useConsumables';
 
 interface InventoryItemProps {
   item: Item;
-  creature: Creature;
+  creature: ICreature;
   onEquip: (item: Item, slot: EquipmentSlot) => void;
   canEquipToSlot: (item: Item, slot: EquipmentSlot) => boolean;
   canSwitchWeaponOrShield: (item: Item, slot: EquipmentSlot) => boolean;
+  onUpdate?: (creature: ICreature) => void;
 }
 
 export function InventoryItem({ 
@@ -17,7 +20,8 @@ export function InventoryItem({
   creature, 
   onEquip, 
   canEquipToSlot, 
-  canSwitchWeaponOrShield 
+  canSwitchWeaponOrShield,
+  onUpdate
 }: InventoryItemProps) {
   const canEquipMainHand = canEquipToSlot(item, 'mainHand');
   const canEquipOffHand = canEquipToSlot(item, 'offHand');
@@ -26,6 +30,11 @@ export function InventoryItem({
   const canSwitchMainHand = canSwitchWeaponOrShield(item, 'mainHand');
   const canSwitchOffHand = canSwitchWeaponOrShield(item, 'offHand');
   const isAIControlled = creature.isAIControlled();
+
+  // Consumable handling
+  const { handleUseConsumable, canUseConsumable } = useConsumables(creature, onUpdate);
+  const isConsumable = item instanceof Consumable;
+  const canUse = isConsumable ? canUseConsumable(item as Consumable) : false;
 
   return (
     <div style={{
@@ -40,8 +49,32 @@ export function InventoryItem({
     }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 12 }}>{item.name}</div>
+        {isConsumable && (
+          <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>
+            {(item as Consumable).effect}
+          </div>
+        )}
       </div>
       <div style={{ display: 'flex', gap: 2 }}>
+        {/* Use button for consumables */}
+        {isConsumable && !isAIControlled && (
+          <button
+            onClick={() => handleUseConsumable(item as Consumable)}
+            disabled={!canUse}
+            style={{
+              ...COMMON_STYLES.button,
+              padding: '2px 6px',
+              fontSize: 10,
+              background: canUse ? COLORS.primary : COLORS.border,
+              opacity: canUse ? 1 : 0.5,
+              cursor: canUse ? 'pointer' : 'not-allowed'
+            }}
+          >
+            Use
+          </button>
+        )}
+        
+        {/* Equipment buttons */}
         {canEquipMainHand && !isAIControlled && (
           <button
             onClick={() => onEquip(item, 'mainHand')}
@@ -54,7 +87,6 @@ export function InventoryItem({
               opacity: canSwitchMainHand ? 1 : 0.5,
               cursor: canSwitchMainHand ? 'pointer' : 'not-allowed'
             }}
-            title={canSwitchMainHand ? "Equip to Main Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
           >
             MH
           </button>
@@ -71,7 +103,6 @@ export function InventoryItem({
               opacity: canSwitchOffHand ? 1 : 0.5,
               cursor: canSwitchOffHand ? 'pointer' : 'not-allowed'
             }}
-            title={canSwitchOffHand ? "Equip to Off Hand (uses quick action or regular action)" : "No actions remaining for weapon/shield switch"}
           >
             OH
           </button>
@@ -88,9 +119,6 @@ export function InventoryItem({
               opacity: canSwitchWeaponOrShield(item, 'armor') ? 1 : 0.5,
               cursor: canSwitchWeaponOrShield(item, 'armor') ? 'pointer' : 'not-allowed'
             }}
-            title={canSwitchWeaponOrShield(item, 'armor') ? "Equip as Armor (uses action, prevents movement)" :
-              creature.getCombatState() ? "Cannot equip armor while in combat" :
-                "Cannot equip armor: must have actions and full movement"}
           >
             A
           </button>

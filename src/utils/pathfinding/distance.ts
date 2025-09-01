@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions';
 import { getTerrainCost } from '../movementCost';
 import { DistanceOptions } from './types';
@@ -54,7 +54,7 @@ export class DistanceSystem {
   static calculateDistanceToCreature(
     fromX: number,
     fromY: number,
-    target: Creature,
+    target: ICreature,
     options: DistanceOptions = {}
   ): number {
     const { usePathfinding, mapData, cols, rows, mapDefinition, allCreatures, costMap, metric = 'chebyshev' } = options;
@@ -77,9 +77,9 @@ export class DistanceSystem {
    * Check if a creature can reach and attack a target
    */
   static canReachAndAttack(
-    attacker: Creature,
-    target: Creature,
-    allCreatures: Creature[],
+    attacker: ICreature,
+    target: ICreature,
+    allCreatures: ICreature[],
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
@@ -110,8 +110,8 @@ export class DistanceSystem {
    * Check if a creature can attack immediately (target is adjacent)
    */
   static canAttackImmediately(
-    attacker: Creature,
-    target: Creature
+    attacker: ICreature,
+    target: ICreature
   ): boolean {
     const distance = this.calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
     const attackRange = attacker.getAttackRange();
@@ -124,9 +124,9 @@ export class DistanceSystem {
   static calculateDistanceToAttackablePosition(
     fromX: number,
     fromY: number,
-    target: Creature,
-    creature: Creature,
-    allCreatures: Creature[],
+    target: ICreature,
+    creature: ICreature,
+    allCreatures: ICreature[],
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
@@ -154,7 +154,7 @@ export class DistanceSystem {
     fromY: number,
     toX: number,
     toY: number,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
@@ -175,8 +175,8 @@ export class DistanceSystem {
   private static calculatePathDistanceToTarget(
     fromX: number,
     fromY: number,
-    target: Creature,
-    allCreatures: Creature[],
+    target: ICreature,
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
@@ -198,9 +198,9 @@ export class DistanceSystem {
   private static calculateCostMapDistance(
     fromX: number,
     fromY: number,
-    target: Creature,
+    target: ICreature,
     costMap: Map<string, number>,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
@@ -222,8 +222,8 @@ export class DistanceSystem {
   private static findClosestAccessiblePositionToTarget(
     fromX: number,
     fromY: number,
-    target: Creature,
-    allCreatures: Creature[],
+    target: ICreature,
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
@@ -271,7 +271,7 @@ export class DistanceSystem {
   static isPositionAccessible(
     x: number,
     y: number,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     mapDefinition?: MapDefinition
   ): boolean {
@@ -306,7 +306,7 @@ export class DistanceSystem {
   static isPositionAccessibleWithBounds(
     x: number,
     y: number,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
@@ -343,7 +343,7 @@ export class DistanceSystem {
   static isCreatureAtPosition(
     x: number,
     y: number,
-    allCreatures: Creature[]
+    allCreatures: ICreature[]
   ): boolean {
     for (const creature of allCreatures) {
       if (creature.isDead()) continue; // Dead creatures don't block
@@ -359,7 +359,7 @@ export class DistanceSystem {
   /**
    * Find a creature by ID
    */
-  static findCreatureById(creatures: Creature[], id: string): Creature | null {
+  static findCreatureById(creatures: ICreature[], id: string): ICreature | null {
     return creatures.find(creature => creature.id === id) || null;
   }
 }

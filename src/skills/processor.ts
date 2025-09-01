@@ -12,7 +12,6 @@ export class SkillProcessor {
     baseValue: number,
     attributeName: keyof Attributes,
     skills: Skills,
-    isWounded: boolean = false,
     statusEffects: StatusEffect[] = []
   ): number {
     let effectiveValue = baseValue;
@@ -32,11 +31,6 @@ export class SkillProcessor {
           effectiveValue += modifier;
         }
       }
-    }
-
-    // Apply wounding penalty (minimum of 1)
-    if (isWounded) {
-      effectiveValue = Math.max(1, effectiveValue - 1);
     }
 
     return effectiveValue;

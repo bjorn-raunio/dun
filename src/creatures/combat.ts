@@ -1,10 +1,9 @@
-import { Attributes, StatusEffect } from '../statusEffects';
+import { Attributes } from '../statusEffects';
 import { Skills } from '../skills';
 import { EquipmentSystem } from '../items/equipment';
 import { Weapon, RangedWeapon, Armor, Shield } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
-import { SkillProcessor } from '../skills';
 
 // --- Creature Combat Management ---
 
@@ -90,73 +89,5 @@ export class CreatureCombatManager {
 
   // --- Effective Attributes ---
 
-  /**
-   * Generic method to get effective attribute value with skill modifiers, status effects, and wounding penalty
-   */
-  private getEffectiveAttribute(
-    attributeName: keyof Attributes,
-    isWounded: boolean,
-    statusEffects: StatusEffect[] = []
-  ): number {
-    const attributes = this.getAttributes();
-    const baseValue = attributes[attributeName] ?? 0;
-    return SkillProcessor.getEffectiveAttribute(baseValue, attributeName, this.getSkills(), isWounded, statusEffects);
-  }
 
-  /**
-   * Get effective movement attribute
-   */
-  getEffectiveMovement(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("movement", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective combat attribute
-   */
-  getEffectiveCombat(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("combat", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective ranged attribute
-   */
-  getEffectiveRanged(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("ranged", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective strength attribute
-   */
-  getEffectiveStrength(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("strength", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective agility attribute
-   */
-  getEffectiveAgility(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("agility", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective courage attribute
-   */
-  getEffectiveCourage(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("courage", isWounded, statusEffects);
-  }
-
-  /**
-   * Get effective intelligence attribute
-   */
-  getEffectiveIntelligence(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("intelligence", isWounded, statusEffects);
-  }
-
-  getEffectivePerception(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("perception", isWounded, statusEffects);
-  }
-
-  getEffectiveDexterity(isWounded: boolean, statusEffects: StatusEffect[] = []): number {
-    return this.getEffectiveAttribute("dexterity", isWounded, statusEffects);
-  }
 }

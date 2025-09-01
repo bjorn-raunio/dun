@@ -1,13 +1,13 @@
 import React from 'react';
 import { createKeyboardHandlers } from '../../handlers/keyboardHandlers';
 import { GameActions } from '../types';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 
 // --- Keyboard Handlers Hook ---
 
 export function useKeyboardHandlers(
   gameActions: GameActions,
-  creatures: Creature[],
+  creatures: ICreature[],
   selectedCreatureId: string | null
 ) {
   const keyboardHandlers = React.useMemo(() => {

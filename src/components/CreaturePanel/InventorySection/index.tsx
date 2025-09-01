@@ -1,11 +1,11 @@
 import React from 'react';
-import { Creature } from '../../../creatures/index';
+import { Creature, ICreature } from '../../../creatures/index';
 import { InventoryItem } from './InventoryItem';
 import { useEquipment } from '../../../game/hooks/useEquipment';
 
 interface InventorySectionProps {
-  creature: Creature;
-  onUpdate?: (creature: Creature) => void;
+  creature: ICreature;
+  onUpdate?: (creature: ICreature) => void;
 }
 
 export function InventorySection({ creature, onUpdate }: InventorySectionProps) {
@@ -26,6 +26,7 @@ export function InventorySection({ creature, onUpdate }: InventorySectionProps) 
               onEquip={handleEquip}
               canEquipToSlot={canEquipToSlot}
               canSwitchWeaponOrShield={canSwitchWeaponOrShield}
+              onUpdate={onUpdate}
             />
           ))}
         </div>

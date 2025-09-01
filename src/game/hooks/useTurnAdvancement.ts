@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { GameActions } from '../types';
 import { TurnState, advanceToNextCreature, shouldEndTurn, recordTurnEndPositions } from '../turnManagement';
 import { findCreatureById } from '../../utils/pathfinding';
@@ -8,7 +8,7 @@ import { findCreatureById } from '../../utils/pathfinding';
 
 export function useTurnAdvancement(
   turnState: TurnState,
-  creatures: Creature[],
+  creatures: ICreature[],
   setTurnState: GameActions['setTurnState']
 ) {
   useEffect(() => {

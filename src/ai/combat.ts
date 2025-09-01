@@ -1,20 +1,16 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { AIState, AIDecision } from './types';
 import { createAIDecision, updateAIStateWithAction } from './helpers';
 
 // --- AI Combat Logic ---
-
-
-
-
 
 /**
  * Update AI state after attack
  */
 export function updateAIStateAfterAttack(
   ai: AIState,
-  creature: Creature,
-  target: Creature,
+  creature: ICreature,
+  target: ICreature,
   success: boolean,
   damage: number
 ): AIState {
@@ -28,7 +24,7 @@ export function updateAIStateAfterAttack(
 /**
  * Check if a target is still valid (alive and hostile)
  */
-export function isTargetValid(target: Creature, creature: Creature): boolean {
+export function isTargetValid(target: ICreature, creature: ICreature): boolean {
   return target.isAlive() && creature.isHostileTo(target);
 }
 
@@ -37,8 +33,8 @@ export function isTargetValid(target: Creature, creature: Creature): boolean {
  */
 export function shouldFlee(
   ai: AIState,
-  creature: Creature,
-  allCreatures: Creature[]
+  creature: ICreature,
+  allCreatures: ICreature[]
 ): boolean {
   return false;
 }
@@ -48,8 +44,8 @@ export function shouldFlee(
  */
 export function createFleeDecision(
   ai: AIState,
-  creature: Creature,
-  allCreatures: Creature[]
+  creature: ICreature,
+  allCreatures: ICreature[]
 ): AIDecision {
   return createAIDecision('flee', {
     priority: 10,

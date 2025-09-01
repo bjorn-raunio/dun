@@ -1,10 +1,27 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { ValidationResult, validateArrayNotEmpty, validateArrayNoDuplicates } from './core';
 import { VALIDATION_MESSAGES } from './messages';
 import { rectsOverlap, areCreaturesOverlapping } from '../utils/geometry';
 import { terrainHeightAt } from '../maps/mapRenderer';
 import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
 import { MapDefinition } from '../maps/types';
+
+/**
+ * Check if a tile is within any room in the map definition
+ */
+function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: MapDefinition): boolean {
+  if (!mapDefinition) {
+    return false;
+  }
+  
+  for (const room of mapDefinition.rooms) {
+    if (room.isTileWithinRoom(x, y)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 /**
  * Validate map dimensions
@@ -131,7 +148,7 @@ export function validatePositionStandable(
   x: number, 
   y: number, 
   dimensions: { w: number; h: number }, 
-  allCreatures: Creature[], 
+  allCreatures: ICreature[], 
   mapData: { tiles: string[][] }, 
   mapDefinition?: MapDefinition, 
   considerCreatures: boolean = true, 
@@ -142,15 +159,42 @@ export function validatePositionStandable(
     return false;
   }
   
-  // Check terrain (if map definition provided)
+  // Check terrain and room validation (if map definition provided)
   if (mapDefinition) {
+    let hasStandableTile = false;
+    
     for (let dx = 0; dx < dimensions.w; dx++) {
       for (let dy = 0; dy < dimensions.h; dy++) {
-        const height = terrainHeightAt(x + dx, y + dy, mapDefinition);
+        const cx = x + dx;
+        const cy = y + dy;
+        const tile = mapData.tiles[cy]?.[cx];
+        const height = terrainHeightAt(cx, cy, mapDefinition);
+        
+        // Check if tile is empty and outside any room - this blocks movement
+        if (!tile || tile === "empty.jpg") {
+          if (!isTileWithinAnyRoom(cx, cy, mapDefinition)) {
+            return false; // Empty tiles outside rooms block movement
+          }
+        }
+        
+        // A tile is considered standable if it's not empty OR if it's within a room
+        if (tile && tile !== "empty.jpg") {
+          hasStandableTile = true;
+        } else if (isTileWithinAnyRoom(cx, cy, mapDefinition)) {
+          hasStandableTile = true;
+        }
+        
         // Allow terrain up to height 1 (elevation 1) - creatures can climb up to 1 elevation
         if (height > 1) {
           return false;
         }
+      }
+    }
+    
+    // For multi-tile creatures, at least one tile must be standable
+    if (dimensions.w > 1 || dimensions.h > 1) {
+      if (!hasStandableTile) {
+        return false;
       }
     }
   }

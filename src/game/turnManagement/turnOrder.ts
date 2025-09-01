@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { AIBehaviorType } from '../../ai/types';
 import { TurnOrderConfig } from './types';
 
@@ -14,7 +14,7 @@ import { TurnOrderConfig } from './types';
 /**
  * Get AI behavior type for a creature
  */
-export function getAIBehaviorType(creature: Creature): AIBehaviorType | null {
+export function getAIBehaviorType(creature: ICreature): AIBehaviorType | null {
   if (!creature.isAIControlled()) {
     return null;
   }
@@ -27,7 +27,7 @@ export function getAIBehaviorType(creature: Creature): AIBehaviorType | null {
 /**
  * Compare AI creatures by behavior (ranged before melee) then by agility
  */
-export function compareAICreaturesByBehavior(a: Creature, b: Creature): number {
+export function compareAICreaturesByBehavior(a: ICreature, b: ICreature): number {
   const aBehavior = getAIBehaviorType(a);
   const bBehavior = getAIBehaviorType(b);
   
@@ -44,7 +44,7 @@ export function compareAICreaturesByBehavior(a: Creature, b: Creature): number {
  * Player-controlled creatures come first (order doesn't matter)
  * AI-controlled creatures are ordered by behavior (ranged before melee) then by agility
  */
-export function compareCreaturesForTurnOrder(a: Creature, b: Creature): number {
+export function compareCreaturesForTurnOrder(a: ICreature, b: ICreature): number {
   const aIsPlayer = a.isPlayerControlled();
   const bIsPlayer = b.isPlayerControlled();
   
@@ -64,13 +64,13 @@ export function compareCreaturesForTurnOrder(a: Creature, b: Creature): number {
 /**
  * Sort creatures by turn order priority
  */
-export function sortCreaturesByTurnOrder(creatures: Creature[]): Creature[] {
+export function sortCreaturesByTurnOrder(creatures: ICreature[]): ICreature[] {
   return [...creatures].sort(compareCreaturesForTurnOrder);
 }
 
 /**
  * Get turn order IDs from sorted creatures
  */
-export function getTurnOrderIds(creatures: Creature[]): string[] {
+export function getTurnOrderIds(creatures: ICreature[]): string[] {
   return sortCreaturesByTurnOrder(creatures).map(c => c.id);
 }

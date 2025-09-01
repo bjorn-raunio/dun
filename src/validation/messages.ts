@@ -7,7 +7,7 @@ export const VALIDATION_MESSAGES = {
   NO_ACTIONS_REMAINING: (name: string) => `${name} has no actions remaining.`,
   NO_MOVEMENT_POINTS: (name: string, required: number) => `${name} needs ${required} movement points but only has ${name}.remainingMovement.`,
   NO_MOVEMENT_POINTS_SIMPLE: (name: string) => `${name} has no movement points remaining.`,
-  TARGET_NOT_VISIBLE: (name: string) => `${name} is not visible or accessible.`,
+  TARGET_NOT_VISIBLE: (name: string) => ``,
   TARGET_DEAD: (name: string) => `${name} is dead and cannot be targeted.`,
   FRIENDLY_FIRE: (name: string) => `${name} cannot attack friendly targets.`,
   OUT_OF_RANGE: (name: string, distance: number, range: number) => `${name} is out of range (distance: ${distance}, range: ${range}).`,
@@ -54,5 +54,6 @@ export const VALIDATION_MESSAGES = {
   CREATURE_EMPTY_TILE: (name: string, x: number, y: number) => `${name} is on empty tile at (${x}, ${y}).`,
   NOW_ENGAGED: (name: string) => `${name} is now engaged in combat.`,
   CANNOT_MOVE_THERE: (name: string) => `${name} cannot move there.`,
-  MOVES_OVER_REMAINS: (name: string) => `${name} moves over the remains.`
+  MOVES_OVER_REMAINS: (name: string) => `${name} moves over the remains.`,
+  RANGED_ATTACK_WHILE_ENGAGED: (name: string) => `${name} cannot perform ranged attacks while engaged in melee combat.`
 } as const;

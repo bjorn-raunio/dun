@@ -1,4 +1,4 @@
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
 import { MapDefinition } from '../maps/types';
 
 // --- AI Types ---
@@ -11,14 +11,14 @@ export enum AIBehaviorType {
 
 export interface AIDecision {
   type: 'move' | 'attack' | 'wait' | 'flee' | 'special';
-  target?: Creature;
+  target?: ICreature;
   destination?: { x: number; y: number };
   priority: number; // Higher number = higher priority
   reason: string;
 }
 
 export interface AITarget {
-  creature: Creature;
+  creature: ICreature;
   distance: number;
   priority: number; // Overall priority for this target
 }
@@ -46,7 +46,7 @@ export interface AIMovementOption {
 
 export interface AIState {
   behavior: AIBehaviorType;
-  currentTarget: Creature | null;
+  currentTarget: ICreature | null;
   lastKnownPlayerPositions: Map<string, { x: number; y: number; turn: number }>;
   threatAssessment: Map<string, number>;
   tacticalMemory: {
@@ -65,12 +65,12 @@ export interface AIActionResult {
 
 export interface AIContext {
   ai: AIState;
-  creature: Creature;
-  allCreatures: Creature[];
+  creature: ICreature;
+  allCreatures: ICreature[];
   mapData: { tiles: string[][] };
   mapDefinition?: MapDefinition;
   currentTurn: number;
   reachableTiles: Array<{ x: number; y: number }>;
   reachableTilesCostMap: Map<string, number>;
-  targetsInRange: Creature[];
+  targetsInRange: ICreature[];
 }

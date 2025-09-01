@@ -1,5 +1,5 @@
-import { Weapon, RangedWeapon, Armor, Shield } from './types';
-import { weaponPresets, rangedPresets, armorPresets, shieldPresets } from './presets';
+import { Weapon, RangedWeapon, Armor, Shield, Consumable } from './types';
+import { weaponPresets, rangedPresets, armorPresets, shieldPresets, consumablePresets } from './presets';
 import { Item } from './types';
 
 /**
@@ -53,4 +53,11 @@ export function createArmor(presetId: string, overrides?: Partial<ConstructorPar
  */
 export function createShield(presetId: string, overrides?: Partial<ConstructorParameters<typeof Shield>[0]> & { id?: string }): Shield {
   return createItem(Shield, presetId, shieldPresets, overrides);
+}
+
+/**
+ * Create a consumable using the generic factory
+ */
+export function createConsumable(presetId: string, overrides?: Partial<ConstructorParameters<typeof Consumable>[0]> & { id?: string }): Consumable {
+  return createItem(Consumable, presetId, consumablePresets, overrides);
 }

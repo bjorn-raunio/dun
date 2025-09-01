@@ -33,8 +33,9 @@ export function generateMapTiles(mapDefinition: MapDefinition) {
   
   // Fill in room tiles
   for (const room of mapDefinition.rooms) {
-    const isRot = room.rotation === 90 || room.rotation === 270;
-      const { width: w, height: h } = getRotatedDimensions(room.mapWidth, room.mapHeight, room.rotation);
+    // Use pre-calculated rotated dimensions
+    const w = room.rotatedWidth;
+    const h = room.rotatedHeight;
     
     for (let y = room.y; y < room.y + h; y++) {
       for (let x = room.x; x < room.x + w; x++) {

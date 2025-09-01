@@ -1,10 +1,10 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions } from '../dimensions';
 import { calculateMovementCost } from '../movementCost';
 import { isInZoneOfControl, pathPassesThroughZoneOfControl, getEngagingCreatures, isAdjacentToCreature } from '../zoneOfControl';
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
 import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
-import { getAreaStats, isAreaStandable, calculateMoveCostInto, calculateHeuristic, reconstructPath } from './helpers';
+import { getAreaStats, isAreaStandable, calculateHeuristic, reconstructPath } from './helpers';
 import { MapDefinition } from '../../maps/types';
 
 /**
@@ -15,8 +15,8 @@ export class PathfindingSystem {
    * Calculate reachable tiles for a creature using A* pathfinding
    */
   static getReachableTiles(
-    creature: Creature,
-    allCreatures: Creature[],
+    creature: ICreature,
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
@@ -62,7 +62,23 @@ export class PathfindingSystem {
         }
 
         // Cost and passability
-        const stepCost = calculateMoveCostInto(nx, ny, selectedDims, mapData, cols, rows, allCreatures, mapDefinition, current.x, current.y, creature);
+        const stepCost = calculateMovementCost(
+          current.x, 
+          current.y, 
+          nx, 
+          ny, 
+          allCreatures,
+          mapData, 
+          mapDefinition,
+          {
+            ...DEFAULT_MOVEMENT_OPTIONS,
+            considerCreatures: false, // Don't check creatures in this context
+            areaDimensions: selectedDims,
+            mapDimensions: { cols, rows },
+            sourcePositionCost: current.cost
+          },
+          creature
+        );
         if (!isFinite(stepCost)) continue;
         if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition)) continue;
 
@@ -92,12 +108,12 @@ export class PathfindingSystem {
     startY: number,
     targetX: number,
     targetY: number,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
     mapDefinition?: MapDefinition,
-    creature?: Creature
+    creature?: ICreature
   ): Array<{ x: number; y: number }> | null {
     const openSet = new Set<string>();
     const closedSet = new Set<string>();
@@ -185,12 +201,12 @@ export class PathfindingSystem {
     fromY: number,
     toX: number,
     toY: number,
-    allCreatures: Creature[],
+    allCreatures: ICreature[],
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
     mapDefinition?: MapDefinition,
-    creature?: Creature
+    creature?: ICreature
   ): number {
     return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
   }

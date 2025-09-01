@@ -2,7 +2,7 @@ import { Weapon, RangedWeapon, Armor, Shield, Item } from '../types';
 import { createWeapon } from '../factories';
 import { EquipmentSlot, EquipmentSlots, EquipmentValidation, EquipmentValidator } from './validation';
 import { CombatCalculator } from './combat';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 
 // --- Equipment System ---
 
@@ -23,7 +23,7 @@ export class EquipmentSystem {
   /**
    * Equip an item to a specific slot
    */
-  equip(item: Item, slot: EquipmentSlot, creature?: Creature): EquipmentValidation {
+  equip(item: Item, slot: EquipmentSlot, creature?: ICreature): EquipmentValidation {
     const validation = EquipmentValidator.validateEquip(item, slot, creature);
     if (!validation.isValid) {
       return validation;
@@ -44,12 +44,7 @@ export class EquipmentSystem {
   /**
    * Unequip an item from a specific slot
    */
-  unequip(slot: EquipmentSlot, creature?: Creature): Item | undefined {
-    // Check if creature is in combat and trying to unequip armor
-    if (creature && slot === 'armor' && creature.getCombatState()) {
-      return undefined; // Cannot unequip armor while in combat
-    }
-
+  unequip(slot: EquipmentSlot, creature?: ICreature): Item | undefined {
     const item = this.slots[slot];
     if (item) {
       this.slots[slot] = undefined;
@@ -168,8 +163,8 @@ export class EquipmentSystem {
   /**
    * Get effective armor value (equipped armor or natural armor)
    */
-  getEffectiveArmor(naturalArmor: number = 0): number {
-    return CombatCalculator.getEffectiveArmor(this.slots.armor, naturalArmor);
+  getEffectiveArmor(naturalArmor: number): number {
+    return CombatCalculator.getEffectiveArmor(naturalArmor, this.slots.armor);
   }
 
   /**

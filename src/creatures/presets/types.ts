@@ -1,6 +1,6 @@
 import { Attributes } from '../../statusEffects';
 import { AIBehaviorType } from '../../ai/types';
-import { CreatureGroup } from '../types';
+import { CreatureGroup } from '../CreatureGroup';
 import { Skills, Skill } from '../../skills';
 
 // --- Shared Preset Types ---

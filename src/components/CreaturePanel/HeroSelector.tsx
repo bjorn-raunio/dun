@@ -1,10 +1,10 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { COLORS } from '../styles';
 
 interface HeroSelectorProps {
-  heroes: Creature[];
-  onSelect?: (creature: Creature) => void;
+  heroes: ICreature[];
+  onSelect?: (creature: ICreature) => void;
 }
 
 export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {

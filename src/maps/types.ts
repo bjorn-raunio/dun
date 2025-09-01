@@ -1,14 +1,8 @@
 // --- Map and Terrain Type Definitions ---
 import { Creature } from '../creatures/index';
+import { Room } from './room';
 
-export type RoomType = {
-  type: string; // e.g. "room1", "room2", "corridor"
-  x: number;
-  y: number;
-  mapWidth: number;
-  mapHeight: number;
-  rotation: 0 | 90 | 180 | 270; // Rotation property
-};
+
 
 export type Terrain = {
   // Either use a reusable preset (preferred) or a raw type key
@@ -36,7 +30,7 @@ export type MapDefinition = {
   description: string;
   width: number;
   height: number;
-  rooms: RoomType[];
+  rooms: Room[];
   terrain: Terrain[];
   creatures: Creature[]; // Array of creatures on the map
   startingTiles: Array<{ x: number; y: number; name?: string }>; // Designated starting positions for heroes

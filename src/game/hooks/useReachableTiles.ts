@@ -1,12 +1,12 @@
 import React from 'react';
-import { Creature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { findCreatureById } from '../../utils/pathfinding';
 import { MapDefinition } from '../../maps/types';
 
 // --- Reachable Tiles Hook ---
 
 export function useReachableTiles(
-  creatures: Creature[],
+  creatures: ICreature[],
   selectedCreatureId: string | null,
   mapData: { tiles: string[][] },
   reachableKey: number,

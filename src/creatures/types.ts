@@ -1,6 +1,7 @@
 import { Item, EquipmentSlots } from '../items';
 import { CombatResult } from '../utils/combat/types';
 import { Attributes } from '../statusEffects';
+import { CreatureGroup } from './CreatureGroup';
 
 // --- Skill Types ---
 export type SkillType = "combat" | "stealth" | "academic" | "natural";
@@ -51,13 +52,7 @@ export const DEFAULT_ATTRIBUTES: Partial<Attributes> = {
   dexterity: 0,
 };
 
-export type CreatureGroup = "player" | "enemy" | "neutral";
 
-export const CREATURE_GROUPS = {
-  PLAYER: "player" as const,
-  ENEMY: "enemy" as const,
-  NEUTRAL: "neutral" as const,
-} as const;
 
 export interface CreaturePosition {
   x: number;
@@ -94,6 +89,6 @@ export interface CreatureConstructorParams {
   mana: number;
   fortune: number;
   naturalArmor?: number;
-  group: CreatureGroup;
+  group: CreatureGroup; // CHANGED from CreatureGroupType
   skills?: Skills | Skill[];
 }
