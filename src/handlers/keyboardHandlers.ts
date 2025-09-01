@@ -95,7 +95,6 @@ export function createKeyboardHandlers(
           }
           return c;
         }));
-        setMessages(prev => [`${currentCreature.name} faces ${currentCreature.getFacingShortName()}`, ...prev].slice(0, 50));
       }
     };
 

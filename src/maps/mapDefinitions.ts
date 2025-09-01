@@ -20,11 +20,10 @@ export const terrainPresets: Record<string, Terrain> = {
 };
 
 export const mapDefinition: MapDefinition = {
-  name: "Exempelkarta med rumstyper",
+  name: "Free the Merchants",
   width: 40,
   height: 30,
   rooms: [
-    // Using room presets with different configurations
     createRoom("forest1", 0, 0, { rotation: 270 }),
     createRoom("forest2", 10, 0, { rotation: 90 }),
   ],

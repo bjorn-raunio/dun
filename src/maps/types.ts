@@ -32,7 +32,7 @@ export type MapDefinition = {
   rooms: Room[];
   terrain: Terrain[];
   creatures: Creature[]; // Array of creatures on the map
-  startingTiles: Array<{ x: number; y: number; }>; // Designated starting positions for heroes
+  startingTiles: Array<{ x: number; y: number; image?: string; }>; // Designated starting positions for heroes
   terrainTypes?: Record<string, TerrainType>; // Terrain type definitions for line of sight and other properties
 };
 
