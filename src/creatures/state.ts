@@ -1,10 +1,10 @@
-import { CreatureState, CreaturePosition } from './types';
+import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 
 // --- Creature State Management ---
 
 export class CreatureStateManager {
   private state: CreatureState;
-  private turnStartPosition: CreaturePosition;
+  private turnStartPosition: CreaturePositionOrUndefined;
 
   constructor(
     private getMaxMovement: () => number,
@@ -13,7 +13,7 @@ export class CreatureStateManager {
     private getMaxVitality: () => number,
     private getMaxMana: () => number,
     private getMaxFortune: () => number,
-    private initialPosition: CreaturePosition
+    private initialPosition?: CreaturePosition
   ) {
     this.state = {
       remainingMovement: this.getMaxMovement(),
@@ -25,7 +25,7 @@ export class CreatureStateManager {
       hasMovedWhileEngaged: false
     };
 
-    this.turnStartPosition = { ...initialPosition };
+    this.turnStartPosition = initialPosition ? { ...initialPosition } : undefined;
   }
 
   // --- State Getters ---
@@ -34,8 +34,8 @@ export class CreatureStateManager {
     return { ...this.state };
   }
 
-  getTurnStartPosition(): CreaturePosition {
-    return { ...this.turnStartPosition };
+  getTurnStartPosition(): CreaturePositionOrUndefined {
+    return this.turnStartPosition ? { ...this.turnStartPosition } : undefined;
   }
 
   // --- State Checks ---
@@ -192,7 +192,7 @@ export class CreatureStateManager {
     this.state.remainingMovement = 0;
   }
 
-  recordTurnStartPosition(position: CreaturePosition): void {
-    this.turnStartPosition = { ...position };
+  recordTurnStartPosition(position: CreaturePositionOrUndefined): void {
+    this.turnStartPosition = position ? { ...position } : undefined;
   }
 }

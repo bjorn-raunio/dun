@@ -95,9 +95,14 @@ export function isWithinMapBounds(x: number, y: number, mapData: { tiles: string
  * Check if a creature is within map bounds
  */
 export function isCreatureInBounds(
-  creature: { x: number; y: number; getDimensions: () => { w: number; h: number } },
+  creature: { x: number | undefined; y: number | undefined; getDimensions: () => { w: number; h: number } },
   mapData: { tiles: string[][] }
 ): boolean {
+  // Return false if creature is not on the map (undefined position)
+  if (creature.x === undefined || creature.y === undefined) {
+    return false;
+  }
+  
   const dimensions = creature.getDimensions();
   
   // Check if the creature's area is within bounds
@@ -112,9 +117,15 @@ export function isCreatureInBounds(
  * Check if two creatures are overlapping
  */
 export function areCreaturesOverlapping(
-  creature1: { x: number; y: number; getDimensions: () => { w: number; h: number } },
-  creature2: { x: number; y: number; getDimensions: () => { w: number; h: number } }
+  creature1: { x: number | undefined; y: number | undefined; getDimensions: () => { w: number; h: number } },
+  creature2: { x: number | undefined; y: number | undefined; getDimensions: () => { w: number; h: number } }
 ): boolean {
+  // Return false if either creature is not on the map (undefined position)
+  if (creature1.x === undefined || creature1.y === undefined || 
+      creature2.x === undefined || creature2.y === undefined) {
+    return false;
+  }
+  
   const dims1 = creature1.getDimensions();
   const dims2 = creature2.getDimensions();
   

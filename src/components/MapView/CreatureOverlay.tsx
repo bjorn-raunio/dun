@@ -36,7 +36,7 @@ export function CreatureOverlay({
         zIndex: 3,
       }}
     >
-      {getLivingCreatures(creatures).map((cr) => {
+      {getLivingCreatures(creatures).filter(cr => cr.x !== undefined && cr.y !== undefined).map((cr) => {
         // Determine if this creature is a valid target in targeting mode
         let isValidTarget = false;
         let isEnemy = false;
@@ -74,8 +74,8 @@ export function CreatureOverlay({
             onClick={(e) => onCreatureClick(cr, e)}
             style={{
               position: "absolute",
-              left: cr.x * TILE_SIZE + (TILE_SIZE * 0.1),
-              top: cr.y * TILE_SIZE + (TILE_SIZE * 0.1),
+              left: cr.x! * TILE_SIZE + (TILE_SIZE * 0.1),
+              top: cr.y! * TILE_SIZE + (TILE_SIZE * 0.1),
               width: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).width,
               height: getCreatureUIDimensions(cr.size, TILE_SIZE, 0.8).height,
               cursor: cursorStyle,
@@ -119,7 +119,7 @@ export function CreatureOverlay({
                 position: "absolute",
                 top: "50%",
                 left: "50%",
-                transform: `translate(-50%, -50%) rotate(${cr.facing * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
+                transform: `translate(-50%, -50%) rotate(${(cr.facing ?? 0) * 45}deg) translateY(-${getCreatureUIOffset(cr.size, TILE_SIZE, 0.4)}px)`,
                 fontSize: "12px",
                 color: cr.isPlayerControlled() ? COLORS.hero : COLORS.monster,
                 fontWeight: "bold",

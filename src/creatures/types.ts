@@ -60,6 +60,8 @@ export interface CreaturePosition {
   facing: number;
 }
 
+export type CreaturePositionOrUndefined = CreaturePosition | undefined;
+
 export interface CreatureState {
   remainingMovement: number;
   remainingActions: number;
@@ -73,8 +75,7 @@ export interface CreatureState {
 export interface CreatureConstructorParams {
   id?: string;
   name: string;
-  x: number;
-  y: number;
+  position?: CreaturePositionOrUndefined;
   image?: string;
   attributes: Attributes;
   actions: number;
@@ -82,7 +83,6 @@ export interface CreatureConstructorParams {
   mapWidth?: number;
   mapHeight?: number;
   size: number;
-  facing?: number;
   inventory?: Item[];
   equipment?: EquipmentSlots;
   vitality: number;

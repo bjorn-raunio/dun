@@ -42,6 +42,11 @@ export function validateHeroStartingPositions(mapDefinition: MapDefinition): { v
   );
   
   for (const hero of heroes) {
+    // Skip heroes that are not on the map (undefined position)
+    if (hero.x === undefined || hero.y === undefined) {
+      continue;
+    }
+    
     if (!isValidStartingTile(mapDefinition, hero.x, hero.y)) {
       errors.push(`${hero.name} is not placed on a valid starting tile (${hero.x}, ${hero.y})`);
     }

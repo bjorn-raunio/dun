@@ -52,6 +52,16 @@ export function validateCombat(
 
   // Range check
   const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
+  
+  // Skip range check if either creature is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined || 
+      target.x === undefined || target.y === undefined) {
+    return {
+      isValid: false,
+      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, Infinity, attackRange)
+    };
+  }
+  
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {
@@ -97,15 +107,21 @@ export function validateCombat(
 
   // Elevation check for melee attacks
   if (weapon instanceof Weapon && mapDefinition) {
-    const attackerHeight = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
-    const targetHeight = terrainHeightAt(target.x, target.y, mapDefinition);
-    const heightDifference = Math.abs(attackerHeight - targetHeight);
-    
-    if (heightDifference > 1) {
-      return {
-        isValid: false,
-        reason: VALIDATION_MESSAGES.ELEVATION_DIFFERENCE_TOO_HIGH(attacker.name, target.name, heightDifference)
-      };
+    // Skip elevation check if either creature is not on the map (undefined position)
+    if (attacker.x === undefined || attacker.y === undefined || 
+        target.x === undefined || target.y === undefined) {
+      // Continue with other validations
+    } else {
+      const attackerHeight = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
+      const targetHeight = terrainHeightAt(target.x, target.y, mapDefinition);
+      const heightDifference = Math.abs(attackerHeight - targetHeight);
+      
+      if (heightDifference > 1) {
+        return {
+          isValid: false,
+          reason: VALIDATION_MESSAGES.ELEVATION_DIFFERENCE_TOO_HIGH(attacker.name, target.name, heightDifference)
+        };
+      }
     }
   }
 
@@ -117,6 +133,16 @@ export function validateCombat(
  */
 export function validateTargetInRange(attacker: ICreature, target: ICreature, weapon: Weapon | RangedWeapon): ValidationResult {
   const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
+  
+  // Skip range check if either creature is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined || 
+      target.x === undefined || target.y === undefined) {
+    return {
+      isValid: false,
+      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, Infinity, attackRange)
+    };
+  }
+  
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   
   if (distance > attackRange) {

@@ -55,6 +55,11 @@ export function validateCreaturePositions(creatures: Creature[], mapData: { tile
   const width = mapData.tiles[0]?.length || 0;
   
   for (const creature of creatures) {
+    // Skip creatures that are not on the map (undefined position)
+    if (creature.x === undefined || creature.y === undefined) {
+      continue;
+    }
+    
     if (creature.x < 0 || creature.x >= width || creature.y < 0 || creature.y >= height) {
       return {
         isValid: false,
@@ -76,6 +81,12 @@ export function validateCreaturesNoOverlap(creatures: Creature[]): ValidationRes
       const creature2 = creatures[j];
       
       if (creature1.isDead() || creature2.isDead()) continue; // Dead creatures don't block
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature1.x === undefined || creature1.y === undefined || 
+          creature2.x === undefined || creature2.y === undefined) {
+        continue;
+      }
       
       if (areCreaturesOverlapping(creature1, creature2)) {
         return {
@@ -204,6 +215,9 @@ export function validatePositionStandable(
     for (const creature of allCreatures) {
       if (creature.isDead()) continue; // Dead creatures don't block
       if (creatureId && creature.id === creatureId) continue; // Don't check against self
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature.x === undefined || creature.y === undefined) continue;
       
       const creatureDimensions = creature.getDimensions();
       if (rectsOverlap(

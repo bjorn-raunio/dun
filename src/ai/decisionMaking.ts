@@ -100,7 +100,8 @@ export function makeAIDecision(context: AIContext): AIActionResult {
 
   if (canAttackNow && attackValidation.isValid) {
     // For ranged creatures, check line of sight
-    if ((hasRangedWeapon || isRangedBehavior) && context.mapData && context.mapDefinition) {
+    if ((hasRangedWeapon || isRangedBehavior) && context.mapData && context.mapDefinition && 
+        creature.x !== undefined && creature.y !== undefined) {
       const hasLineOfSight = isCreatureVisible(
         creature.x,
         creature.y,
@@ -253,25 +254,27 @@ export function executeAIDecision(
 
         if (moveResult.status === 'success' || moveResult.status === 'partial') {
           // Update AI state with final position (either destination or where they stopped)
-          const finalPosition = moveResult.finalPosition || { x: creature.x, y: creature.y };
-          const newState = updateAIStateAfterMovement(
-            ai,
-            creature,
-            finalPosition.x,
-            finalPosition.y
-          );
+          const finalPosition = moveResult.finalPosition || { x: creature.x ?? 0, y: creature.y ?? 0 };
+          if (finalPosition.x !== undefined && finalPosition.y !== undefined) {
+            const newState = updateAIStateAfterMovement(
+              ai,
+              creature,
+              finalPosition.x,
+              finalPosition.y
+            );
 
-          let message = AI_MESSAGES.moveToPosition(creature.name, finalPosition.x, finalPosition.y);
-          if (moveResult.status === 'partial') {
-            message = `${message} (partial: moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles)`;
+            let message = AI_MESSAGES.moveToPosition(creature.name, finalPosition.x, finalPosition.y);
+            if (moveResult.status === 'partial') {
+              message = `${message} (partial: moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles)`;
+            }
+
+            return {
+              success: true,
+              messages: [message],
+              newState,
+              targetDefeated: false
+            };
           }
-
-          return {
-            success: true,
-            messages: [message],
-            newState,
-            targetDefeated: false
-          };
         } else {
           return {
             success: false,
@@ -380,6 +383,9 @@ export function shouldMoveBeforeAttack(
   }
 
   // Calculate current distance to target
+  if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
+    return false;
+  }
   const currentDistance = Math.max(
     Math.abs(target.x - creature.x),
     Math.abs(target.y - creature.y)
@@ -399,7 +405,8 @@ export function shouldMoveBeforeAttack(
   // For ranged creatures, also check line of sight
   const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
 
-  if (hasRangedWeapon && mapData && mapDefinition) {
+  if (hasRangedWeapon && mapData && mapDefinition && 
+      creature.x !== undefined && creature.y !== undefined) {
     const currentHasLOS = isCreatureVisible(
       creature.x,
       creature.y,

@@ -22,9 +22,17 @@ export function calculateTargetsInRange(
   const rangeTiles = equipment.getAttackRange();
   const inRange = new Set<string>();
 
+  // Skip if attacker is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined) {
+    return inRange;
+  }
+
   for (const target of allCreatures) {
     if (attacker.isFriendlyTo(target)) continue; // Same faction
     if (target.isDead()) continue; // Skip dead creatures
+    
+    // Skip targets that are not on the map (undefined position)
+    if (target.x === undefined || target.y === undefined) continue;
 
     const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
     if (distance <= rangeTiles) {
@@ -69,6 +77,13 @@ export function determineHit(
  * Check if attack is from behind (for back attack bonus)
  */
 export function isBackAttack(attacker: ICreature, target: ICreature): boolean {
+  // Return false if either creature is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined || 
+      target.x === undefined || target.y === undefined || 
+      target.facing === undefined) {
+    return false;
+  }
+
   const isBack = isInBackArc(target.x, target.y, target.facing, attacker.x, attacker.y);
 
   logCombat(`Back attack check: ${attacker.name} at (${attacker.x},${attacker.y}) attacking ${target.name} at (${target.x},${target.y})`, {
@@ -130,6 +145,12 @@ export function calculateElevationBonus(
   mapDefinition?: MapDefinition
 ): { attackerBonus: number; defenderBonus: number } {
   if (!mapDefinition) return { attackerBonus: 0, defenderBonus: 0 };
+
+  // Return no bonus if either creature is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined || 
+      target.x === undefined || target.y === undefined) {
+    return { attackerBonus: 0, defenderBonus: 0 };
+  }
 
   const attackerElevation = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
   const targetElevation = terrainHeightAt(target.x, target.y, mapDefinition);

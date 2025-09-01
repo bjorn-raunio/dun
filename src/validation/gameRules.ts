@@ -29,6 +29,11 @@ export function validateGameState(
 
   // Check for creatures outside map bounds
   for (const creature of creatures) {
+    // Skip creatures that are not on the map (undefined position)
+    if (creature.x === undefined || creature.y === undefined) {
+      continue;
+    }
+    
     if (!isCreatureInBounds(creature, mapData)) {
       return {
         isValid: false,
@@ -120,8 +125,11 @@ export function validateCreatureStats(creature: Creature): GameRuleValidationRes
   if (!sizeCheck.isValid) return sizeCheck;
 
   // Check if facing direction is within valid range (0-7)
-  const facingCheck = validateRange(creature.facing, 0, 7, creature.name, 'facing direction');
-  if (!facingCheck.isValid) return facingCheck;
+  // Skip validation if creature is not on the map (undefined position)
+  if (creature.facing !== undefined) {
+    const facingCheck = validateRange(creature.facing, 0, 7, creature.name, 'facing direction');
+    if (!facingCheck.isValid) return facingCheck;
+  }
 
   return { isValid: true };
 }
@@ -155,6 +163,11 @@ export function validateMapConsistency(
   // Check if creatures are on valid tiles
   for (const creature of creatures) {
     if (creature.isDead()) continue; // Dead creatures don't need valid tiles
+    
+    // Skip creatures that are not on the map (undefined position)
+    if (creature.x === undefined || creature.y === undefined) {
+      continue;
+    }
     
     const dimensions = creature.getDimensions();
     for (let dy = 0; dy < dimensions.h; dy++) {

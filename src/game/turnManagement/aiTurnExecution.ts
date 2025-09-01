@@ -32,15 +32,16 @@ export function executeAITurnForCreature(
     logAI(`${creature.name} calculating line of sight at (${creature.x}, ${creature.y})`);
     
     // Get visible creatures for this AI creature
-    const visibleCreatures = getVisibleCreatures(
-      creature.x,
-      creature.y,
-      groups.flatMap(group => group.getLivingCreatures()),
-      mapData,
-      cols,
-      rows,
-      mapDefinition
-    );
+    const visibleCreatures = creature.x !== undefined && creature.y !== undefined ? 
+      getVisibleCreatures(
+        creature.x,
+        creature.y,
+        groups.flatMap(group => group.getLivingCreatures()),
+        mapData,
+        cols,
+        rows,
+        mapDefinition
+      ) : [];
     
     const visibleHostileCreatures = visibleCreatures.filter((c: ICreature) => creature.isHostileTo(c));
     logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);

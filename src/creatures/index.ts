@@ -17,6 +17,7 @@ export { createMonster, monsterPresets, monsterPresetsByFaction, type MonsterPre
 
 // Export new interfaces and services
 export * from './interfaces';
+export * from './types';
 export { CreatureServiceLocator } from './services';
 export { CombatExecutor } from './combatExecutor';
 

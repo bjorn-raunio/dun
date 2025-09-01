@@ -10,6 +10,7 @@ import { calculateMovementCost } from '../utils/movementCost';
 import { MovementResult, MovementStatus } from '../game/movement';
 import { MapDefinition } from '../maps/types';
 import { logMovement } from '../utils';
+import { CreaturePositionOrUndefined } from './types';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement implements ICreatureMovement {
@@ -22,15 +23,28 @@ export class CreatureMovement implements ICreatureMovement {
     rows: number,
     mapDefinition?: MapDefinition
   ): { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> } {
-    return PathfindingSystem.getReachableTiles(
-      creature,
-      allCreatures,
-      mapData,
-      cols,
-      rows,
-      mapDefinition,
-      { considerEngagement: true }
-    );
+    if (creature.x !== undefined && creature.y !== undefined) {
+      return PathfindingSystem.getReachableTiles(
+        creature,
+        allCreatures,
+        mapData,
+        cols,
+        rows,
+        mapDefinition,
+        { considerEngagement: true },
+      );
+    } else if (mapDefinition) {
+      const tiles = mapDefinition.startingTiles.map(tile => ({ x: tile.x, y: tile.y }));
+      const dist = new Map<string, number>();
+      const pathMap = new Map<string, Array<{ x: number; y: number }>>();
+      tiles.forEach(tile => {
+        const key = PathfindingSystem.createKey(tile.x, tile.y);
+        dist.set(key, 0);
+        pathMap.set(key, [{ x: tile.x, y: tile.y }]);
+      });
+      return { tiles: tiles, costMap: dist, pathMap: pathMap };
+    }
+    return { tiles: [], costMap: new Map(), pathMap: new Map() };
   }
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)

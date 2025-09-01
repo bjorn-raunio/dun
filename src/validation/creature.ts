@@ -80,6 +80,11 @@ export function validateCreatureSize(creature: Creature): ValidationResult {
  * Validate creature facing direction
  */
 export function validateCreatureFacing(creature: Creature): ValidationResult {
+  // Skip validation if creature is not on the map (undefined position)
+  if (creature.facing === undefined) {
+    return { isValid: true };
+  }
+  
   return validateRange(creature.facing, 0, 7, creature.name, 'facing direction');
 }
 

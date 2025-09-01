@@ -4,7 +4,7 @@
 
 import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
 import { MovementResult } from '../game/movement';
-import { CreatureState, CreaturePosition } from './types';
+import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { CreatureGroup } from './CreatureGroup';
 import { StatusEffectManager, StatusEffect, Attributes } from '../statusEffects';
 import { MapDefinition } from '../maps/types';
@@ -35,9 +35,9 @@ export interface ICreature {
   running: boolean;
   
   // Position
-  x: number;
-  y: number;
-  facing: number;
+  x: number | undefined;
+  y: number | undefined;
+  facing: number | undefined;
   
   // Position methods
   faceDirection(direction: number): void;
@@ -133,9 +133,9 @@ export interface ICreature {
   getEngagingCreatures(allCreatures: ICreature[]): ICreature[];
   
   // Turn start position
-  get turnStartX(): number;
-  get turnStartY(): number;
-  get turnStartFacing(): number;
+  get turnStartX(): number | undefined;
+  get turnStartY(): number | undefined;
+  get turnStartFacing(): number | undefined;
   
   // Cloning
   clone(overrides?: Partial<ICreature>): ICreature;
@@ -157,7 +157,7 @@ export interface ICreature {
   isEngagedWithAll(allCreatures: ICreature[]): boolean;
   setRemainingMovement(value: number): void;
   recordTurnEndPosition(): void;
-  getFacingShortName(): string;
+  getFacingShortName(): string | undefined;
   getAllSkills(): Array<{ name: string; type: string; description?: string }>;
 }
 
@@ -165,7 +165,7 @@ export interface ICreature {
 
 export interface ICreatureStateManager {
   getState(): CreatureState;
-  getTurnStartPosition(): CreaturePosition;
+  getTurnStartPosition(): CreaturePositionOrUndefined;
   isAlive(): boolean;
   isDead(): boolean;
   hasMoved(effectiveMovement?: number): boolean;
@@ -189,20 +189,22 @@ export interface ICreatureStateManager {
   setRemainingFortune(value: number): void;
   setRemainingVitality(value: number): void;
   setRemainingMana(value: number): void;
-  recordTurnStartPosition(position: CreaturePosition): void;
+  recordTurnStartPosition(position: CreaturePositionOrUndefined): void;
 }
 
 export interface ICreaturePositionManager {
-  getPosition(): CreaturePosition;
-  getX(): number;
-  getY(): number;
-  getFacing(): number;
+  getPosition(): CreaturePositionOrUndefined;
+  getX(): number | undefined;
+  getY(): number | undefined;
+  getFacing(): number | undefined;
+  isOnMap(): boolean;
   setPosition(x: number, y: number): void;
   setFacing(facing: number): void;
-  getFacingDegrees(): number;
-  getFacingArrow(): string;
-  getFacingName(): string;
-  getFacingShortName(): string;
+  removeFromMap(): void;
+  getFacingDegrees(): number | undefined;
+  getFacingArrow(): string | undefined;
+  getFacingName(): string | undefined;
+  getFacingShortName(): string | undefined;
   faceDirection(direction: number): void;
   faceTowards(targetX: number, targetY: number): void;
   getDimensions(size: number): { w: number; h: number };

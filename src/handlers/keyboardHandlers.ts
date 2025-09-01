@@ -39,7 +39,7 @@ export function createKeyboardHandlers(
         return; // Don't allow keyboard control of AI-controlled creatures
       }
       
-      let newFacing = currentCreature.facing;
+      let newFacing = currentCreature.facing ?? 0;
       
       switch (e.key) {
         case 'Numpad8':

@@ -23,6 +23,15 @@ export class PathfindingSystem {
     mapDefinition?: MapDefinition,
     options: PathfindingOptions = {}
   ): PathfindingResult {
+    // Return empty result if creature is not on the map (undefined position)
+    if (creature.x === undefined || creature.y === undefined) {
+      return {
+        tiles: [],
+        costMap: new Map(),
+        pathMap: new Map()
+      };
+    }
+    
     const maxBudget = options.maxBudget ?? creature.remainingMovement ?? creature.movement;
     const dist = new Map<string, number>();
     const pathMap = new Map<string, Array<{ x: number; y: number }>>();
@@ -36,7 +45,7 @@ export class PathfindingSystem {
       path: [{ x: creature.x, y: creature.y }]
     }];
     
-    dist.set(`${creature.x},${creature.y}`, 0);
+    dist.set(this.createKey(creature.x, creature.y), 0);
     const selectedDims = getCreatureDimensions(creature.size);
 
     while (pq.length) {
@@ -88,7 +97,7 @@ export class PathfindingSystem {
         const newCost = current.cost + stepCost;
         if (newCost > maxBudget) continue;
         
-        const key = `${nx},${ny}`;
+        const key = this.createKey(nx, ny);
         if (newCost < (dist.get(key) ?? Infinity)) {
           dist.set(key, newCost);
           pathMap.set(key, newPath);
@@ -98,6 +107,10 @@ export class PathfindingSystem {
     }
 
     return { tiles: result, costMap: dist, pathMap };
+  }
+
+  static createKey(x: number, y: number): string {
+    return `${x},${y}`;
   }
 
   /**

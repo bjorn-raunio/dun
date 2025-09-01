@@ -12,6 +12,9 @@ import { MapDefinition } from '../maps/types';
  * Check if a creature would be in attack range from a specific position
  */
 function canAttackFromPosition(x: number, y: number, creature: ICreature, target: ICreature): boolean {
+  if (target.x === undefined || target.y === undefined) {
+    return false;
+  }
   const distance = Math.max(Math.abs(target.x - x), Math.abs(target.y - y));
   const attackRange = creature.getAttackRange();
   return distance <= attackRange;
@@ -53,7 +56,7 @@ export function evaluateMovementOption(
   let score = 0;
 
   // Only consider the movement cost to reach the target
-  if (target) {
+  if (target && creature.x !== undefined && creature.y !== undefined) {
     const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
     const newPathDistance = calculateDistanceToAttackablePosition(x, y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
     const attackRange = creature.getAttackRange();
@@ -103,7 +106,8 @@ export function evaluateMovementOption(
       }
 
       // Check current position line of sight for comparison
-      const currentHasLOS = isCreatureVisible(creature.x, creature.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures);
+      const currentHasLOS = creature.x !== undefined && creature.y !== undefined ? 
+        isCreatureVisible(creature.x, creature.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures) : false;
 
       // Bonus for improving line of sight situation
       if (!currentHasLOS && hasLOS) {
@@ -226,7 +230,8 @@ export function findBestMovement(
       mapDefinition
     );
 
-    const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    const currentPathDistance = creature.x !== undefined && creature.y !== undefined ? 
+      calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition) : Infinity;
     const newPathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
     logAI(`Option (${tile.x}, ${tile.y}): cost=${cost}, score=${option.score}, closerToTarget=${option.benefits.closerToTarget}, hasLineOfSight=${option.benefits.hasLineOfSight}, pathDistance=${newPathDistance} (current=${currentPathDistance}), movementEfficiency=${cost <= 2 ? 'HIGH' : cost <= 4 ? 'MEDIUM' : 'LOW'}`);
 
@@ -331,7 +336,8 @@ export function shouldMove(
 
   if (hasRangedWeapon || isRangedBehavior) {
     // Check if we have line of sight to the target
-    if (mapData && cols !== undefined && rows !== undefined) {
+    if (mapData && cols !== undefined && rows !== undefined && 
+        creature.x !== undefined && creature.y !== undefined) {
       const currentHasLOS = isCreatureVisible(creature.x, creature.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures);
       // If we don't have line of sight, we should definitely move
       if (!currentHasLOS) {
@@ -346,6 +352,9 @@ export function shouldMove(
       } else {
         // We already have line of sight - only move if there's a significantly better position
         // Check if there's a position that's both closer to optimal range AND requires minimal movement
+        if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
+          return false;
+        }
         const currentDistance = Math.max(
           Math.abs(target.x - creature.x),
           Math.abs(target.y - creature.y)
@@ -358,6 +367,7 @@ export function shouldMove(
         if (isSignificantlySuboptimal) {
           // Look for positions that are better AND require minimal movement (cost <= 2)
           const betterPositionAvailable = reachableTiles.some(tile => {
+            if (target.x === undefined || target.y === undefined) return false;
             const newDistance = Math.max(
               Math.abs(target.x - tile.x),
               Math.abs(target.y - tile.y)
@@ -382,6 +392,9 @@ export function shouldMove(
     }
 
     // For ranged weapons, check if we're at optimal range
+    if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
+      return false;
+    }
     const currentDistance = Math.max(
       Math.abs(target.x - creature.x),
       Math.abs(target.y - creature.y)
@@ -392,6 +405,7 @@ export function shouldMove(
     if (currentDistance < attackRange * 0.8) {
       // Check if there's a better position available
       const betterPositionAvailable = reachableTiles.some(tile => {
+        if (target.x === undefined || target.y === undefined) return false;
         const newDistance = Math.max(
           Math.abs(target.x - tile.x),
           Math.abs(target.y - tile.y)

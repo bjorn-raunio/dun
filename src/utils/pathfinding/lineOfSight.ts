@@ -85,6 +85,11 @@ export class LineOfSightSystem {
       return false;
     }
 
+    // Return false if target is not on the map (undefined position)
+    if (target.x === undefined || target.y === undefined) {
+      return false;
+    }
+
     return this.hasLineOfSight(fromX, fromY, target.x, target.y, mapData, cols, rows, mapDefinition, options, fromCreature, target, allCreatures);
   }
 
@@ -225,6 +230,11 @@ export class LineOfSightSystem {
 
     for (const creature of allCreatures) {
       if (creature.isDead()) {
+        continue;
+      }
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature.x === undefined || creature.y === undefined) {
         continue;
       }
 
@@ -520,6 +530,9 @@ export class LineOfSightSystem {
 
       for (const creature of allCreatures) {
         if (creature.isDead()) continue; // Dead creatures don't block
+        
+        // Skip creatures that are not on the map (undefined position)
+        if (creature.x === undefined || creature.y === undefined) continue;
 
         // Check if this creature is at the current position
         if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {

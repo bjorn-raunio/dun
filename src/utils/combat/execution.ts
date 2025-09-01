@@ -32,8 +32,11 @@ export function executeCombat(
   mapDefinition?: any,
   mapData?: { tiles: string[][] }
 ): CombatResult {
-  // Face the target when attacking
-  attacker.faceTowards(target.x, target.y);
+  // Face the target when attacking (only if both creatures are on the map)
+  if (attacker.x !== undefined && attacker.y !== undefined && 
+      target.x !== undefined && target.y !== undefined) {
+    attacker.faceTowards(target.x, target.y);
+  }
 
   // Determine the weapon being used for the attack
   const equipment = new EquipmentSystem(attacker.equipment);
@@ -194,6 +197,12 @@ function executeCombatPhase(
 function pushback(attacker: Creature, target: Creature, allCreatures: Creature[], takePosition: boolean, mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition) {
   if (attacker.size >= target.size && mapData) {
     if (!target.isDead()) {
+      // Skip pushback if either creature is not on the map (undefined position)
+      if (attacker.x === undefined || attacker.y === undefined || 
+          target.x === undefined || target.y === undefined) {
+        return;
+      }
+      
       // Calculate direction from attacker to target
       const direction = getDirectionFromTo(attacker.x, attacker.y, target.x, target.y);
       const backArcLeft = (direction + 7) % 8;
@@ -217,8 +226,8 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
       const validPositions = candidateDirs.map(dir => {
         const [dx, dy] = directionDeltas[dir];
         return {
-          x: target.x + dx,
-          y: target.y + dy,
+          x: target.x! + dx,
+          y: target.y! + dy,
           dir
         };
       }).filter(pos =>
@@ -239,15 +248,15 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
         const idx = Math.floor(Math.random() * validPositions.length);
         const chosen = validPositions[idx];
         if (takePosition) {
-          attacker.x = target.x;
-          attacker.y = target.y;
+          attacker.x = target.x!;
+          attacker.y = target.y!;
         }
         target.x = chosen.x;
         target.y = chosen.y;
       }
     } else if (takePosition) {
-      attacker.x = target.x;
-      attacker.y = target.y;
+      attacker.x = target.x!;
+      attacker.y = target.y!;
     }
   }
 }

@@ -52,6 +52,9 @@ export class CreatureRelationshipsManager implements ICreatureRelationshipsManag
   }
 
   isInZoneOfControl(x: number, y: number, creature: Creature, zoneOfControlRange: number): boolean {
+    if (creature.x === undefined || creature.y === undefined) {
+      return false;
+    }
     const distance = Math.max(Math.abs(x - creature.x), Math.abs(y - creature.y));
     return distance <= zoneOfControlRange;
   }

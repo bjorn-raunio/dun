@@ -99,15 +99,16 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
       
       logGame(`${creature.name} selected - calculating line of sight at (${creature.x}, ${creature.y})`);
       
-      const visibleCreatures = getVisibleCreatures(
-        creature.x,
-        creature.y,
-        creatures,
-        mapData,
-        cols,
-        rows,
-        mapDefinition
-      );
+      const visibleCreatures = creature.x !== undefined && creature.y !== undefined ? 
+        getVisibleCreatures(
+          creature.x,
+          creature.y,
+          creatures,
+          mapData,
+          cols,
+          rows,
+          mapDefinition
+        ) : [];
       
       const visibleHostileCreatures = visibleCreatures.filter((c: ICreature) => creature.isHostileTo(c));
       logGame(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);

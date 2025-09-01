@@ -32,7 +32,7 @@ export {
   getAreaStats,
   isAreaStandable,
   calculateHeuristic,
-  reconstructPath
+  reconstructPath,
 } from './helpers';
 
 // Utility function exports for backward compatibility

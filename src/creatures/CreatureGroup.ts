@@ -90,9 +90,12 @@ export class CreatureGroup {
       const hostileCreatures = creature.getHostileCreatures(allCreatures);
       
       for (const enemy of hostileCreatures) {
-        const distance = calculateDistanceBetween(creature.x, creature.y, enemy.x, enemy.y);
-        if (distance <= 12) {
-          return true;
+        if (creature.x !== undefined && creature.y !== undefined && 
+            enemy.x !== undefined && enemy.y !== undefined) {
+          const distance = calculateDistanceBetween(creature.x, creature.y, enemy.x, enemy.y);
+          if (distance <= 12) {
+            return true;
+          }
         }
       }
     }

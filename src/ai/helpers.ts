@@ -46,6 +46,14 @@ export function evaluateTargetWithScoring(
     reachabilityWeight = 50
   } = scoringOptions;
 
+  if (creature.x === undefined || creature.y === undefined) {
+    return {
+      creature: target,
+      distance: Infinity,
+      priority: 0
+    };
+  }
+  
   const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
     usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
     mapData,

@@ -1,61 +1,77 @@
-import { CreaturePosition } from './types';
+import { CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { DIRECTION_ARROWS, DIRECTION_NAMES, DIRECTION_SHORT_NAMES } from '../utils/constants';
 import { getCreatureDimensions } from '../utils/dimensions';
 
 // --- Creature Position Management ---
 
 export class CreaturePositionManager {
-  private position: CreaturePosition;
+  private position: CreaturePositionOrUndefined;
 
-  constructor(initialPosition: CreaturePosition) {
-    this.position = { ...initialPosition };
+  constructor(initialPosition?: CreaturePosition) {
+    this.position = initialPosition ? { ...initialPosition } : undefined;
   }
 
   // --- Position Getters ---
 
-  getPosition(): CreaturePosition {
-    return { ...this.position };
+  getPosition(): CreaturePositionOrUndefined {
+    return this.position ? { ...this.position } : undefined;
   }
 
-  getX(): number {
-    return this.position.x;
+  getX(): number | undefined {
+    return this.position?.x;
   }
 
-  getY(): number {
-    return this.position.y;
+  getY(): number | undefined {
+    return this.position?.y;
   }
 
-  getFacing(): number {
-    return this.position.facing;
+  getFacing(): number | undefined {
+    return this.position?.facing;
+  }
+
+  isOnMap(): boolean {
+    return this.position !== undefined;
   }
 
   // --- Position Setters ---
 
   setPosition(x: number, y: number): void {
-    this.position.x = x;
-    this.position.y = y;
+    if (!this.position) {
+      this.position = { x, y, facing: 0 };
+    } else {
+      this.position.x = x;
+      this.position.y = y;
+    }
   }
 
   setFacing(facing: number): void {
-    this.position.facing = ((facing % 8) + 8) % 8; // Ensure 0-7 range
+    if (!this.position) {
+      this.position = { x: 0, y: 0, facing: ((facing % 8) + 8) % 8 };
+    } else {
+      this.position.facing = ((facing % 8) + 8) % 8; // Ensure 0-7 range
+    }
+  }
+
+  removeFromMap(): void {
+    this.position = undefined;
   }
 
   // --- Facing Calculations ---
 
-  getFacingDegrees(): number {
-    return this.position.facing * 45; // 0=0°, 1=45°, 2=90°, etc.
+  getFacingDegrees(): number | undefined {
+    return this.position?.facing !== undefined ? this.position.facing * 45 : undefined; // 0=0°, 1=45°, 2=90°, etc.
   }
 
-  getFacingArrow(): string {
-    return DIRECTION_ARROWS[this.position.facing as keyof typeof DIRECTION_ARROWS];
+  getFacingArrow(): string | undefined {
+    return this.position?.facing !== undefined ? DIRECTION_ARROWS[this.position.facing as keyof typeof DIRECTION_ARROWS] : undefined;
   }
 
-  getFacingName(): string {
-    return DIRECTION_NAMES[this.position.facing as keyof typeof DIRECTION_NAMES];
+  getFacingName(): string | undefined {
+    return this.position?.facing !== undefined ? DIRECTION_NAMES[this.position.facing as keyof typeof DIRECTION_NAMES] : undefined;
   }
 
-  getFacingShortName(): string {
-    return DIRECTION_SHORT_NAMES[this.position.facing as keyof typeof DIRECTION_SHORT_NAMES];
+  getFacingShortName(): string | undefined {
+    return this.position?.facing !== undefined ? DIRECTION_SHORT_NAMES[this.position.facing as keyof typeof DIRECTION_SHORT_NAMES] : undefined;
   }
 
   // --- Movement and Facing ---
@@ -65,6 +81,8 @@ export class CreaturePositionManager {
   }
 
   faceTowards(targetX: number, targetY: number): void {
+    if (!this.position) return; // Cannot face towards if not on map
+    
     const dx = targetX - this.position.x;
     const dy = targetY - this.position.y;
     

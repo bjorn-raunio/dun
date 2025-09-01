@@ -87,7 +87,8 @@ export function updateTargetInformation(
       // Check if target is visible using line of sight
       let isVisible = false;
       
-      if (mapData && cols !== undefined && rows !== undefined) {
+      if (mapData && cols !== undefined && rows !== undefined && 
+          creature.x !== undefined && creature.y !== undefined) {
         isVisible = isCreatureVisible(
           creature.x, 
           creature.y, 
@@ -105,7 +106,7 @@ export function updateTargetInformation(
         isVisible = true;
       }
 
-      if (isVisible) {
+      if (isVisible && creature.x !== undefined && creature.y !== undefined) {
         // Target is visible, update current position
         const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
           usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
@@ -116,11 +117,13 @@ export function updateTargetInformation(
           allCreatures
         });
 
-        newState.lastKnownPlayerPositions.set(target.id, {
-          x: target.x,
-          y: target.y,
-          turn: Date.now() // Use timestamp as turn number for now
-        });
+        if (target.x !== undefined && target.y !== undefined) {
+          newState.lastKnownPlayerPositions.set(target.id, {
+            x: target.x,
+            y: target.y,
+            turn: Date.now() // Use timestamp as turn number for now
+          });
+        }
       } else {
         // Target is not visible, keep last known position if it exists
         // This allows AI to remember where enemies were last seen

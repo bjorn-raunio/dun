@@ -1,4 +1,4 @@
-import { Monster, Mercenary, CreatureGroup } from '../index';
+import { Monster, Mercenary, CreatureGroup, CreaturePositionOrUndefined } from '../index';
 import { createWeapon, createRangedWeapon, createArmor, createShield } from '../../items';
 import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
 import { monsterPresets } from './monsters';
@@ -71,7 +71,7 @@ function createEquipmentFromPreset(preset: MonsterPreset | MercenaryPreset): Equ
 export function createMonster(
   presetId: string, 
   faction: MonsterFaction,
-  overrides?: Partial<Monster> & { id?: string; x: number; y: number; weaponLoadout?: string; armorLoadout?: string }
+  overrides?: Partial<Monster> & { id?: string; position?: CreaturePositionOrUndefined; weaponLoadout?: string; armorLoadout?: string }
 ): Monster {
   const p = monsterPresets[presetId];
   if (!p) {
@@ -175,15 +175,13 @@ export function createMonster(
 
   return new Monster({
     name: overrides?.name ?? p.name,
-    x: overrides?.x ?? 0,
-    y: overrides?.y ?? 0,
+    position: overrides?.position ?? { x: 0, y: 0, facing: 0 },
     image: overrides?.image ?? p.image,
     attributes,
     actions: overrides?.actions ?? p.actions ?? 1,
     mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
     mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
     size: overrides?.size ?? p.size,
-    facing: overrides?.facing ?? p.facing ?? 0,
     inventory: overrides?.inventory ?? inventory,
     equipment: overrides?.equipment ?? equipment,
     vitality: overrides?.vitality ?? p.vitality,
@@ -202,7 +200,7 @@ export function createMonster(
  */
 export function createMercenary(
   presetId: string, 
-  overrides?: Partial<Mercenary> & { id?: string; x: number; y: number }
+  overrides?: Partial<Mercenary> & { id?: string; position?: CreaturePositionOrUndefined }
 ): Mercenary {
   const p = mercenaryPresets[presetId];
   if (!p) {
@@ -224,15 +222,13 @@ export function createMercenary(
 
   return new Mercenary({
     name: overrides?.name ?? p.name,
-    x: overrides?.x ?? 0,
-    y: overrides?.y ?? 0,
+    position: overrides?.position ?? { x: 0, y: 0, facing: 0 },
     image: overrides?.image ?? p.image,
     attributes,
     actions: overrides?.actions ?? p.actions ?? 1,
     mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
     mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
     size: overrides?.size ?? p.size,
-    facing: overrides?.facing ?? p.facing ?? 0,
     inventory: overrides?.inventory ?? inventory,
     equipment: overrides?.equipment ?? equipment,
     vitality: overrides?.vitality ?? p.vitality,

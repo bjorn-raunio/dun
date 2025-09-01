@@ -90,11 +90,7 @@ export abstract class Creature implements ICreature {
     }
 
     // Initialize managers
-    const initialPosition: CreaturePosition = {
-      x: params.x,
-      y: params.y,
-      facing: params.facing ?? 0
-    };
+    const initialPosition: CreaturePosition | undefined = params.position;
 
     this.stateManager = new CreatureStateManager(
       () => this.attributes.movement,
@@ -127,13 +123,31 @@ export abstract class Creature implements ICreature {
   abstract get kind(): "hero" | "monster" | "mercenary";
 
   // --- Position Delegation ---
-  get x(): number { return this.positionManager.getX(); }
-  get y(): number { return this.positionManager.getY(); }
-  get facing(): number { return this.positionManager.getFacing(); }
+  get x(): number | undefined { return this.positionManager.getX(); }
+  get y(): number | undefined { return this.positionManager.getY(); }
+  get facing(): number | undefined { return this.positionManager.getFacing(); }
 
-  set x(value: number) { this.positionManager.setPosition(value, this.y); }
-  set y(value: number) { this.positionManager.setPosition(this.x, value); }
-  set facing(value: number) { this.positionManager.setFacing(value); }
+  set x(value: number | undefined) { 
+    if (value !== undefined) {
+      const currentY = this.positionManager.getY() ?? 0;
+      this.positionManager.setPosition(value, currentY); 
+    } else {
+      this.positionManager.removeFromMap();
+    }
+  }
+  set y(value: number | undefined) { 
+    if (value !== undefined) {
+      const currentX = this.positionManager.getX() ?? 0;
+      this.positionManager.setPosition(currentX, value); 
+    } else {
+      this.positionManager.removeFromMap();
+    }
+  }
+  set facing(value: number | undefined) { 
+    if (value !== undefined) {
+      this.positionManager.setFacing(value); 
+    }
+  }
 
   // --- State Delegation ---
   private getModifiedRemaining(baseValue: number, modifierType: 'movementModifier' | 'actionModifier' | 'quickActionModifier'): number {
@@ -294,16 +308,19 @@ export abstract class Creature implements ICreature {
     const hostileCreatures = this.getHostileCreatures(allCreatures);
 
     return hostileCreatures.filter(enemy => {
+      if (this.x === undefined || this.y === undefined || enemy.x === undefined || enemy.y === undefined) {
+        return false;
+      }
       const distance = calculateDistanceBetween(this.x, this.y, enemy.x, enemy.y);
       return distance <= 12;
     });
   }
 
   // --- Position Methods ---
-  getFacingDegrees(): number { return this.positionManager.getFacingDegrees(); }
-  getFacingArrow(): string { return this.positionManager.getFacingArrow(); }
-  getFacingName(): string { return this.positionManager.getFacingName(); }
-  getFacingShortName(): string { return this.positionManager.getFacingShortName(); }
+  getFacingDegrees(): number | undefined { return this.positionManager.getFacingDegrees(); }
+  getFacingArrow(): string | undefined { return this.positionManager.getFacingArrow(); }
+  getFacingName(): string | undefined { return this.positionManager.getFacingName(); }
+  getFacingShortName(): string | undefined { return this.positionManager.getFacingShortName(); }
   faceDirection(direction: number): void { this.positionManager.faceDirection(direction); }
   faceTowards(targetX: number, targetY: number): void { this.positionManager.faceTowards(targetX, targetY); }
   getDimensions(): { w: number; h: number } { return this.positionManager.getDimensions(this.size); }
@@ -434,6 +451,7 @@ export abstract class Creature implements ICreature {
 
   // --- Zone of Control ---
   isInZoneOfControl(x: number, y: number): boolean {
+    if (this.x === undefined || this.y === undefined) return false;
     return this.combatManager.isInZoneOfControl(x, y, this.x, this.y);
   }
 
@@ -443,10 +461,12 @@ export abstract class Creature implements ICreature {
 
   // --- Engagement ---
   isEngaged(hostileCreatures: ICreature[]): boolean {
+    if (this.x === undefined || this.y === undefined) return false;
     return this.relationshipsManager.isEngaged(hostileCreatures, this.x, this.y, this.getZoneOfControlRange());
   }
 
   getEngagingCreatures(allCreatures: ICreature[]): ICreature[] {
+    if (this.x === undefined || this.y === undefined) return [];
     return this.relationshipsManager.getEngagingCreatures(allCreatures, this.x, this.y, this.getZoneOfControlRange());
   }
 
@@ -457,11 +477,15 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Turn Start Position ---
-  get turnStartX(): number { return this.stateManager.getTurnStartPosition().x; }
-  get turnStartY(): number { return this.stateManager.getTurnStartPosition().y; }
-  get turnStartFacing(): number { return this.stateManager.getTurnStartPosition().facing; }
+  get turnStartX(): number | undefined { return this.stateManager.getTurnStartPosition()?.x; }
+  get turnStartY(): number | undefined { return this.stateManager.getTurnStartPosition()?.y; }
+  get turnStartFacing(): number | undefined { return this.stateManager.getTurnStartPosition()?.facing; }
 
   wasBehindTargetAtTurnStart(target: ICreature): boolean {
+    if (target.x === undefined || target.y === undefined || target.facing === undefined || 
+        this.turnStartX === undefined || this.turnStartY === undefined) {
+      return false;
+    }
     return this.combatManager.wasBehindTargetAtTurnStart(
       target.x, target.y, target.facing, this.turnStartX, this.turnStartY
     );
@@ -473,10 +497,16 @@ export abstract class Creature implements ICreature {
   }
 
   moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
+    if (this.x === undefined || this.y === undefined) {
+      this.positionManager.setPosition(path[0].x, path[0].y);
+    }
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
   }
 
   attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult {
+    if (this.x === undefined || this.y === undefined) {
+      return { success: false, damage: 0, targetDefeated: false, messages: ["Creature is not on the map"] };
+    }
     const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, mapData);
 
     return {

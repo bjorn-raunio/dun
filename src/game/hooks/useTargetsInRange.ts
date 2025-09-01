@@ -24,6 +24,13 @@ export function useTargetsInRange(
       return;
     }
 
+    // Skip if selected creature is not on the map (undefined position)
+    if (sel.x === undefined || sel.y === undefined) {
+      logGame(`Selected creature ${sel.name} is not on the map, skipping targets calculation`);
+      setTargetsInRangeIds(new Set());
+      return;
+    }
+
     logGame(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
     
     // Get basic targets in range
@@ -40,7 +47,8 @@ export function useTargetsInRange(
       
       for (const targetId of Array.from(basicTargetsInRange)) {
         const target = findCreatureById(creatures, targetId);
-        if (target && isCreatureVisible(
+        // Skip targets that are not on the map (undefined position)
+        if (target && target.x !== undefined && target.y !== undefined && sel.x !== undefined && sel.y !== undefined && isCreatureVisible(
           sel.x, 
           sel.y, 
           target, 

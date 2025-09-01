@@ -96,6 +96,11 @@ export function isPositionInCreatureBounds(
   creatureY: number, 
   creatureSize: number
 ): boolean {
+  // Return false if creature is not on the map (undefined position)
+  if (creatureX === undefined || creatureY === undefined) {
+    return false;
+  }
+  
   const dims = getCreatureDimensions(creatureSize);
   return x >= creatureX && 
          x < creatureX + dims.w && 

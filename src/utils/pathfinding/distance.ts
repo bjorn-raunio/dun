@@ -22,6 +22,11 @@ export class DistanceSystem {
   ): number {
     const { usePathfinding, mapData, cols, rows, mapDefinition, allCreatures, metric = 'chebyshev' } = options;
 
+    // Return infinity if any position is undefined (creature not on map)
+    if (fromX === undefined || fromY === undefined || toX === undefined || toY === undefined) {
+      return Infinity;
+    }
+
     // If positions are the same, distance is 0
     if (fromX === toX && fromY === toY) {
       return 0;
@@ -59,6 +64,11 @@ export class DistanceSystem {
   ): number {
     const { usePathfinding, mapData, cols, rows, mapDefinition, allCreatures, costMap, metric = 'chebyshev' } = options;
 
+    // Return infinity if target is not on the map (undefined position)
+    if (target.x === undefined || target.y === undefined) {
+      return Infinity;
+    }
+
     // If we have map data and want pathfinding, use comprehensive pathfinding
     if (usePathfinding && mapData && cols !== undefined && rows !== undefined && allCreatures) {
       return this.calculatePathDistanceToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);
@@ -70,7 +80,7 @@ export class DistanceSystem {
     }
 
     // Fallback to simple distance calculation
-    return this.calculateDistanceBetween(fromX, fromY, target.x, target.y);
+    return this.calculateDistanceBetween(fromX, fromY, target.x!, target.y!);
   }
 
   /**
@@ -87,12 +97,18 @@ export class DistanceSystem {
   ): boolean {
     // If we don't have map data, fall back to simple distance calculation
     if (!mapData || cols === undefined || rows === undefined) {
+      // Return false if either creature is not on the map (undefined position)
+      if (attacker.x === undefined || attacker.y === undefined || 
+          target.x === undefined || target.y === undefined) {
+        return false;
+      }
+      
       const distance = this.calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
       const attackRange = attacker.getAttackRange();
       return distance <= attackRange;
     }
 
-    const distance = this.calculateDistanceToCreature(attacker.x, attacker.y, target, {
+    const distance = this.calculateDistanceToCreature(attacker.x!, attacker.y!, target, {
       usePathfinding: true,
       mapData,
       cols,
@@ -113,6 +129,12 @@ export class DistanceSystem {
     attacker: ICreature,
     target: ICreature
   ): boolean {
+    // Return false if either creature is not on the map (undefined position)
+    if (attacker.x === undefined || attacker.y === undefined || 
+        target.x === undefined || target.y === undefined) {
+      return false;
+    }
+    
     const distance = this.calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
     const attackRange = attacker.getAttackRange();
     return distance <= attackRange;
@@ -132,6 +154,11 @@ export class DistanceSystem {
     rows?: number,
     mapDefinition?: MapDefinition
   ): number {
+    // Return infinity if target is not on the map (undefined position)
+    if (target.x === undefined || target.y === undefined) {
+      return Infinity;
+    }
+    
     // If we don't have map data, fall back to simple distance calculation
     if (!mapData || cols === undefined || rows === undefined) {
       return this.calculateDistanceBetween(fromX, fromY, target.x, target.y);
@@ -229,6 +256,11 @@ export class DistanceSystem {
     rows: number,
     mapDefinition?: MapDefinition
   ): { x: number; y: number } | null {
+    // Return null if target is not on the map (undefined position)
+    if (target.x === undefined || target.y === undefined) {
+      return null;
+    }
+    
     // Check positions around the target
     const positions = [];
 
@@ -283,6 +315,9 @@ export class DistanceSystem {
     // Check if any creature occupies this position
     for (const creature of allCreatures) {
       if (creature.isDead()) continue; // Dead creatures don't block
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature.x === undefined || creature.y === undefined) continue;
 
       if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
         return false;
@@ -320,6 +355,9 @@ export class DistanceSystem {
     // Check if any creature occupies this position
     for (const creature of allCreatures) {
       if (creature.isDead()) continue; // Dead creatures don't block
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature.x === undefined || creature.y === undefined) continue;
 
       if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
         return false;
@@ -347,6 +385,9 @@ export class DistanceSystem {
   ): boolean {
     for (const creature of allCreatures) {
       if (creature.isDead()) continue; // Dead creatures don't block
+      
+      // Skip creatures that are not on the map (undefined position)
+      if (creature.x === undefined || creature.y === undefined) continue;
 
       if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
         return true;

@@ -117,6 +117,18 @@ export function executeToHitRollRanged(
     backAttackBonus = COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
   }
 
+  // Return early if either creature is not on the map (undefined position)
+  if (attacker.x === undefined || attacker.y === undefined || 
+      target.x === undefined || target.y === undefined) {
+    return {
+      hit: false,
+      toHitMessage: `${attacker.name} cannot attack ${target.name} - target not on map`,
+      attackerDoubleCritical: false,
+      criticalHit: false,
+      attackerDice: []
+    };
+  }
+
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
 
   // Apply range penalty: -1 over 3, -2 over 6, -3 over 9

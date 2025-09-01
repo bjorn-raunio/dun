@@ -45,26 +45,20 @@ export const mapDefinition: MapDefinition = {
     "building": { blocksLineOfSight: true, height: 4 },
   },
   startingTiles: [
-    { x: 0, y: 1, name: "Hero Starting Position 1" },
-    { x: 1, y: 1, name: "Hero Starting Position 2" },
-    { x: 0, y: 2, name: "Hero Starting Position 3" },
-    { x: 1, y: 2, name: "Hero Starting Position 4" },
+    { x: 0, y: 1 },
+    { x: 0, y: 3 },
   ],
   creatures: [
-    createMonster("human_bandit", "bandits", { x: 12, y: 7, facing: 1, weaponLoadout: "broadsword", armorLoadout: "shield" }),
-    createMonster("shooter", "bandits", { x: 10, y: 1, facing: 3, weaponLoadout: "shortbow" }),
+    createMonster("human_bandit", "bandits", { position: { x: 12, y: 7, facing: 1 }, weaponLoadout: "broadsword", armorLoadout: "shield" }),
+    createMonster("shooter", "bandits", { position: { x: 10, y: 1, facing: 3 }, weaponLoadout: "shortbow" }),
     
     createMercenary("civilian", { 
-      x: 16, 
-      y: 4, 
-      group: CREATURE_GROUPS.PLAYER, 
-      facing: 6
+      position: { x: 16, y: 4, facing: 6 },
+      group: CREATURE_GROUPS.PLAYER
     }),
-    //createMercenary("civilian", { x: 17, y: 4, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
+    createMercenary("civilian", { position: { x: 17, y: 4, facing: 6 }, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
     new Hero({
       name: "Herbod",
-      x: 0,
-      y: 1,
       image: "creatures/human.png",
       attributes: {
         movement: 5,
@@ -77,7 +71,6 @@ export const mapDefinition: MapDefinition = {
       },
       actions: 1,
       size: 2,
-      facing: 2,
       inventory: [
         createConsumable("healingPotion"),
         createConsumable("strengthPotion"),
