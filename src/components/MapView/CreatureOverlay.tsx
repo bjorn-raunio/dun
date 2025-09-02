@@ -4,7 +4,7 @@ import { ICreature } from '../../creatures/index';
 import { getLivingCreatures } from '../../validation/creature';
 import { getCreatureUIDimensions, getCreatureUIOffset } from '../../utils/dimensions';
 import { validateCombat } from '../../validation/combat';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { EquipmentSystem } from '../../items/equipment';
 
 interface CreatureOverlayProps {
@@ -12,7 +12,7 @@ interface CreatureOverlayProps {
   selectedCreatureId: string | null;
   onCreatureClick: (creature: ICreature, e: React.MouseEvent) => void;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
-  mapDefinition?: MapDefinition;
+  mapDefinition?: QuestMap;
   mapData?: { tiles: string[][] };
 }
 

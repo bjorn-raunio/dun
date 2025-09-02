@@ -4,7 +4,7 @@ import { GameActions, GameRefs } from '../game/types';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { createMouseHandlers } from './mouseHandlers/mainMouseHandlers';
 import { MouseHandlers } from './mouseHandlers/types';
 
@@ -24,7 +24,7 @@ export function useEventHandlers(
   targetsInRangeIds: Set<string>,
   mapData: { tiles: string[][] },
   setSelectedCreatureId: (id: string | null) => void,
-  mapDefinition?: MapDefinition,
+  mapDefinition: QuestMap,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {
   // Create mouse handlers with organized structure

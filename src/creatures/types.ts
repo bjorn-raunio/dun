@@ -30,6 +30,7 @@ export interface CreatureState {
   remainingMana: number;
   remainingFortune: number;
   hasMovedWhileEngaged: boolean;
+  pushedCreatures: Set<string>; // Track IDs of creatures pushed this turn
 }
 
 export interface CreatureConstructorParams {
@@ -52,3 +53,5 @@ export interface CreatureConstructorParams {
   group: CreatureGroup; // CHANGED from CreatureGroupType
   skills?: Skill[];
 }
+
+export type CreatureAction = 'run' | 'disengage' | 'search';

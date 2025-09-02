@@ -1,40 +1,40 @@
 import { Creature, ICreature } from '../../creatures/index';
-import { terrainHeightAt } from '../../maps/mapRenderer';
-import { validatePositionStandable } from '../../validation/map';
+
+import { PositionValidationResult, validatePositionStandable } from '../../validation/map';
 
 import { AreaStats } from './types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 /**
  * Helper method to get area stats
  */
 export function getAreaStats(
-  tx: number, 
-  ty: number, 
-  dims: { w: number; h: number }, 
-  mapData: { tiles: string[][] }, 
-  cols: number, 
-  rows: number, 
-  mapDefinition?: MapDefinition
+  tx: number,
+  ty: number,
+  dims: { w: number; h: number },
+  mapData: { tiles: string[][] },
+  cols: number,
+  rows: number,
+  mapDefinition?: QuestMap
 ): AreaStats {
   let maxH = 0;
   let hasEmpty = false;
-  
+
   if (tx < 0 || ty < 0 || tx + dims.w > cols || ty + dims.h > rows) {
     return { maxH: Infinity, hasEmpty: true };
   }
-  
+
   for (let oy = 0; oy < dims.h; oy++) {
     for (let ox = 0; ox < dims.w; ox++) {
       const cx = tx + ox;
       const cy = ty + oy;
       const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
       if (!nonEmpty) hasEmpty = true;
-      const th = terrainHeightAt(cx, cy, mapDefinition!);
+      const th = mapDefinition!.terrainHeightAt(cx, cy);
       if (th > maxH) maxH = th;
     }
   }
-  
+
   return { maxH, hasEmpty };
 }
 
@@ -42,17 +42,17 @@ export function getAreaStats(
  * Helper method to check if area is standable
  */
 export function isAreaStandable(
-  tx: number, 
-  ty: number, 
-  dims: { w: number; h: number }, 
-  considerCreatures: boolean, 
-  allCreatures: ICreature[], 
-  cols: number, 
-  rows: number, 
-  mapData?: { tiles: string[][] }, 
-  mapDefinition?: MapDefinition
-): boolean {
-  if (!mapData) return false;
+  tx: number,
+  ty: number,
+  dims: { w: number; h: number },
+  considerCreatures: boolean,
+  allCreatures: ICreature[],
+  cols: number,
+  rows: number,
+  mapData?: { tiles: string[][] },
+  mapDefinition?: QuestMap
+): PositionValidationResult {
+  if (!mapData) return { isValid: false };
   return validatePositionStandable(tx, ty, dims, allCreatures, mapData, mapDefinition, considerCreatures);
 }
 

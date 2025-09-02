@@ -8,7 +8,7 @@ import {
   getNextCreature,
   setActiveCreature as setActiveCreatureLogic
 } from './turnManagement';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
 
 // --- Game-Specific Turn Management ---
@@ -22,7 +22,7 @@ export function endTurn(
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
   currentTurnState: TurnState,
-  mapDefinition?: MapDefinition
+  mapDefinition: QuestMap
 ) {
   let playerControlledGroup = groups.find(group => group.isPlayerControlled());
 
@@ -47,13 +47,16 @@ export function endTurn(
     executeNextAIGroup(newAITurnState, context, dispatch);
   }
 
-  if(playerControlledGroup) {
-    playerControlledGroup.startTurn();
-  }
-  
   // Advance to next turn (this will reset all turns internally)
   const newTurnState = newTurn(currentTurnState, groups, dispatch, lastMovement);
   dispatch({ type: 'SET_TURN_STATE', payload: newTurnState });
+
+  if(playerControlledGroup) {
+    const messages = playerControlledGroup.startTurn();
+    messages.forEach(message => {
+      dispatch({ type: 'ADD_MESSAGE', payload: message });
+    });
+  }
   
 }
 
@@ -67,7 +70,10 @@ export function executeNextAIGroup(
 ) {
   const group = aiTurnState.currentGroup;
   if(group) {
-    group.startTurn();
+    const messages = group.startTurn();
+    messages.forEach(message => {
+      dispatch({ type: 'ADD_MESSAGE', payload: message });
+    });
   }
 
   // Continue AI turn phase

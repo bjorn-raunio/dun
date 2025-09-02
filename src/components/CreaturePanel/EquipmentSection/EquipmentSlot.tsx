@@ -1,10 +1,9 @@
 import React from 'react';
 import { Creature, ICreature } from '../../../creatures/index';
+import { Item, Weapon, RangedWeapon } from '../../../items/types';
 import { EquipmentSlot as EquipmentSlotType } from '../../../items/equipment';
-import { Armor, Weapon, RangedWeapon } from '../../../items/types';
-import { EquipmentSystem } from '../../../items/equipment/system';
-import { EquipmentValidator } from '../../../items/equipment';
-import { COLORS, COMMON_STYLES } from '../../styles';
+import { EquipmentSystem } from '../../../items/equipment';
+import { COLORS, LAYOUT_PATTERNS, createConditionalButtonStyle } from '../../styles';
 
 interface EquipmentSlotProps {
   slot: EquipmentSlotType;
@@ -14,6 +13,54 @@ interface EquipmentSlotProps {
   canUnequip: (slot: EquipmentSlotType) => boolean;
   onAttack?: (creature: ICreature) => void;
   canAttack?: (creature: ICreature) => boolean;
+}
+
+// Extracted button components for better organization
+interface AttackButtonProps {
+  onAttack: (creature: ICreature) => void;
+  canAttack: boolean;
+  creature: ICreature;
+}
+
+function AttackButton({ onAttack, canAttack, creature }: AttackButtonProps) {
+  const buttonStyle = createConditionalButtonStyle('medium', canAttack, 'disabled');
+  
+  return (
+    <button
+      onClick={() => onAttack(creature)}
+      disabled={!canAttack}
+      style={buttonStyle}
+      title="Attack"
+    >
+      <img 
+        src={"/icons/attack.png"} 
+        style={{ 
+          width: '20px', 
+          height: '20px',
+          filter: canAttack ? 'none' : 'grayscale(100%)'
+        }} 
+      />
+    </button>
+  );
+}
+
+interface UnequipButtonProps {
+  onUnequip: () => void;
+  canUnequip: boolean;
+}
+
+function UnequipButton({ onUnequip, canUnequip }: UnequipButtonProps) {
+  const buttonStyle = createConditionalButtonStyle('medium', canUnequip, 'disabled');
+  
+  return (
+    <button
+      onClick={onUnequip}
+      disabled={!canUnequip}
+      style={buttonStyle}
+    >
+      Unequip
+    </button>
+  );
 }
 
 export function EquipmentSlot({ 
@@ -48,21 +95,18 @@ export function EquipmentSlot({
 
   // Check if this is a weapon that can be used for attack
   const isWeapon = displayItem instanceof Weapon || displayItem instanceof RangedWeapon;
-  const canAttackWithWeapon = onAttack && canAttack && isWeapon && !isAIControlled && canAttack(creature);
-  const shouldShowAttackButton = onAttack && canAttack && isWeapon && !isAIControlled;
+  const canAttackWithWeapon = Boolean(onAttack && canAttack && isWeapon && !isAIControlled && canAttack(creature));
+  const shouldShowAttackButton = Boolean(onAttack && canAttack && isWeapon && !isAIControlled);
 
   return (
     <div style={{ marginBottom: 8 }}>
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
+        ...LAYOUT_PATTERNS.flexRowCenter,
         justifyContent: 'space-between',
         padding: 8,
-        border: `1px solid ${COLORS.border}`,
-        borderRadius: 4,
-        background: COLORS.backgroundLight
+        ...LAYOUT_PATTERNS.card
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+        <div style={{ ...LAYOUT_PATTERNS.flexRowCenter, gap: 8, flex: 1 }}>
           {!shouldShowAttackButton && (
             <div
               style={{
@@ -73,23 +117,12 @@ export function EquipmentSlot({
               }}
             />
           )}
-          {shouldShowAttackButton && (
-            <button
-              onClick={() => onAttack(creature)}
-              disabled={!canAttackWithWeapon}
-                             style={{
-                 ...COMMON_STYLES.button,
-                 padding: '4px 8px',
-                 fontSize: 12,
-                 background: canAttackWithWeapon ? '#000' : COLORS.border,
-                 color: canAttackWithWeapon ? '#fff' : COLORS.textMuted,
-                 border: `2px solid ${COLORS.border}`,
-                 opacity: canAttackWithWeapon ? 1 : 0.5,
-                 cursor: canAttackWithWeapon ? 'pointer' : 'not-allowed'
-               }}
-            >
-              ⚔️
-            </button>
+          {shouldShowAttackButton && onAttack && (
+            <AttackButton
+              onAttack={onAttack}
+              canAttack={canAttackWithWeapon}
+              creature={creature}
+            />
           )}
           <div style={{ 
             fontWeight: 600, 
@@ -101,20 +134,10 @@ export function EquipmentSlot({
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {!isAIControlled && !isUnarmedWeapon && (
-            <button
-              onClick={() => onUnequip(slot)}
-              disabled={!canUnequipSlot}
-              style={{
-                ...COMMON_STYLES.button,
-                padding: '4px 8px',
-                fontSize: 12,
-                background: canUnequipSlot ? COLORS.error : COLORS.border,
-                opacity: canUnequipSlot ? 1 : 0.5,
-                cursor: canUnequipSlot ? 'pointer' : 'not-allowed'
-              }}
-            >
-              Unequip
-            </button>
+            <UnequipButton
+              onUnequip={() => onUnequip(slot)}
+              canUnequip={canUnequipSlot}
+            />
           )}
         </div>
       </div>

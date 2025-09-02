@@ -1,71 +1,43 @@
 import React from 'react';
-import { Creature, ICreature } from '../../../creatures/index';
-import { COMMON_STYLES } from '../../styles';
+import { CreatureAction, ICreature } from '../../../creatures/index';
+import { LAYOUT_PATTERNS, createConditionalButtonStyle } from '../../styles';
+import { validateAction } from '../../../validation';
 
 interface ActionPanelProps {
   creature: ICreature;
-  onRun?: () => void;
-  onSearch?: () => void;
-  onDisengage?: () => void;
+  allCreatures: ICreature[];
+  onAction: (creature: ICreature, action: CreatureAction) => void;
 }
 
-export function ActionPanel({ creature, onRun, onSearch, onDisengage }: ActionPanelProps) {
+export function ActionPanel({ creature, allCreatures, onAction }: ActionPanelProps) {
   // Only show for player controlled characters
   if (!creature.isPlayerControlled()) {
     return null;
   }
 
   return (
-    <div style={BUTTON_CONTAINER_STYLES}>
+    <div style={LAYOUT_PATTERNS.grid3Col}>
       <button 
-        style={!creature.canRun() ? ACTION_BUTTON_DISABLED_STYLES : ACTION_BUTTON_STYLES}
-        onClick={onRun}
-        disabled={!creature.canRun()}
+        style={createConditionalButtonStyle('action', validateAction(creature, 'run', allCreatures))}
+        onClick={() => onAction(creature, 'run')}
+        disabled={!validateAction(creature, 'run', allCreatures)}
       >
         Run
       </button>
       <button 
-        style={!creature.canSearch() ? ACTION_BUTTON_DISABLED_STYLES : ACTION_BUTTON_STYLES}
-        onClick={onSearch}
-        disabled={!creature.canSearch()}
+        style={createConditionalButtonStyle('action', validateAction(creature, 'search', []))}
+        onClick={() => onAction(creature, 'search')}
+        disabled={!validateAction(creature, 'search', [])}
       >
         Search
       </button>
       <button 
-        style={!creature.canDisengage() ? ACTION_BUTTON_DISABLED_STYLES : ACTION_BUTTON_STYLES}
-        onClick={onDisengage}
-        disabled={!creature.canDisengage()}
+        style={createConditionalButtonStyle('action', validateAction(creature, 'disengage', allCreatures))}
+        onClick={() => onAction(creature, 'disengage')}
+        disabled={!validateAction(creature, 'disengage', allCreatures)}
       >
         Disengage
       </button>
     </div>
   );
 }
-
-
-
-const BUTTON_CONTAINER_STYLES = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr 1fr',
-  gap: 8,
-};
-
-const ACTION_BUTTON_STYLES = {
-  ...COMMON_STYLES.button,
-  padding: '8px 12px',
-  fontSize: '14px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  border: 'none',
-  borderRadius: '4px',
-  backgroundColor: '#4a5568',
-  color: 'white',
-  transition: 'all 0.2s ease',
-};
-
-const ACTION_BUTTON_DISABLED_STYLES = {
-  ...ACTION_BUTTON_STYLES,
-  backgroundColor: '#718096',
-  cursor: 'not-allowed',
-  opacity: 0.6,
-};

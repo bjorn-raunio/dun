@@ -1,9 +1,9 @@
 import React from 'react';
 import { TILE_SIZE } from '../styles';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 interface StartingTilesOverlayProps {
-  mapDefinition: MapDefinition;
+  mapDefinition: QuestMap;
 }
 
 export function StartingTilesOverlay({ mapDefinition }: StartingTilesOverlayProps) {

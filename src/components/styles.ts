@@ -29,9 +29,9 @@ export const COLORS = {
 // Common styles
 export const COMMON_STYLES = {
   button: {
-    background: COLORS.primary,
-    color: "#000",
-    border: "none",
+    backgroundColor: COLORS.backgroundLight,
+    color: COLORS.text,
+    border:  `1px solid ${COLORS.border}`,
     borderRadius: 6,
     fontWeight: 700,
     cursor: "pointer",
@@ -62,3 +62,95 @@ export const COMMON_STYLES = {
     margin: 0,
   },
 } as const;
+
+// Button style variants to eliminate redundancies
+export const BUTTON_VARIANTS = {
+  small: {
+    ...COMMON_STYLES.button,
+    padding: '2px 6px',
+    fontSize: 10,
+  },
+  smallIcon: {
+    ...COMMON_STYLES.button,
+    padding: '2px 6px',
+    fontSize: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '24px',
+    minHeight: '20px',
+  },
+  medium: {
+    ...COMMON_STYLES.button,
+    padding: '4px 8px',
+    fontSize: 12,
+  },
+  action: {
+    ...COMMON_STYLES.button,
+    padding: '8px 12px',
+    fontSize: '14px',
+    fontWeight: 'bold',
+  },
+  disabled: {
+    backgroundColor: COLORS.border,
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  },
+  enabled: {
+    backgroundColor: COLORS.backgroundLight,
+    opacity: 1,
+    cursor: 'pointer',
+  },
+  error: {
+    backgroundColor: COLORS.error,
+    color: COLORS.text,
+  },
+  attack: {
+    backgroundColor: '#000',
+    color: COLORS.text,
+    border: `2px solid ${COLORS.border}`,
+  },
+} as const;
+
+// Common layout patterns to eliminate redundancies
+export const LAYOUT_PATTERNS = {
+  flexCenter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flexRowCenter: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  flexColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  card: {
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 4,
+    background: COLORS.backgroundLight,
+  },
+  grid3Col: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: 8,
+  },
+} as const;
+
+// Utility function to create button styles
+export const createButtonStyle = (
+  variant: 'small' | 'smallIcon' | 'medium' | 'action',
+  state: 'enabled' | 'disabled'
+) => ({
+  ...BUTTON_VARIANTS[variant],
+  ...BUTTON_VARIANTS[state],
+});
+
+// Utility function to create conditional button styles
+export const createConditionalButtonStyle = (
+  variant: 'small' | 'smallIcon' | 'medium' | 'action',
+  condition: boolean,
+  disabledState: 'disabled' = 'disabled'
+) => createButtonStyle(variant, condition ? 'enabled' : disabledState);

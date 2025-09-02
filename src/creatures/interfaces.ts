@@ -7,7 +7,7 @@ import { MovementResult } from '../game/movement';
 import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { CreatureGroup } from './CreatureGroup';
 import { StatusEffectManager, StatusEffect, Attributes } from '../statusEffects';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
 import { Skill } from '../skills';
@@ -95,19 +95,15 @@ export interface ICreature {
   isFriendlyTo(other: ICreature): boolean;
   
   // Movement
-  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult;
-  moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult;
+  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult;
+  moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult;
   
   // Combat
-  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
+  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult;
   
   // Actions
-  run(): { success: boolean, message: string };
-  search(): boolean;
-  canRun(): boolean;
-  canSearch(): boolean;
-  disengage(): { success: boolean, message: string };
-  canDisengage(): boolean;
+  canAct(): boolean;
+  performAction(action: 'run' | 'disengage' | 'search', allCreatures: ICreature[]): { success: boolean, message: string };
   
   // State modifiers
   takeDamage(damage: number): number;
@@ -118,7 +114,7 @@ export interface ICreature {
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
   restoreMana(amount: number): void;
-  startTurn(): void;
+  startTurn(): string[];
   endTurn(): void;
   resetRemainingActions(): void;
   
@@ -128,10 +124,6 @@ export interface ICreature {
   // Creature filtering
   getHostileCreatures(allCreatures: ICreature[]): ICreature[];
   getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
-  
-  // Engagement
-  isEngaged(hostileCreatures: ICreature[]): boolean;
-  getEngagingCreatures(allCreatures: ICreature[]): ICreature[];
   
   // Turn start position
   get turnStartX(): number | undefined;
@@ -155,7 +147,6 @@ export interface ICreature {
   
   // Utility methods
   getDimensions(): { w: number; h: number };
-  isEngagedWithAll(allCreatures: ICreature[]): boolean;
   setRemainingMovement(value: number): void;
   recordTurnEndPosition(): void;
   getFacingShortName(): string | undefined;
@@ -191,6 +182,8 @@ export interface ICreatureStateManager {
   setRemainingVitality(value: number): void;
   setRemainingMana(value: number): void;
   recordTurnStartPosition(position: CreaturePositionOrUndefined): void;
+  canPushCreature(targetId: string): boolean;
+  recordPushedCreature(targetId: string): void;
 }
 
 export interface ICreaturePositionManager {
@@ -232,19 +225,17 @@ export interface ICreatureRelationshipsManager {
   isFriendlyTo(otherGroup: CreatureGroup): boolean; // CHANGED from string
   getHostileCreatures(allCreatures: ICreature[]): ICreature[];
   getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
-  isEngaged(hostileCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): boolean;
-  getEngagingCreatures(allCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): ICreature[];
 }
 
 // --- Movement Interface ---
 
 export interface ICreatureMovement {
-  getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult;
-  moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult;
+  getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult;
+  moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult;
 }
 
 // --- Combat Interface ---
 
 export interface ICombatExecutor {
-  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult;
+  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult;
 }

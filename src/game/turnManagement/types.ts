@@ -1,5 +1,5 @@
 import { Creature, CreatureGroup } from '../../creatures/index';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 export interface TurnState {
   currentTurn: number;
@@ -26,5 +26,5 @@ export interface TurnExecutionContext {
   groups: CreatureGroup[];
   mapData: { tiles: string[][] };
   dispatch: React.Dispatch<any>;
-  mapDefinition?: MapDefinition;
+  mapDefinition: QuestMap;
 }

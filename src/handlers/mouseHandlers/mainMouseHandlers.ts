@@ -1,6 +1,6 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { tileFromPointer } from '../../utils';
 import { findCreatureById, getVisibleCreatures } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';

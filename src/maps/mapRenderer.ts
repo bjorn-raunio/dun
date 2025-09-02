@@ -1,23 +1,8 @@
-import { ResolvedTerrain, MapDefinition } from './types';
+import { ResolvedTerrain, QuestMap } from './types';
 import { Terrain } from './terrain';
-import { getRotatedDimensions } from '../utils/dimensions';
-
-// Resolve terrain definition to concrete values
-export function resolveTerrain(t: Terrain): ResolvedTerrain {
-  return {
-    key: t.type,
-    x: t.x,
-    y: t.y,
-    mapWidth: t.mapWidth,
-    mapHeight: t.mapHeight,
-    rotation: t.rotation,
-    image: t.image,
-    height: t.height,
-  };
-}
 
 // Generate map tiles from map definition
-export function generateMapTiles(mapDefinition: MapDefinition) {
+export function generateMapTiles(mapDefinition: QuestMap) {
   const tiles: string[][] = [];
   
   // Initialize empty tiles
@@ -46,22 +31,4 @@ export function generateMapTiles(mapDefinition: MapDefinition) {
   return { tiles };
 }
 
-// Helper: terrain height at tile
-export function terrainHeightAt(tx: number, ty: number, mapDefinition: MapDefinition): number {
-  let h = 0;
-  for (const t of mapDefinition.terrain) {
-    h = Math.max(h, t.getHeightAt(tx, ty));
-  }
-  return h;
-}
 
-// Helper: terrain movement cost at tile
-export function terrainMovementCostAt(tx: number, ty: number, mapDefinition: MapDefinition): number {
-  let cost = 1; // Default movement cost
-  for (const t of mapDefinition.terrain) {
-    if (t.isTileWithinTerrain(tx, ty)) {
-      cost = Math.max(cost, t.getMovementCostAt(tx, ty));
-    }
-  }
-  return cost;
-}

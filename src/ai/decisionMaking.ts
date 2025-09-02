@@ -11,7 +11,7 @@ import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 import { createAIDecision, validateAIAction } from './helpers';
 import creatureServices from '../creatures/services';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { MonsterPreset, MercenaryPreset } from '../creatures/presets/types';
 import { EquipmentSystem } from '../items/equipment';
 
@@ -376,7 +376,7 @@ export function shouldMoveBeforeAttack(
   movementDecision: AIDecision,
   allCreatures: Creature[],
   mapData?: { tiles: string[][] },
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): boolean {
   if (movementDecision.type !== 'move' || !movementDecision.destination) {
     return false;

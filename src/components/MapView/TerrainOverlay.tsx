@@ -2,11 +2,11 @@ import React from 'react';
 import { TILE_SIZE } from '../styles';
 import { getRotatedDimensions } from '../../utils/dimensions';
 import { TerrainItem } from './types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { Terrain } from '../../maps/terrain';
 
 interface TerrainOverlayProps {
-  mapDefinition: MapDefinition;
+  mapDefinition: QuestMap;
 }
 
 export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
@@ -22,7 +22,7 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
         zIndex: 1,
       }}
     >
-      {mapDefinition.terrain.map((t: Terrain, index: number) => {
+      {mapDefinition.getTerrain().map((t: Terrain, index: number) => {
         const { width: blockWidth, height: blockHeight } = getRotatedDimensions(
           t.mapWidth, 
           t.mapHeight, 

@@ -3,10 +3,10 @@ import { EquipmentSystem } from '../../items/equipment';
 import { Weapon } from '../../items/types';
 import { rollD6 } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
-import { terrainHeightAt } from '../../maps/mapRenderer';
+
 import { isInBackArc } from '../geometry';
 import { logCombat } from '../logging';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 // --- Combat Calculation Utilities ---
 // Streamlined calculations with optimized object creation
@@ -142,7 +142,7 @@ export function generateWeaponModifierText(weapon: Weapon | null, isUnarmed: boo
 export function calculateElevationBonus(
   attacker: Creature,
   target: Creature,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): { attackerBonus: number; defenderBonus: number } {
   if (!mapDefinition) return { attackerBonus: 0, defenderBonus: 0 };
 
@@ -152,8 +152,8 @@ export function calculateElevationBonus(
     return { attackerBonus: 0, defenderBonus: 0 };
   }
 
-  const attackerElevation = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
-  const targetElevation = terrainHeightAt(target.x, target.y, mapDefinition);
+      const attackerElevation = mapDefinition.terrainHeightAt(attacker.x, attacker.y);
+    const targetElevation = mapDefinition.terrainHeightAt(target.x, target.y);
 
   let attackerBonus = 0;
   let defenderBonus = 0;

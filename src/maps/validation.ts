@@ -1,4 +1,4 @@
-import { MapDefinition } from './types';
+import { QuestMap } from './types';
 import { Hero, CREATURE_GROUPS } from '../creatures/index';
 import { getRandomElement } from '../utils/dice';
 
@@ -7,14 +7,14 @@ import { getRandomElement } from '../utils/dice';
 /**
  * Check if a position is a valid starting tile for heroes
  */
-export function isValidStartingTile(mapDefinition: MapDefinition, x: number, y: number): boolean {
+export function isValidStartingTile(mapDefinition: QuestMap, x: number, y: number): boolean {
   return mapDefinition.startingTiles.some(tile => tile.x === x && tile.y === y);
 }
 
 /**
  * Get all available starting tiles (not occupied by creatures)
  */
-export function getAvailableStartingTiles(mapDefinition: MapDefinition): Array<{ x: number; y: number; name?: string }> {
+export function getAvailableStartingTiles(mapDefinition: QuestMap): Array<{ x: number; y: number; name?: string }> {
   const occupiedPositions = new Set(
     mapDefinition.creatures.map(creature => `${creature.x},${creature.y}`)
   );
@@ -27,7 +27,7 @@ export function getAvailableStartingTiles(mapDefinition: MapDefinition): Array<{
 /**
  * Get a random available starting position
  */
-export function getRandomStartingPosition(mapDefinition: MapDefinition): { x: number; y: number; name?: string } | null {
+export function getRandomStartingPosition(mapDefinition: QuestMap): { x: number; y: number; name?: string } | null {
   const available = getAvailableStartingTiles(mapDefinition);
   return getRandomElement(available) || null;
 }
@@ -35,7 +35,7 @@ export function getRandomStartingPosition(mapDefinition: MapDefinition): { x: nu
 /**
  * Validate that all heroes are placed on valid starting tiles
  */
-export function validateHeroStartingPositions(mapDefinition: MapDefinition): { valid: boolean; errors: string[] } {
+export function validateHeroStartingPositions(mapDefinition: QuestMap): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   const heroes = mapDefinition.creatures.filter(creature => 
     creature.group === CREATURE_GROUPS.PLAYER || creature instanceof Hero
@@ -61,7 +61,7 @@ export function validateHeroStartingPositions(mapDefinition: MapDefinition): { v
 /**
  * Validate that a map has at least one starting tile
  */
-export function validateMapHasStartingTiles(mapDefinition: MapDefinition): { valid: boolean; errors: string[] } {
+export function validateMapHasStartingTiles(mapDefinition: QuestMap): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
   if (!mapDefinition.startingTiles || mapDefinition.startingTiles.length === 0) {
@@ -77,7 +77,7 @@ export function validateMapHasStartingTiles(mapDefinition: MapDefinition): { val
 /**
  * Validate the entire map definition
  */
-export function validateMapDefinition(mapDefinition: MapDefinition): { valid: boolean; errors: string[] } {
+export function validateMapDefinition(mapDefinition: QuestMap): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
   // Check for starting tiles

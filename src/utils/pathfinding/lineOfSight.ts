@@ -1,8 +1,8 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { isPositionInCreatureBounds } from '../dimensions';
 import { LineOfSightOptions } from './types';
-import { terrainHeightAt } from '../../maps/mapRenderer';
-import { MapDefinition } from '../../maps/types';
+
+import { QuestMap } from '../../maps/types';
 import { GAME_SETTINGS } from '../constants';
 
 /**
@@ -79,7 +79,7 @@ export class LineOfSightSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     options: LineOfSightOptions = {},
     fromCreature?: ICreature,
     allCreatures?: ICreature[]
@@ -107,7 +107,7 @@ export class LineOfSightSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     options: LineOfSightOptions = {},
     fromCreature?: ICreature,
     toCreature?: ICreature,
@@ -130,8 +130,8 @@ export class LineOfSightSystem {
     }
 
     // Get elevation and size information if creatures are provided
-    const fromElevation = fromCreature && mapDefinition ? terrainHeightAt(fromX, fromY, mapDefinition) : undefined;
-    const toElevation = toCreature && mapDefinition ? terrainHeightAt(toX, toY, mapDefinition) : undefined;
+    const fromElevation = fromCreature && mapDefinition ? mapDefinition.terrainHeightAt(fromX, fromY) : undefined;
+    const toElevation = toCreature && mapDefinition ? mapDefinition.terrainHeightAt(toX, toY) : undefined;
     const fromSize = fromCreature?.size;
     const toSize = toCreature?.size;
 
@@ -192,7 +192,7 @@ export class LineOfSightSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): { path: Array<{ x: number; y: number }>; isBlocked: boolean; blockingTile?: { x: number; y: number; tileType: string } } {
     const path = this.getLinePoints(fromX, fromY, toX, toY);
 
@@ -227,7 +227,7 @@ export class LineOfSightSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition: QuestMap,
     options: LineOfSightOptions = {},
     fromCreature?: ICreature
   ): ICreature[] {
@@ -258,7 +258,7 @@ export class LineOfSightSystem {
   private static hasPixelLineOfSight(
     fromX: number, fromY: number, toX: number, toY: number,
     mapData: { tiles: string[][] }, cols: number, rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     fromElevation?: number, toElevation?: number, fromSize?: number, toSize?: number,
     allCreatures?: ICreature[]
   ): boolean {
@@ -318,7 +318,7 @@ export class LineOfSightSystem {
   private static isPixelPositionBlocking(
     pixelX: number, pixelY: number, tileX: number, tileY: number,
     mapData: { tiles: string[][] }, cols: number, rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     fromPixelX?: number, fromPixelY?: number, toPixelX?: number, toPixelY?: number,
     fromElevation?: number, toElevation?: number, fromSize?: number, toSize?: number,
     allCreatures?: ICreature[]
@@ -330,15 +330,6 @@ export class LineOfSightSystem {
 
     // Check terrain blocking at this tile
     if (mapData.tiles[tileY] && mapData.tiles[tileY][tileX]) {
-      const tileType = mapData.tiles[tileY][tileX];
-
-      // Check if map definition specifies this terrain blocks line of sight
-      if (mapDefinition && mapDefinition.terrainTypes && mapDefinition.terrainTypes[tileType]) {
-        const terrainInfo = mapDefinition.terrainTypes[tileType];
-        if (terrainInfo.blocksLineOfSight) {
-          return true;
-        }
-      }
 
       // Check elevation-based blocking if we have elevation information
       if (fromElevation !== undefined && toElevation !== undefined &&
@@ -346,7 +337,7 @@ export class LineOfSightSystem {
         fromPixelX !== undefined && fromPixelY !== undefined &&
         toPixelX !== undefined && toPixelY !== undefined) {
 
-        const terrainHeight = mapDefinition ? terrainHeightAt(tileX, tileY, mapDefinition) : 0;
+        const terrainHeight = mapDefinition ? mapDefinition.terrainHeightAt(tileX, tileY) : 0;
         const fromEffectiveHeight = fromElevation + fromSize;
         const toEffectiveHeight = toElevation + toSize;
 
@@ -368,7 +359,7 @@ export class LineOfSightSystem {
 
         // Check if this creature is at the current tile position
         if (creature.x === tileX && creature.y === tileY && !creature.isDead()) {
-          const creatureElevation = mapDefinition ? terrainHeightAt(creature.x, creature.y, mapDefinition) : 0;
+          const creatureElevation = mapDefinition ? mapDefinition.terrainHeightAt(creature.x, creature.y) : 0;
           const creatureEffectiveHeight = creatureElevation + creature.size;
 
           const totalDistance = Math.sqrt((toPixelX - fromPixelX) ** 2 + (toPixelY - fromPixelY) ** 2);
@@ -460,7 +451,7 @@ export class LineOfSightSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     fromX?: number,
     fromY?: number,
     toX?: number,
@@ -479,14 +470,6 @@ export class LineOfSightSystem {
     if (mapData.tiles[y] && mapData.tiles[y][x]) {
       const tileType = mapData.tiles[y][x];
 
-      // Check if map definition specifies this terrain blocks line of sight
-      if (mapDefinition && mapDefinition.terrainTypes && mapDefinition.terrainTypes[tileType]) {
-        const terrainInfo = mapDefinition.terrainTypes[tileType];
-        if (terrainInfo.blocksLineOfSight) {
-          return true;
-        }
-      }
-
       // If we have elevation information, check if terrain is tall enough to block
       if (fromElevation !== undefined && toElevation !== undefined &&
         fromSize !== undefined && toSize !== undefined &&
@@ -494,7 +477,7 @@ export class LineOfSightSystem {
         toX !== undefined && toY !== undefined) {
 
         // Get terrain height at this position
-        const terrainHeight = mapDefinition ? terrainHeightAt(x, y, mapDefinition) : 0;
+        const terrainHeight = mapDefinition ? mapDefinition.terrainHeightAt(x, y) : 0;
 
         // Calculate the effective heights of the creatures
         const fromEffectiveHeight = fromElevation + fromSize;
@@ -533,7 +516,7 @@ export class LineOfSightSystem {
         // Check if this creature is at the current position
         if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
           // Get the creature's elevation and calculate its effective height
-          const creatureElevation = mapDefinition ? terrainHeightAt(creature.x, creature.y, mapDefinition) : 0;
+          const creatureElevation = mapDefinition ? mapDefinition.terrainHeightAt(creature.x, creature.y) : 0;
           const creatureEffectiveHeight = creatureElevation + creature.size;
 
           // Calculate the line of sight height at this point

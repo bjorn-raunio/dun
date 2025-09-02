@@ -1,31 +1,21 @@
 import { useCallback } from 'react';
-import { Creature } from '../../creatures/index';
+import { CreatureAction, ICreature } from '../../creatures/index';
 
 export function useActions(
-  onUpdate?: (creature: Creature) => void
+  allCreatures: ICreature[],
+  onUpdate?: (creature: ICreature) => void
 ) {
-  const handleRun = useCallback((creature: Creature) => {
-    if (!creature.isPlayerControlled()) {
-        return;
-    }
-    const success = creature.run();
-    if (success) {
-      onUpdate?.(creature);
-    }
-  }, [onUpdate]);
-
-  const handleSearch = useCallback((creature: Creature) => {
+  const handleAction = useCallback((creature: ICreature, action: CreatureAction) => {
     if (!creature.isPlayerControlled()) {
       return;
     }
-    const success = creature.search();
-    if (success) {
+    const result = creature.performAction(action, allCreatures);
+    if (result.success) {
       onUpdate?.(creature);
     }
-  }, [onUpdate]);
+  }, [allCreatures, onUpdate]);
 
   return {
-    handleRun,
-    handleSearch,
+    handleAction,
   };
 }

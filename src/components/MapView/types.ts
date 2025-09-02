@@ -1,13 +1,13 @@
 import React from 'react';
 import { ICreature } from '../../creatures/index';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 export interface MapViewProps {
   mapData: {
     name: string;
     tiles: string[][];
   };
-  mapDefinition: MapDefinition;
+  mapDefinition: QuestMap;
   creatures: ICreature[];
   selectedCreatureId: string | null;
   reachable: {

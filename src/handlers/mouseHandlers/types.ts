@@ -1,6 +1,6 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { PanningHandlers } from './panningHandlers';
 import { CombatHandlers } from './combatHandlers';
 import { MovementHandlers } from './movementHandlers';
@@ -24,7 +24,7 @@ export interface MouseHandlerDependencies {
   targetsInRangeIds: Set<string>;
   mapData: { tiles: string[][] };
   setSelectedCreatureId: (id: string | null) => void;
-  mapDefinition?: MapDefinition;
+  mapDefinition: QuestMap;
   targetingMode?: { 
     isActive: boolean; 
     attackerId: string | null; 

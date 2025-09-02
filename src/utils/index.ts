@@ -20,8 +20,6 @@ export {
   canReachAndAttack,
   canAttackImmediately,
   calculateDistanceToAttackablePosition,
-  isPositionAccessible,
-  isPositionAccessibleWithBounds,
   isCreatureAtPosition,
   findCreatureById,
   isCreatureVisible,

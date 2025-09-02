@@ -8,7 +8,7 @@ import {
 import { updateCombatStates } from '../utils/combatStateUtils';
 import { calculateMovementCost } from '../utils/movementCost';
 import { MovementResult, MovementStatus } from '../game/movement';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { logMovement } from '../utils';
 import { CreaturePositionOrUndefined } from './types';
 
@@ -21,7 +21,7 @@ export class CreatureMovement implements ICreatureMovement {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition: QuestMap
   ): { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> } {
     if (creature.x !== undefined && creature.y !== undefined) {
       return PathfindingSystem.getReachableTiles(
@@ -48,7 +48,7 @@ export class CreatureMovement implements ICreatureMovement {
   }
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
-  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
+  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult {
     if (path.length === 0) {
       return {
         status: 'failed',
@@ -125,7 +125,7 @@ export class CreatureMovement implements ICreatureMovement {
       }
 
       // Check if we're currently engaged
-      const engagingCreatures = getEngagingCreatures(creature, allCreatures);
+      const engagingCreatures = getEngagingCreatures(creature, allCreatures, true);
       const currentlyEngaged = engagingCreatures.length > 0;
       if (currentlyEngaged) {
         // We're engaged - check if we can move to the next position
@@ -182,16 +182,3 @@ export class CreatureMovement implements ICreatureMovement {
     };
   }
 }
-
-// --- Static Methods for Backward Compatibility ---
-// These are kept for existing code that uses the static methods
-
-export const getReachableTiles = (creature: Creature, allCreatures: Creature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition) => {
-  const movement = new CreatureMovement();
-  return movement.getReachableTiles(creature, allCreatures, mapData, cols, rows, mapDefinition);
-};
-
-export const moveTo = (creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition) => {
-  const movement = new CreatureMovement();
-  return movement.moveTo(creature, path, allCreatures, mapData, mapDefinition);
-};

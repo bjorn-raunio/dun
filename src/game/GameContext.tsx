@@ -6,7 +6,7 @@ import { WeatherState } from './weather';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
 
 // --- Game Context Types ---
@@ -29,7 +29,7 @@ export function GameProvider({
 }: {
   children: React.ReactNode;
   initialCreatures: ICreature[];
-  mapDefinition?: MapDefinition;
+  mapDefinition: QuestMap;
 }) {
   const [state, dispatch] = useReducer(
     gameReducer, 

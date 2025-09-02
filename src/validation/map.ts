@@ -2,14 +2,14 @@ import { Creature, ICreature } from '../creatures/index';
 import { ValidationResult, validateArrayNotEmpty, validateArrayNoDuplicates } from './core';
 import { VALIDATION_MESSAGES } from './messages';
 import { rectsOverlap, areCreaturesOverlapping } from '../utils/geometry';
-import { terrainHeightAt } from '../maps/mapRenderer';
+
 import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 
 /**
  * Check if a tile is within any room in the map definition
  */
-function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: MapDefinition): boolean {
+function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: QuestMap): boolean {
   if (!mapDefinition) {
     return false;
   }
@@ -153,6 +153,15 @@ export function validateTurnOrderNoDeadCreatures(creatures: Creature[], turnOrde
 }
 
 /**
+ * Result type for position validation with blocking information
+ */
+export interface PositionValidationResult {
+  isValid: boolean;
+  blockingCreature?: ICreature;
+  blockingTerrain?: boolean;
+}
+
+/**
  * Validate that a position is standable (not occupied by creatures or terrain)
  */
 export function validatePositionStandable(
@@ -161,13 +170,19 @@ export function validatePositionStandable(
   dimensions: { w: number; h: number }, 
   allCreatures: ICreature[], 
   mapData: { tiles: string[][] }, 
-  mapDefinition?: MapDefinition, 
+  mapDefinition?: QuestMap, 
   considerCreatures: boolean = true, 
   creatureId?: string
-): boolean {
+): PositionValidationResult {
+  const result: PositionValidationResult = {
+    isValid: true
+  };
+
   // Check map bounds
   if (x < 0 || y < 0 || x + dimensions.w > mapData.tiles[0].length || y + dimensions.h > mapData.tiles.length) {
-    return false;
+    result.isValid = false;
+    result.blockingTerrain = true;
+    return result;
   }
   
   // Check terrain and room validation (if map definition provided)
@@ -179,12 +194,13 @@ export function validatePositionStandable(
         const cx = x + dx;
         const cy = y + dy;
         const tile = mapData.tiles[cy]?.[cx];
-        const height = terrainHeightAt(cx, cy, mapDefinition);
+        const height = mapDefinition.terrainHeightAt(cx, cy);
         
         // Check if tile is empty and outside any room - this blocks movement
         if (!tile || tile === "empty.jpg") {
           if (!isTileWithinAnyRoom(cx, cy, mapDefinition)) {
-            return false; // Empty tiles outside rooms block movement
+            result.isValid = false;
+            result.blockingTerrain = true;
           }
         }
         
@@ -197,7 +213,8 @@ export function validatePositionStandable(
         
         // Allow terrain up to height 1 (elevation 1) - creatures can climb up to 1 elevation
         if (height > 1) {
-          return false;
+          result.isValid = false;
+          result.blockingTerrain = true;
         }
       }
     }
@@ -205,7 +222,8 @@ export function validatePositionStandable(
     // For multi-tile creatures, at least one tile must be standable
     if (dimensions.w > 1 || dimensions.h > 1) {
       if (!hasStandableTile) {
-        return false;
+        result.isValid = false;
+        result.blockingTerrain = true;
       }
     }
   }
@@ -224,10 +242,11 @@ export function validatePositionStandable(
         x, y, dimensions.w, dimensions.h,
         creature.x, creature.y, creatureDimensions.w, creatureDimensions.h
       )) {
-        return false;
+        result.isValid = false;
+        result.blockingCreature = creature;
       }
     }
   }
   
-  return true;
+  return result;
 }

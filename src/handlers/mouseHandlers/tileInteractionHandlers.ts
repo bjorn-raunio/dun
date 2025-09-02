@@ -1,6 +1,6 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { tileFromPointer, GAME_SETTINGS } from '../../utils';
 import { addMessage } from '../../game/messageSystem';
 import { findCreatureById } from '../../utils/pathfinding';
@@ -12,7 +12,7 @@ export interface TileInteractionHandlers {
     creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
     mapData: { tiles: string[][] },
-    mapDefinition?: MapDefinition,
+    mapDefinition: QuestMap,
     targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
   ) => { action: 'none' | 'deselect' | 'movement' | 'targeting_cancelled' };
 }
@@ -27,7 +27,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
     creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
     mapData: { tiles: string[][] },
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
   ): { action: 'none' | 'deselect' | 'movement' | 'targeting_cancelled' } {
     const wasDrag = Math.hypot(dragMoved.current.dx, dragMoved.current.dy) > GAME_SETTINGS.DRAG_THRESHOLD;

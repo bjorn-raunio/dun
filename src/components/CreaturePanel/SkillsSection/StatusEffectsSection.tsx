@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Creature } from '../../../creatures/index';
 import { StatusEffect } from '../../../statusEffects';
-import { COLORS } from '../../styles';
+import { COLORS, LAYOUT_PATTERNS } from '../../styles';
 
 interface StatusEffectsSectionProps {
   creature: Creature;
 }
 
 const StatusEffectsSection: React.FC<StatusEffectsSectionProps> = ({ creature }) => {
-  const activeEffects = creature.getActiveStatusEffects();
+  const activeEffects = creature.getStatusEffectManager().getActiveEffectsByPriority();
   const [hoveredEffect, setHoveredEffect] = useState<string | null>(null);
   
   if (activeEffects.length === 0) {
@@ -23,7 +23,7 @@ const StatusEffectsSection: React.FC<StatusEffectsSectionProps> = ({ creature })
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Status Effects</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+      <div style={{ ...LAYOUT_PATTERNS.flexRowCenter, flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
         {activeEffects.map((effect) => (
           <div
             key={effect.id}
@@ -36,14 +36,12 @@ const StatusEffectsSection: React.FC<StatusEffectsSectionProps> = ({ creature })
           >
             {/* Status effect icon */}
             <div style={{
-              fontSize: 14,
+              fontSize: 18,
               padding: 4,
               borderRadius: 4,
               background: COLORS.backgroundLight,
               position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              ...LAYOUT_PATTERNS.flexCenter,
               minWidth: '20px',
               minHeight: '20px'
             }}>

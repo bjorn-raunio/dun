@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Creature, ICreature } from '../../creatures/index';
 import { StatusEffect } from '../../statusEffects';
-import { COLORS } from '../styles';
+import { COLORS, LAYOUT_PATTERNS } from '../styles';
 
 interface CreatureHeaderProps {
   creature: ICreature;
 }
 
 export function CreatureHeader({ creature }: CreatureHeaderProps) {
-  const activeEffects = creature.getActiveStatusEffects();
+  const activeEffects = creature.getStatusEffectManager().getActiveEffectsByPriority();
   const [hoveredEffect, setHoveredEffect] = useState<string | null>(null);
 
   return (
@@ -39,7 +39,7 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
           opacity: creature.isDead() ? 0.6 : 1
         }} />
       )}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+      <div style={{ ...LAYOUT_PATTERNS.flexColumn, alignItems: "flex-start" }}>
         <div style={{
           fontSize: 18,
           fontWeight: 700,
@@ -51,8 +51,8 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
         
         {/* Status Effects */}
         {activeEffects.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start', width: '100%' }}>
-            {activeEffects.map((effect) => (
+          <div style={{ ...LAYOUT_PATTERNS.flexRowCenter, flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start', width: '100%' }}>
+            {activeEffects.map((effect: StatusEffect) => (
               <div
                 key={effect.id}
                 style={{
@@ -64,14 +64,12 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
               >
                 {/* Status effect icon */}
                 <div style={{
-                  fontSize: 12,
+                  fontSize: 15,
                   padding: 3,
                   borderRadius: 3,
                   background: COLORS.backgroundLight,
                   position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  ...LAYOUT_PATTERNS.flexCenter,
                   minWidth: '18px',
                   minHeight: '18px'
                 }}>

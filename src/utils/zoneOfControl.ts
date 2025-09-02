@@ -4,25 +4,38 @@ import { calculateDistanceBetween } from './pathfinding';
 // --- Zone of Control Utilities ---
 
 /**
- * Check if a position is within a creature's zone of control
+ * Helper function to check if a creature is in a valid state for zone of control calculations
  */
-export function isInZoneOfControl(x: number, y: number, creature: ICreature): boolean {
-  if (creature.x === undefined || creature.y === undefined) {
-    return false;
-  }
-  const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
-  return distance <= creature.getZoneOfControlRange();
+function isValidCreatureForZoneCheck(creature: ICreature): boolean {
+  return creature.x !== undefined && creature.y !== undefined && !creature.isDead();
 }
 
 /**
- * Check if a position is within a creature's zone of control using a custom range
+ * Helper function to check if a position is within a given range of a creature
  */
-export function isInZoneOfControlWithRange(x: number, y: number, creature: ICreature, zoneRange: number): boolean {
-  if (creature.x === undefined || creature.y === undefined) {
+function isPositionInRange(x: number, y: number, creature: ICreature, range: number): boolean {
+  if (!isValidCreatureForZoneCheck(creature)) {
     return false;
   }
-  const distance = calculateDistanceBetween(creature.x, creature.y, x, y);
-  return distance <= zoneRange;
+  const distance = calculateDistanceBetween(creature.x!, creature.y!, x, y);
+  return distance <= range;
+}
+
+/**
+ * Check if a position is within a creature's zone of control
+ * @param x X coordinate to check
+ * @param y Y coordinate to check
+ * @param creature The creature whose zone of control to check
+ * @param customRange Optional custom range to use instead of creature's default zone range
+ */
+export function isInZoneOfControl(
+  x: number, 
+  y: number, 
+  creature: ICreature, 
+  customRange?: number
+): boolean {
+  const range = customRange ?? creature.getZoneOfControlRange();
+  return isPositionInRange(x, y, creature, range);
 }
 
 /**
@@ -39,8 +52,8 @@ export function pathPassesThroughZoneOfControl(
   const zoneRange = creature.getZoneOfControlRange();
   
   // Check if start or end point is in the zone
-  const startInZone = isInZoneOfControlWithRange(fromX, fromY, creature, zoneRange);
-  const endInZone = isInZoneOfControlWithRange(toX, toY, creature, zoneRange);
+  const startInZone = isInZoneOfControl(fromX, fromY, creature, zoneRange);
+  const endInZone = isInZoneOfControl(toX, toY, creature, zoneRange);
   
   // If the destination is in the zone, allow the movement (this will trigger engagement)
   if (endInZone) {
@@ -59,7 +72,7 @@ export function pathPassesThroughZoneOfControl(
     const checkX = Math.floor(fromX + (toX - fromX) * t);
     const checkY = Math.floor(fromY + (toY - fromY) * t);
     
-    const pointInZone = isInZoneOfControlWithRange(checkX, checkY, creature, zoneRange);
+    const pointInZone = isInZoneOfControl(checkX, checkY, creature, zoneRange);
     if (pointInZone) {
       return true; // Path passes through zone
     }
@@ -93,21 +106,22 @@ export function pathPassesThroughHostileZones(
 /**
  * Get all creatures that are engaging a given creature
  */
-export function getEngagingCreatures(creature: ICreature, allCreatures: ICreature[]): ICreature[] {
+export function getEngagingCreatures(creature: ICreature, allCreatures: ICreature[], ignoreEngaged: boolean = false): ICreature[] {
   // Return empty array if creature is not on the map (undefined position)
-  if (creature.x === undefined || creature.y === undefined) {
+  if (!isValidCreatureForZoneCheck(creature)) {
     return [];
   }
   
-  return getEngagingCreaturesAtPosition(creature, allCreatures, creature.x, creature.y);
+  return getEngagingCreaturesAtPosition(creature, allCreatures, creature.x!, creature.y!, ignoreEngaged);
 }
 
-export function getEngagingCreaturesAtPosition(creature: ICreature, allCreatures: ICreature[], x: number, y: number): ICreature[] {
+export function getEngagingCreaturesAtPosition(creature: ICreature, allCreatures: ICreature[], x: number, y: number, ignoreEngaged: boolean = false): ICreature[] {
   return allCreatures.filter(other => 
     other !== creature && 
     other.isAlive() && 
     creature.isHostileTo(other) && // Must be hostile
-    isInZoneOfControl(x, y, other) // They are in our zone
+    isInZoneOfControl(x, y, other) && // They are in our zone
+    (!ignoreEngaged || getEngagingCreatures(other, allCreatures.filter(c => c !== creature), false).length === 0)
   );
 }
 
@@ -122,17 +136,5 @@ export function isEngaged(creature: ICreature, allCreatures: ICreature[]): boole
  * Check if a position is adjacent to a creature
  */
 export function isAdjacentToCreature(x: number, y: number, creature: ICreature): boolean {
-  // Return false if creature is not on the map (undefined position)
-  if (creature.x === undefined || creature.y === undefined) {
-    return false;
-  }
-  
-  return calculateDistanceBetween(x, y, creature.x, creature.y) <= 1;
-}
-
-/**
- * Get the zone of control range for a creature
- */
-export function getZoneOfControlRange(creature: ICreature): number {
-  return creature.getZoneOfControlRange();
+  return isPositionInRange(x, y, creature, 1);
 }

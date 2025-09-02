@@ -40,17 +40,6 @@ export class CreatureRelationshipsManager implements ICreatureRelationshipsManag
     return this.group.getFriendlyCreatures(allCreatures);
   }
 
-  // --- Engagement Logic ---
-
-  isEngaged(hostileCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): boolean {
-    return false; // placeholder
-  }
-
-  getEngagingCreatures(allCreatures: ICreature[], positionX: number, positionY: number, zoneOfControlRange: number): ICreature[] {
-    // Find all hostile creatures in our zone of control
-    return [];
-  }
-
   isInZoneOfControl(x: number, y: number, creature: Creature, zoneOfControlRange: number): boolean {
     if (creature.x === undefined || creature.y === undefined) {
       return false;

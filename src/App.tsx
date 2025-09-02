@@ -6,13 +6,9 @@ import { GameProvider, useGameContext } from './game/GameContext';
 import { MapView, GameUI, TurnTracker } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
-import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom, useActions } from './game/hooks';
-import { findCreatureById } from './utils/pathfinding';
+import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
 import { ICreature } from './creatures/index';
 import { addMessage } from './game/messageSystem';
-import { VALIDATION_MESSAGES } from './validation/messages';
-import { Creature } from './creatures/index';
-import { displayDiceRoll } from "./utils";
 
 // Map and game state are now imported from extracted modules
 
@@ -47,39 +43,6 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
 
   // Turn advancement hook
   useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
-
-  // Enhanced action handlers with messages
-  const handleRunWithMessage = React.useCallback((creature: ICreature) => {
-    const result = creature.run();
-    if (result.success) {
-      addMessage(result.message, gameActions.dispatch);
-      // Update the creature in the creatures array
-      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
-    }
-  }, [gameActions]);
-
-  const handleSearchWithMessage = React.useCallback((creature: ICreature) => {
-    const success = creature.search();
-    if (success) {
-      addMessage(`${creature.name} used an action to search the area...`, gameActions.dispatch);
-      // Update the creature in the creatures array
-      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
-      
-      // TODO: Implement actual search logic (reveal hidden items, traps, etc.)
-
-    } else {
-      addMessage(`${creature.name} cannot search right now`, gameActions.dispatch);
-    }
-  }, [gameActions]);
-
-  const handleDisengageWithMessage = React.useCallback((creature: ICreature) => {
-    const result = creature.disengage();
-    if (result.success) {
-      addMessage(result.message, gameActions.dispatch);
-      // Update the creature in the creatures array
-      gameActions.setCreatures(prevCreatures => prevCreatures.map(c => c.id === creature.id ? creature : c));
-    }
-  }, [gameActions]);
 
   // Attack function for equipment panel - enters targeting mode
   const handleAttack = React.useCallback((attackingCreature: ICreature) => {
@@ -176,9 +139,6 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
         }}
         onAttack={handleAttack}
         canAttack={canAttack}
-        onRun={handleRunWithMessage}
-        onSearch={handleSearchWithMessage}
-        onDisengage={handleDisengageWithMessage}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import {
   isAdjacentToCreature,
   getEngagingCreatures
 } from '../utils/zoneOfControl';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 
 // --- Movement Validation Logic ---
 
@@ -27,7 +27,7 @@ export function validateMovement(
   allCreatures: ICreature[],
   mapData: { tiles: string[][] },
   stepCost: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): MovementValidationResult {
   // Use centralized validation for basic creature state
   const aliveCheck = validateCreatureAlive(creature, 'move');
@@ -72,10 +72,11 @@ export function isPositionStandable(
   y: number,
   allCreatures: ICreature[],
   mapData: { tiles: string[][] },
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): boolean {
   const dimensions = creature.getDimensions();
-  return validatePositionStandable(x, y, dimensions, allCreatures, mapData, mapDefinition, true, creature.id);
+  const result = validatePositionStandable(x, y, dimensions, allCreatures, mapData, mapDefinition, true, creature.id);
+  return result.isValid;
 }
 
 /**
@@ -87,7 +88,7 @@ export function validateEngagementMovement(
   newY: number,
   allCreatures: ICreature[]
 ): MovementValidationResult {
-  const engagingCreatures = getEngagingCreatures(creature, allCreatures);
+  const engagingCreatures = getEngagingCreatures(creature, allCreatures, true);
   const currentlyEngaged = engagingCreatures.length > 0;
 
   if (currentlyEngaged) {

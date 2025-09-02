@@ -1,6 +1,6 @@
 import React from 'react';
 import { Creature, ICreature } from '../../creatures/index';
-import { COLORS } from '../styles';
+import { COLORS, LAYOUT_PATTERNS } from '../styles';
 
 interface HeroSelectorProps {
   heroes: ICreature[];
@@ -14,19 +14,16 @@ export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
       {heroes.length === 0 ? (
         <div style={{ opacity: 0.8 }}>No heroes available</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "calc(100vh - 300px)", overflow: "auto" }}>
+        <div style={{ ...LAYOUT_PATTERNS.flexColumn, gap: 8, maxHeight: "calc(100vh - 300px)", overflow: "auto" }}>
           {heroes.map((hero) => (
             <div
               key={hero.id}
               onClick={() => onSelect?.(hero)}
               style={{
-                display: "flex",
-                alignItems: "center",
+                ...LAYOUT_PATTERNS.flexRowCenter,
                 gap: 12,
                 padding: 8,
-                borderRadius: 8,
-                border: `1px solid ${COLORS.border}`,
-                background: COLORS.backgroundLight,
+                ...LAYOUT_PATTERNS.card,
                 cursor: onSelect ? "pointer" : "default",
                 transition: "all 0.2s ease",
               }}

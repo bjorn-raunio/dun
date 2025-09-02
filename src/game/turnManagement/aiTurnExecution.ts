@@ -85,9 +85,6 @@ function executeAITurnLoop(
         break;
       }
       logTurn(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
-    } else if (actionResult.actionType === 'attack') {
-      logTurn(`${creature.name} attacked but did not kill the target. Ending turn.`);
-      break;
     }
 
     // Check if any progress was made

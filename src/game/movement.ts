@@ -67,13 +67,6 @@ export function executeMovement(
     };
   }
   
-  // Check if movement resulted in engagement
-  const isEngaged = creature.isEngagedWithAll(allCreatures);
-  if (isEngaged) {
-    // Set remaining movement to zero when entering hostile zone of control
-    creature.setRemainingMovement(0);
-  }
-  
   // Use the result from moveTo directly since it now returns MovementResult
   return {
     status: moveResult.status,

@@ -16,12 +16,14 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
     description: "stun on doubles during an attack",
     combatTriggers: [
       {
-        event: "onDoubleResult", 
+        event: "onDoubleResult",
         type: "melee",
         effect: (data: CombatEventData) => {
-          applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect(), (msg: string) => {
-            data.messages.push(msg);
-          });
+          if (data.target.size < 4) {
+            applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect(), (msg: string) => {
+              data.messages.push(msg);
+            });
+          }
         }
       }
     ]

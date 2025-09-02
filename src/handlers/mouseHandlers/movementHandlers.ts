@@ -1,6 +1,6 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
 import { executeMovement } from '../../game/movement';
 import { calculateCostDifference } from '../../utils/movementCost';
@@ -24,7 +24,7 @@ interface MovementParams {
   creatures: ICreature[];
   reachable: ReachableData;
   mapData: MapData;
-  mapDefinition?: MapDefinition;
+  mapDefinition: QuestMap;
 }
 
 export interface MovementHandlers {
@@ -48,7 +48,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
     targetX: number,
     targetY: number,
     mapData: MapData,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): Array<{ x: number; y: number }> | undefined {
     const destKey = `${targetX},${targetY}`;
     let path = reachable.pathMap.get(destKey);
@@ -164,12 +164,6 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
 
         // Update last movement reference
         updateLastMovement(selectedCreatureId, targetX, targetY);
-
-        // Check engagement status
-        const isEngaged = targetCreature.isEngagedWithAll(prev);
-        if (isEngaged) {
-          logGame(`${targetCreature.name} is now engaged`);
-        }
 
       } else {
         logMovement(`Movement failed: ${moveResult.message || 'Cannot move there'}`);

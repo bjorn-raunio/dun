@@ -15,6 +15,7 @@ export interface StatusEffect {
   description: string;
   duration: number | null; // null means permanent
   remainingTurns: number | null; // null for permanent effects
+  priority: number; // Priority level for ordering and conflict resolution
   
   // Effect modifiers
   attributeModifiers?: Partial<Attributes>;
@@ -28,7 +29,7 @@ export interface StatusEffect {
   accuracyModifier?: number;
   
   // Special effects
-  onTurnStart?: (creature: Creature) => void;
+  onTurnStart?: (creature: Creature) => string[];
   onTurnEnd?: (creature: Creature) => void;
   onCombatStart?: (creature: Creature) => void;
   onCombatEnd?: (creature: Creature) => void;
@@ -47,6 +48,7 @@ export interface StatusEffectManager {
   removeEffect(effectId: string): void;
   updateEffects(): void;
   getActiveEffects(): StatusEffect[];
+  getActiveEffectsByPriority(): StatusEffect[]; // Returns effects sorted by priority (highest first)
   hasEffect(type: StatusEffectType): boolean;
   getEffect(type: StatusEffectType): StatusEffect | null;
   clearAllEffects(): void;

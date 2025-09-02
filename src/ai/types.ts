@@ -1,5 +1,5 @@
 import { Creature, ICreature } from '../creatures/index';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 
 // --- AI Types ---
 
@@ -68,7 +68,7 @@ export interface AIContext {
   creature: ICreature;
   allCreatures: ICreature[];
   mapData: { tiles: string[][] };
-  mapDefinition?: MapDefinition;
+  mapDefinition?: QuestMap;
   currentTurn: number;
   reachableTiles: Array<{ x: number; y: number }>;
   reachableTilesCostMap: Map<string, number>;

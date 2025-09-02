@@ -1,10 +1,11 @@
 import {
+  CreatureAction,
   CreatureConstructorParams,
   CreaturePosition,
   CreatureState,
   DEFAULT_ATTRIBUTES
 } from './types';
-import { Skill, SkillType } from '../skills';
+import { Skill } from '../skills';
 import { CreatureGroup } from './CreatureGroup';
 import {
   Attributes,
@@ -24,10 +25,11 @@ import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
 import { MovementResult } from '../game/movement';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
-import { calculateAttributeRoll, displayDiceRoll, roll2d6 } from '../utils';
+import { calculateAttributeRoll, displayDiceRoll } from '../utils';
+import { validateAction} from '../validation';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -76,7 +78,7 @@ export abstract class Creature implements ICreature {
     this.naturalArmor = params.naturalArmor ?? 3;
     this.group = params.group;
     this.running = false;
-    this.skills = params.skills ?? [];    
+    this.skills = params.skills ?? [];
 
     // Initialize managers
     const initialPosition: CreaturePosition | undefined = params.position;
@@ -116,25 +118,25 @@ export abstract class Creature implements ICreature {
   get y(): number | undefined { return this.positionManager.getY(); }
   get facing(): number | undefined { return this.positionManager.getFacing(); }
 
-  set x(value: number | undefined) { 
+  set x(value: number | undefined) {
     if (value !== undefined) {
       const currentY = this.positionManager.getY() ?? 0;
-      this.positionManager.setPosition(value, currentY); 
+      this.positionManager.setPosition(value, currentY);
     } else {
       this.positionManager.removeFromMap();
     }
   }
-  set y(value: number | undefined) { 
+  set y(value: number | undefined) {
     if (value !== undefined) {
       const currentX = this.positionManager.getX() ?? 0;
-      this.positionManager.setPosition(currentX, value); 
+      this.positionManager.setPosition(currentX, value);
     } else {
       this.positionManager.removeFromMap();
     }
   }
-  set facing(value: number | undefined) { 
+  set facing(value: number | undefined) {
     if (value !== undefined) {
-      this.positionManager.setFacing(value); 
+      this.positionManager.setFacing(value);
     }
   }
 
@@ -215,7 +217,7 @@ export abstract class Creature implements ICreature {
   set perception(value: number) { this.attributes.perception = value; }
   set dexterity(value: number) { this.attributes.dexterity = value; }
 
-  // --- State Methods ---
+  // --- State methods ---
   isAlive(): boolean { return this.stateManager.isAlive(); }
   isDead(): boolean { return this.stateManager.isDead(); }
   isWounded(): boolean { return this.hasStatusEffect("wounded"); }
@@ -228,9 +230,13 @@ export abstract class Creature implements ICreature {
     return this.effectiveActions > 0 && this.stateManager.hasActionsRemaining();
   }
   hasMana(amount: number): boolean { return this.stateManager.hasMana(amount); }
-  hasTakenActionsThisTurn(): boolean { return this.stateManager.hasTakenActionsThisTurn(); }
   hasFortune(amount: number): boolean { return this.stateManager.hasFortune(amount); }
+  hasTakenActionsThisTurn(): boolean { return this.stateManager.hasTakenActionsThisTurn(); }
   setRemainingFortune(value: number): void { this.stateManager.setRemainingFortune(value); }
+
+  // --- Push Tracking ---
+  canPushCreature(targetId: string): boolean { return this.stateManager.canPushCreature(targetId); }
+  recordPushedCreature(targetId: string): void { this.stateManager.recordPushedCreature(targetId); }
 
   // --- Combat Methods ---
   getArmorValue(): number { return this.combatManager.getArmorValue(); }
@@ -339,17 +345,27 @@ export abstract class Creature implements ICreature {
   setRemainingActions(value: number): void { this.stateManager.setRemainingActions(value); }
   setRemainingQuickActions(value: number): void { this.stateManager.setRemainingQuickActions(value); }
 
-  // --- Actions ---
-  canRun() {
-    return this.isAlive() &&
-      this.hasActionsRemaining() &&
-      !this.running && !this.hasMoved() &&
-      !this.hasStatusEffect("wounded") &&
-      !this.hasStatusEffect("stunned");
+  canAct(): boolean {
+    return this.isAlive() && (
+      this.remainingActions > 0 ||
+      this.remainingQuickActions > 0 ||
+      this.remainingMovement > 0
+    );
   }
 
-  run(): { success: boolean, message: string } {
-    if (!this.canRun()) {
+  performAction(action: CreatureAction, allCreatures: ICreature[]): { success: boolean, message: string } {
+    switch(action) {
+      case 'run':
+        return this.run(allCreatures);
+      case 'disengage':
+        return this.disengage(allCreatures);
+      case 'search':
+        return this.search();
+    }
+  }
+
+  private run(allCreatures: ICreature[]): { success: boolean, message: string } {
+    if (!validateAction(this, 'run', allCreatures)) {
       return { success: false, message: '' };
     }
 
@@ -367,54 +383,43 @@ export abstract class Creature implements ICreature {
     return { success: true, message: `${this.name} runs ${displayDiceRoll(roll.dice)}${roll.fumble ? ' (Fumble)' : ''}` };
   }
 
-  canDisengage() {
-    return this.isAlive() &&
-      this.hasActionsRemaining();
-  }
-
-  disengage(): { success: boolean, message: string } {
-    if (!this.canDisengage()) {
+  private disengage(allCreatures: ICreature[]): { success: boolean, message: string } {
+    if (!validateAction(this, 'disengage', allCreatures)) {
       return { success: false, message: '' };
     }
     this.endTurn();
     return { success: true, message: `${this.name} disengages` };
   }
 
-  canSearch() {
-    return this.isAlive() &&
-      this.hasActionsRemaining() &&
-      false;
-  }
-
-  search(): boolean {
-    if (!this.canSearch()) {
-      return false;
+  private search(): { success: boolean, message: string } {
+    if (!validateAction(this, 'search', [])) {
+      return { success: false, message: '' };
     }
 
     // Use an action to search (could reveal hidden items, traps, or enemies)
     this.useAction();
 
-    // TODO: Implement actual search logic (reveal hidden items, traps, etc.)
-    // For now, just return success
-    return true;
+    return { success: true, message: `${this.name} searches` };
   }
 
-  performAttributeTest(attributeName: keyof Attributes, modifier: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
+  performAttributeTest(attributeName: keyof Attributes, modifier: number = 0): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
     const attributeValue = this.getEffectiveAttribute(attributeName);
     const totalModifier = attributeValue + modifier;
     const testResult = calculateAttributeRoll(totalModifier);
     if (testResult.fumble) {
       return { success: false, modifier: totalModifier, ...testResult };
     }
-    if(testResult.total >= 10) {
+    if (testResult.total >= 10) {
       return { success: true, modifier: totalModifier, ...testResult };
     }
     return { success: false, modifier: totalModifier, ...testResult };
   }
 
-  startTurn(): void {
+  startTurn(): string[] {
     this.running = false;
     this.stateManager.startTurn();
+
+    const messages: string[] = [];
 
     // Process status effects at turn start
     this.statusEffectManager.updateEffects();
@@ -423,9 +428,11 @@ export abstract class Creature implements ICreature {
     const activeEffects = this.statusEffectManager.getActiveEffects();
     activeEffects.forEach(effect => {
       if (effect.onTurnStart) {
-        effect.onTurnStart(this);
+        messages.push(...effect.onTurnStart(this));
       }
     });
+
+    return messages;
   }
 
   endTurn(): void {
@@ -448,31 +455,14 @@ export abstract class Creature implements ICreature {
   getHostileCreatures(allCreatures: ICreature[]): ICreature[] { return this.relationshipsManager.getHostileCreatures(allCreatures); }
   getFriendlyCreatures(allCreatures: ICreature[]): ICreature[] { return this.relationshipsManager.getFriendlyCreatures(allCreatures); }
 
-  // --- Engagement ---
-  isEngaged(hostileCreatures: ICreature[]): boolean {
-    if (this.x === undefined || this.y === undefined) return false;
-    return this.relationshipsManager.isEngaged(hostileCreatures, this.x, this.y, this.getZoneOfControlRange());
-  }
-
-  getEngagingCreatures(allCreatures: ICreature[]): ICreature[] {
-    if (this.x === undefined || this.y === undefined) return [];
-    return this.relationshipsManager.getEngagingCreatures(allCreatures, this.x, this.y, this.getZoneOfControlRange());
-  }
-
-  // Convenience method to check engagement status with all creatures
-  isEngagedWithAll(allCreatures: ICreature[]): boolean {
-    const hostileCreatures = this.getHostileCreatures(allCreatures);
-    return this.isEngaged(hostileCreatures);
-  }
-
   // --- Turn Start Position ---
   get turnStartX(): number | undefined { return this.stateManager.getTurnStartPosition()?.x; }
   get turnStartY(): number | undefined { return this.stateManager.getTurnStartPosition()?.y; }
   get turnStartFacing(): number | undefined { return this.stateManager.getTurnStartPosition()?.facing; }
 
   wasBehindTargetAtTurnStart(target: ICreature): boolean {
-    if (target.x === undefined || target.y === undefined || target.facing === undefined || 
-        this.turnStartX === undefined || this.turnStartY === undefined) {
+    if (target.x === undefined || target.y === undefined || target.facing === undefined ||
+      this.turnStartX === undefined || this.turnStartY === undefined) {
       return false;
     }
     return this.combatManager.wasBehindTargetAtTurnStart(
@@ -481,18 +471,18 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Movement and Combat Delegation ---
-  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: MapDefinition): PathfindingResult {
+  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult {
     return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
   }
 
-  moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: MapDefinition): MovementResult {
+  moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult {
     if (this.x === undefined || this.y === undefined) {
       this.positionManager.setPosition(path[0].x, path[0].y);
     }
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
   }
 
-  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }): CombatResult {
+  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult {
     if (this.x === undefined || this.y === undefined) {
       return { success: false, damage: 0, targetDefeated: false, messages: ["Creature is not on the map"] };
     }

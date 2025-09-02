@@ -1,19 +1,19 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions } from '../../game/types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
 import { addMessage } from '../../game/messageSystem';
 import { VALIDATION_MESSAGES } from '../../validation/messages';
 
 export interface CombatHandlers {
-  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }) => void;
-  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }) => void;
+  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) => void;
+  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) => void;
 }
 
 export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
   const { setCreatures, setTargetingMode, setTargetsInRangeKey, dispatch } = gameActions;
 
-  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }) {
+  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) {
     // Perform the attack using the creature's attack method
     const combatResult = attacker.attack(target, creatures, mapDefinition, mapData);
 
@@ -42,7 +42,7 @@ export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
     setTargetsInRangeKey(prev => prev + 1);
   }
 
-  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition?: MapDefinition, mapData?: { tiles: string[][] }) {
+  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) {
     // Handle attack in targeting mode
     handleAttack(attacker, target, creatures, mapDefinition, mapData);
     

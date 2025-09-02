@@ -9,13 +9,18 @@ export const roomPresetsByCategory: Record<string, RoomPresetCategory> = {
                 image: "rooms/forest1.jpg",
                 mapWidth: 8,
                 mapHeight: 10,
-                outdoors: true,
+                outdoors: true
             },
             forest2: {
                 image: "rooms/forest2.jpg",
                 mapWidth: 8,
                 mapHeight: 10,
                 outdoors: true,
+                terrain: [
+                    { id: "tree", x: 1, y: 1 },
+                    { id: "tree", x: 1, y: 6 },
+                    { id: "tree", x: 5, y: 8 },
+                ]
             },
         }
     },

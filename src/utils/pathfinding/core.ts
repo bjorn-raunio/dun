@@ -1,11 +1,10 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions } from '../dimensions';
 import { calculateMovementCost } from '../movementCost';
-import { isInZoneOfControl, pathPassesThroughZoneOfControl, getEngagingCreatures, isAdjacentToCreature } from '../zoneOfControl';
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
 import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { getAreaStats, isAreaStandable, calculateHeuristic, reconstructPath } from './helpers';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 /**
  * Core pathfinding system that handles A* pathfinding algorithms
@@ -20,7 +19,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     options: PathfindingOptions = {}
   ): PathfindingResult {
     // Return empty result if creature is not on the map (undefined position)
@@ -89,7 +88,7 @@ export class PathfindingSystem {
           creature
         );
         if (!isFinite(stepCost)) continue;
-        if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition)) continue;
+        if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition).isValid) continue;
 
         // Create the new path for this tile
         const newPath = [...current.path, { x: nx, y: ny }];
@@ -125,7 +124,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     creature?: ICreature
   ): Array<{ x: number; y: number }> | null {
     const openSet = new Set<string>();
@@ -218,7 +217,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition,
+    mapDefinition?: QuestMap,
     creature?: ICreature
   ): number {
     return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
@@ -236,7 +235,7 @@ export class PathfindingSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): boolean {
     const sideA = getAreaStats(currentX + (nx - currentX), currentY, selectedDims, mapData, cols, rows, mapDefinition);
     const sideB = getAreaStats(currentX, currentY + (ny - currentY), selectedDims, mapData, cols, rows, mapDefinition);

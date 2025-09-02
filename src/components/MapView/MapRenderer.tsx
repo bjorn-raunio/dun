@@ -2,13 +2,13 @@ import React from 'react';
 import { TILE_SIZE, COLORS } from '../styles';
 import { typeToImage } from '../../maps';
 import { MapBlock } from './types';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 interface MapRendererProps {
   mapData: {
     tiles: string[][];
   };
-  mapDefinition: MapDefinition;
+  mapDefinition: QuestMap;
 }
 
 export function MapRenderer({ mapData, mapDefinition }: MapRendererProps) {

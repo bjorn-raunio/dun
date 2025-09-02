@@ -3,7 +3,7 @@ import { AITarget, AIState, AIBehaviorType } from './types';
 import { calculateDistanceToCreature, canReachAndAttack, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { filterValidTargets, evaluateTargetWithScoring } from './helpers';
 import { PathfindingSystem } from '../utils/pathfinding';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 
 // --- AI Targeting Logic ---
 
@@ -17,7 +17,7 @@ export function evaluateTargets(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): AITarget[] {
   const validTargets = filterValidTargets(creature, allCreatures);
   
@@ -39,7 +39,7 @@ export function selectBestTarget(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): ICreature | null {
   const targets = evaluateTargets(ai, creature, allCreatures, mapData, cols, rows, mapDefinition);
 
@@ -73,7 +73,7 @@ export function updateTargetInformation(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): AIState {
   const newState = { ...ai };
 

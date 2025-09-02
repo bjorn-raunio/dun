@@ -3,9 +3,9 @@ import { ValidationResult } from './core';
 import { VALIDATION_MESSAGES } from './messages';
 import { validateCreatureAlive, validateActionsRemaining } from './creature';
 import { calculateDistanceBetween } from '../utils/pathfinding';
-import { terrainHeightAt } from '../maps/mapRenderer';
+
 import { LineOfSightSystem } from '../utils/pathfinding/lineOfSight';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { isEngaged } from '../utils/zoneOfControl';
 import { Weapon, RangedWeapon } from '../items/types';
 
@@ -17,7 +17,7 @@ export function validateCombat(
   target: ICreature,
   weapon: Weapon | RangedWeapon,
   allCreatures: ICreature[],
-  mapDefinition?: MapDefinition,
+  mapDefinition?: QuestMap,
   mapData?: { tiles: string[][] }
 ): ValidationResult {
   // Basic creature state checks
@@ -112,8 +112,8 @@ export function validateCombat(
         target.x === undefined || target.y === undefined) {
       // Continue with other validations
     } else {
-      const attackerHeight = terrainHeightAt(attacker.x, attacker.y, mapDefinition);
-      const targetHeight = terrainHeightAt(target.x, target.y, mapDefinition);
+          const attackerHeight = mapDefinition.terrainHeightAt(attacker.x, attacker.y);
+    const targetHeight = mapDefinition.terrainHeightAt(target.x, target.y);
       const heightDifference = Math.abs(attackerHeight - targetHeight);
       
       if (heightDifference > 1) {

@@ -95,3 +95,10 @@ export function processStatusEffectsAtTurnEnd(creatures: Creature[]): void {
     }
   });
 }
+
+/**
+ * Get status effects sorted by priority (highest first)
+ */
+export function getStatusEffectsByPriority(creature: Creature): StatusEffect[] {
+  return creature.getStatusEffectManager().getActiveEffectsByPriority();
+}

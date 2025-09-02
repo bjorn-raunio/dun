@@ -66,10 +66,13 @@ export class CreatureGroup {
     return allCreatures.filter((c: ICreature) => this.isFriendlyTo(c.group));
   }
 
-  startTurn() {
+  startTurn(): string[] {
+    const messages: string[] = [];
     this.creatures.forEach(creature => {
-      creature.startTurn();
+      const creatureMessages = creature.startTurn();
+      messages.push(...creatureMessages);
     });
+    return messages;
   }
 
   endTurn() {

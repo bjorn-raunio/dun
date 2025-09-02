@@ -1,5 +1,5 @@
 import React from 'react';
-import { Creature, ICreature } from '../../creatures/index';
+import { ICreature } from '../../creatures/index';
 import { CreatureHeader } from './CreatureHeader';
 import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
@@ -7,6 +7,7 @@ import { InventorySection } from './InventorySection';
 import { SkillsSection } from './SkillsSection';
 import { HeroSelector } from './HeroSelector';
 import { ActionPanel } from './ActionPanel';
+import { useActions } from '../../game/hooks/useActions';
 
 import { COMMON_STYLES } from '../styles';
 
@@ -18,9 +19,6 @@ interface CreaturePanelProps {
   onCreatureUpdate?: (creature: ICreature) => void;
   onAttack?: (creature: ICreature) => void;
   canAttack?: (creature: ICreature) => boolean;
-  onRun?: (creature: ICreature) => void;
-  onSearch?: (creature: ICreature) => void;
-  onDisengage?: (creature: ICreature) => void;
 }
 
 export function CreaturePanel({ 
@@ -30,11 +28,11 @@ export function CreaturePanel({
   onSelectCreature, 
   onCreatureUpdate,
   onAttack,
-  canAttack,
-  onRun,
-  onSearch,
-  onDisengage
+  canAttack
 }: CreaturePanelProps) {
+  // Use the useActions hook for run, search, and disengage actions
+  const { handleAction } = useActions(creatures, onCreatureUpdate);
+
   if (!selectedCreature) {
     return (
       <div style={PANEL_STYLES}>
@@ -53,9 +51,8 @@ export function CreaturePanel({
       <SkillsSection creature={selectedCreature} />
       <ActionPanel 
         creature={selectedCreature}
-        onRun={onRun ? () => onRun(selectedCreature) : undefined}
-        onSearch={onSearch ? () => onSearch(selectedCreature) : undefined}
-        onDisengage={onDisengage ? () => onDisengage(selectedCreature) : undefined}
+        allCreatures={creatures}
+        onAction={handleAction}
       />
       <EquipmentSection 
         creature={selectedCreature} 
@@ -75,8 +72,8 @@ const PANEL_STYLES = {
   position: "absolute" as const,
   top: 0,
   right: 0,
-  height: "calc(100vh - 162.5px)",
-  bottom: 162.5,
+  height: "calc(100vh - 243.75px)",
+  bottom: 243.75,
   width: 280,
   ...COMMON_STYLES.panel,
   padding: 16,

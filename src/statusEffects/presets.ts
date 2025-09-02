@@ -1,6 +1,7 @@
 import { StatusEffectType, StatusEffect } from './types';
 import { Creature } from '../creatures/index';
 import { createStatusEffect } from './manager';
+import { displayDiceRoll, displayDiceSum } from '../utils/dice';
 
 export interface StatusEffectPreset {
   icon: string;
@@ -25,7 +26,6 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     createEffect: (): StatusEffect => {
         return createStatusEffect('poison', 'poison', null, {
             name: "Poison",
-            description: "-1 to all attributes",
             attributeModifiers: {
               ...standardAttributeModifiers
             }
@@ -38,7 +38,6 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     createEffect: (): StatusEffect => {
         return createStatusEffect('wounded', 'wounded', null, {
             name: "Wounded",
-            description: "-1 to all attributes",
             attributeModifiers: {
               ...standardAttributeModifiers
             }
@@ -51,15 +50,17 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     createEffect: (): StatusEffect => {
       return createStatusEffect('stunned', 'stunned', null, {
         name: "Stunned",
-        description: "-1 to all attributes",
+        priority: 1,
         attributeModifiers: {
           ...standardAttributeModifiers
         },
         onTurnStart: (creature: Creature) => {          
-          /*const recoveryRoll = Math.floor(Math.random() * 6) + 1;
+          const recoveryRoll = Math.floor(Math.random() * 6) + 1;
           if (recoveryRoll >= 4) {
             creature.removeStatusEffect('stunned');
-          }*/
+            return [`${creature.name} recovers from stun ${displayDiceRoll([recoveryRoll])}`];
+          }
+          return [`${creature.name} fails to recover from stun ${displayDiceRoll([recoveryRoll])}`];
         }
       });
     }
@@ -70,12 +71,20 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     createEffect: (): StatusEffect => {
       return createStatusEffect('knockedDown', 'knockedDown', null, {
         name: "Knocked Down",
-        description: "Cannot move, perform actions, or quick actions",
         movementModifier: -999, // Effectively prevents movement
         actionModifier: -999, // Effectively prevents actions
         quickActionModifier: -999, // Effectively prevents quick actions
         attributeModifiers: {
           ...standardAttributeModifiers
+        },
+        onTurnStart: (creature: Creature) => {  
+          const result = creature.performAttributeTest("agility");
+          if (result.success) {
+            creature.removeStatusEffect('knockedDown');
+            creature.addStatusEffect(STATUS_EFFECT_PRESETS.stunned.createEffect());
+            return [`${creature.name} stands up: ${displayDiceSum(result, result.modifier)}`];
+          }
+          return [`${creature.name} fails to stand up: ${displayDiceSum(result, result.modifier)}`];
         }
       });
     }
@@ -86,7 +95,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
       return createStatusEffect('strength', 'strength', duration, {
         name: name ?? "Strength",
-        description: `+${value} to strength`,
+        description: `+${value} strength`,
         attributeModifiers: {
           strength: value
         }

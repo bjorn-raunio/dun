@@ -1,10 +1,10 @@
-import { Creature, ICreature } from '../creatures/index';
+import { ICreature } from '../creatures/index';
 import { AIState, AIMovementOption, AIDecision, AIBehaviorType } from './types';
-import { isPositionAccessibleWithBounds, calculateDistanceToCreature, calculateDistanceToAttackablePosition, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
+import { calculateDistanceToAttackablePosition, canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { getEngagingCreaturesAtPosition } from '../utils/zoneOfControl';
 import { createAIDecision, updateAIStateWithAction } from './helpers';
 import { logAI } from '../utils/logging';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 
 // --- AI Movement Logic ---
 
@@ -35,7 +35,7 @@ export function evaluateMovementOption(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): AIMovementOption {
   const benefits = {
     closerToTarget: false,
@@ -125,16 +125,6 @@ export function evaluateMovementOption(
       }
     }
 
-    // Don't penalize movement cost if we're getting closer to target
-    // The goal is to reach the target with minimal total movement, not minimal immediate movement
-
-    // Add a small penalty for positions that are dead ends (limited future movement options)
-    /*if (benefits.closerToTarget && mapData && cols !== undefined && rows !== undefined) {
-      const accessibleNeighbors = countAccessibleNeighbors(x, y, allCreatures, mapData, cols, rows, mapDefinition);
-      if (accessibleNeighbors <= 2) {
-        score -= 10; // Penalty for positions with very limited movement options
-      }
-    }*/
   }
 
   return {
@@ -161,7 +151,7 @@ function validateClosestDestination(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): boolean {
   const destinationPathDistance = calculateDistanceToAttackablePosition(destination.x, destination.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
 
@@ -196,7 +186,7 @@ export function findBestMovement(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): AIMovementOption | null {
   if (reachableTiles.length === 0) {
     return null;
@@ -315,7 +305,7 @@ export function shouldMove(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): boolean {
   // If no target, movement is less important
   if (!target) {
@@ -437,7 +427,7 @@ export function createMovementDecision(
   mapData?: { tiles: string[][] },
   cols?: number,
   rows?: number,
-  mapDefinition?: MapDefinition
+  mapDefinition?: QuestMap
 ): AIDecision | null {
   if (!shouldMove(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition)) {
     return null;
@@ -485,37 +475,4 @@ export function updateAIStateAfterMovement(
     type: 'move',
     destination: { x: newX, y: newY }
   });
-}
-
-/**
- * Count accessible neighboring tiles for a position
- */
-function countAccessibleNeighbors(
-  x: number,
-  y: number,
-  allCreatures: ICreature[],
-  mapData: { tiles: string[][] },
-  cols: number,
-  rows: number,
-  mapDefinition?: MapDefinition
-): number {
-  let count = 0;
-
-  // Check all 8 adjacent tiles using direction constants
-  // [dx, dy] for each direction: South, East, North, West, Southeast, Southwest, Northwest, Northeast
-  const directions = [
-    [0, 1], [1, 0], [0, -1], [-1, 0], // Cardinal directions
-    [1, 1], [1, -1], [-1, 1], [-1, -1] // Diagonal directions
-  ];
-
-  for (const [dx, dy] of directions) {
-    const neighborX = x + dx;
-    const neighborY = y + dy;
-
-    if (isPositionAccessibleWithBounds(neighborX, neighborY, allCreatures, mapData, cols, rows, mapDefinition)) {
-      count++;
-    }
-  }
-
-  return count;
 }

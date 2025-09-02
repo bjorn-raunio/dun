@@ -3,7 +3,7 @@ import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions
 import { getTileCost } from '../movementCost';
 import { DistanceOptions } from './types';
 import { PathfindingSystem } from './core';
-import { MapDefinition } from '../../maps/types';
+import { QuestMap } from '../../maps/types';
 
 /**
  * Distance calculation utilities
@@ -93,7 +93,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): boolean {
     // If we don't have map data, fall back to simple distance calculation
     if (!mapData || cols === undefined || rows === undefined) {
@@ -152,7 +152,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): number {
     // Return infinity if target is not on the map (undefined position)
     if (target.x === undefined || target.y === undefined) {
@@ -164,7 +164,7 @@ export class DistanceSystem {
       return this.calculateDistanceBetween(fromX, fromY, target.x, target.y);
     }
 
-    const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);
+    const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, cols, rows, mapDefinition);
 
     if (!closestPosition) {
       return Infinity;
@@ -185,7 +185,7 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): number {
     const path = PathfindingSystem.findPathToTarget(fromX, fromY, toX, toY, allCreatures, mapData, cols, rows, mapDefinition);
 
@@ -207,10 +207,10 @@ export class DistanceSystem {
     mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): number {
     // Find the closest accessible position to the target
-    const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);
+    const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, cols, rows, mapDefinition);
 
     if (!closestPosition) {
       return Infinity; // No accessible position found
@@ -231,7 +231,7 @@ export class DistanceSystem {
     mapData?: { tiles: string[][] },
     cols?: number,
     rows?: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): number {
     const key = `${fromX},${fromY}`;
     const cost = costMap.get(key);
@@ -251,10 +251,9 @@ export class DistanceSystem {
     fromY: number,
     target: ICreature,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): { x: number; y: number } | null {
     // Return null if target is not on the map (undefined position)
     if (target.x === undefined || target.y === undefined) {
@@ -271,7 +270,7 @@ export class DistanceSystem {
         const y = target.y + dy;
 
         if (x >= 0 && x < cols && y >= 0 && y < rows) {
-          if (this.isPositionAccessibleWithBounds(x, y, allCreatures, mapData, cols, rows, mapDefinition)) {
+          if (this.isPositionAccessible(x, y, allCreatures, mapDefinition)) {
             positions.push({ x, y });
           }
         }
@@ -304,12 +303,13 @@ export class DistanceSystem {
     x: number,
     y: number,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
-    mapDefinition?: MapDefinition
+    mapDefinition?: QuestMap
   ): boolean {
-    // Check map bounds
-    if (x < 0 || y < 0 || x >= mapData.tiles[0].length || y >= mapData.tiles.length) {
-      return false;
+    // Check map bounds using mapDefinition if available, otherwise fall back to mapData
+    if (mapDefinition) {
+      if (!mapDefinition.isWithinBounds(x, y)) {
+        return false;
+      }
     }
 
     // Check if any creature occupies this position
@@ -326,47 +326,7 @@ export class DistanceSystem {
 
     // Check terrain cost (if map definition provided)
     if (mapDefinition) {
-      const terrainCost = getTileCost(x, y, mapData, mapDefinition);
-      if (!isFinite(terrainCost)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Check if a position is accessible with bounds checking
-   */
-  static isPositionAccessibleWithBounds(
-    x: number,
-    y: number,
-    allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
-    cols: number,
-    rows: number,
-    mapDefinition?: MapDefinition
-  ): boolean {
-    // Check map bounds
-    if (x < 0 || y < 0 || x >= cols || y >= rows) {
-      return false;
-    }
-
-    // Check if any creature occupies this position
-    for (const creature of allCreatures) {
-      if (creature.isDead()) continue; // Dead creatures don't block
-      
-      // Skip creatures that are not on the map (undefined position)
-      if (creature.x === undefined || creature.y === undefined) continue;
-
-      if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
-        return false;
-      }
-    }
-
-    // Check terrain cost (if map definition provided)
-    if (mapDefinition) {
-      const terrainCost = getTileCost(x, y, mapData, mapDefinition);
+      const terrainCost = getTileCost(x, y, mapDefinition);
       if (!isFinite(terrainCost)) {
         return false;
       }

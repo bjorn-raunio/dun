@@ -19,7 +19,8 @@ import {
   calculateDamage
 } from './calculations';
 import { COMBAT_CONSTANTS } from '../constants';
-import { CombatEventData } from './execution';
+import { COMBAT_EVENTS, CombatEventData } from './execution';
+import { CombatTriggers } from './combatTriggers';
 
 // --- Combat Phase 1: To-Hit Roll ---
 
@@ -48,8 +49,27 @@ export function executeToHitRollMelee(
   defenderBonus += elevationBonus.defenderBonus;
 
   // Roll for combat
-  const attackerRollResult = calculateAttributeRoll(combatEventData.attackerBonus);
+  const attackerRollResult = calculateAttributeRoll(attackerBonus);
+  if(attackerRollResult.fumble) {
+    combatEventData.attacker.endTurn();
+  }
+
+  if (attackerRollResult.dice && attackerRollResult.dice.length === 2) {
+    const [die1, die2] = attackerRollResult.dice;
+    if (die1 === die2 && die1 > 1) {
+      CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, combatEventData);
+    }
+  }
+
   const defenderRollResult = calculateAttributeRoll(defenderBonus);
+
+  if (defenderRollResult.dice && defenderRollResult.dice.length === 2) {
+    const [die1, die2] = defenderRollResult.dice;
+    if (die1 === die2 && die1 > 1) {
+      CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, {...combatEventData, target: combatEventData.attacker, attacker: combatEventData.target});
+    }
+  }
+
   const attackerRoll = attackerRollResult.total;
   const defenderRoll = defenderRollResult.total;
 
@@ -163,6 +183,9 @@ export function executeToHitRollRanged(
 
   const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
   const toHitRollResult = combatEventData.attacker.performAttributeTest('ranged', totalModifier);
+  if(toHitRollResult.criticalSuccess) {
+    combatEventData.attacker.endTurn();
+  }
   let criticalHit = isCriticalHit(toHitRollResult.dice);
 
   // Check if target is more than half the weapon's range away
@@ -262,7 +285,8 @@ export function executeDamageRoll(
   target: Creature,
   attackerDoubleCritical: boolean,
   criticalHit: boolean,
-  isRanged: boolean
+  isRanged: boolean,
+  bonusDamage: number = 0
 ): DamageResult {
   const attackerEquipment = new EquipmentSystem(attacker.equipment);
   const targetEquipment = new EquipmentSystem(target.equipment);
@@ -273,8 +297,8 @@ export function executeDamageRoll(
 
   // Roll dice based on attack type
   const diceRolls = isRanged
-    ? calculateDamageRoll(weaponDamage, 0) // Ranged: weapon damage only, no strength
-    : calculateDamageRoll(weaponDamage, attacker.strength); // Melee: weapon damage + strength
+    ? calculateDamageRoll(weaponDamage, bonusDamage) // Ranged: weapon damage only, no strength
+    : calculateDamageRoll(weaponDamage, attacker.strength + bonusDamage); // Melee: weapon damage + strength
 
   // Calculate effective armor value
   const armorValue = calculateEffectiveArmor(target, targetEquipment, attackerEquipment);

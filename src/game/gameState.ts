@@ -5,12 +5,12 @@ import { GameState, GameRefs, GameActions, ViewportState, PanState, TargetingMod
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
-import { MapDefinition } from '../maps/types';
+import { QuestMap } from '../maps/types';
 import { createWeatherEffect } from './weather';
 
 // --- Game State Management ---
 
-export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapDefinition): [GameState, GameRefs, GameActions] {
+export function useGameState(initialCreatures: ICreature[], mapDefinition?: QuestMap): [GameState, GameRefs, GameActions] {
   // --- VIEWPORT SIZE ---
     const [viewport, setViewport] = React.useState<ViewportState>({ 
     width: window.innerWidth, 
@@ -38,8 +38,8 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapD
   const startingTilePixelX = startingTile.x * GAME_SETTINGS.TILE_SIZE;
   const startingTilePixelY = startingTile.y * GAME_SETTINGS.TILE_SIZE;
   
-  // Account for bottom bar height (130px) in vertical centering
-  const bottomBarHeight = 130;
+  // Account for bottom bar height (195px) in vertical centering
+  const bottomBarHeight = 195;
   const availableHeight = window.innerHeight - bottomBarHeight;
   
   // Center the starting tile in the viewport
@@ -51,7 +51,7 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapD
   
   // Recalculate center when viewport changes
   React.useEffect(() => {
-    const bottomBarHeight = 130;
+    const bottomBarHeight = 195;
     const availableHeight = viewport.height - bottomBarHeight;
     
     // Recalculate center over starting tile when viewport changes

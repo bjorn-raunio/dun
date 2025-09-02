@@ -1,5 +1,4 @@
 import { StatusEffect, StatusEffectType, StatusEffectManager } from './types';
-import { generateId } from '../utils/idGeneration';
 import { 
   getStatusEffectIcon
 } from './presets';
@@ -50,6 +49,10 @@ export class CreatureStatusEffectManager implements StatusEffectManager {
     return Array.from(this.effects.values());
   }
 
+  getActiveEffectsByPriority(): StatusEffect[] {
+    return Array.from(this.effects.values()).sort((a, b) => b.priority - a.priority);
+  }
+
   /**
    * Check if creature has a specific effect
    */
@@ -93,6 +96,7 @@ export function createStatusEffect(
     description: '', // Description must be set explicitly in overrides
     duration,
     remainingTurns: duration,
+    priority: 0, // Default priority
     icon: getStatusEffectIcon(type),
     ...overrides
   };

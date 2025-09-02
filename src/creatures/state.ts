@@ -22,7 +22,8 @@ export class CreatureStateManager {
       remainingVitality: this.getMaxVitality(),
       remainingMana: this.getMaxMana(),
       remainingFortune: this.getMaxFortune(),
-      hasMovedWhileEngaged: false
+      hasMovedWhileEngaged: false,
+      pushedCreatures: new Set<string>() // Initialize pushedCreatures
     };
 
     this.turnStartPosition = initialPosition ? { ...initialPosition } : undefined;
@@ -75,10 +76,6 @@ export class CreatureStateManager {
   }
 
   hasTakenActionsThisTurn(): boolean {
-    // Dead creatures cannot have taken actions
-    if (this.isDead()) {
-      return false;
-    }
     return this.hasMoved() ||
       this.state.remainingActions < this.getMaxActions() ||
       this.state.remainingQuickActions < this.getMaxQuickActions();
@@ -124,7 +121,7 @@ export class CreatureStateManager {
       this.state.remainingQuickActions--;
     } else {
       this.useAction();
-    }    
+    }
   }
 
   useMana(amount: number): boolean {
@@ -173,13 +170,15 @@ export class CreatureStateManager {
 
   // --- Turn Management ---
 
-  startTurn(): void {
+  startTurn() {
+
     if (!this.isDead()) {
       this.state.remainingMovement = this.getMaxMovement();
       this.state.remainingActions = this.getMaxActions();
       this.state.remainingQuickActions = this.getMaxQuickActions();
     }
     this.state.hasMovedWhileEngaged = false;
+    this.state.pushedCreatures.clear(); // Reset pushed creatures tracking for new turn
   }
 
   endTurn(): void {
@@ -194,5 +193,17 @@ export class CreatureStateManager {
 
   recordTurnStartPosition(position: CreaturePositionOrUndefined): void {
     this.turnStartPosition = position ? { ...position } : undefined;
+  }
+
+  // --- Push Tracking ---
+
+  canPushCreature(targetId: string): boolean {
+    // Check if this creature has already pushed the target this turn
+    return !this.state.pushedCreatures.has(targetId);
+  }
+
+  recordPushedCreature(targetId: string): void {
+    // Mark this creature as pushed by this creature this turn
+    this.state.pushedCreatures.add(targetId);
   }
 }
