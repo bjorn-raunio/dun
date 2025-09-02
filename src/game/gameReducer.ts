@@ -2,6 +2,7 @@ import { ICreature, CreatureGroup } from '../creatures/index';
 import { GameState, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, AITurnState } from './turnManagement';
 import { MapDefinition } from '../maps/types';
+import { WeatherState, createWeatherEffect } from './weather';
 
 // --- Game Action Types ---
 
@@ -19,6 +20,7 @@ export type GameAction =
   | { type: 'SET_AI_TURN_STATE'; payload: AITurnState }
   | { type: 'SET_TURN_STATE'; payload: TurnState }
   | { type: 'SET_TARGETING_MODE'; payload: TargetingMode }
+  | { type: 'SET_WEATHER'; payload: WeatherState }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
   | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } };
 
@@ -74,6 +76,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     
     case 'SET_TARGETING_MODE':
       return { ...state, targetingMode: action.payload };
+    
+    case 'SET_WEATHER':
+      return { ...state, weather: action.payload };
     
     case 'RESET_VIEWPORT_CENTER':
       return {
@@ -145,6 +150,11 @@ export function getInitialGameState(
       isActive: false,
       attackerId: null,
       message: ''
+    },
+    weather: {
+      current: createWeatherEffect('clear'),
+      transitionTime: 0,
+      isTransitioning: false
     }
   };
 }

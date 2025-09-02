@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useMemo, useCallback, use
 import { ICreature } from '../creatures/index';
 import { gameReducer, GameAction, getInitialGameState } from './gameReducer';
 import { GameState, GameRefs, GameActions, TargetingMode } from './types';
+import { WeatherState } from './weather';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
@@ -137,6 +138,10 @@ export function GameProvider({
     dispatch({ type: 'SET_TARGETING_MODE', payload: targetingMode });
   }, [dispatch]);
 
+  const setWeather = useCallback((weather: WeatherState) => {
+    dispatch({ type: 'SET_WEATHER', payload: weather });
+  }, [dispatch]);
+
   const actions = useMemo((): GameActions => ({
     setCreatures,
     setSelectedCreatureId,
@@ -150,8 +155,9 @@ export function GameProvider({
     setTurnState,
     setZoom,
     setTargetingMode,
+    setWeather,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {

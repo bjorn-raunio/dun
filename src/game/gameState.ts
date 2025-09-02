@@ -6,6 +6,7 @@ import { TurnState, initializeAITurnState, initializeTurnState } from './turnMan
 import { GAME_SETTINGS } from '../utils/constants';
 import { updateCombatStates } from '../utils/combatStateUtils';
 import { MapDefinition } from '../maps/types';
+import { createWeatherEffect } from './weather';
 
 // --- Game State Management ---
 
@@ -84,6 +85,13 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapD
     message: ''
   });
 
+  // Weather state
+  const [weather, setWeather] = React.useState({
+    current: createWeatherEffect('clear'),
+    transitionTime: 0,
+    isTransitioning: false
+  });
+
   // Initialize combat states when creatures are first loaded
   React.useEffect(() => {
     updateCombatStates(creatures);
@@ -127,6 +135,7 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapD
     aiTurnState,
     turnState,
     targetingMode,
+    weather,
   };
 
   const gameRefs: GameRefs = {
@@ -154,6 +163,7 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: MapD
     setTurnState,
     setZoom,
     setTargetingMode,
+    setWeather,
     dispatch: () => {}, // Placeholder - implement actual dispatch logic if needed
   };
 

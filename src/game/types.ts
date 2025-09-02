@@ -1,5 +1,6 @@
 import { Creature, ICreature, CreatureGroup } from '../creatures/index';
 import { TurnState, AITurnState } from './turnManagement';
+import { WeatherState } from './weather';
 
 // --- Game State Types ---
 
@@ -16,6 +17,7 @@ export type GameState = {
   aiTurnState: AITurnState;
   turnState: TurnState;
   targetingMode: TargetingMode;
+  weather: WeatherState;
 };
 
 export type TargetingMode = {
@@ -60,5 +62,6 @@ export type GameActions = {
   setTurnState: (updater: (prev: TurnState) => TurnState) => void;
   setZoom: (zoom: number) => void;
   setTargetingMode: (targetingMode: TargetingMode) => void;
+  setWeather: (weather: WeatherState) => void;
   dispatch: React.Dispatch<any>;
 };
