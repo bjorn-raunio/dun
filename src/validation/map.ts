@@ -7,23 +7,6 @@ import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
 import { QuestMap } from '../maps/types';
 
 /**
- * Check if a tile is within any room in the map definition
- */
-function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: QuestMap): boolean {
-  if (!mapDefinition) {
-    return false;
-  }
-  
-  for (const room of mapDefinition.rooms) {
-    if (room.isTileWithinRoom(x, y)) {
-      return true;
-    }
-  }
-  
-  return false;
-}
-
-/**
  * Validate map dimensions
  */
 export function validateMapDimensions(mapDefinition: QuestMap): ValidationResult {
@@ -192,18 +175,15 @@ export function validatePositionStandable(
         const tile = mapDefinition.tiles[cy]?.[cx];
         const height = mapDefinition.terrainHeightAt(cx, cy);
         
-        // Check if tile is empty and outside any room - this blocks movement
-        if (!tile || tile === "empty.jpg") {
-          if (!isTileWithinAnyRoom(cx, cy, mapDefinition)) {
+        if (!mapDefinition.isValidTile(cx, cy)) {
             result.isValid = false;
-            result.blockingTerrain = true;
-          }
+            result.blockingTerrain = true;          
         }
         
         // A tile is considered standable if it's not empty OR if it's within a room
         if (tile && tile !== "empty.jpg") {
           hasStandableTile = true;
-        } else if (isTileWithinAnyRoom(cx, cy, mapDefinition)) {
+        } else if (mapDefinition.isValidTile(cx, cy)) {
           hasStandableTile = true;
         }
         

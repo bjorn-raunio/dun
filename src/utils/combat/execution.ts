@@ -15,7 +15,7 @@ import { isAreaStandable } from '../pathfinding/helpers';
 import { QuestMap } from '../../maps/types';
 import { RangedWeapon } from '../../items/types';
 import { CombatTriggers } from './combatTriggers';
-import { diagonalMovementBlocked } from '../movementCost';
+import { diagonalMovementBlocked } from '../movement';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building

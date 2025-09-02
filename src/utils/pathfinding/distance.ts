@@ -1,6 +1,6 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions, isPositionInCreatureBounds } from '../dimensions';
-import { getTileCost } from '../movementCost';
+import { getTileCost } from '../movement';
 import { DistanceOptions } from './types';
 import { PathfindingSystem } from './core';
 import { QuestMap } from '../../maps/types';

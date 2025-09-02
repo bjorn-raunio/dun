@@ -36,6 +36,10 @@ export class QuestMap {
     return this.width * this.height;
   }
 
+  isValidTile(x: number, y: number): boolean {
+    return this.getRoomsAt(x, y).length > 0;
+  }
+
   /**
    * Check if coordinates are within map bounds
    */
@@ -196,16 +200,4 @@ export class QuestMap {
       }
     }
   }
-
 }
-
-export type ResolvedTerrain = {
-  key: string;
-  x: number;
-  y: number;
-  mapWidth: number;
-  mapHeight: number;
-  rotation: 0 | 90 | 180 | 270;
-  image: string;
-  height: number;
-};

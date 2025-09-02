@@ -6,8 +6,8 @@ import {
   getEngagingCreatures
 } from '../utils/zoneOfControl';
 import { updateCombatStates } from '../utils/combatStateUtils';
-import { calculateMovementCost } from '../utils/movementCost';
-import { MovementResult, MovementStatus } from '../game/movement';
+import { calculateMovementCost } from '../utils/movement';
+import { MovementResult, MovementStatus } from '../utils/movement';
 import { QuestMap } from '../maps/types';
 import { logMovement } from '../utils';
 import { CreaturePositionOrUndefined } from './types';

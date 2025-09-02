@@ -6,7 +6,7 @@ import { shouldFlee, createFleeDecision, updateAIStateAfterAttack, isTargetValid
 import { calculateTargetsInRange } from '../utils/combat';
 import { canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { validateCombat } from '../validation/combat';
-import { executeMovement } from '../game/movement';
+import { executeMovement } from '../utils/movement';
 import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 import { createAIDecision } from './helpers';

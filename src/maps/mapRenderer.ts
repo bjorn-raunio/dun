@@ -1,5 +1,4 @@
-import { ResolvedTerrain, QuestMap } from './types';
-import { Terrain } from './terrain';
+import { QuestMap } from './types';
 
 // Generate map tiles from map definition
 export function generateMapTiles(mapDefinition: QuestMap) {

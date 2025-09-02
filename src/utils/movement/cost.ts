@@ -1,35 +1,9 @@
-import { Creature, ICreature } from '../creatures/index';
-
-import { validateEngagementMovement } from '../validation/movement';
-import { validatePositionStandable } from '../validation/map';
-import { getEngagingCreaturesAtPosition } from './zoneOfControl';
-import { QuestMap } from '../maps/types';
-
-/**
- * Check if a tile is within any room in the map definition
- * (Uses QuestMap methods)
- */
-function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: QuestMap): boolean {
-  if (!mapDefinition) {
-    return false;
-  }
-  
-  const roomsAtPosition = mapDefinition.getRoomsAt(x, y);
-  return roomsAtPosition.length > 0;
-}
-
-/**
- * Check if a tile is within any terrain in the map definition
- * (Uses QuestMap methods)
- */
-function isTileWithinAnyTerrain(x: number, y: number, mapDefinition?: QuestMap): boolean {
-  if (!mapDefinition) {
-    return false;
-  }
-
-  const terrainAtPosition = mapDefinition.getTerrainAt(x, y);
-  return terrainAtPosition.length > 0;
-}
+import { Creature, ICreature } from '../../creatures/index';
+import { validateEngagementMovement } from '../../validation/movement';
+import { validatePositionStandable } from '../../validation/map';
+import { getEngagingCreaturesAtPosition } from '../zoneOfControl';
+import { QuestMap } from '../../maps/types';
+import { MovementCostOptions } from './types';
 
 export function diagonalMovementBlocked(fromX: number, fromY: number, toX: number, toY: number, mapDefinition?: QuestMap, maxElevationDifference: number = 1, climbingCostPenalty: number = 1) {
   const isDiagonal = (fromX !== toX) && (fromY !== toY);
@@ -63,7 +37,6 @@ export function diagonalMovementBlocked(fromX: number, fromY: number, toX: numbe
   return false;
 }
 
-
 // --- Centralized Movement Cost Calculation Service ---
 // 
 // This service consolidates movement cost calculations for both single-tile and multi-tile creatures.
@@ -75,30 +48,6 @@ export function diagonalMovementBlocked(fromX: number, fromY: number, toX: numbe
 //     areaDimensions: { w: 2, h: 2 },
 //     mapDimensions: { cols: 20, rows: 15 }
 //   })
-
-/**
- * Movement cost calculation options
- */
-export interface MovementCostOptions {
-  /** Whether to check diagonal movement corner rule */
-  checkDiagonalCornerRule?: boolean;
-  /** Whether to consider creature blocking */
-  considerCreatures?: boolean;
-  /** Base movement cost (default: 1) */
-  baseCost?: number;
-  /** Maximum elevation difference allowed (default: 1) */
-  maxElevationDifference?: number;
-  /** Cost penalty for climbing (default: 1) */
-  climbingCostPenalty?: number;
-  /** Whether to return Infinity for blocked movement or throw error */
-  returnInfinityForBlocked?: boolean;
-  /** Area dimensions for multi-tile creatures (default: 1x1 for single tiles) */
-  areaDimensions?: { w: number; h: number };
-  /** Map dimensions for bounds checking (required when using area dimensions) */
-  mapDimensions?: { cols: number; rows: number };
-  /** Cost to reach the source position (used for engagement zone calculations) */
-  sourcePositionCost?: number;
-}
 
 /**
  * Unified movement cost calculation function
@@ -299,8 +248,8 @@ export function getTileCost(
   if (!mapDefinition || !mapDefinition.isWithinBounds(x, y)) {
     return returnInfinityForBlocked ? Infinity : 0;
   }
-
-  if (!isTileWithinAnyRoom(x, y, mapDefinition) && !isTileWithinAnyTerrain(x, y, mapDefinition)) {
+  
+  if (!mapDefinition.isValidTile(x, y)) {
     return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms and terrain block movement
   }
 
@@ -343,8 +292,6 @@ export function getTileCost(
   // Default terrain cost
   return 1;
 }
-
-
 
 /**
  * Calculate the cost difference between two positions (for step-by-step movement)

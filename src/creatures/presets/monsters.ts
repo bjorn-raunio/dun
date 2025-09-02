@@ -18,7 +18,6 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
         courage: 3,
         intelligence: 4,
       },
-      actions: 3,
       vitality: 4,
       size: 2,
       weaponLoadouts: ["broadsword", "axe", "mace"],

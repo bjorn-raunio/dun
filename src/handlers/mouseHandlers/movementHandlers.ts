@@ -2,8 +2,8 @@ import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { QuestMap } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
-import { executeMovement } from '../../game/movement';
-import { calculateCostDifference } from '../../utils/movementCost';
+import { executeMovement } from '../../utils/movement';
+import { calculateCostDifference } from '../../utils/movement';
 import { logMovement, logGame } from '../../utils/logging';
 
 // Simplified interfaces for better readability

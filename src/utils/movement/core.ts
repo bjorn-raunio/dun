@@ -1,21 +1,10 @@
-import { Creature, ICreature } from '../creatures/index';
-import { validateMovement } from '../validation/movement';
-import { VALIDATION_MESSAGES } from '../validation/messages';
-import { QuestMap } from '../maps/types';
+import { Creature, ICreature } from '../../creatures/index';
+import { validateMovement } from '../../validation/movement';
+import { VALIDATION_MESSAGES } from '../../validation/messages';
+import { QuestMap } from '../../maps/types';
+import { MovementResult, MovementStatus } from './types';
 
-// --- Movement Logic ---
-
-export type MovementStatus = 'success' | 'partial' | 'failed';
-
-export interface MovementResult {
-  status: MovementStatus;
-  message?: string;
-  cost: number;
-  finalPosition?: { x: number; y: number };
-  intendedDestination?: { x: number; y: number };
-  tilesMoved: number;
-  totalPathLength: number;
-}
+// --- Core Movement Logic ---
 
 /**
  * Execute movement for a creature through a path
@@ -78,5 +67,3 @@ export function executeMovement(
     totalPathLength: moveResult.totalPathLength
   };
 }
-
-

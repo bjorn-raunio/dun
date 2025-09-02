@@ -24,7 +24,7 @@ import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../it
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
-import { MovementResult } from '../game/movement';
+import { MovementResult } from '../utils/movement';
 import { QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';

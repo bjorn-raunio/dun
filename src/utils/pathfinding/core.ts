@@ -1,6 +1,6 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { getCreatureDimensions } from '../dimensions';
-import { calculateMovementCost } from '../movementCost';
+import { calculateMovementCost } from '../movement';
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
 import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
 import { getAreaStats, isAreaStandable, calculateHeuristic, reconstructPath } from './helpers';
@@ -103,7 +103,7 @@ export class PathfindingSystem {
         }
       }
     }
-
+    
     return { tiles: result, costMap: dist, pathMap };
   }
 

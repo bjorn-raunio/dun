@@ -76,24 +76,7 @@ export function GameUI({
        }}>
         <TurnTracker
           turnState={turnState}
-        />
-        {targetingMode?.isActive && (
-          <div style={{
-            marginTop: 8,
-            padding: 8,
-            background: COLORS.primary,
-            color: 'white',
-            borderRadius: 4,
-            fontSize: 12,
-            fontWeight: 600,
-            textAlign: 'center'
-          }}>
-            🎯 {targetingMode.message}
-            <div style={{ fontSize: 10, opacity: 0.8, marginTop: 4 }}>
-              Press ESC to cancel
-            </div>
-          </div>
-        )}
+        />        
       </div>
 
              <button

@@ -3,7 +3,7 @@
 // without creating circular dependencies
 
 import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
-import { MovementResult } from '../game/movement';
+import { MovementResult } from '../utils/movement';
 import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { CreatureGroup } from './CreatureGroup';
 import { StatusEffectManager, StatusEffect, Attributes } from '../statusEffects';
