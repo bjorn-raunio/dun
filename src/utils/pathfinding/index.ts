@@ -42,14 +42,14 @@ export const calculateDistanceBetween = (fromX: number, fromY: number, toX: numb
 export const calculateDistanceToCreature = (fromX: number, fromY: number, target: ICreature, options: DistanceOptions = {}) => 
   DistanceSystem.calculateDistanceToCreature(fromX, fromY, target, options);
 
-export const canReachAndAttack = (attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapData?: { tiles: string[][] }, cols?: number, rows?: number, mapDefinition?: QuestMap) => 
-  DistanceSystem.canReachAndAttack(attacker, target, allCreatures, mapData, cols, rows, mapDefinition);
+export const canReachAndAttack = (attacker: ICreature, target: ICreature, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap) => 
+  DistanceSystem.canReachAndAttack(attacker, target, allCreatures, cols, rows, mapDefinition);
 
 export const canAttackImmediately = (attacker: ICreature, target: ICreature) => 
   DistanceSystem.canAttackImmediately(attacker, target);
 
-export const calculateDistanceToAttackablePosition = (fromX: number, fromY: number, target: ICreature, creature: ICreature, allCreatures: ICreature[], mapData?: { tiles: string[][] }, cols?: number, rows?: number, mapDefinition?: QuestMap) => 
-  DistanceSystem.calculateDistanceToAttackablePosition(fromX, fromY, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+export const calculateDistanceToAttackablePosition = (fromX: number, fromY: number, target: ICreature, creature: ICreature, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap) => 
+  DistanceSystem.calculateDistanceToAttackablePosition(fromX, fromY, target, creature, allCreatures, cols, rows, mapDefinition);
 
 export const isCreatureAtPosition = (x: number, y: number, allCreatures: ICreature[]) => 
   DistanceSystem.isCreatureAtPosition(x, y, allCreatures);
@@ -57,23 +57,23 @@ export const isCreatureAtPosition = (x: number, y: number, allCreatures: ICreatu
 export const findCreatureById = (creatures: ICreature[], id: string) => 
   DistanceSystem.findCreatureById(creatures, id);
 
-export const isCreatureVisible = (fromX: number, fromY: number, target: ICreature, mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature, allCreatures?: ICreature[]) => 
-  LineOfSightSystem.isCreatureVisible(fromX, fromY, target, mapData, cols, rows, mapDefinition, options, fromCreature, allCreatures);
+export const isCreatureVisible = (fromX: number, fromY: number, target: ICreature, cols: number, rows: number, mapDefinition: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature, allCreatures?: ICreature[]) => 
+  LineOfSightSystem.isCreatureVisible(fromX, fromY, target, cols, rows, mapDefinition, options, fromCreature, allCreatures);
 
-export const hasLineOfSight = (fromX: number, fromY: number, toX: number, toY: number, mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature, toCreature?: ICreature, allCreatures?: ICreature[]) => 
-  LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows, mapDefinition, options, fromCreature, toCreature, allCreatures);
+export const hasLineOfSight = (fromX: number, fromY: number, toX: number, toY: number, cols: number, rows: number, mapDefinition: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature, toCreature?: ICreature, allCreatures?: ICreature[]) => 
+  LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, cols, rows, mapDefinition, options, fromCreature, toCreature, allCreatures);
 
-export const debugLineOfSight = (fromX: number, fromY: number, toX: number, toY: number, mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap) => 
-  LineOfSightSystem.debugLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows, mapDefinition);
+export const debugLineOfSight = (fromX: number, fromY: number, toX: number, toY: number, cols: number, rows: number, mapDefinition: QuestMap) => 
+  LineOfSightSystem.debugLineOfSight(fromX, fromY, toX, toY, cols, rows, mapDefinition);
 
-export const getVisibleCreatures = (fromX: number, fromY: number, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature) => 
-  LineOfSightSystem.getVisibleCreatures(fromX, fromY, allCreatures, mapData, cols, rows, mapDefinition, options, fromCreature);
+export const getVisibleCreatures = (fromX: number, fromY: number, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, options?: LineOfSightOptions, fromCreature?: ICreature) => 
+  LineOfSightSystem.getVisibleCreatures(fromX, fromY, allCreatures, cols, rows, mapDefinition, options, fromCreature);
 
-export const getReachableTiles = (creature: ICreature, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap, options?: PathfindingOptions) => 
-  PathfindingSystem.getReachableTiles(creature, allCreatures, mapData, cols, rows, mapDefinition, options);
+export const getReachableTiles = (creature: ICreature, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, options?: PathfindingOptions) => 
+  PathfindingSystem.getReachableTiles(creature, allCreatures, cols, rows, mapDefinition, options);
 
-export const findPathToTarget = (startX: number, startY: number, targetX: number, targetY: number, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap, creature?: ICreature) => 
-  PathfindingSystem.findPathToTarget(startX, startY, targetX, targetY, allCreatures, mapData, cols, rows, mapDefinition, creature);
+export const findPathToTarget = (startX: number, startY: number, targetX: number, targetY: number, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, creature?: ICreature) => 
+  PathfindingSystem.findPathToTarget(startX, startY, targetX, targetY, allCreatures, cols, rows, mapDefinition, creature);
 
-export const calculateStepCost = (fromX: number, fromY: number, toX: number, toY: number, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap, creature?: ICreature) => 
-  PathfindingSystem.calculateStepCost(fromX, fromY, toX, toY, allCreatures, mapData, cols, rows, mapDefinition, creature);
+export const calculateStepCost = (fromX: number, fromY: number, toX: number, toY: number, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, creature?: ICreature) => 
+  PathfindingSystem.calculateStepCost(fromX, fromY, toX, toY, allCreatures, cols, rows, mapDefinition, creature);

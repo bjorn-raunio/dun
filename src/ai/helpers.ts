@@ -30,10 +30,9 @@ export function evaluateTargetWithScoring(
   creature: ICreature,
   ai: AIState,
   allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
+  mapDefinition: QuestMap,
   cols?: number,
   rows?: number,
-  mapDefinition?: QuestMap,
   scoringOptions: {
     basePriority?: number;
     distanceWeight?: number;
@@ -57,15 +56,14 @@ export function evaluateTargetWithScoring(
   }
   
   const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
-    usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
-    mapData,
+    usePathfinding: !!(cols !== undefined && rows !== undefined),
     cols,
     rows,
     mapDefinition,
     allCreatures
   });
 
-  const canReachAndAttackThisTurn = canReachAndAttack(creature, target, allCreatures, mapData, cols, rows, mapDefinition);
+  const canReachAndAttackThisTurn = canReachAndAttack(creature, target, allCreatures, cols || 0, rows || 0, mapDefinition);
   const canAttackNow = canAttackImmediately(creature, target);
 
   let priority = basePriority;
@@ -193,45 +191,4 @@ export function updateAIStateWithAction(
   }
 
   return newState;
-}
-
-/**
- * Common validation patterns for AI actions
- */
-export function validateAIAction(
-  creature: ICreature,
-  action: AIDecision,
-  allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
-  mapDefinition?: QuestMap
-): { isValid: boolean; reason?: string } {
-  // Basic creature state validation
-  if (!creature.isAlive()) {
-    return { isValid: false, reason: 'Creature is dead' };
-  }
-
-  switch (action.type) {
-    case 'attack':
-      if (!action.target) {
-        return { isValid: false, reason: 'No target specified for attack' };
-      }
-      if (!action.target.isAlive()) {
-        return { isValid: false, reason: 'Target is dead' };
-      }
-      if (!creature.isHostileTo(action.target)) {
-        return { isValid: false, reason: 'Target is not hostile' };
-      }
-      if (!canAttackImmediately(creature, action.target)) {
-        return { isValid: false, reason: 'Cannot attack target from current position' };
-      }
-      break;
-    case 'move':
-      if (!action.destination) {
-        return { isValid: false, reason: 'No destination specified for movement' };
-      }
-      // Additional movement validation could be added here
-      break;
-  }
-
-  return { isValid: true };
 }

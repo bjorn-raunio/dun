@@ -20,11 +20,14 @@ export function useEventHandlers(
   gameRefs: GameRefs,
   creatures: ICreature[],
   selectedCreatureId: string | null,
-  reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
+  reachable: {
+    tiles: Array<{ x: number; y: number }>;
+    costMap: Map<string, number>;
+    pathMap: Map<string, Array<{ x: number; y: number }>>;
+  },
   targetsInRangeIds: Set<string>,
-  mapData: { tiles: string[][] },
-  setSelectedCreatureId: (id: string | null) => void,
   mapDefinition: QuestMap,
+  setSelectedCreatureId: (id: string | null) => void,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {
   // Create mouse handlers with organized structure
@@ -36,9 +39,8 @@ export function useEventHandlers(
       selectedCreatureId,
       reachable,
       targetsInRangeIds,
-      mapData,
-      setSelectedCreatureId,
       mapDefinition,
+      setSelectedCreatureId,
       targetingMode
     });
 
@@ -54,9 +56,8 @@ export function useEventHandlers(
           selectedCreatureId,
           reachable,
           targetsInRangeIds,
-          mapData,
-          setSelectedCreatureId,
           mapDefinition,
+          setSelectedCreatureId,
           targetingMode
         });
         originalHandler.onCreatureClick(creature, e);
@@ -67,9 +68,9 @@ export function useEventHandlers(
       setSelectedCreatureId(creature.id);
       
       // If the clicked creature is player-controlled, calculate line of sight
-      if (creature.isPlayerControlled() && mapData && mapData.tiles && mapData.tiles.length > 0) {
-        const cols = mapData.tiles[0].length;
-        const rows = mapData.tiles.length;
+      if (creature.isPlayerControlled() && mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
+        const cols = mapDefinition.tiles[0].length;
+        const rows = mapDefinition.tiles.length;
         
         logGame(`${creature.name} selected - calculating line of sight at (${creature.x}, ${creature.y})`);
         
@@ -79,7 +80,6 @@ export function useEventHandlers(
             creature.x,
             creature.y,
             creatures,
-            mapData,
             cols,
             rows,
             mapDefinition
@@ -101,7 +101,7 @@ export function useEventHandlers(
     selectedCreatureId,
     reachable,
     targetsInRangeIds,
-    mapData,
+    mapDefinition,
     setSelectedCreatureId,
     mapDefinition,
     targetingMode

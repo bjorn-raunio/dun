@@ -70,8 +70,8 @@ export function diagonalMovementBlocked(fromX: number, fromY: number, toX: numbe
 // The main function calculateMovementCost() handles both cases through the areaDimensions option.
 // 
 // Usage examples:
-// - Single tile: calculateMovementCost(fromX, fromY, toX, toY, creatures, mapData, mapDef)
-// - Multi-tile: calculateMovementCost(fromX, fromY, toX, toY, creatures, mapData, mapDef, {
+// - Single tile: calculateMovementCost(fromX, fromY, toX, toY, creatures, mapDefinition)
+// - Multi-tile: calculateMovementCost(fromX, fromY, toX, toY, creatures, mapDefinition, {
 //     areaDimensions: { w: 2, h: 2 },
 //     mapDimensions: { cols: 20, rows: 15 }
 //   })
@@ -110,8 +110,7 @@ export function calculateMovementCost(
   toX: number,
   toY: number,
   allCreatures: ICreature[],
-  mapData: { tiles: string[][] },
-  mapDefinition?: QuestMap,
+  mapDefinition: QuestMap,
   options: MovementCostOptions = {},
   movingCreature?: ICreature,
 ): number {
@@ -135,7 +134,6 @@ export function calculateMovementCost(
     toY,
     areaDimensions,
     allCreatures,
-    mapData,
     mapDefinition, // Now pass mapDefinition since it handles room validation
     considerCreatures,
     movingCreature?.id

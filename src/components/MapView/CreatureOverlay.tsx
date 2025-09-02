@@ -6,23 +6,22 @@ import { getCreatureUIDimensions, getCreatureUIOffset } from '../../utils/dimens
 import { validateCombat } from '../../validation/combat';
 import { QuestMap } from '../../maps/types';
 import { EquipmentSystem } from '../../items/equipment';
+import { TargetingMode } from '../../game/types';
 
 interface CreatureOverlayProps {
   creatures: ICreature[];
   selectedCreatureId: string | null;
   onCreatureClick: (creature: ICreature, e: React.MouseEvent) => void;
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
-  mapDefinition?: QuestMap;
-  mapData?: { tiles: string[][] };
+  targetingMode?: TargetingMode;
+  mapDefinition: QuestMap;
 }
 
-export function CreatureOverlay({ 
-  creatures, 
-  selectedCreatureId, 
-  onCreatureClick, 
+export function CreatureOverlay({
+  creatures,
+  selectedCreatureId,
+  onCreatureClick,
   targetingMode,
-  mapDefinition,
-  mapData
+  mapDefinition
 }: CreatureOverlayProps) {
   return (
     <div
@@ -48,7 +47,7 @@ export function CreatureOverlay({
             if (isEnemy) {
               const equipment = new EquipmentSystem(attacker.equipment);
               const weapon = equipment.getMainWeapon();
-              const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition, mapData) : { isValid: false };
+              const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition) : { isValid: false };
               isValidTarget = validation.isValid;
             }
           }

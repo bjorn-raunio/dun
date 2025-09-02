@@ -16,10 +16,9 @@ export class PathfindingSystem {
   static getReachableTiles(
     creature: ICreature,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     options: PathfindingOptions = {}
   ): PathfindingResult {
     // Return empty result if creature is not on the map (undefined position)
@@ -64,7 +63,7 @@ export class PathfindingSystem {
 
         // Corner rule for diagonal movement
         if (Math.abs(dx) === 1 && Math.abs(dy) === 1) {
-          if (!this.canMoveDiagonally(current.x, current.y, nx, ny, selectedDims, mapData, cols, rows, mapDefinition)) {
+          if (!this.canMoveDiagonally(current.x, current.y, nx, ny, selectedDims, mapDefinition, cols, rows)) {
             continue;
           }
         }
@@ -76,7 +75,7 @@ export class PathfindingSystem {
           nx, 
           ny, 
           allCreatures,
-          mapData, 
+ 
           mapDefinition,
           {
             ...DEFAULT_MOVEMENT_OPTIONS,
@@ -88,7 +87,7 @@ export class PathfindingSystem {
           creature
         );
         if (!isFinite(stepCost)) continue;
-        if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapData, mapDefinition).isValid) continue;
+        if (!isAreaStandable(nx, ny, selectedDims, true, allCreatures, cols, rows, mapDefinition).isValid) continue;
 
         // Create the new path for this tile
         const newPath = [...current.path, { x: nx, y: ny }];
@@ -121,10 +120,9 @@ export class PathfindingSystem {
     targetX: number,
     targetY: number,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     creature?: ICreature
   ): Array<{ x: number; y: number }> | null {
     const openSet = new Set<string>();
@@ -179,7 +177,7 @@ export class PathfindingSystem {
         // Calculate movement cost to this neighbor
         const stepCost = this.calculateStepCost(
           currentX, currentY, neighborX, neighborY,
-          allCreatures, mapData, cols, rows, mapDefinition, creature
+          allCreatures, cols, rows, mapDefinition, creature
         );
 
         if (stepCost === Infinity) {
@@ -214,13 +212,12 @@ export class PathfindingSystem {
     toX: number,
     toY: number,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     creature?: ICreature
   ): number {
-    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapData, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
+    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
   }
 
   /**
@@ -232,15 +229,14 @@ export class PathfindingSystem {
     nx: number,
     ny: number,
     selectedDims: { w: number; h: number },
-    mapData: { tiles: string[][] },
+    mapDefinition: QuestMap,
     cols: number,
-    rows: number,
-    mapDefinition?: QuestMap
+    rows: number
   ): boolean {
-    const sideA = getAreaStats(currentX + (nx - currentX), currentY, selectedDims, mapData, cols, rows, mapDefinition);
-    const sideB = getAreaStats(currentX, currentY + (ny - currentY), selectedDims, mapData, cols, rows, mapDefinition);
-    const destStats = getAreaStats(nx, ny, selectedDims, mapData, cols, rows, mapDefinition);
-    const currentStats = getAreaStats(currentX, currentY, selectedDims, mapData, cols, rows, mapDefinition);
+    const sideA = getAreaStats(currentX + (nx - currentX), currentY, selectedDims, cols, rows, mapDefinition);
+    const sideB = getAreaStats(currentX, currentY + (ny - currentY), selectedDims, cols, rows, mapDefinition);
+    const destStats = getAreaStats(nx, ny, selectedDims, cols, rows, mapDefinition);
+    const currentStats = getAreaStats(currentX, currentY, selectedDims, cols, rows, mapDefinition);
 
     // Check if the sides block diagonal movement
     const sideABlocks = sideA.maxH >= 1;

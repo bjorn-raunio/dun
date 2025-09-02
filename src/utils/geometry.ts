@@ -1,4 +1,5 @@
 import { DIRECTIONS } from './constants';
+import { QuestMap } from '../maps/types';
 
 // --- Geometry Utilities ---
 
@@ -84,10 +85,10 @@ export function rectsOverlap(
 /**
  * Check if a point is within map bounds
  */
-export function isWithinMapBounds(x: number, y: number, mapData: { tiles: string[][] }): boolean {
+export function isWithinMapBounds(x: number, y: number, mapDefinition: QuestMap): boolean {
   if (x < 0 || y < 0) return false;
-  if (y >= mapData.tiles.length) return false;
-  if (x >= mapData.tiles[0].length) return false;
+  if (y >= mapDefinition.tiles.length) return false;
+  if (x >= mapDefinition.tiles[0].length) return false;
   return true;
 }
 
@@ -96,7 +97,7 @@ export function isWithinMapBounds(x: number, y: number, mapData: { tiles: string
  */
 export function isCreatureInBounds(
   creature: { x: number | undefined; y: number | undefined; getDimensions: () => { w: number; h: number } },
-  mapData: { tiles: string[][] }
+  mapDefinition: QuestMap
 ): boolean {
   // Return false if creature is not on the map (undefined position)
   if (creature.x === undefined || creature.y === undefined) {
@@ -107,8 +108,8 @@ export function isCreatureInBounds(
   
   // Check if the creature's area is within bounds
   if (creature.x < 0 || creature.y < 0) return false;
-  if (creature.x + dimensions.w > mapData.tiles[0].length) return false;
-  if (creature.y + dimensions.h > mapData.tiles.length) return false;
+  if (creature.x + dimensions.w > mapDefinition.tiles[0].length) return false;
+  if (creature.y + dimensions.h > mapDefinition.tiles.length) return false;
   
   return true;
 }

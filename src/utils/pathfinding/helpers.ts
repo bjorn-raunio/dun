@@ -12,10 +12,9 @@ export function getAreaStats(
   tx: number,
   ty: number,
   dims: { w: number; h: number },
-  mapData: { tiles: string[][] },
   cols: number,
   rows: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap
 ): AreaStats {
   let maxH = 0;
   let hasEmpty = false;
@@ -28,7 +27,7 @@ export function getAreaStats(
     for (let ox = 0; ox < dims.w; ox++) {
       const cx = tx + ox;
       const cy = ty + oy;
-      const nonEmpty = mapData.tiles[cy]?.[cx] && mapData.tiles[cy][cx] !== "empty.jpg";
+      const nonEmpty = mapDefinition.tiles[cy]?.[cx] && mapDefinition.tiles[cy][cx] !== "empty.jpg";
       if (!nonEmpty) hasEmpty = true;
       const th = mapDefinition!.terrainHeightAt(cx, cy);
       if (th > maxH) maxH = th;
@@ -49,11 +48,9 @@ export function isAreaStandable(
   allCreatures: ICreature[],
   cols: number,
   rows: number,
-  mapData?: { tiles: string[][] },
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap
 ): PositionValidationResult {
-  if (!mapData) return { isValid: false };
-  return validatePositionStandable(tx, ty, dims, allCreatures, mapData, mapDefinition, considerCreatures);
+  return validatePositionStandable(tx, ty, dims, allCreatures, mapDefinition, considerCreatures);
 }
 
 

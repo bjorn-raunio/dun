@@ -15,7 +15,7 @@ export function executeAITurnForCreature(
   creature: ICreature,
   context: TurnExecutionContext
 ): boolean {
-  const { groups, mapData, mapDefinition } = context;
+  const { groups, mapDefinition } = context;
   
   // Get AI state from the creature (assuming it's a Monster)
   const aiState = (creature as any).getAIState?.() || null;
@@ -25,9 +25,9 @@ export function executeAITurnForCreature(
   }
 
   // Calculate line of sight at the start of AI turn
-  if (mapData && mapData.tiles && mapData.tiles.length > 0) {
-    const cols = mapData.tiles[0].length;
-    const rows = mapData.tiles.length;
+  if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
+    const cols = mapDefinition.tiles[0].length;
+    const rows = mapDefinition.tiles.length;
     
     logAI(`${creature.name} calculating line of sight at (${creature.x}, ${creature.y})`);
     
@@ -37,7 +37,6 @@ export function executeAITurnForCreature(
         creature.x,
         creature.y,
         groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined),
-        mapData,
         cols,
         rows,
         mapDefinition
@@ -114,13 +113,13 @@ function executeSingleAIAction(
   aiState: AIState,
   context: TurnExecutionContext
 ): { success: boolean; actionType?: string; targetDefeated?: boolean } {
-  const { groups, mapData, mapDefinition } = context;
+  const { groups, mapDefinition } = context;
   
   // Get updated reachable tiles and targets in range
   const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = 
-    creatureServices.getMovementService().getReachableTiles(
-      creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined), mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition
-    );
+          creatureServices.getMovementService().getReachableTiles(
+        creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined), mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length
+      );
   
   const targetsInRangeIds = calculateTargetsInRange(creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined));
   const targetsInRange = groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined).filter(c => targetsInRangeIds.has(c.id));
@@ -130,11 +129,9 @@ function executeSingleAIAction(
     ai: aiState,
     creature,
     allCreatures: groups.flatMap(group => group.getLivingCreatures()),
-    mapData,
     mapDefinition,
     currentTurn: 1, // TODO: Get actual turn number
-    reachableTiles,
-    reachableTilesCostMap,
+    reachableTiles: { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap },
     targetsInRange
   };
 

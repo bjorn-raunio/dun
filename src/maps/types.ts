@@ -10,6 +10,7 @@ export class QuestMap {
   public rooms: Room[];
   public creatures: Creature[];
   public startingTiles: Array<{ x: number; y: number; image?: string; }>;
+  public tiles: string[][] = [];
 
   constructor(
     name: string,
@@ -25,6 +26,7 @@ export class QuestMap {
     this.rooms = rooms;
     this.creatures = creatures;
     this.startingTiles = startingTiles;
+    this.generateMapTiles();
   }
 
   /**
@@ -55,7 +57,7 @@ export class QuestMap {
    * Get terrain at a specific position
    */
   getTerrainAt(x: number, y: number): Terrain[] {
-    return this.rooms.flatMap(room => room.terrain).filter(t => 
+    return this.rooms.flatMap(room => room.terrain).filter(t =>
       t.isTileWithinTerrain(x, y)
     );
   }
@@ -64,7 +66,7 @@ export class QuestMap {
    * Get rooms at a specific position
    */
   getRoomsAt(x: number, y: number): Room[] {
-    return this.rooms.filter(room => 
+    return this.rooms.filter(room =>
       x >= room.x && x < room.x + room.rotatedWidth &&
       y >= room.y && y < room.y + room.rotatedHeight
     );
@@ -118,7 +120,7 @@ export class QuestMap {
       [...this.startingTiles]
     );
   }
-  
+
   getTerrain(): Terrain[] {
     return this.rooms.flatMap(room => room.terrain);
   }
@@ -155,20 +157,46 @@ export class QuestMap {
       this.name.length > 0 &&
       this.width > 0 &&
       this.height > 0 &&
-      this.rooms.every(room => 
-        room.x >= 0 && room.y >= 0 && 
-        room.x + room.mapWidth <= this.width && 
+      this.rooms.every(room =>
+        room.x >= 0 && room.y >= 0 &&
+        room.x + room.mapWidth <= this.width &&
         room.y + room.mapHeight <= this.height
       ) &&
       this.creatures.every(creature => {
         const position = creature['positionManager']?.getPosition();
         return position && this.isWithinBounds(position.x, position.y);
       }) &&
-      this.startingTiles.every(tile => 
+      this.startingTiles.every(tile =>
         this.isWithinBounds(tile.x, tile.y)
       )
     );
   }
+
+  generateMapTiles() {
+    // Initialize empty tiles
+    for (let y = 0; y < this.height; y++) {
+      this.tiles[y] = [];
+      for (let x = 0; x < this.width; x++) {
+        this.tiles[y][x] = "empty.jpg";
+      }
+    }
+
+    // Fill in room tiles
+    for (const room of this.rooms) {
+      // Use pre-calculated rotated dimensions
+      const w = room.rotatedWidth;
+      const h = room.rotatedHeight;
+
+      for (let y = room.y; y < room.y + h; y++) {
+        for (let x = room.x; x < room.x + w; x++) {
+          if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
+            this.tiles[y][x] = `${room.type}.jpg`;
+          }
+        }
+      }
+    }
+  }
+
 }
 
 export type ResolvedTerrain = {

@@ -26,16 +26,13 @@ function isTileWithinAnyRoom(x: number, y: number, mapDefinition?: QuestMap): bo
 /**
  * Validate map dimensions
  */
-export function validateMapDimensions(mapData: { tiles: string[][] }): ValidationResult {
-  if (!mapData.tiles || mapData.tiles.length === 0) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.MAP_DIMENSIONS_INVALID(0, 0)
-    };
+export function validateMapDimensions(mapDefinition: QuestMap): ValidationResult {
+  if (!mapDefinition.tiles || mapDefinition.tiles.length === 0) {
+    return { isValid: false, reason: 'Map has no tiles' };
   }
   
-  const height = mapData.tiles.length;
-  const width = mapData.tiles[0]?.length || 0;
+  const height = mapDefinition.tiles.length;
+  const width = mapDefinition.tiles[0]?.length || 0;
   
   if (width === 0 || height === 0) {
     return {
@@ -50,9 +47,9 @@ export function validateMapDimensions(mapData: { tiles: string[][] }): Validatio
 /**
  * Validate that all creatures are within map bounds
  */
-export function validateCreaturePositions(creatures: Creature[], mapData: { tiles: string[][] }): ValidationResult {
-  const height = mapData.tiles.length;
-  const width = mapData.tiles[0]?.length || 0;
+export function validateCreaturePositions(creatures: Creature[], mapDefinition: QuestMap): ValidationResult {
+  const height = mapDefinition.tiles.length;
+  const width = mapDefinition.tiles[0]?.length || 0;
   
   for (const creature of creatures) {
     // Skip creatures that are not on the map (undefined position)
@@ -169,8 +166,7 @@ export function validatePositionStandable(
   y: number, 
   dimensions: { w: number; h: number }, 
   allCreatures: ICreature[], 
-  mapData: { tiles: string[][] }, 
-  mapDefinition?: QuestMap, 
+  mapDefinition: QuestMap, 
   considerCreatures: boolean = true, 
   creatureId?: string
 ): PositionValidationResult {
@@ -179,7 +175,7 @@ export function validatePositionStandable(
   };
 
   // Check map bounds
-  if (x < 0 || y < 0 || x + dimensions.w > mapData.tiles[0].length || y + dimensions.h > mapData.tiles.length) {
+  if (x < 0 || y < 0 || x + dimensions.w > mapDefinition.tiles[0].length || y + dimensions.h > mapDefinition.tiles.length) {
     result.isValid = false;
     result.blockingTerrain = true;
     return result;
@@ -193,7 +189,7 @@ export function validatePositionStandable(
       for (let dy = 0; dy < dimensions.h; dy++) {
         const cx = x + dx;
         const cy = y + dy;
-        const tile = mapData.tiles[cy]?.[cx];
+        const tile = mapDefinition.tiles[cy]?.[cx];
         const height = mapDefinition.terrainHeightAt(cx, cy);
         
         // Check if tile is empty and outside any room - this blocks movement

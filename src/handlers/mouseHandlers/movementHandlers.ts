@@ -13,17 +13,12 @@ interface ReachableData {
   pathMap: Map<string, Array<{ x: number; y: number }>>;
 }
 
-interface MapData {
-  tiles: string[][];
-}
-
 interface MovementParams {
   selectedCreatureId: string;
   targetX: number;
   targetY: number;
   creatures: ICreature[];
   reachable: ReachableData;
-  mapData: MapData;
   mapDefinition: QuestMap;
 }
 
@@ -31,7 +26,10 @@ export interface MovementHandlers {
   handleMovement: (params: MovementParams) => boolean;
 }
 
-export function createMovementHandlers(gameActions: GameActions, gameRefs: GameRefs): MovementHandlers {
+export function createMovementHandlers(
+  gameActions: GameActions,
+  gameRefs: GameRefs
+): MovementHandlers {
   const { setCreatures, setReachableKey, setTargetsInRangeKey } = gameActions;
   const { lastMovement } = gameRefs;
 
@@ -47,8 +45,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
     reachable: ReachableData,
     targetX: number,
     targetY: number,
-    mapData: MapData,
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): Array<{ x: number; y: number }> | undefined {
     const destKey = `${targetX},${targetY}`;
     let path = reachable.pathMap.get(destKey);
@@ -59,15 +56,14 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
     }
 
     // Check if path is stale and recalculate if needed
-    if (path.length > 0 && (path[0].x !== creature.x || path[0].y !== creature.y)) {
+    if (path.length > 0 && creature.x !== undefined && creature.y !== undefined && (path[0].x !== creature.x || path[0].y !== creature.y)) {
       console.warn(`Path is stale - recalculating from (${creature.x}, ${creature.y})`);
       
       const freshReachable = creature.getReachableTiles(
         [], // We'll get creatures from the current state
-        mapData,
-        mapData.tiles[0].length,
-        mapData.tiles.length,
-        mapDefinition
+        mapDefinition,
+        mapDefinition.tiles[0].length,
+        mapDefinition.tiles.length
       );
       
       path = freshReachable.pathMap.get(destKey);
@@ -116,7 +112,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
   }
 
   function handleMovement(params: MovementParams): boolean {
-    const { selectedCreatureId, targetX, targetY, creatures, reachable, mapData, mapDefinition } = params;
+    const { selectedCreatureId, targetX, targetY, creatures, reachable, mapDefinition } = params;
 
     // Find selected creature once
     const selected = findCreatureById(creatures, selectedCreatureId);
@@ -130,7 +126,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
     }
 
     // Get valid path
-    const path = getValidPath(selected, reachable, targetX, targetY, mapData, mapDefinition);
+    const path = getValidPath(selected, reachable, targetX, targetY, mapDefinition);
     if (!path) {
       return false;
     }
@@ -139,7 +135,10 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
     const stepCost = calculateMovementCost(selected, reachable, targetX, targetY);
 
     // Log movement details
-    logMovement(`Hero at (${selected.x},${selected.y}) moving to (${targetX},${targetY})`, {
+    const positionText = selected.x !== undefined && selected.y !== undefined 
+      ? `(${selected.x},${selected.y})` 
+      : '(undefined, undefined)';
+    logMovement(`Hero at ${positionText} moving to (${targetX},${targetY})`, {
       path,
       stepCost,
       remainingMovement: selected.remainingMovement
@@ -156,7 +155,7 @@ export function createMovementHandlers(gameActions: GameActions, gameRefs: GameR
       if (!targetCreature) return prev;
 
       // Execute movement
-      const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapData, mapDefinition);
+      const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapDefinition);
       
       if (moveResult.status === 'success' || moveResult.status === 'partial') {
         const statusText = moveResult.status === 'partial' ? 'partial' : 'complete';

@@ -14,15 +14,14 @@ export function evaluateTargets(
   ai: AIState,
   creature: ICreature,
   allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  cols: number,
+  rows: number
 ): AITarget[] {
   const validTargets = filterValidTargets(creature, allCreatures);
   
   const targets = validTargets.map(target => 
-    evaluateTargetWithScoring(target, creature, ai, allCreatures, mapData, cols, rows, mapDefinition)
+    evaluateTargetWithScoring(target, creature, ai, allCreatures, mapDefinition, cols, rows)
   );
 
   // Sort by priority (highest first)
@@ -36,12 +35,11 @@ export function selectBestTarget(
   ai: AIState,
   creature: ICreature,
   allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  cols: number,
+  rows: number
 ): ICreature | null {
-  const targets = evaluateTargets(ai, creature, allCreatures, mapData, cols, rows, mapDefinition);
+  const targets = evaluateTargets(ai, creature, allCreatures, mapDefinition, cols, rows);
 
   if (targets.length === 0) {
     return null;
@@ -70,10 +68,9 @@ export function updateTargetInformation(
   ai: AIState,
   creature: ICreature,
   allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  cols: number,
+  rows: number
 ): AIState {
   const newState = { ...ai };
 
@@ -90,13 +87,12 @@ export function updateTargetInformation(
       // Check if target is visible using line of sight
       let isVisible = false;
       
-      if (mapData && cols !== undefined && rows !== undefined && 
+      if (cols !== undefined && rows !== undefined && 
           creature.x !== undefined && creature.y !== undefined) {
         isVisible = isCreatureVisible(
           creature.x, 
           creature.y, 
           target, 
-          mapData, 
           cols, 
           rows, 
           mapDefinition,
@@ -112,8 +108,7 @@ export function updateTargetInformation(
       if (isVisible && creature.x !== undefined && creature.y !== undefined) {
         // Target is visible, update current position
         const distance = calculateDistanceToCreature(creature.x, creature.y, target, {
-          usePathfinding: !!(mapData && cols !== undefined && rows !== undefined),
-          mapData,
+          usePathfinding: true, // Always use pathfinding for distance calculation
           cols,
           rows,
           mapDefinition,

@@ -6,16 +6,20 @@ import { addMessage } from '../../game/messageSystem';
 import { VALIDATION_MESSAGES } from '../../validation/messages';
 
 export interface CombatHandlers {
-  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) => void;
-  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) => void;
+  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap) => void;
+  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap) => void;
 }
 
 export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
   const { setCreatures, setTargetingMode, setTargetsInRangeKey, dispatch } = gameActions;
 
-  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) {
+  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap) {
+    if (!attacker.isAlive() || !target.isAlive()) {
+      return;
+    }
+
     // Perform the attack using the creature's attack method
-    const combatResult = attacker.attack(target, creatures, mapDefinition, mapData);
+    const combatResult = attacker.attack(target, creatures, mapDefinition);
 
     // Add combat messages
     if (combatResult.messages && combatResult.messages.length > 0) {
@@ -42,9 +46,13 @@ export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
     setTargetsInRangeKey(prev => prev + 1);
   }
 
-  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, mapData?: { tiles: string[][] }) {
+  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap) {
+    if (!attacker.isAlive() || !target.isAlive()) {
+      return;
+    }
+
     // Handle attack in targeting mode
-    handleAttack(attacker, target, creatures, mapDefinition, mapData);
+    handleAttack(attacker, target, creatures, mapDefinition);
     
     // Exit targeting mode
     setTargetingMode({ isActive: false, attackerId: null, message: '' });

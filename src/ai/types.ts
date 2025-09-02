@@ -67,10 +67,12 @@ export interface AIContext {
   ai: AIState;
   creature: ICreature;
   allCreatures: ICreature[];
-  mapData: { tiles: string[][] };
-  mapDefinition?: QuestMap;
   currentTurn: number;
-  reachableTiles: Array<{ x: number; y: number }>;
-  reachableTilesCostMap: Map<string, number>;
+  reachableTiles: {
+    tiles: Array<{ x: number; y: number }>;
+    costMap: Map<string, number>;
+    pathMap: Map<string, Array<{ x: number; y: number }>>;
+  };
   targetsInRange: ICreature[];
+  mapDefinition: QuestMap;
 }

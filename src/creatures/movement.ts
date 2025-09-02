@@ -18,16 +18,14 @@ export class CreatureMovement implements ICreatureMovement {
   getReachableTiles(
     creature: Creature,
     allCreatures: Creature[],
-    mapData: { tiles: string[][] },
+    mapDefinition: QuestMap,
     cols: number,
-    rows: number,
-    mapDefinition: QuestMap
+    rows: number
   ): { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> } {
     if (creature.x !== undefined && creature.y !== undefined) {
       return PathfindingSystem.getReachableTiles(
         creature,
         allCreatures,
-        mapData,
         cols,
         rows,
         mapDefinition,
@@ -48,11 +46,11 @@ export class CreatureMovement implements ICreatureMovement {
   }
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
-  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult {
+  moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapDefinition?: QuestMap): MovementResult {
     if (path.length === 0) {
       return {
         status: 'failed',
-        message: "No path provided for movement.",
+        message: 'No path provided',
         cost: 0,
         tilesMoved: 0,
         totalPathLength: 0
@@ -60,7 +58,7 @@ export class CreatureMovement implements ICreatureMovement {
     }
     // Validate that the path starts from the creature's current position
     const startTile = path[0];
-    if (startTile.x !== creature.x || startTile.y !== creature.y) {
+    if (creature.x !== undefined && creature.y !== undefined && (startTile.x !== creature.x || startTile.y !== creature.y)) {
       return {
         status: 'failed',
         message: `Path must start from creature's current position (${creature.x}, ${creature.y}), but starts at (${startTile.x}, ${startTile.y})`,
@@ -83,7 +81,7 @@ export class CreatureMovement implements ICreatureMovement {
       // Validate that tiles are adjacent (including diagonal)
       const dx = Math.abs(nextTile.x - currentTile.x);
       const dy = Math.abs(nextTile.y - currentTile.y);
-      if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1)) {
+      if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1) || (dx === 0 && dy === 0)) {
         // Valid adjacent movement (orthogonal or diagonal)
       } else {
         return {
@@ -95,27 +93,29 @@ export class CreatureMovement implements ICreatureMovement {
         };
       }
 
-      // Calculate movement cost for this step if map data is available
-      let stepCost = 1; // Default cost
-      if (mapData && mapDefinition) {
-        stepCost = calculateMovementCost(
-          currentX,
-          currentY,
-          nextTile.x,
-          nextTile.y,
-          allCreatures,
-          mapData,
-          mapDefinition,
-          {
-            areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
-            mapDimensions: { cols: mapData.tiles[0]?.length || 0, rows: mapData.tiles.length || 0 }
-          },
-          creature
-        );
+      let stepCost = 0;
+      if (currentX !== undefined && currentY !== undefined) {
+        // Calculate movement cost for this step if map data is available
+        stepCost = 1; // Default cost
+        if (mapDefinition) {
+          stepCost = calculateMovementCost(
+            currentX,
+            currentY,
+            nextTile.x,
+            nextTile.y,
+            allCreatures,
+            mapDefinition,
+            {
+              areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
+              mapDimensions: { cols: mapDefinition.tiles[0]?.length || 0, rows: mapDefinition.tiles.length || 0 }
+            },
+            creature
+          );
 
-        // If movement is blocked, stop here
-        if (stepCost === Infinity) {
-          break;
+          // If movement is blocked, stop here
+          if (stepCost === Infinity) {
+            break;
+          }
         }
       }
 
@@ -158,7 +158,7 @@ export class CreatureMovement implements ICreatureMovement {
         break;
       }
     }
-
+    
     // Determine if movement was complete or partial
     const totalPathLength = path.length - 1; // Exclude starting position
     let status: MovementStatus = 'success';
@@ -175,7 +175,7 @@ export class CreatureMovement implements ICreatureMovement {
       status,
       message,
       cost: totalCost,
-      finalPosition: { x: creature.x, y: creature.y },
+      finalPosition: { x: creature.x!, y: creature.y! },
       intendedDestination: path[path.length - 1],
       tilesMoved,
       totalPathLength

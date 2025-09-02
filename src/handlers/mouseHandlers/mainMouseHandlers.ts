@@ -21,7 +21,6 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
     selectedCreatureId,
     reachable,
     targetsInRangeIds,
-    mapData,
     setSelectedCreatureId,
     mapDefinition,
     targetingMode
@@ -42,7 +41,6 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
       selectedCreatureId,
       creatures,
       reachable,
-      mapData,
       mapDefinition,
       targetingMode
     );
@@ -51,7 +49,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
     if (tileAction.action === 'deselect' && selectedCreatureId) {
       setSelectedCreatureId(null);
     } else if (tileAction.action === 'movement' && selectedCreatureId) {
-      const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapData.tiles[0].length, mapData.tiles.length);
+              const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
 
       if (pos) {
         movementHandlers.handleMovement({
@@ -60,7 +58,6 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
           targetY: pos.tileY,
           creatures,
           reachable,
-          mapData,
           mapDefinition
         });
       }
@@ -74,7 +71,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
       return false;
     }
 
-    combatHandlers.handleTargetingModeAttack(attacker, target, creatures, mapDefinition, mapData);
+    combatHandlers.handleTargetingModeAttack(attacker, target, creatures, mapDefinition);
     return true;
   }
 
@@ -85,7 +82,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
       return false;
     }
 
-    combatHandlers.handleAttack(attacker, target, creatures, mapDefinition, mapData);
+    combatHandlers.handleAttack(attacker, target, creatures, mapDefinition);
     return true;
   }
 
@@ -93,9 +90,9 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   function handleCreatureSelection(creature: ICreature) {
     setSelectedCreatureId(creature.id);
     
-    if (creature.isPlayerControlled() && mapData?.tiles?.length > 0) {
-      const cols = mapData.tiles[0].length;
-      const rows = mapData.tiles.length;
+    if (creature.isPlayerControlled() && mapDefinition?.tiles?.length > 0) {
+      const cols = mapDefinition.tiles[0].length;
+      const rows = mapDefinition.tiles.length;
       
       logGame(`${creature.name} selected - calculating line of sight at (${creature.x}, ${creature.y})`);
       
@@ -104,7 +101,6 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
           creature.x,
           creature.y,
           creatures,
-          mapData,
           cols,
           rows,
           mapDefinition

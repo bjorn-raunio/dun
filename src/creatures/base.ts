@@ -471,22 +471,31 @@ export abstract class Creature implements ICreature {
   }
 
   // --- Movement and Combat Delegation ---
-  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult {
-    return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapData, cols, rows, mapDefinition);
+  getReachableTiles(allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult {
+    return creatureServices.getMovementService().getReachableTiles(this, allCreatures, mapDefinition, cols, rows);
   }
 
-  moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult {
-    if (this.x === undefined || this.y === undefined) {
-      this.positionManager.setPosition(path[0].x, path[0].y);
+  moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): MovementResult {
+    if (!this.positionManager) {
+      return { 
+        status: 'failed', 
+        message: 'No position manager',
+        cost: 0,
+        tilesMoved: 0,
+        totalPathLength: 0
+      };
     }
-    return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapData, mapDefinition);
+    if(this.positionManager.getX() === undefined || this.positionManager.getY() === undefined) {
+      path = [path[0], ...path];
+    }
+    return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapDefinition);
   }
 
-  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult {
+  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): CombatResult {
     if (this.x === undefined || this.y === undefined) {
       return { success: false, damage: 0, targetDefeated: false, messages: ["Creature is not on the map"] };
     }
-    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, mapData);
+    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition);
 
     return {
       success: result.success,

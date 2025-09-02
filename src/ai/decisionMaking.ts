@@ -9,7 +9,7 @@ import { validateCombat } from '../validation/combat';
 import { executeMovement } from '../game/movement';
 import { CreatureMovement } from '../creatures/movement';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
-import { createAIDecision, validateAIAction } from './helpers';
+import { createAIDecision } from './helpers';
 import creatureServices from '../creatures/services';
 import { QuestMap } from '../maps/types';
 import { MonsterPreset, MercenaryPreset } from '../creatures/presets/types';
@@ -43,10 +43,10 @@ export function shouldContinueTurnAfterKill(
  * Make a decision for an AI creature's turn
  */
 export function makeAIDecision(context: AIContext): AIActionResult {
-  const { ai, creature, allCreatures, mapData, currentTurn, reachableTiles, targetsInRange, mapDefinition } = context;
+  const { ai, creature, allCreatures, currentTurn, reachableTiles, targetsInRange, mapDefinition } = context;
 
   // Update AI state with current information
-  const updatedAI = updateTargetInformation(ai, creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+  const updatedAI = updateTargetInformation(ai, creature, allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
 
   // Check if creature should flee
   if (shouldFlee(updatedAI, creature, allCreatures)) {
@@ -71,7 +71,7 @@ export function makeAIDecision(context: AIContext): AIActionResult {
 
   // Select best target if we don't have a valid one
   if (!target) {
-    target = selectBestTarget(updatedAI, creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+    target = selectBestTarget(updatedAI, creature, allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
   }
 
   if (!target) {
@@ -88,7 +88,6 @@ export function makeAIDecision(context: AIContext): AIActionResult {
 
   // Check if we can attack the target from current position
   const canAttackNow = canAttackImmediately(creature, target);
-  
   // Get the weapon for validation
   const equipment = new EquipmentSystem(creature.equipment);
   const weapon = equipment.getMainWeapon();
@@ -98,83 +97,78 @@ export function makeAIDecision(context: AIContext): AIActionResult {
   const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
   const isRangedBehavior = updatedAI.behavior === AIBehaviorType.RANGED;
 
-  if (canAttackNow && attackValidation.isValid) {
-    // For ranged creatures, check line of sight
-    if ((hasRangedWeapon || isRangedBehavior) && context.mapData && context.mapDefinition && 
+  if (canAttackNow) {
+    if (attackValidation.isValid) {
+      if ((hasRangedWeapon || isRangedBehavior) && context.mapDefinition &&
         creature.x !== undefined && creature.y !== undefined) {
-      const hasLineOfSight = isCreatureVisible(
-        creature.x,
-        creature.y,
-        target,
-        context.mapData,
-        context.mapData.tiles[0].length,
-        context.mapData.tiles.length,
-        context.mapDefinition,
-        {},
-        creature,
-        allCreatures
-      );
+        const hasLineOfSight = isCreatureVisible(
+          creature.x,
+          creature.y,
+          target,
+          context.mapDefinition.tiles[0].length,
+          context.mapDefinition.tiles.length,
+          context.mapDefinition,
+          {},
+          creature,
+          allCreatures
+        );
 
-      // If we don't have line of sight, try to move instead of attacking
-      if (!hasLineOfSight) {
-        if (context.reachableTiles.length > 0) {
-          const movementDecision = createMovementDecision(
-            updatedAI,
-            creature,
-            allCreatures,
-            context.reachableTiles,
-            context.reachableTilesCostMap,
-            target,
-            context.mapData,
-            context.mapData.tiles[0].length,
-            context.mapData.tiles.length,
-            context.mapDefinition
-          );
+        // If we don't have line of sight, try to move instead of attacking
+        if (!hasLineOfSight) {
+          if (context.reachableTiles.tiles.length > 0) {
+            const movementDecision = createMovementDecision(
+              updatedAI,
+              creature,
+              allCreatures,
+              context.reachableTiles.tiles,
+              context.reachableTiles.costMap,
+              target,
+              context.mapDefinition
+            );
 
-          if (movementDecision) {
-            const message = createMovementMessage(creature.name, target.name, updatedAI.currentTarget === null);
+            if (movementDecision) {
+              const message = createMovementMessage(creature.name, target.name, updatedAI.currentTarget === null);
 
-            return {
-              success: true,
-              action: movementDecision,
-              message,
-              newState: updatedAI
-            };
+              return {
+                success: true,
+                action: movementDecision,
+                message,
+                newState: updatedAI
+              };
+            }
           }
         }
       }
+
+      // Attack from current position - no movement when already in attack range and have line of sight
+      const attackDecision = createAIDecision('attack', {
+        target,
+        priority: 8,
+        reason: `Attacking ${target.name}`
+      });
+
+      return {
+        success: true,
+        action: attackDecision,
+        message: AI_MESSAGES.attack(creature.name, target.name),
+        newState: updatedAI
+      };
+    } else {
+      // If target is in range but we can't attack (e.g., no actions remaining), wait
+      const waitDecision = createAIDecision('wait', { reason: 'Target in range but cannot attack' });
+
+      return {
+        success: true,
+        action: waitDecision,
+        message: AI_MESSAGES.waitEngaged(creature.name, target.name),
+        newState: updatedAI
+      };
     }
-
-    // Attack from current position - no movement when already in attack range and have line of sight
-    const attackDecision = createAIDecision('attack', {
-      target,
-      priority: 8,
-      reason: `Attacking ${target.name}`
-    });
-
-    return {
-      success: true,
-      action: attackDecision,
-      message: AI_MESSAGES.attack(creature.name, target.name),
-      newState: updatedAI
-    };
-  }
-
-  // If target is in range but we can't attack (e.g., no actions remaining), wait
-  if (canAttackNow) {
-    const waitDecision = createAIDecision('wait', { reason: 'Target in range but cannot attack' });
-
-    return {
-      success: true,
-      action: waitDecision,
-      message: AI_MESSAGES.waitEngaged(creature.name, target.name),
-      newState: updatedAI
-    };
   }
 
   // Can't attack now, but we have a target - try to move toward it
-  if (reachableTiles.length > 0) {
-    const movementDecision = createMovementDecision(updatedAI, creature, allCreatures, reachableTiles, context.reachableTilesCostMap, target, context.mapData, context.mapData.tiles[0].length, context.mapData.tiles.length, context.mapDefinition);
+  if (reachableTiles.tiles.length > 0) {
+    const movementDecision = createMovementDecision(updatedAI, creature, allCreatures, reachableTiles.tiles, reachableTiles.costMap, target, context.mapDefinition);
 
     if (movementDecision) {
       const message = createMovementMessage(creature.name, target.name, updatedAI.currentTarget === null);
@@ -206,13 +200,13 @@ export function executeAIDecision(
   decision: AIDecision,
   context: AIContext
 ): { success: boolean; messages: string[]; newState: AIState; targetDefeated?: boolean } {
-  const { ai, creature, allCreatures, mapData, mapDefinition } = context;
+  const { ai, creature, allCreatures, currentTurn, reachableTiles, targetsInRange, mapDefinition } = context;
 
   switch (decision.type) {
     case 'attack':
       if (decision.target) {
         // Perform the attack
-        const attackResult = creature.attack(decision.target, allCreatures, mapDefinition, mapData);
+        const attackResult = creature.attack(decision.target, allCreatures, mapDefinition);
 
         // Update AI state
         const newState = updateAIStateAfterAttack(
@@ -235,7 +229,8 @@ export function executeAIDecision(
     case 'move':
       if (decision.destination) {
         // Get the actual movement cost and path from the reachable tiles calculation
-        const { costMap, pathMap } = creatureServices.getMovementService().getReachableTiles(creature, allCreatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+        const { costMap, pathMap } = creatureServices.getMovementService().getReachableTiles(creature, allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
+        console.log(costMap, pathMap);
         const destKey = `${decision.destination.x},${decision.destination.y}`;
         const cost = costMap.get(destKey) ?? Infinity;
         const path = pathMap.get(destKey);
@@ -250,7 +245,7 @@ export function executeAIDecision(
         }
 
         // Use the same movement validation and execution as heroes
-        const moveResult = executeMovement(creature, path, allCreatures, cost, mapData, mapDefinition);
+        const moveResult = executeMovement(creature, path, allCreatures, cost, mapDefinition);
 
         if (moveResult.status === 'success' || moveResult.status === 'partial') {
           // Update AI state with final position (either destination or where they stopped)
@@ -365,140 +360,4 @@ export function shouldAITakeTurn(creature: ICreature, allCreatures: ICreature[] 
     (creature.remainingMovement > 0 ||
       creature.remainingQuickActions > 0 ||
       (creature.remainingActions > 0 && targetsInRange.size > 0));
-}
-
-/**
- * Evaluate whether moving before attacking would be beneficial
- */
-export function shouldMoveBeforeAttack(
-  creature: Creature,
-  target: Creature,
-  movementDecision: AIDecision,
-  allCreatures: Creature[],
-  mapData?: { tiles: string[][] },
-  mapDefinition?: QuestMap
-): boolean {
-  if (movementDecision.type !== 'move' || !movementDecision.destination) {
-    return false;
-  }
-
-  // Calculate current distance to target
-  if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
-    return false;
-  }
-  const currentDistance = Math.max(
-    Math.abs(target.x - creature.x),
-    Math.abs(target.y - creature.y)
-  );
-
-  // Calculate distance after movement
-  const newDistance = Math.max(
-    Math.abs(target.x - (movementDecision.destination?.x ?? target.x)),
-    Math.abs(target.y - (movementDecision.destination?.y ?? target.y))
-  );
-
-  // Check if movement would put us in attack range (if we're not already)
-  const attackRange = creature.getAttackRange();
-  const currentlyInRange = currentDistance <= attackRange;
-  const wouldBeInRange = newDistance <= attackRange;
-
-  // For ranged creatures, also check line of sight
-  const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
-
-  if (hasRangedWeapon && mapData && mapDefinition && 
-      creature.x !== undefined && creature.y !== undefined) {
-    const currentHasLOS = isCreatureVisible(
-      creature.x,
-      creature.y,
-      target,
-      mapData,
-      mapData.tiles[0].length,
-      mapData.tiles.length,
-      mapDefinition,
-      {},
-      creature,
-      allCreatures
-    );
-
-    const newHasLOS = isCreatureVisible(
-      movementDecision.destination.x,
-      movementDecision.destination.y,
-      target,
-      mapData,
-      mapData.tiles[0].length,
-      mapData.tiles.length,
-      mapDefinition,
-      {},
-      creature,
-      allCreatures
-    );
-
-    // If we don't have line of sight now but would have it after movement, definitely move
-    if (!currentHasLOS && newHasLOS) {
-      return true;
-    }
-
-    // If we have line of sight now but would lose it after movement, don't move
-    if (currentHasLOS && !newHasLOS) {
-      return false;
-    }
-  }
-
-  // If we're not in range and movement would get us in range, definitely move
-  if (!currentlyInRange && wouldBeInRange) {
-    return true;
-  }
-
-  // If we're already in attack range, NEVER move - attack from current position
-  if (currentlyInRange) {
-    return false;
-  }
-
-  // Only move if it would get us into attack range
-  return wouldBeInRange;
-}
-
-/**
- * Get all possible decisions for an AI creature (for debugging/analysis)
- */
-export function getAllPossibleDecisions(context: AIContext): AIDecision[] {
-  const { ai, creature, allCreatures, reachableTiles, targetsInRange, mapDefinition } = context;
-  const decisions: AIDecision[] = [];
-
-  // Check for flee decision
-  if (shouldFlee(ai, creature, allCreatures)) {
-    decisions.push(createFleeDecision(ai, creature, allCreatures));
-  }
-
-  // Check for attack decisions
-  for (const target of targetsInRange) {
-    const canAttackNow = canAttackImmediately(creature, target);
-    if (canAttackNow) {
-      const equipment = new EquipmentSystem(creature.equipment);
-      const weapon = equipment.getMainWeapon();
-      const attackValidation = weapon ? validateCombat(creature, target, weapon, allCreatures, mapDefinition) : { isValid: false };
-      if (attackValidation.isValid) {
-        decisions.push(createAIDecision('attack', {
-          target,
-          priority: 8,
-          reason: `Attacking ${target.name}`
-        }));
-      }
-    }
-  }
-
-  // Check for movement decisions
-  const target = selectBestTarget(ai, creature, allCreatures, context.mapData, context.mapData.tiles[0].length, context.mapData.tiles.length, context.mapDefinition);
-  if (target && reachableTiles.length > 0) {
-    const movementDecision = createMovementDecision(ai, creature, allCreatures, reachableTiles, context.reachableTilesCostMap, target, context.mapData, context.mapData.tiles[0].length, context.mapData.tiles.length, context.mapDefinition);
-    if (movementDecision) {
-      decisions.push(movementDecision);
-    }
-  }
-
-  // Always add wait as an option
-  decisions.push(createAIDecision('wait', { reason: 'No advantageous action available' }));
-
-  // Sort by priority (highest first)
-  return decisions.sort((a, b) => b.priority - a.priority);
 }

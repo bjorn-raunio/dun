@@ -1,21 +1,29 @@
 import React from 'react';
 import { tileFromPointer } from '../../utils';
+import { QuestMap } from '../../maps/types';
+import { PathfindingResult } from '../../utils/pathfinding/types';
+
+interface PathHighlightResult {
+  hoveredTile: { x: number; y: number } | null;
+  highlightedPath: Array<{ x: number; y: number }>;
+  onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseLeave: () => void;
+}
 
 // --- Path Highlight Hook ---
 
 export function usePathHighlight(
-  reachable: {
-    tiles: Array<{ x: number; y: number }>;
-    costMap: Map<string, number>;
-    pathMap: Map<string, Array<{ x: number; y: number }>>;
-  },
+  reachable: PathfindingResult,
   viewportRef: React.MutableRefObject<HTMLDivElement | null>,
-  livePan: React.MutableRefObject<{ x: number; y: number; zoom: number }>,
-  mapData: { tiles: string[][] },
-  reachableKey?: number
-) {
+  livePan: { x: number; y: number; zoom: number },
+  mapDefinition: QuestMap,
+  reachableKey: number
+): PathHighlightResult {
   const [hoveredTile, setHoveredTile] = React.useState<{ x: number; y: number } | null>(null);
   const [highlightedPath, setHighlightedPath] = React.useState<Array<{ x: number; y: number }>>([]);
+
+  const cols = mapDefinition.tiles[0].length;
+  const rows = mapDefinition.tiles.length;
 
   // Clear highlights when reachable data changes (e.g., after movement)
   React.useEffect(() => {
@@ -31,9 +39,9 @@ export function usePathHighlight(
       e.clientX, 
       e.clientY, 
       viewportRef, 
-      livePan.current,
-      mapData.tiles[0].length, 
-      mapData.tiles.length
+      livePan,
+      cols, 
+      rows
     );
 
     if (!pos) {
@@ -53,7 +61,7 @@ export function usePathHighlight(
       setHoveredTile(null);
       setHighlightedPath([]);
     }
-  }, [reachable, viewportRef, livePan, mapData]);
+  }, [reachable, viewportRef, livePan, mapDefinition]);
 
   // Mouse leave handler to clear highlights
   const onMouseLeave = React.useCallback(() => {

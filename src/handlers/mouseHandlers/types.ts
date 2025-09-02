@@ -22,7 +22,6 @@ export interface MouseHandlerDependencies {
     pathMap: Map<string, Array<{ x: number; y: number }>> 
   };
   targetsInRangeIds: Set<string>;
-  mapData: { tiles: string[][] };
   setSelectedCreatureId: (id: string | null) => void;
   mapDefinition: QuestMap;
   targetingMode?: { 

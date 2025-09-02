@@ -25,9 +25,8 @@ export function validateMovement(
   newX: number,
   newY: number,
   allCreatures: ICreature[],
-  mapData: { tiles: string[][] },
-  stepCost: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  stepCost: number
 ): MovementValidationResult {
   // Use centralized validation for basic creature state
   const aliveCheck = validateCreatureAlive(creature, 'move');
@@ -36,21 +35,15 @@ export function validateMovement(
   const movementCheck = validateMovementPoints(creature, stepCost);
   if (!movementCheck.isValid) return movementCheck;
 
-  // Check if position is within map bounds
-  const boundsCheck = validateCondition(
-    isWithinMapBounds(newX, newY, mapData),
-    creature.name,
-    'position within map bounds'
-  );
-  if (!boundsCheck.isValid) return boundsCheck;
-
-  // Check if position is standable
-  const standableCheck = validateCondition(
-    isPositionStandable(creature, newX, newY, allCreatures, mapData, mapDefinition),
-    creature.name,
-    'position is standable'
-  );
-  if (!standableCheck.isValid) return standableCheck;
+  // Check if new position is within map bounds
+  if (!isWithinMapBounds(newX, newY, mapDefinition)) {
+    return { isValid: false, reason: 'Position is outside map bounds' };
+  }
+  
+  // Check if new position is standable
+  if (!isPositionStandable(creature, newX, newY, allCreatures, mapDefinition, true)) {
+    return { isValid: false, reason: 'Position is not standable' };
+  }
 
   // Check engagement restrictions
   const engagementValidation = validateEngagementMovement(creature, newX, newY, allCreatures);
@@ -71,11 +64,12 @@ export function isPositionStandable(
   x: number,
   y: number,
   allCreatures: ICreature[],
-  mapData: { tiles: string[][] },
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  considerCreatures: boolean = true,
+  excludeCreatureId?: string
 ): boolean {
   const dimensions = creature.getDimensions();
-  const result = validatePositionStandable(x, y, dimensions, allCreatures, mapData, mapDefinition, true, creature.id);
+  const result = validatePositionStandable(x, y, dimensions, allCreatures, mapDefinition, true, creature.id);
   return result.isValid;
 }
 

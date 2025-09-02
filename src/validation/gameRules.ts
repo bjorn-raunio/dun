@@ -4,6 +4,7 @@ import { isCreatureInBounds, areCreaturesOverlapping } from '../utils/geometry';
 import { VALIDATION_MESSAGES } from './messages';
 import { getLivingCreatureIds, getDeadCreatureIds } from './creature';
 import { validateNonNegative, validateNotExceeding, validateRange } from './core';
+import { QuestMap } from '../maps/types';
 
 // --- Game Rules Validation Logic ---
 
@@ -14,7 +15,7 @@ export interface GameRuleValidationResult extends BaseValidationResult {}
  */
 export function validateGameState(
   creatures: Creature[],
-  mapData: { tiles: string[][] }
+  mapDefinition: QuestMap
 ): GameRuleValidationResult {
   // Check for duplicate creature IDs using centralized utility
   const creatureIds = creatures.map(c => c.id);
@@ -34,7 +35,7 @@ export function validateGameState(
       continue;
     }
     
-    if (!isCreatureInBounds(creature, mapData)) {
+    if (!isCreatureInBounds(creature, mapDefinition)) {
       return {
         isValid: false,
         reason: VALIDATION_MESSAGES.CREATURE_OUTSIDE_BOUNDS(creature.name)
@@ -138,11 +139,11 @@ export function validateCreatureStats(creature: Creature): GameRuleValidationRes
  * Validate map consistency
  */
 export function validateMapConsistency(
-  mapData: { tiles: string[][] },
+  mapDefinition: QuestMap,
   creatures: Creature[]
 ): GameRuleValidationResult {
   // Check if map has valid dimensions
-  if (mapData.tiles.length === 0 || mapData.tiles[0].length === 0) {
+  if (mapDefinition.tiles.length === 0 || mapDefinition.tiles[0].length === 0) {
     return {
       isValid: false,
       reason: VALIDATION_MESSAGES.MAP_INVALID_DIMENSIONS(0, 0)
@@ -150,12 +151,12 @@ export function validateMapConsistency(
   }
 
   // Check if all rows have the same length
-  const expectedLength = mapData.tiles[0].length;
-  for (let i = 1; i < mapData.tiles.length; i++) {
-    if (mapData.tiles[i].length !== expectedLength) {
+  const expectedLength = mapDefinition.tiles[0].length;
+  for (let i = 1; i < mapDefinition.tiles.length; i++) {
+    if (mapDefinition.tiles[i].length !== expectedLength) {
       return {
         isValid: false,
-        reason: VALIDATION_MESSAGES.MAP_INCONSISTENT_ROWS(expectedLength, mapData.tiles[i].length)
+        reason: VALIDATION_MESSAGES.MAP_INCONSISTENT_ROWS(expectedLength, mapDefinition.tiles[i].length)
       };
     }
   }
@@ -175,14 +176,14 @@ export function validateMapConsistency(
         const tileX = creature.x + dx;
         const tileY = creature.y + dy;
         
-        if (tileY >= mapData.tiles.length || tileX >= mapData.tiles[0].length) {
+        if (tileY >= mapDefinition.tiles.length || tileX >= mapDefinition.tiles[0].length) {
           return {
             isValid: false,
             reason: VALIDATION_MESSAGES.CREATURE_INVALID_TILE(creature.name, tileX, tileY)
           };
         }
         
-        const tile = mapData.tiles[tileY][tileX];
+        const tile = mapDefinition.tiles[tileY][tileX];
         if (!tile || tile === "empty.jpg") {
           return {
             isValid: false,

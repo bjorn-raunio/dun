@@ -20,7 +20,7 @@ export class DistanceSystem {
     toY: number,
     options: DistanceOptions = {}
   ): number {
-    const { usePathfinding, mapData, cols, rows, mapDefinition, allCreatures, metric = 'chebyshev' } = options;
+    const { usePathfinding, cols, rows, mapDefinition, allCreatures, metric = 'chebyshev' } = options;
 
     // Return infinity if any position is undefined (creature not on map)
     if (fromX === undefined || fromY === undefined || toX === undefined || toY === undefined) {
@@ -33,8 +33,8 @@ export class DistanceSystem {
     }
 
     // Use pathfinding if requested and we have the necessary data
-    if (usePathfinding && mapData && cols !== undefined && rows !== undefined && allCreatures) {
-      return this.calculatePathDistance(fromX, fromY, toX, toY, allCreatures, mapData, cols, rows, mapDefinition);
+    if (usePathfinding && cols !== undefined && rows !== undefined && allCreatures && mapDefinition) {
+      return this.calculatePathDistance(fromX, fromY, toX, toY, allCreatures, cols, rows, mapDefinition);
     }
 
     // Fallback to simple distance calculation
@@ -62,7 +62,7 @@ export class DistanceSystem {
     target: ICreature,
     options: DistanceOptions = {}
   ): number {
-    const { usePathfinding, mapData, cols, rows, mapDefinition, allCreatures, costMap, metric = 'chebyshev' } = options;
+    const { usePathfinding, cols, rows, mapDefinition, allCreatures, costMap, metric = 'chebyshev' } = options;
 
     // Return infinity if target is not on the map (undefined position)
     if (target.x === undefined || target.y === undefined) {
@@ -70,13 +70,13 @@ export class DistanceSystem {
     }
 
     // If we have map data and want pathfinding, use comprehensive pathfinding
-    if (usePathfinding && mapData && cols !== undefined && rows !== undefined && allCreatures) {
-      return this.calculatePathDistanceToTarget(fromX, fromY, target, allCreatures, mapData, cols, rows, mapDefinition);
+    if (usePathfinding && cols !== undefined && rows !== undefined && allCreatures && mapDefinition) {
+      return this.calculatePathDistanceToTarget(fromX, fromY, target, allCreatures, cols, rows, mapDefinition);
     }
 
     // If we have a cost map, use cost-based distance
-    if (costMap && allCreatures) {
-      return this.calculateCostMapDistance(fromX, fromY, target, costMap, allCreatures, mapData, cols, rows, mapDefinition);
+    if (costMap && allCreatures && mapDefinition && cols !== undefined && rows !== undefined) {
+      return this.calculateCostMapDistance(fromX, fromY, target, costMap, allCreatures, cols, rows, mapDefinition);
     }
 
     // Fallback to simple distance calculation
@@ -90,27 +90,18 @@ export class DistanceSystem {
     attacker: ICreature,
     target: ICreature,
     allCreatures: ICreature[],
-    mapData?: { tiles: string[][] },
-    cols?: number,
-    rows?: number,
-    mapDefinition?: QuestMap
+    cols: number,
+    rows: number,
+    mapDefinition: QuestMap
   ): boolean {
-    // If we don't have map data, fall back to simple distance calculation
-    if (!mapData || cols === undefined || rows === undefined) {
-      // Return false if either creature is not on the map (undefined position)
-      if (attacker.x === undefined || attacker.y === undefined || 
-          target.x === undefined || target.y === undefined) {
-        return false;
-      }
-      
-      const distance = this.calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-      const attackRange = attacker.getAttackRange();
-      return distance <= attackRange;
+    // Return false if either creature is not on the map (undefined position)
+    if (attacker.x === undefined || attacker.y === undefined || 
+        target.x === undefined || target.y === undefined) {
+      return false;
     }
 
     const distance = this.calculateDistanceToCreature(attacker.x!, attacker.y!, target, {
       usePathfinding: true,
-      mapData,
       cols,
       rows,
       mapDefinition,
@@ -149,20 +140,16 @@ export class DistanceSystem {
     target: ICreature,
     creature: ICreature,
     allCreatures: ICreature[],
-    mapData?: { tiles: string[][] },
-    cols?: number,
-    rows?: number,
-    mapDefinition?: QuestMap
+    cols: number,
+    rows: number,
+    mapDefinition: QuestMap
   ): number {
     // Return infinity if target is not on the map (undefined position)
     if (target.x === undefined || target.y === undefined) {
       return Infinity;
     }
     
-    // If we don't have map data, fall back to simple distance calculation
-    if (!mapData || cols === undefined || rows === undefined) {
-      return this.calculateDistanceBetween(fromX, fromY, target.x, target.y);
-    }
+    // Always use pathfinding since we have the required parameters
 
     const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, cols, rows, mapDefinition);
 
@@ -170,7 +157,7 @@ export class DistanceSystem {
       return Infinity;
     }
 
-    return this.calculatePathDistance(fromX, fromY, closestPosition.x, closestPosition.y, allCreatures, mapData, cols, rows, mapDefinition);
+    return this.calculatePathDistance(fromX, fromY, closestPosition.x, closestPosition.y, allCreatures, cols, rows, mapDefinition);
   }
 
   /**
@@ -182,12 +169,11 @@ export class DistanceSystem {
     toX: number,
     toY: number,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): number {
-    const path = PathfindingSystem.findPathToTarget(fromX, fromY, toX, toY, allCreatures, mapData, cols, rows, mapDefinition);
+    const path = PathfindingSystem.findPathToTarget(fromX, fromY, toX, toY, allCreatures, cols, rows, mapDefinition);
 
     if (!path || path.length === 0) {
       return Infinity; // No path found
@@ -204,10 +190,9 @@ export class DistanceSystem {
     fromY: number,
     target: ICreature,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): number {
     // Find the closest accessible position to the target
     const closestPosition = this.findClosestAccessiblePositionToTarget(fromX, fromY, target, allCreatures, cols, rows, mapDefinition);
@@ -216,7 +201,7 @@ export class DistanceSystem {
       return Infinity; // No accessible position found
     }
 
-    return this.calculatePathDistance(fromX, fromY, closestPosition.x, closestPosition.y, allCreatures, mapData, cols, rows, mapDefinition);
+    return this.calculatePathDistance(fromX, fromY, closestPosition.x, closestPosition.y, allCreatures, cols, rows, mapDefinition);
   }
 
   /**
@@ -228,10 +213,9 @@ export class DistanceSystem {
     target: ICreature,
     costMap: Map<string, number>,
     allCreatures: ICreature[],
-    mapData?: { tiles: string[][] },
-    cols?: number,
-    rows?: number,
-    mapDefinition?: QuestMap
+    cols: number,
+    rows: number,
+    mapDefinition: QuestMap
   ): number {
     const key = `${fromX},${fromY}`;
     const cost = costMap.get(key);
@@ -253,7 +237,7 @@ export class DistanceSystem {
     allCreatures: ICreature[],
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): { x: number; y: number } | null {
     // Return null if target is not on the map (undefined position)
     if (target.x === undefined || target.y === undefined) {
@@ -303,13 +287,11 @@ export class DistanceSystem {
     x: number,
     y: number,
     allCreatures: ICreature[],
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): boolean {
-    // Check map bounds using mapDefinition if available, otherwise fall back to mapData
-    if (mapDefinition) {
-      if (!mapDefinition.isWithinBounds(x, y)) {
-        return false;
-      }
+    // Check map bounds using mapDefinition
+    if (!mapDefinition.isWithinBounds(x, y)) {
+      return false;
     }
 
     // Check if any creature occupies this position

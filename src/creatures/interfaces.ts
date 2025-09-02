@@ -95,11 +95,11 @@ export interface ICreature {
   isFriendlyTo(other: ICreature): boolean;
   
   // Movement
-  getReachableTiles(allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult;
-  moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult;
+  getReachableTiles(allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult;
+  moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapDefinition?: QuestMap): MovementResult;
   
   // Combat
-  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult;
+  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap): CombatResult;
   
   // Actions
   canAct(): boolean;
@@ -230,12 +230,12 @@ export interface ICreatureRelationshipsManager {
 // --- Movement Interface ---
 
 export interface ICreatureMovement {
-  getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapData: { tiles: string[][] }, cols: number, rows: number, mapDefinition?: QuestMap): PathfindingResult;
-  moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapData?: { tiles: string[][] }, mapDefinition?: QuestMap): MovementResult;
+  getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult;
+  moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapDefinition?: QuestMap): MovementResult;
 }
 
 // --- Combat Interface ---
 
 export interface ICombatExecutor {
-  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult;
+  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: QuestMap): CombatResult;
 }

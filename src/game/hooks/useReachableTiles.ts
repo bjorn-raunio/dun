@@ -8,9 +8,8 @@ import { QuestMap } from '../../maps/types';
 export function useReachableTiles(
   creatures: ICreature[],
   selectedCreatureId: string | null,
-  mapData: { tiles: string[][] },
-  reachableKey: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  reachableKey: number
 ) {
   // Calculate possible squares for selected creature
   const reachable = React.useMemo(() => {
@@ -19,9 +18,9 @@ export function useReachableTiles(
     if (!selected || !selected.isPlayerControlled()) return { tiles: [] as Array<{x: number; y: number}>, costMap: new Map<string, number>(), pathMap: new Map<string, Array<{x: number; y: number}>>() };
 
     // Use the creature's built-in pathfinding method
-    return selected.getReachableTiles(creatures, mapData, mapData.tiles[0].length, mapData.tiles.length, mapDefinition);
+    return selected.getReachableTiles(creatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCreatureId, creatures, mapData, mapDefinition, reachableKey]);
+  }, [selectedCreatureId, creatures, mapDefinition, reachableKey]);
 
   return reachable;
 }

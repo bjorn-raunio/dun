@@ -1,6 +1,7 @@
 import React from "react";
 import './App.css';
-import { mapDefinition, generateMapTiles } from './maps';
+import { mapDefinition } from './maps';
+import { QuestMap } from './maps/types';
 import { endTurn } from './game';
 import { GameProvider, useGameContext } from './game/GameContext';
 import { MapView, GameUI, TurnTracker } from './components';
@@ -12,12 +13,7 @@ import { addMessage } from './game/messageSystem';
 
 // Map and game state are now imported from extracted modules
 
-const tileMapData = {
-  name: mapDefinition.name,
-  tiles: generateMapTiles(mapDefinition).tiles,
-};
-
-function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
+function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   // Game state management using context
   const { state: gameState, actions: gameActions, refs: gameRefs } = useGameContext();
   const { groups, creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode } = gameState;
@@ -25,16 +21,16 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
   
   // Custom hooks for game logic
-  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, mapData, mapDefinition);
-  const reachable = useReachableTiles(creatures, selectedCreatureId, mapData, reachableKey, mapDefinition);
+  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, mapDefinition);
+  const reachable = useReachableTiles(creatures, selectedCreatureId, mapDefinition, reachableKey);
   const selectedCreature = useSelectedCreature(creatures, selectedCreatureId);
 
   // Path highlight hook
   const { highlightedPath, onMouseMove: onPathMouseMove, onMouseLeave: onPathMouseLeave } = usePathHighlight(
     reachable,
     viewportRef,
-    livePan,
-    mapData,
+    livePan.current,
+    mapDefinition,
     reachableKey
   );
 
@@ -85,9 +81,8 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
     selectedCreatureId,
     reachable,
     targetsInRangeIds,
-    mapData,
-    setSelectedCreatureId,
     mapDefinition,
+    setSelectedCreatureId,
     targetingMode
   );
 
@@ -97,7 +92,6 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
   return (
     <div className="App">
       <MapView
-        mapData={mapData}
         mapDefinition={mapDefinition}
         creatures={creatures}
         selectedCreatureId={selectedCreatureId}
@@ -120,7 +114,7 @@ function TileMapView({ mapData }: { mapData: typeof tileMapData }) {
       <GameUI
         messages={messages}
         onEndTurn={() => {
-          endTurn(groups, tileMapData, gameActions.dispatch, lastMovement, turnState, mapDefinition);
+          endTurn(groups, mapDefinition, gameActions.dispatch, lastMovement, turnState);
         }}
         isAITurnActive={aiTurnState.isAITurnActive}
         turnState={turnState}
@@ -148,7 +142,7 @@ function App() {
   return (
     <GameProvider initialCreatures={mapDefinition.creatures} mapDefinition={mapDefinition}>
       <div className="App">
-        <TileMapView mapData={tileMapData} />
+        <TileMapView mapDefinition={mapDefinition} />
       </div>
     </GameProvider>
   );

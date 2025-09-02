@@ -5,21 +5,18 @@ import { MapBlock } from './types';
 import { QuestMap } from '../../maps/types';
 
 interface MapRendererProps {
-  mapData: {
-    tiles: string[][];
-  };
   mapDefinition: QuestMap;
 }
 
-export function MapRenderer({ mapData, mapDefinition }: MapRendererProps) {
-  const rows = mapData.tiles.length;
-  const cols = mapData.tiles[0].length;
+export function MapRenderer({ mapDefinition }: MapRendererProps) {
+  const rows = mapDefinition.tiles.length;
+  const cols = mapDefinition.tiles[0].length;
   const gridItems: React.ReactNode[] = [];
 
   // Track which tiles are already rendered as part of a block
   const rendered: boolean[][] = Array.from(
-    { length: mapData.tiles.length }, 
-    () => Array(mapData.tiles[0].length).fill(false)
+    { length: mapDefinition.tiles.length }, 
+    () => Array(mapDefinition.tiles[0].length).fill(false)
   );
 
   // Helper function to find if this is the top-left of a block and its size
@@ -47,7 +44,7 @@ export function MapRenderer({ mapData, mapDefinition }: MapRendererProps) {
             if (
               y + dy < rows &&
               x + dx < cols &&
-              mapData.tiles[y + dy][x + dx] === typeToImage[block.type]
+              mapDefinition.tiles[y + dy][x + dx] === typeToImage[block.type]
             ) {
               rendered[y + dy][x + dx] = true;
             }

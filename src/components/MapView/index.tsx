@@ -10,7 +10,6 @@ import { CreatureOverlay } from './CreatureOverlay';
 import { WeatherOverlay } from './WeatherOverlay';
 
 export function MapView({
-  mapData,
   mapDefinition,
   creatures,
   selectedCreatureId,
@@ -27,8 +26,8 @@ export function MapView({
   panRef,
   targetingMode,
 }: MapViewProps) {
-  const rows = mapData.tiles.length;
-  const cols = mapData.tiles[0].length;
+  const rows = mapDefinition.tiles.length;
+  const cols = mapDefinition.tiles[0].length;
 
   // Determine cursor style based on cursor style
   const cursorStyle = targetingMode?.isActive ? 'crosshair' : 'grab';
@@ -94,7 +93,7 @@ export function MapView({
           }}
         >
           {/* Base map rendering */}
-          <MapRenderer mapData={mapData} mapDefinition={mapDefinition} />
+          <MapRenderer mapDefinition={mapDefinition} />
 
           {/* Terrain overlay */}
           <TerrainOverlay mapDefinition={mapDefinition} />
@@ -125,8 +124,7 @@ export function MapView({
             selectedCreatureId={selectedCreatureId}
             onCreatureClick={onCreatureClick}
             targetingMode={targetingMode}
-            mapDefinition={mapDefinition}
-            mapData={mapData}
+                          mapDefinition={mapDefinition}
           />
 
         </div>

@@ -3,10 +3,6 @@ import { ICreature } from '../../creatures/index';
 import { QuestMap } from '../../maps/types';
 
 export interface MapViewProps {
-  mapData: {
-    name: string;
-    tiles: string[][];
-  };
   mapDefinition: QuestMap;
   creatures: ICreature[];
   selectedCreatureId: string | null;

@@ -18,11 +18,10 @@ import { AITurnState } from './turnManagement/types';
  */
 export function endTurn(
   groups: CreatureGroup[],
-  mapData: { tiles: string[][] },
+  mapDefinition: QuestMap,
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
-  currentTurnState: TurnState,
-  mapDefinition: QuestMap
+  currentTurnState: TurnState
 ) {
   let playerControlledGroup = groups.find(group => group.isPlayerControlled());
 
@@ -33,7 +32,6 @@ export function endTurn(
   // Create context for AI turn phase
   const context: TurnExecutionContext = {
     groups,
-    mapData,
     dispatch,
     mapDefinition
   };

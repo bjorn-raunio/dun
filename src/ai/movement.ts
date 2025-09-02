@@ -32,9 +32,6 @@ export function evaluateMovementOption(
   allCreatures: ICreature[],
   costMap: Map<string, number>,
   target?: ICreature,
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
   mapDefinition?: QuestMap
 ): AIMovementOption {
   const benefits = {
@@ -56,9 +53,9 @@ export function evaluateMovementOption(
   let score = 0;
 
   // Only consider the movement cost to reach the target
-  if (target && creature.x !== undefined && creature.y !== undefined) {
-    const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
-    const newPathDistance = calculateDistanceToAttackablePosition(x, y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+  if (target && creature.x !== undefined && creature.y !== undefined && mapDefinition) {
+          const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition);
+      const newPathDistance = calculateDistanceToAttackablePosition(x, y, target, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition);
     const attackRange = creature.getAttackRange();
     
     const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
@@ -77,9 +74,9 @@ export function evaluateMovementOption(
     }
 
     // Check line of sight for ranged creatures
-    if ((hasRangedWeapon || isRangedBehavior) && mapData && cols !== undefined && rows !== undefined) {
+    if ((hasRangedWeapon || isRangedBehavior) && mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
       // Check if this position has line of sight to the target
-      const hasLOS = isCreatureVisible(x, y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures);
+      const hasLOS = isCreatureVisible(x, y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures);
 
       if (hasLOS) {
         benefits.hasLineOfSight = true;
@@ -105,9 +102,9 @@ export function evaluateMovementOption(
         score -= 75;
       }
 
-      // Check current position line of sight for comparison
-      const currentHasLOS = creature.x !== undefined && creature.y !== undefined ? 
-        isCreatureVisible(creature.x, creature.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures) : false;
+              // Check current position line of sight for comparison
+        const currentHasLOS = creature.x !== undefined && creature.y !== undefined ? 
+          isCreatureVisible(creature.x, creature.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures) : false;
 
       // Bonus for improving line of sight situation
       if (!currentHasLOS && hasLOS) {
@@ -148,12 +145,11 @@ function validateClosestDestination(
   reachableTiles: Array<{ x: number; y: number }>,
   costMap: Map<string, number>,
   allCreatures: ICreature[],
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap,
+  cols: number,
+  rows: number
 ): boolean {
-  const destinationPathDistance = calculateDistanceToAttackablePosition(destination.x, destination.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+  const destinationPathDistance = calculateDistanceToAttackablePosition(destination.x, destination.y, target, creature, allCreatures, cols, rows, mapDefinition);
 
   // Check if any other reachable tile is closer to the target
   for (const tile of reachableTiles) {
@@ -162,7 +158,7 @@ function validateClosestDestination(
       continue;
     }
 
-    const tilePathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    const tilePathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target, creature, allCreatures, cols, rows, mapDefinition);
 
     // If we find a tile that's significantly closer (with some tolerance for equal distances)
     if (tilePathDistance < destinationPathDistance - 0.5) {
@@ -183,9 +179,6 @@ export function findBestMovement(
   reachableTiles: Array<{ x: number; y: number }>,
   costMap: Map<string, number>,
   target?: ICreature,
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
   mapDefinition?: QuestMap
 ): AIMovementOption | null {
   if (reachableTiles.length === 0) {
@@ -214,15 +207,12 @@ export function findBestMovement(
       allCreatures,
       costMap,
       target,
-      mapData,
-      cols,
-      rows,
       mapDefinition
     );
 
-    const currentPathDistance = creature.x !== undefined && creature.y !== undefined ? 
-      calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition) : Infinity;
-    const newPathDistance = calculateDistanceToAttackablePosition(tile.x, tile.y, target!, creature, allCreatures, mapData, cols, rows, mapDefinition);
+    const currentPathDistance = creature.x !== undefined && creature.y !== undefined && mapDefinition ? 
+      calculateDistanceToAttackablePosition(creature.x, creature.y, target!, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition) : Infinity;
+    const newPathDistance = mapDefinition ? calculateDistanceToAttackablePosition(tile.x, tile.y, target!, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition) : Infinity;
     logAI(`Option (${tile.x}, ${tile.y}): cost=${cost}, score=${option.score}, closerToTarget=${option.benefits.closerToTarget}, hasLineOfSight=${option.benefits.hasLineOfSight}, pathDistance=${newPathDistance} (current=${currentPathDistance}), movementEfficiency=${cost <= 2 ? 'HIGH' : cost <= 4 ? 'MEDIUM' : 'LOW'}`);
 
     options.push(option);
@@ -247,8 +237,8 @@ export function findBestMovement(
     const bestOption = options[0];
 
     // If the best option claims to get us closer to target, validate it
-    if (bestOption.benefits.closerToTarget) {
-      const isValidClosest = validateClosestDestination(bestOption, target, creature, reachableTiles, costMap, allCreatures, mapData, cols, rows, mapDefinition);
+    if (bestOption.benefits.closerToTarget && mapDefinition) {
+      const isValidClosest = validateClosestDestination(bestOption, target, creature, reachableTiles, costMap, allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
 
       if (!isValidClosest) {
         logAI(`WARNING: Best option is not actually closest to target!`);
@@ -257,7 +247,7 @@ export function findBestMovement(
         let closestDistance = Infinity;
 
         for (const option of options) {
-          const pathDistance = calculateDistanceToAttackablePosition(option.x, option.y, target, creature, allCreatures, mapData, cols, rows, mapDefinition);
+          const pathDistance = calculateDistanceToAttackablePosition(option.x, option.y, target, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition);
           if (pathDistance < closestDistance) {
             closestDistance = pathDistance;
             actualClosestOption = option;
@@ -302,9 +292,6 @@ export function shouldMove(
   reachableTiles: Array<{ x: number; y: number }>,
   costMap: Map<string, number>,
   target?: ICreature,
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
   mapDefinition?: QuestMap
 ): boolean {
   // If no target, movement is less important
@@ -326,15 +313,15 @@ export function shouldMove(
 
   if (hasRangedWeapon || isRangedBehavior) {
     // Check if we have line of sight to the target
-    if (mapData && cols !== undefined && rows !== undefined && 
-        creature.x !== undefined && creature.y !== undefined) {
-      const currentHasLOS = isCreatureVisible(creature.x, creature.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures);
-      // If we don't have line of sight, we should definitely move
-      if (!currentHasLOS) {
-        // Check if there's a position with line of sight available
-        const hasPositionWithLOS = reachableTiles.some(tile =>
-          isCreatureVisible(tile.x, tile.y, target, mapData, cols, rows, mapDefinition, {}, creature, allCreatures)
-        );
+         if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0 && 
+         creature.x !== undefined && creature.y !== undefined) {
+       const currentHasLOS = isCreatureVisible(creature.x, creature.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures);
+       // If we don't have line of sight, we should definitely move
+       if (!currentHasLOS) {
+         // Check if there's a position with line of sight available
+         const hasPositionWithLOS = reachableTiles.some(tile =>
+           isCreatureVisible(tile.x, tile.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures)
+         );
 
         if (hasPositionWithLOS) {
           return true;
@@ -424,16 +411,13 @@ export function createMovementDecision(
   reachableTiles: Array<{ x: number; y: number }>,
   costMap: Map<string, number>,
   target?: ICreature,
-  mapData?: { tiles: string[][] },
-  cols?: number,
-  rows?: number,
   mapDefinition?: QuestMap
 ): AIDecision | null {
-  if (!shouldMove(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition)) {
+  if (!shouldMove(ai, creature, allCreatures, reachableTiles, costMap, target, mapDefinition)) {
     return null;
   }
 
-  const bestMove = findBestMovement(ai, creature, allCreatures, reachableTiles, costMap, target, mapData, cols, rows, mapDefinition);
+  const bestMove = findBestMovement(ai, creature, allCreatures, reachableTiles, costMap, target, mapDefinition);
 
   if (!bestMove) {
     return null;

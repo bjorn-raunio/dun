@@ -17,8 +17,7 @@ export function validateCombat(
   target: ICreature,
   weapon: Weapon | RangedWeapon,
   allCreatures: ICreature[],
-  mapDefinition?: QuestMap,
-  mapData?: { tiles: string[][] }
+  mapDefinition: QuestMap
 ): ValidationResult {
   // Basic creature state checks
   if (!attacker.isAlive()) {
@@ -79,17 +78,16 @@ export function validateCombat(
     };
   }
 
-  // Line of sight check - only if map data is available
-  if (mapData && mapData.tiles && mapData.tiles.length > 0) {
-    const cols = mapData.tiles[0].length;
-    const rows = mapData.tiles.length;
+  // Line of sight check - only if map definition is available
+  if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
+    const cols = mapDefinition.tiles[0].length;
+    const rows = mapDefinition.tiles.length;
     
     if (!LineOfSightSystem.hasLineOfSight(
       attacker.x, 
       attacker.y, 
       target.x, 
       target.y, 
-      mapData, 
       cols, 
       rows, 
       mapDefinition,

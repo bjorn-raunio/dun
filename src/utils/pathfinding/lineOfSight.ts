@@ -41,11 +41,11 @@ import { GAME_SETTINGS } from '../constants';
  * USAGE:
  * ```typescript
  * // Use pixel-based calculations (default)
- * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows);
+ * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, cols, rows, mapDefinition);
  * 
  * // Force tile-based calculations for backward compatibility
- * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, mapData, cols, rows, 
- *   mapDefinition, { usePixelCalculations: false });
+ * const hasLOS = LineOfSightSystem.hasLineOfSight(fromX, fromY, toX, toY, cols, rows, mapDefinition, 
+ *   { usePixelCalculations: false });
  * ```
  */
 export class LineOfSightSystem {
@@ -76,10 +76,9 @@ export class LineOfSightSystem {
     fromX: number,
     fromY: number,
     target: ICreature,
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     options: LineOfSightOptions = {},
     fromCreature?: ICreature,
     allCreatures?: ICreature[]
@@ -93,7 +92,7 @@ export class LineOfSightSystem {
       return false;
     }
 
-    return this.hasLineOfSight(fromX, fromY, target.x, target.y, mapData, cols, rows, mapDefinition, options, fromCreature, target, allCreatures);
+    return this.hasLineOfSight(fromX, fromY, target.x, target.y, cols, rows, mapDefinition, options, fromCreature, target, allCreatures);
   }
 
   /**
@@ -104,10 +103,9 @@ export class LineOfSightSystem {
     fromY: number,
     toX: number,
     toY: number,
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     options: LineOfSightOptions = {},
     fromCreature?: ICreature,
     toCreature?: ICreature,
@@ -139,7 +137,7 @@ export class LineOfSightSystem {
       // Use pixel-based line of sight calculation
       return this.hasPixelLineOfSight(
         fromX, fromY, toX, toY,
-        mapData, cols, rows, mapDefinition,
+        cols, rows, mapDefinition,
         fromElevation, toElevation, fromSize, toSize,
         allCreatures
       );
@@ -158,7 +156,6 @@ export class LineOfSightSystem {
         if (this.isTerrainBlocking(
           point.x,
           point.y,
-          mapData,
           cols,
           rows,
           mapDefinition,
@@ -189,10 +186,9 @@ export class LineOfSightSystem {
     fromY: number,
     toX: number,
     toY: number,
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap
+    mapDefinition: QuestMap
   ): { path: Array<{ x: number; y: number }>; isBlocked: boolean; blockingTile?: { x: number; y: number; tileType: string } } {
     const path = this.getLinePoints(fromX, fromY, toX, toY);
 
@@ -204,8 +200,8 @@ export class LineOfSightSystem {
       }
 
       // Check if terrain blocks line of sight
-      if (this.isTerrainBlocking(point.x, point.y, mapData, cols, rows, mapDefinition)) {
-        const tileType = mapData.tiles[point.y]?.[point.x] || 'unknown';
+      if (this.isTerrainBlocking(point.x, point.y, cols, rows, mapDefinition)) {
+        const tileType = mapDefinition.tiles[point.y]?.[point.x] || 'unknown';
         return {
           path,
           isBlocked: true,
@@ -224,7 +220,6 @@ export class LineOfSightSystem {
     fromX: number,
     fromY: number,
     allCreatures: ICreature[],
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
     mapDefinition: QuestMap,
@@ -244,7 +239,7 @@ export class LineOfSightSystem {
       }
 
       // Check if creature is within line of sight
-      if (this.hasLineOfSight(fromX, fromY, creature.x, creature.y, mapData, cols, rows, mapDefinition, options, fromCreature, creature, allCreatures)) {
+      if (this.hasLineOfSight(fromX, fromY, creature.x, creature.y, cols, rows, mapDefinition, options, fromCreature, creature, allCreatures)) {
         visibleCreatures.push(creature);
       }
     }
@@ -257,8 +252,8 @@ export class LineOfSightSystem {
    */
   private static hasPixelLineOfSight(
     fromX: number, fromY: number, toX: number, toY: number,
-    mapData: { tiles: string[][] }, cols: number, rows: number,
-    mapDefinition?: QuestMap,
+    cols: number, rows: number,
+    mapDefinition: QuestMap,
     fromElevation?: number, toElevation?: number, fromSize?: number, toSize?: number,
     allCreatures?: ICreature[]
   ): boolean {
@@ -298,7 +293,7 @@ export class LineOfSightSystem {
       // Check if this position blocks line of sight
       if (this.isPixelPositionBlocking(
         currentPixelX, currentPixelY, currentTile.tileX, currentTile.tileY,
-        mapData, cols, rows, mapDefinition,
+        cols, rows, mapDefinition,
         fromPixel.pixelX, fromPixel.pixelY, toPixel.pixelX, toPixel.pixelY,
         fromElevation, toElevation, fromSize, toSize,
         allCreatures
@@ -317,8 +312,8 @@ export class LineOfSightSystem {
    */
   private static isPixelPositionBlocking(
     pixelX: number, pixelY: number, tileX: number, tileY: number,
-    mapData: { tiles: string[][] }, cols: number, rows: number,
-    mapDefinition?: QuestMap,
+    cols: number, rows: number,
+    mapDefinition: QuestMap,
     fromPixelX?: number, fromPixelY?: number, toPixelX?: number, toPixelY?: number,
     fromElevation?: number, toElevation?: number, fromSize?: number, toSize?: number,
     allCreatures?: ICreature[]
@@ -329,7 +324,7 @@ export class LineOfSightSystem {
     }
 
     // Check terrain blocking at this tile
-    if (mapData.tiles[tileY] && mapData.tiles[tileY][tileX]) {
+    if (mapDefinition.tiles[tileY] && mapDefinition.tiles[tileY][tileX]) {
 
       // Check elevation-based blocking if we have elevation information
       if (fromElevation !== undefined && toElevation !== undefined &&
@@ -448,10 +443,9 @@ export class LineOfSightSystem {
   private static isTerrainBlocking(
     x: number,
     y: number,
-    mapData: { tiles: string[][] },
     cols: number,
     rows: number,
-    mapDefinition?: QuestMap,
+    mapDefinition: QuestMap,
     fromX?: number,
     fromY?: number,
     toX?: number,
@@ -467,8 +461,8 @@ export class LineOfSightSystem {
     }
 
     // Check if tile exists and has blocking terrain
-    if (mapData.tiles[y] && mapData.tiles[y][x]) {
-      const tileType = mapData.tiles[y][x];
+    if (mapDefinition.tiles[y] && mapDefinition.tiles[y][x]) {
+      const tileType = mapDefinition.tiles[y][x];
 
       // If we have elevation information, check if terrain is tall enough to block
       if (fromElevation !== undefined && toElevation !== undefined &&

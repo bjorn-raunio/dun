@@ -27,8 +27,7 @@ export function executeCombat(
   attacker: Creature,
   target: Creature,
   allCreatures: Creature[],
-  mapDefinition?: any,
-  mapData?: { tiles: string[][] }
+  mapDefinition: QuestMap
 ): CombatResult {
   // Face the target when attacking (only if both creatures are on the map)
   if (attacker.x !== undefined && attacker.y !== undefined &&
@@ -50,7 +49,7 @@ export function executeCombat(
   }
 
   // Use consolidated validation
-  const validation = validateCombat(attacker, target, weapon, allCreatures, mapDefinition, mapData);
+  const validation = validateCombat(attacker, target, weapon, allCreatures, mapDefinition);
 
   if (!validation.isValid) {
     return {
@@ -65,7 +64,7 @@ export function executeCombat(
   const isRanged = weapon instanceof RangedWeapon;
 
   // Execute unified combat
-  const result = executeCombatPhase(attacker, target, isRanged, allCreatures, mapDefinition, mapData);
+  const result = executeCombatPhase(attacker, target, isRanged, allCreatures, mapDefinition);
 
   // Update combat states for all creatures after combat
   updateCombatStates(allCreatures);
@@ -98,8 +97,7 @@ function executeCombatPhase(
   target: Creature,
   isRanged: boolean,
   allCreatures: Creature[],
-  mapDefinition?: QuestMap,
-  mapData?: { tiles: string[][] }
+  mapDefinition: QuestMap
 ): CombatResult {
   const combatEventData: CombatEventData = {
     attacker,
@@ -157,7 +155,7 @@ function executeCombatPhase(
 
   let bonusDamage = 0;
   if (!isRanged) {
-    if(!pushback(attacker, target, allCreatures, true, mapData, mapDefinition)) {
+    if(!pushback(attacker, target, allCreatures, true, mapDefinition)) {
       bonusDamage++;
     }
   }
@@ -204,8 +202,8 @@ function executeCombatPhase(
   return finalResult;
 }
 
-function pushback(attacker: Creature, target: Creature, allCreatures: Creature[], takePosition: boolean, mapData?: { tiles: string[][] }, mapDefinition?: QuestMap) {
-  if (attacker.size >= target.size && mapData) {
+function pushback(attacker: Creature, target: Creature, allCreatures: Creature[], takePosition: boolean, mapDefinition?: QuestMap) {
+  if (attacker.size >= target.size && mapDefinition) {
     if (!target.isDead()) {
       // Check if this attacker can push this target this turn
       if (!attacker.canPushCreature(target.id)) {
@@ -236,8 +234,8 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
       // Get possible pushback positions
       const candidateDirs = [direction, backArcLeft, backArcRight];
       const targetDims = target.getDimensions();
-      const mapRows = mapData.tiles.length;
-      const mapCols = mapData.tiles[0].length;
+      const mapRows = mapDefinition.tiles.length;
+      const mapCols = mapDefinition.tiles[0].length;
       const positions = candidateDirs.filter(dir => !diagonalMovementBlocked(target.x!, target.y!, target.x! + directionDeltas[dir][0], target.y! + directionDeltas[dir][1], mapDefinition)).map(dir => {
         const [dx, dy] = directionDeltas[dir];
         const x = target.x! + dx;
@@ -246,7 +244,7 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
           x: x,
           y: y,
           dir,
-          result: isAreaStandable(x, y, targetDims, true, allCreatures, mapCols, mapRows, mapData, mapDefinition)
+          result: isAreaStandable(x, y, targetDims, true, allCreatures, mapCols, mapRows, mapDefinition)
         };
       });
       const validPositions = positions.filter(r => r.result.isValid);

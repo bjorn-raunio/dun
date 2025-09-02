@@ -29,8 +29,6 @@ export interface LineOfSightOptions {
 export interface DistanceOptions {
   /** Use pathfinding for accurate distance calculation */
   usePathfinding?: boolean;
-  /** Map data for pathfinding calculations */
-  mapData?: { tiles: string[][] };
   /** Map dimensions for bounds checking */
   cols?: number;
   rows?: number;

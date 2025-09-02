@@ -24,7 +24,6 @@ export interface TurnOrderConfig {
 
 export interface TurnExecutionContext {
   groups: CreatureGroup[];
-  mapData: { tiles: string[][] };
   dispatch: React.Dispatch<any>;
   mapDefinition: QuestMap;
 }

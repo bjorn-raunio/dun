@@ -1,6 +1,7 @@
 import { Creature, ICreature } from '../creatures/index';
 import { validateMovement } from '../validation/movement';
 import { VALIDATION_MESSAGES } from '../validation/messages';
+import { QuestMap } from '../maps/types';
 
 // --- Movement Logic ---
 
@@ -24,8 +25,7 @@ export function executeMovement(
   path: Array<{x: number; y: number}>,
   allCreatures: ICreature[],
   stepCost: number,
-  mapData: { tiles: string[][] },
-  mapDefinition?: any
+  mapDefinition: QuestMap
 ): MovementResult {
   
   if (path.length === 0) {
@@ -42,7 +42,7 @@ export function executeMovement(
   const destination = path[path.length - 1];
   
   // Validate movement using extracted validation logic
-  const validation = validateMovement(creature, destination.x, destination.y, allCreatures, mapData, stepCost, mapDefinition);
+  const validation = validateMovement(creature, destination.x, destination.y, allCreatures, mapDefinition, stepCost);
   
   if (!validation.isValid) {
     return {
@@ -55,7 +55,7 @@ export function executeMovement(
   }
   
   // Try to move through the path with zone of control checks
-  const moveResult = creature.moveTo(path, allCreatures, mapData, mapDefinition);
+  const moveResult = creature.moveTo(path, allCreatures, mapDefinition);
   
   if (moveResult.status === 'failed') {
     return {

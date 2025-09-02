@@ -11,8 +11,7 @@ export function useTargetsInRange(
   creatures: ICreature[],
   selectedCreatureId: string | null,
   targetsInRangeKey: number,
-  mapData?: { tiles: string[][] },
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap
 ) {
   const [targetsInRangeIds, setTargetsInRangeIds] = React.useState<Set<string>>(new Set());
 
@@ -39,9 +38,9 @@ export function useTargetsInRange(
     // Filter by line of sight if map data is available
     let finalTargetsInRange = basicTargetsInRange;
     
-    if (mapData && mapData.tiles && mapData.tiles.length > 0) {
-      const cols = mapData.tiles[0].length;
-      const rows = mapData.tiles.length;
+    if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
+      const cols = mapDefinition.tiles[0].length;
+      const rows = mapDefinition.tiles.length;
       
       const visibleTargets = new Set<string>();
       
@@ -52,7 +51,6 @@ export function useTargetsInRange(
           sel.x, 
           sel.y, 
           target, 
-          mapData, 
           cols, 
           rows, 
           mapDefinition,
@@ -70,7 +68,7 @@ export function useTargetsInRange(
     
     logGame(`Final targets in range: ${Array.from(finalTargetsInRange).join(', ')}`);
     setTargetsInRangeIds(finalTargetsInRange);
-  }, [selectedCreatureId, creatures, targetsInRangeKey, mapData, mapDefinition]);
+  }, [selectedCreatureId, creatures, targetsInRangeKey, mapDefinition]);
 
   return {
     targetsInRangeIds,

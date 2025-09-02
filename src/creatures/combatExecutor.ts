@@ -1,6 +1,6 @@
 import { ICombatExecutor } from './interfaces';
 import { executeCombat as executeCombatUtil } from '../utils/combat';
-import { Creature } from './index';
+import { Creature, ICreature } from './index';
 import { QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 
@@ -8,8 +8,13 @@ import { CombatResult } from '../utils/combat/types';
 // This class wraps the combat utility functions to implement the ICombatExecutor interface
 
 export class CombatExecutor implements ICombatExecutor {
-  executeCombat(attacker: Creature, target: Creature, allCreatures: Creature[], mapDefinition?: QuestMap, mapData?: { tiles: string[][] }): CombatResult {
-    return executeCombatUtil(attacker, target, allCreatures, mapDefinition, mapData);
+  executeCombat(
+    attacker: ICreature,
+    target: ICreature,
+    allCreatures: ICreature[],
+    mapDefinition?: QuestMap
+  ): CombatResult {
+    return executeCombatUtil(attacker as Creature, target as Creature, allCreatures as Creature[], mapDefinition || {} as QuestMap);
   }
 }
 
