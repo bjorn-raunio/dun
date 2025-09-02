@@ -1,4 +1,4 @@
-import { Skill, Skills } from './types';
+import { Skill } from './types';
 import { Attributes, StatusEffect } from '../statusEffects';
 
 // --- Skill Processor ---
@@ -11,7 +11,7 @@ export class SkillProcessor {
   static getEffectiveAttribute(
     baseValue: number,
     attributeName: keyof Attributes,
-    skills: Skills,
+    skills: Skill[],
     statusEffects: StatusEffect[] = []
   ): number {
     let effectiveValue = baseValue;
@@ -41,11 +41,11 @@ export class SkillProcessor {
    */
   private static getAttributeModifiers(
     attributeName: keyof Attributes,
-    skills: Skills
+    skills: Skill[]
   ): Array<{ attribute: keyof Attributes; value: number }> {
     const modifiers: Array<{ attribute: keyof Attributes; value: number }> = [];
 
-    for (const skill of Object.values(skills)) {
+    for (const skill of skills) {
       if (skill.attributeModifiers) {
         for (const modifier of skill.attributeModifiers) {
           if (modifier.attribute === attributeName) {
@@ -61,10 +61,10 @@ export class SkillProcessor {
   /**
    * Get a summary of all skill effects for a creature
    */
-  static getSkillEffectsSummary(skills: Skills): string[] {
+  static getSkillEffectsSummary(skills: Skill[]): string[] {
     const effects: string[] = [];
 
-    for (const skill of Object.values(skills)) {
+    for (const skill of skills) {
       if (skill.attributeModifiers) {
         for (const modifier of skill.attributeModifiers) {
           const sign = modifier.value >= 0 ? "+" : "";
@@ -79,7 +79,7 @@ export class SkillProcessor {
   /**
    * Check if a creature has a specific skill
    */
-  static hasSkill(creatureSkills: Skills, skillName: string): boolean {
+  static hasSkill(creatureSkills: Skill[], skillName: string): boolean {
     return Object.values(creatureSkills).some(skill =>
       skill.name.toLowerCase() === skillName.toLowerCase()
     );
@@ -88,7 +88,7 @@ export class SkillProcessor {
   /**
    * Get all skills of a specific type
    */
-  static getSkillsByType(creatureSkills: Skills, type: string): Skill[] {
+  static getSkillsByType(creatureSkills: Skill[], type: string): Skill[] {
     return Object.values(creatureSkills).filter(skill => skill.type === type);
   }
 }

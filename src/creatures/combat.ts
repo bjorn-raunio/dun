@@ -1,9 +1,9 @@
 import { Attributes } from '../statusEffects';
-import { Skills } from '../skills';
 import { EquipmentSystem } from '../items/equipment';
 import { Weapon, RangedWeapon, Armor, Shield } from '../items/types';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
+import { Skill } from '../skills';
 
 // --- Creature Combat Management ---
 
@@ -17,7 +17,7 @@ export class CreatureCombatManager {
     },
     private getNaturalArmor: () => number,
     private getSize: () => number,
-    private getSkills: () => Skills
+    private getSkills: () => Skill[]
   ) {}
 
   // --- Equipment Access Consolidation ---

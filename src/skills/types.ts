@@ -1,5 +1,5 @@
-import { CombatResult } from '../utils/combat/types';
 import { Attributes } from '../statusEffects';
+import { CombatEventData, CombatEventName } from '../utils/combat/execution';
 
 // --- Skill Types ---
 export type SkillType = "combat" | "stealth" | "academic" | "natural";
@@ -13,29 +13,12 @@ export interface Skill {
     value: number;
   }>;
   
-  // Combat triggers
+  // Combat triggers  
   combatTriggers?: CombatTrigger[];
 }
 
-// --- Combat Trigger Types ---
-export type CombatTriggerType = 
-  | "onAttackHit"
-  | "onAttackMiss" 
-  | "onDoubleCritical"
-  | "onCriticalHit"
-  | "onTargetDefeated"
-  | "onBackAttack"
-  | "onFirstBlood"
-  | "onLowHealth"
-  | "onDoubleResult";
-
 export interface CombatTrigger {
-  type: CombatTriggerType;
-  condition?: (attacker: any, target: any, combatResult: CombatResult) => boolean;
-  effect: (attacker: any, target: any, combatResult: CombatResult) => void;
-  description: string;
-}
-
-export interface Skills {
-  [key: string]: Skill;
+  event: CombatEventName;
+  type?: "melee" | "ranged";
+  effect: (data: CombatEventData) => void;
 }

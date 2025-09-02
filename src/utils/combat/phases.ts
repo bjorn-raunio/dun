@@ -19,6 +19,7 @@ import {
   calculateDamage
 } from './calculations';
 import { COMBAT_CONSTANTS } from '../constants';
+import { CombatEventData } from './execution';
 
 // --- Combat Phase 1: To-Hit Roll ---
 
@@ -26,29 +27,28 @@ import { COMBAT_CONSTANTS } from '../constants';
  * Execute to-hit roll for melee combat
  */
 export function executeToHitRollMelee(
-  attacker: Creature,
-  target: Creature,
+  combatEventData: CombatEventData,
   mapDefinition?: any
 ): ToHitResult {
   // Create EquipmentSystem instances once and reuse
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
-  const targetEquipment = new EquipmentSystem(target.equipment);
+  const attackerEquipment = new EquipmentSystem(combatEventData.attacker.equipment);
+  const targetEquipment = new EquipmentSystem(combatEventData.target.equipment);
   
-  let attackerBonus = attackerEquipment.getAttackBonus(attacker.combat, attacker.ranged);
-  let defenderBonus = targetEquipment.getAttackBonus(target.combat, target.ranged);
+  let attackerBonus = attackerEquipment.getAttackBonus(combatEventData.attacker.combat, combatEventData.attacker.ranged);
+  let defenderBonus = targetEquipment.getAttackBonus(combatEventData.target.combat, combatEventData.target.ranged);
 
   // Check for back attack bonus
-  if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
+  if (combatEventData.attacker.wasBehindTargetAtTurnStart(combatEventData.target) && isBackAttack(combatEventData.attacker, combatEventData.target)) {
     attackerBonus += COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
   }
 
   // Check for elevation bonus
-  const elevationBonus = calculateElevationBonus(attacker, target, mapDefinition);
+  const elevationBonus = calculateElevationBonus(combatEventData.attacker, combatEventData.target, mapDefinition);
   attackerBonus += elevationBonus.attackerBonus;
   defenderBonus += elevationBonus.defenderBonus;
 
   // Roll for combat
-  const attackerRollResult = calculateAttributeRoll(attackerBonus);
+  const attackerRollResult = calculateAttributeRoll(combatEventData.attackerBonus);
   const defenderRollResult = calculateAttributeRoll(defenderBonus);
   const attackerRoll = attackerRollResult.total;
   const defenderRoll = defenderRollResult.total;
@@ -57,7 +57,7 @@ export function executeToHitRollMelee(
   const criticalHit = isCriticalHit(attackerRollResult.dice);
 
   // Check if attack hits
-  const isBackAttackForHit = isBackAttack(attacker, target);
+  const isBackAttackForHit = isBackAttack(combatEventData.attacker, combatEventData.target);
   const attackerHasShield = attackerEquipment.hasShield();
   const defenderHasShield = targetEquipment.hasShield(isBackAttackForHit);
 
@@ -68,8 +68,8 @@ export function executeToHitRollMelee(
     hit = determineHit(
       attackerRoll,
       defenderRoll,
-      attacker.agility,
-      target.agility,
+      combatEventData.attacker.agility,
+      combatEventData.target.agility,
       attackerHasShield,
       defenderHasShield
     );
@@ -81,14 +81,14 @@ export function executeToHitRollMelee(
     hit = determineHit(
       attackerRoll,
       defenderRoll,
-      attacker.agility,
-      target.agility,
+      combatEventData.attacker.agility,
+      combatEventData.target.agility,
       attackerHasShield,
       defenderHasShield
     );
   }
 
-  let toHitMessage: string = `${attacker.name} attacks ${target.name}: ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} ${displayHitMessage(hit, criticalHit, attackerRollResult.criticalSuccess)}`;
+  let toHitMessage: string = `${combatEventData.attacker.name} attacks ${combatEventData.target.name}: ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} ${displayHitMessage(hit, criticalHit, attackerRollResult.criticalSuccess)}`;
 
   return {
     hit,
@@ -107,29 +107,28 @@ export function executeToHitRollMelee(
  * Execute to-hit roll for ranged combat
  */
 export function executeToHitRollRanged(
-  attacker: Creature,
-  target: Creature
+  combatEventData: CombatEventData
 ): RangedToHitResult {
   
   // Check for back attack bonus
   let backAttackBonus = 0;
-  if (attacker.wasBehindTargetAtTurnStart(target) && isBackAttack(attacker, target)) {
+  if (combatEventData.attacker.wasBehindTargetAtTurnStart(combatEventData.target) && isBackAttack(combatEventData.attacker, combatEventData.target)) {
     backAttackBonus = COMBAT_CONSTANTS.BACK_ATTACK_BONUS;
   }
 
   // Return early if either creature is not on the map (undefined position)
-  if (attacker.x === undefined || attacker.y === undefined || 
-      target.x === undefined || target.y === undefined) {
+  if (combatEventData.attacker.x === undefined || combatEventData.attacker.y === undefined || 
+      combatEventData.target.x === undefined || combatEventData.target.y === undefined) {
     return {
       hit: false,
-      toHitMessage: `${attacker.name} cannot attack ${target.name} - target not on map`,
+      toHitMessage: `${combatEventData.attacker.name} cannot attack ${combatEventData.target.name} - target not on map`,
       attackerDoubleCritical: false,
       criticalHit: false,
       attackerDice: []
     };
   }
 
-  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
+  const distance = calculateDistanceBetween(combatEventData.attacker.x, combatEventData.attacker.y, combatEventData.target.x, combatEventData.target.y);
 
   // Apply range penalty: -1 over 3, -2 over 6, -3 over 9
   let rangePenalty = 0;
@@ -143,14 +142,14 @@ export function executeToHitRollRanged(
 
   // Apply agility penalty: -1 to hit if target has higher agility
   let agilityPenalty = 0;
-  if (target.agility > attacker.agility) {
+  if (combatEventData.target.agility > combatEventData.attacker.agility) {
     agilityPenalty = -1;
   }
 
   // Apply movement penalty: -1 if moved up to half movement, -2 if moved more than half
   let movementPenalty = 0;
-  const maxMovement = attacker.movement;
-  const movementUsed = maxMovement - attacker.remainingMovement;
+  const maxMovement = combatEventData.attacker.movement;
+  const movementUsed = maxMovement - combatEventData.attacker.remainingMovement;
   
   if (movementUsed > 0) {
     const halfMovement = Math.ceil(maxMovement / 2);
@@ -163,11 +162,11 @@ export function executeToHitRollRanged(
   }
 
   const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
-  const toHitRollResult = attacker.performAttributeTest('ranged', totalModifier);
+  const toHitRollResult = combatEventData.attacker.performAttributeTest('ranged', totalModifier);
   let criticalHit = isCriticalHit(toHitRollResult.dice);
 
   // Check if target is more than half the weapon's range away
-  const attackerEquipment = new EquipmentSystem(attacker.equipment);
+  const attackerEquipment = new EquipmentSystem(combatEventData.attacker.equipment);
   const weaponRange = attackerEquipment.getWeaponRange('normal') as number;
   const halfRange = Math.ceil(weaponRange / 2);
 
@@ -177,7 +176,7 @@ export function executeToHitRollRanged(
     criticalHit = false;
   }
 
-  const toHitMessage = `${attacker.name} makes a ranged attack at ${target.name}: ${displayDiceSum(toHitRollResult, toHitRollResult.modifier)} ${displayHitMessage(toHitRollResult.success, criticalHit, toHitRollResult.criticalSuccess)}`;
+  const toHitMessage = `${combatEventData.attacker.name} makes a ranged attack at ${combatEventData.target.name}: ${displayDiceSum(toHitRollResult, toHitRollResult.modifier)} ${displayHitMessage(toHitRollResult.success, criticalHit, toHitRollResult.criticalSuccess)}`;
 
   return {
     hit: toHitRollResult.success,

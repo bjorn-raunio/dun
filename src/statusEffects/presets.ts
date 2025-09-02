@@ -56,10 +56,10 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
           ...standardAttributeModifiers
         },
         onTurnStart: (creature: Creature) => {          
-          const recoveryRoll = Math.floor(Math.random() * 6) + 1;
+          /*const recoveryRoll = Math.floor(Math.random() * 6) + 1;
           if (recoveryRoll >= 4) {
             creature.removeStatusEffect('stunned');
-          }
+          }*/
         }
       });
     }

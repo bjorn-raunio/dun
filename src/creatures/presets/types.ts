@@ -1,7 +1,7 @@
 import { Attributes } from '../../statusEffects';
 import { AIBehaviorType } from '../../ai/types';
 import { CreatureGroup } from '../CreatureGroup';
-import { Skills, Skill } from '../../skills';
+import { Skill } from '../../skills';
 
 // --- Shared Preset Types ---
 
@@ -26,7 +26,7 @@ export type BasePreset = {
   fortune?: number;// Optional - defaults to 0
   naturalArmor?: number;
   group?: CreatureGroup;
-  skills?: Skill[] | Skills;
+  skills?: Skill[];
 };
 
 export type MonsterPreset = BasePreset & {

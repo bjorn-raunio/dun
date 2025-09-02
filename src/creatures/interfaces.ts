@@ -10,6 +10,7 @@ import { StatusEffectManager, StatusEffect, Attributes } from '../statusEffects'
 import { MapDefinition } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
+import { Skill } from '../skills';
 
 // --- Core Creature Interfaces ---
 
@@ -31,7 +32,7 @@ export interface ICreature {
   fortune: number;
   naturalArmor: number;
   group: CreatureGroup; // CHANGED from string
-  skills: { [key: string]: { name: string; type: string; description?: string } };
+  skills: Skill[];
   running: boolean;
   
   // Position

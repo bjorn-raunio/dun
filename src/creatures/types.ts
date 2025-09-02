@@ -2,7 +2,7 @@ import { Item, EquipmentSlots } from '../items';
 import { CombatResult } from '../utils/combat/types';
 import { Attributes } from '../statusEffects';
 import { CreatureGroup } from './CreatureGroup';
-import { Skill, Skills } from '../skills';
+import { Skill } from '../skills';
 
 // --- Core Creature Types ---
 
@@ -50,5 +50,5 @@ export interface CreatureConstructorParams {
   fortune: number;
   naturalArmor?: number;
   group: CreatureGroup; // CHANGED from CreatureGroupType
-  skills?: Skills | Skill[];
+  skills?: Skill[];
 }

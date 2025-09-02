@@ -3,9 +3,7 @@ import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
 import { CombatResult } from './types';
-import { CombatSkillTriggerManager } from '../../skills';
 import { applyStatusEffect, STATUS_EFFECT_PRESETS } from '../../statusEffects';
-import { logCombat } from '../logging';
 import {
   executeToHitRollMelee,
   executeToHitRollRanged,
@@ -14,10 +12,9 @@ import {
 } from './phases';
 import { getDirectionFromTo } from '../geometry';
 import { isAreaStandable } from '../pathfinding/helpers';
-import { rollXd6 } from '../dice';
-import { DIRECTIONS } from '../constants';
 import { MapDefinition } from '../../maps/types';
 import { RangedWeapon } from '../../items/types';
+import { CombatTriggers } from './combatTriggers';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building
@@ -33,15 +30,15 @@ export function executeCombat(
   mapData?: { tiles: string[][] }
 ): CombatResult {
   // Face the target when attacking (only if both creatures are on the map)
-  if (attacker.x !== undefined && attacker.y !== undefined && 
-      target.x !== undefined && target.y !== undefined) {
+  if (attacker.x !== undefined && attacker.y !== undefined &&
+    target.x !== undefined && target.y !== undefined) {
     attacker.faceTowards(target.x, target.y);
   }
 
   // Determine the weapon being used for the attack
   const equipment = new EquipmentSystem(attacker.equipment);
   const weapon = equipment.getMainWeapon();
-  
+
   if (!weapon) {
     return {
       success: false,
@@ -75,6 +72,24 @@ export function executeCombat(
   return result;
 }
 
+// --- Combat Event Names ---
+export const COMBAT_EVENTS = {
+  ATTACK_HIT: 'onAttackHit',
+  ATTACK_MISS: 'onAttackMiss',
+  DOUBLE_RESULT: 'onDoubleResult'
+} as const;
+
+export type CombatEventName = typeof COMBAT_EVENTS[keyof typeof COMBAT_EVENTS];
+
+// --- Combat Event Types ---
+export interface CombatEventData {
+  attacker: Creature;
+  target: Creature;
+  isRanged: boolean;
+  messages: string[];
+  [key: string]: any; // Allow additional event-specific data
+}
+
 /**
  * Unified combat execution for both melee and ranged combat
  */
@@ -86,12 +101,18 @@ function executeCombatPhase(
   mapDefinition?: MapDefinition,
   mapData?: { tiles: string[][] }
 ): CombatResult {
-  const messages = [];
+  const combatEventData: CombatEventData = {
+    attacker,
+    target,
+    isRanged,
+    messages: []
+  };
+
   // === PART 1: TO-HIT ROLL ===
   const toHitResult = isRanged
-    ? executeToHitRollRanged(attacker, target)
-    : executeToHitRollMelee(attacker, target, mapDefinition);
-  messages.push(toHitResult.toHitMessage);
+    ? executeToHitRollRanged(combatEventData)
+    : executeToHitRollMelee(combatEventData, mapDefinition);
+  combatEventData.messages.push(toHitResult.toHitMessage);
 
   // Consume action (regardless of hit or miss)
   attacker.setRemainingActions(attacker.remainingActions - 1);
@@ -102,10 +123,11 @@ function executeCombatPhase(
       success: true,
       damage: 0,
       targetDefeated: false,
-      messages: messages
+      messages: combatEventData.messages
     };
 
-    CombatSkillTriggerManager.processAttackMiss(attacker, target, missResult);
+    // Emit attack miss event
+    CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_MISS, combatEventData);
     return missResult;
   }
 
@@ -114,20 +136,14 @@ function executeCombatPhase(
     success: true,
     damage: 0,
     targetDefeated: false,
-    messages: messages
+    messages: combatEventData.messages
   };
 
-  CombatSkillTriggerManager.processAttackHit(attacker, target, hitResult);
-
-  // Process critical hit triggers
-  if (toHitResult.criticalHit) {
-    CombatSkillTriggerManager.processCriticalHit(attacker, target, hitResult);
-  }
+  // Emit attack hit event
+  CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_HIT, combatEventData);
 
   // Process double critical triggers
   if (toHitResult.attackerDoubleCritical) {
-    CombatSkillTriggerManager.processDoubleCritical(attacker, target, hitResult);
-
     // Universal rule: Double critical hits apply knocked down status unless target has greater size
     if (target.size <= attacker.size) {
       const knockedDownEffect = STATUS_EFFECT_PRESETS.knockedDown.createEffect();
@@ -139,14 +155,17 @@ function executeCombatPhase(
     }
   }
 
-  // Process double result triggers (any doubles: 2&2, 3&3, 4&4, 5&5, 6&6)
-  if (toHitResult.attackerDice) {
-    CombatSkillTriggerManager.processDoubleResultFromDice(attacker, target, hitResult, toHitResult.attackerDice);
+  // Emit double result event if applicable
+  if (toHitResult.attackerDice && toHitResult.attackerDice.length === 2) {
+    const [die1, die2] = toHitResult.attackerDice;
+    if (die1 === die2 && die1 > 0) {
+      CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, combatEventData);
+    }
   }
 
   // === PART 2: BLOCK ROLL ===
   const blockResult = executeBlockRoll(attacker, target, toHitResult.attackerDoubleCritical, toHitResult.criticalHit);
-  messages.push(blockResult.blockMessage);
+  combatEventData.messages.push(blockResult.blockMessage);
 
   if (blockResult.blockSuccess) {
     // Shield blocked the attack - no damage
@@ -154,7 +173,7 @@ function executeCombatPhase(
       success: true,
       damage: 0,
       targetDefeated: false,
-      messages: messages
+      messages: combatEventData.messages
     };
   }
 
@@ -166,7 +185,7 @@ function executeCombatPhase(
     toHitResult.criticalHit,
     isRanged
   );
-  messages.push(damageResult.damageMessage);
+  combatEventData.messages.push(damageResult.damageMessage);
 
   // Apply damage using the proper method
   target.takeDamage(damageResult.damage);
@@ -183,13 +202,8 @@ function executeCombatPhase(
     success: true,
     damage: damageResult.damage,
     targetDefeated,
-    messages: messages.filter(message => !!message)
+    messages: combatEventData.messages.filter(message => !!message)
   };
-
-  // Process target defeated triggers if applicable
-  if (targetDefeated) {
-    CombatSkillTriggerManager.processTargetDefeated(attacker, target, finalResult);
-  }
 
   return finalResult;
 }
@@ -198,11 +212,11 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
   if (attacker.size >= target.size && mapData) {
     if (!target.isDead()) {
       // Skip pushback if either creature is not on the map (undefined position)
-      if (attacker.x === undefined || attacker.y === undefined || 
-          target.x === undefined || target.y === undefined) {
+      if (attacker.x === undefined || attacker.y === undefined ||
+        target.x === undefined || target.y === undefined) {
         return;
       }
-      
+
       // Calculate direction from attacker to target
       const direction = getDirectionFromTo(attacker.x, attacker.y, target.x, target.y);
       const backArcLeft = (direction + 7) % 8;

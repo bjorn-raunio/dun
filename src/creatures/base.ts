@@ -4,7 +4,7 @@ import {
   CreatureState,
   DEFAULT_ATTRIBUTES
 } from './types';
-import { Skills, Skill, SkillType } from '../skills';
+import { Skill, SkillType } from '../skills';
 import { CreatureGroup } from './CreatureGroup';
 import {
   Attributes,
@@ -48,7 +48,7 @@ export abstract class Creature implements ICreature {
   fortune: number;
   naturalArmor: number;
   group: CreatureGroup;
-  skills: Skills;
+  skills: Skill[];
   running: boolean;
 
   // Manager instances - now using interfaces
@@ -76,16 +76,7 @@ export abstract class Creature implements ICreature {
     this.naturalArmor = params.naturalArmor ?? 3;
     this.group = params.group;
     this.running = false;
-    // Handle skills as either array or object
-    if (Array.isArray(params.skills)) {
-      // Convert array to object format for internal storage
-      this.skills = params.skills.reduce((acc, skill) => {
-        acc[skill.name.toLowerCase().replace(/\s+/g, '_')] = skill;
-        return acc;
-      }, {} as Skills);
-    } else {
-      this.skills = params.skills ?? {};
-    }
+    this.skills = params.skills ?? [];    
 
     // Initialize managers
     const initialPosition: CreaturePosition | undefined = params.position;
@@ -257,7 +248,7 @@ export abstract class Creature implements ICreature {
   /**
    * Get all skills the creature has
    */
-  getSkills(): Skills {
+  getSkills(): Skill[] {
     return this.skills;
   }
 
@@ -517,11 +508,11 @@ export abstract class Creature implements ICreature {
 
   // --- Skills ---
   getSkill(skillName: string): Skill | undefined {
-    return this.skills[skillName];
+    return this.skills.find(skill => skill.name === skillName);
   }
 
   getAllSkills(): Skill[] {
-    return Object.values(this.skills);
+    return this.skills;
   }
 
   // --- Status Effects ---

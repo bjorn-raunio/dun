@@ -1,5 +1,6 @@
+import { applyStatusEffect, STATUS_EFFECT_PRESETS } from '../statusEffects';
+import { CombatEventData } from '../utils/combat/execution';
 import { Skill, SkillType } from './types';
-import { CombatTriggerEffects } from './combatTriggers';
 
 // --- Skill Presets ---
 export const SKILL_PRESETS: { [key: string]: Skill } = {
@@ -14,7 +15,15 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
     type: "combat",
     description: "stun on doubles during an attack",
     combatTriggers: [
-      CombatTriggerEffects.applyStatusEffectOnDoubleResult('stunned', null, "Stuns target when rolling doubles")
+      {
+        event: "onDoubleResult", 
+        type: "melee",
+        effect: (data: CombatEventData) => {
+          applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect(), (msg: string) => {
+            data.messages.push(msg);
+          });
+        }
+      }
     ]
   },
 

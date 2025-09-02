@@ -19,7 +19,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     size: 2,
     inventory: [],
     equipment: {},
-    vitality: 4,
+    vitality: 400,
     hireCost: 75,
     skills: [
       SKILL_PRESETS.lostInTheDark,
