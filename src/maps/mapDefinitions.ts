@@ -63,7 +63,7 @@ export const mapDefinition = new QuestMap(
         armor: createArmor("chainMail"),
       },
       vitality: 4,
-      mana: 0,
+      mana: 4,
       fortune: 3,
       group: CREATURE_GROUPS.PLAYER,
       skills: [

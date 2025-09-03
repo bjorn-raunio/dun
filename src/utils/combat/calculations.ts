@@ -105,21 +105,15 @@ export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; 
 }
 
 /**
- * Calculate critical damage bonus based on hit type
- */
-export function calculateCriticalDamage(baseDamage: number, attackerDoubleCritical: boolean, criticalHit: boolean): number {
-  if (attackerDoubleCritical) return baseDamage + 2;
-  if (criticalHit) return baseDamage + 1;
-  return baseDamage;
-}
-
-/**
  * Calculate effective armor value for target
  */
-export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem): number {
+export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem, modifier: number = 0): number {
   const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
   const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
-  return baseArmorValue + weaponArmorModifier;
+  let armor = baseArmorValue + weaponArmorModifier + modifier;
+  if(armor < 2) armor = 2;
+  if(armor > 6) armor = 6;
+  return armor;
 }
 
 /**

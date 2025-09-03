@@ -1,19 +1,18 @@
 import { Creature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { Weapon } from '../../items/types';
-import { calculateAttributeRoll, calculateDamageRoll, displayDiceRoll, displayDiceSum, isCriticalHit } from '../dice';
+import { calculateAttributeRoll, displayDiceRoll, displayDiceSum, isCriticalHit, rollXd6 } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
 import { logCombat } from '../logging';
-import { 
-  ToHitResult, 
-  RangedToHitResult, 
-  BlockResult, 
-  DamageResult 
+import {
+  ToHitResult,
+  RangedToHitResult,
+  BlockResult,
+  DamageResult
 } from './types';
-import { 
-  isBackAttack, 
-  checkShieldBlock, 
-  calculateCriticalDamage, 
+import {
+  isBackAttack,
+  checkShieldBlock,
   calculateEffectiveArmor,
   calculateElevationBonus,
   calculateDamage
@@ -34,7 +33,7 @@ export function executeToHitRollMelee(
   // Create EquipmentSystem instances once and reuse
   const attackerEquipment = new EquipmentSystem(combatEventData.attacker.equipment);
   const targetEquipment = new EquipmentSystem(combatEventData.target.equipment);
-  
+
   let attackerBonus = attackerEquipment.getAttackBonus(combatEventData.attacker.combat, combatEventData.attacker.ranged);
   let defenderBonus = targetEquipment.getAttackBonus(combatEventData.target.combat, combatEventData.target.ranged);
 
@@ -50,7 +49,7 @@ export function executeToHitRollMelee(
 
   // Roll for combat
   const attackerRollResult = calculateAttributeRoll(attackerBonus);
-  if(attackerRollResult.fumble) {
+  if (attackerRollResult.fumble) {
     combatEventData.attacker.endTurn();
   }
 
@@ -66,7 +65,7 @@ export function executeToHitRollMelee(
   if (defenderRollResult.dice && defenderRollResult.dice.length === 2) {
     const [die1, die2] = defenderRollResult.dice;
     if (die1 === die2 && die1 > 1) {
-      CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, {...combatEventData, target: combatEventData.attacker, attacker: combatEventData.target});
+      CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, { ...combatEventData, target: combatEventData.attacker, attacker: combatEventData.target });
     }
   }
 
@@ -129,7 +128,7 @@ export function executeToHitRollMelee(
 export function executeToHitRollRanged(
   combatEventData: CombatEventData
 ): RangedToHitResult {
-  
+
   // Check for back attack bonus
   let backAttackBonus = 0;
   if (combatEventData.attacker.wasBehindTargetAtTurnStart(combatEventData.target) && isBackAttack(combatEventData.attacker, combatEventData.target)) {
@@ -137,8 +136,8 @@ export function executeToHitRollRanged(
   }
 
   // Return early if either creature is not on the map (undefined position)
-  if (combatEventData.attacker.x === undefined || combatEventData.attacker.y === undefined || 
-      combatEventData.target.x === undefined || combatEventData.target.y === undefined) {
+  if (combatEventData.attacker.x === undefined || combatEventData.attacker.y === undefined ||
+    combatEventData.target.x === undefined || combatEventData.target.y === undefined) {
     return {
       hit: false,
       toHitMessage: `${combatEventData.attacker.name} cannot attack ${combatEventData.target.name} - target not on map`,
@@ -170,10 +169,10 @@ export function executeToHitRollRanged(
   let movementPenalty = 0;
   const maxMovement = combatEventData.attacker.movement;
   const movementUsed = maxMovement - combatEventData.attacker.remainingMovement;
-  
+
   if (movementUsed > 0) {
     const halfMovement = Math.ceil(maxMovement / 2);
-    
+
     if (movementUsed <= halfMovement) {
       movementPenalty = -1;
     } else {
@@ -183,7 +182,7 @@ export function executeToHitRollRanged(
 
   const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
   const toHitRollResult = combatEventData.attacker.performAttributeTest('ranged', totalModifier);
-  if(toHitRollResult.criticalSuccess) {
+  if (toHitRollResult.criticalSuccess) {
     combatEventData.attacker.endTurn();
   }
   let criticalHit = isCriticalHit(toHitRollResult.dice);
@@ -222,7 +221,7 @@ export function executeBlockRoll(
   criticalHit: boolean
 ): BlockResult {
   const targetEquipment = new EquipmentSystem(target.equipment);
-  
+
   // Check if this is a back attack (shields can't block back attacks)
   const isBackAttackFromAttacker = isBackAttack(attacker, target);
 
@@ -268,7 +267,7 @@ function processShieldBlock(
 
   const shieldResult = checkShieldBlock(shieldBlockValue);
   const blockMessage = shieldResult.blocked ? `${target.name} blocks: ${displayDiceRoll([shieldResult.roll])}` : '';
-  
+
   return {
     blockMessage,
     blockSuccess: shieldResult.blocked
@@ -293,15 +292,28 @@ export function executeDamageRoll(
 
   // Calculate weapon damage with critical bonuses
   let weaponDamage = attackerEquipment.getWeaponDamage();
-  weaponDamage = calculateCriticalDamage(weaponDamage, attackerDoubleCritical, criticalHit);
+  if (attackerDoubleCritical) {
+    weaponDamage += 2;
+  } else if (criticalHit) {
+    weaponDamage += 1;
+  }
+
+  let totalDamage = weaponDamage + bonusDamage;
+  if (!isRanged) {
+    totalDamage += attacker.strength;
+  }
+
+  let armorModifier = 0;
+  if (totalDamage <= 0) {
+    totalDamage = 1;
+    armorModifier = 1;
+  }
 
   // Roll dice based on attack type
-  const diceRolls = isRanged
-    ? calculateDamageRoll(weaponDamage, bonusDamage) // Ranged: weapon damage only, no strength
-    : calculateDamageRoll(weaponDamage, attacker.strength + bonusDamage); // Melee: weapon damage + strength
+  const diceRolls = rollXd6(totalDamage);
 
   // Calculate effective armor value
-  const armorValue = calculateEffectiveArmor(target, targetEquipment, attackerEquipment);
+  const armorValue = calculateEffectiveArmor(target, targetEquipment, attackerEquipment, armorModifier);
 
   // Calculate final damage
   const damage = calculateDamage(diceRolls, armorValue);

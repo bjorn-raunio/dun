@@ -41,30 +41,6 @@ export function roll2d6(bonus: number = 0): number {
   return rollXd6Sum(2, bonus);
 }
 
-// Note: rollShieldBlock() was removed as it was redundant with rollD6()
-// Use rollD6() directly for shield blocking rolls
-
-/**
- * Calculate damage roll (Xd6 where X = base dice + optional strength)
- * This is the unified damage roll function - use this for all damage calculations
- * 
- * @param baseDice Base number of dice (usually weapon damage)
- * @param strength Optional strength modifier (defaults to 0 for ranged attacks)
- * @returns Array of dice roll results
- * 
- * @example
- * // For melee attacks: strength + weapon damage
- * const meleeDamage = calculateDamageRoll(weaponDamage, strength);
- * 
- * // For ranged attacks: weapon damage only (no strength)
- * const rangedDamage = calculateDamageRoll(weaponDamage, 0);
- * // or simply: calculateDamageRoll(weaponDamage);
- */
-export function calculateDamageRoll(baseDice: number, strength: number = 0): number[] {
-  const numDice = baseDice + strength;
-  return rollXd6(numDice);
-}
-
 export function calculateAttributeRoll(bonus: number): { total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
   const dice = rollXd6(2);
   const total = dice.reduce((sum, roll) => sum + roll, 0) + bonus;

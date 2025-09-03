@@ -11,7 +11,6 @@ export {
   determineHit,
   isBackAttack,
   checkShieldBlock,
-  calculateCriticalDamage,
   calculateEffectiveArmor,
   generateWeaponModifierText,
   calculateElevationBonus
