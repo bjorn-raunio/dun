@@ -8,8 +8,8 @@ import {
 import { updateCombatStates } from '../utils/combatStateUtils';
 import { calculateMovementCost } from '../utils/movement';
 import { MovementResult, MovementStatus } from '../utils/movement';
-import { QuestMap } from '../maps/types';
-import { logMovement } from '../utils';
+import { Light, QuestMap } from '../maps/types';
+import { logMovement, STATUS_EFFECT_PRESETS } from '../utils';
 import { CreaturePositionOrUndefined } from './types';
 
 // Movement and pathfinding logic for creatures
@@ -144,6 +144,9 @@ export class CreatureMovement implements ICreatureMovement {
       creature.x = nextTile.x;
       creature.y = nextTile.y;
 
+      // On enter tile
+      this.onEnterTile(creature, mapDefinition);
+
       // Update current position for next iteration
       currentX = nextTile.x;
       currentY = nextTile.y;
@@ -180,5 +183,15 @@ export class CreatureMovement implements ICreatureMovement {
       tilesMoved,
       totalPathLength
     };
+  }
+
+  onEnterTile(creature: Creature, mapDefinition?: QuestMap): void {
+    if(!mapDefinition || creature.x === undefined || creature.y === undefined) {
+      return;
+    }
+    const tile = mapDefinition.tiles[creature.y][creature.x];
+    if(tile.light === Light.darkness) {
+      creature.addStatusEffect(STATUS_EFFECT_PRESETS.darkness.createEffect());
+    }
   }
 }

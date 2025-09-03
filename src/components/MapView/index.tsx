@@ -3,6 +3,7 @@ import { TILE_SIZE, COLORS } from '../styles';
 import { MapViewProps } from './types';
 import { MapRenderer } from './MapRenderer';
 import { TerrainOverlay } from './TerrainOverlay';
+import { LightingOverlay } from './LightingOverlay';
 import { StartingTilesOverlay } from './StartingTilesOverlay';
 import { ReachableOverlay } from './ReachableOverlay';
 import { PathOverlay } from './PathOverlay';
@@ -26,8 +27,8 @@ export function MapView({
   panRef,
   targetingMode,
 }: MapViewProps) {
-  const rows = mapDefinition.tiles.length;
-  const cols = mapDefinition.tiles[0].length;
+  const rows = mapDefinition?.tiles.length ?? 0;
+  const cols = mapDefinition?.tiles[0].length ?? 0;
 
   // Determine cursor style based on cursor style
   const cursorStyle = targetingMode?.isActive ? 'crosshair' : 'grab';
@@ -98,6 +99,9 @@ export function MapView({
           {/* Terrain overlay */}
           <TerrainOverlay mapDefinition={mapDefinition} />
 
+          {/* Lighting overlay */}
+          <LightingOverlay mapDefinition={mapDefinition} />
+
           {/* Starting tiles overlay */}
           <StartingTilesOverlay mapDefinition={mapDefinition} />
 
@@ -124,7 +128,7 @@ export function MapView({
             selectedCreatureId={selectedCreatureId}
             onCreatureClick={onCreatureClick}
             targetingMode={targetingMode}
-                          mapDefinition={mapDefinition}
+            mapDefinition={mapDefinition}
           />
 
         </div>

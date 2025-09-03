@@ -98,7 +98,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
 export function getInitialGameState(
   initialCreatures: ICreature[], 
-  mapDefinition?: QuestMap
+  mapDefinition: QuestMap | null
 ): GameState {
   // Calculate initial pan position to center over a starting tile
   const mapWidth = mapDefinition?.width ?? 40;

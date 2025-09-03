@@ -201,7 +201,8 @@ export class LineOfSightSystem {
 
       // Check if terrain blocks line of sight
       if (this.isTerrainBlocking(point.x, point.y, cols, rows, mapDefinition)) {
-        const tileType = mapDefinition.tiles[point.y]?.[point.x] || 'unknown';
+        const tile = mapDefinition.tiles[point.y]?.[point.x];
+        const tileType = tile ? tile.image : 'unknown';
         return {
           path,
           isBlocked: true,
@@ -324,7 +325,7 @@ export class LineOfSightSystem {
     }
 
     // Check terrain blocking at this tile
-    if (mapDefinition.tiles[tileY] && mapDefinition.tiles[tileY][tileX]) {
+    if (mapDefinition.tiles[tileY] && mapDefinition.tiles[tileY][tileX] && !mapDefinition.tiles[tileY][tileX].isEmpty()) {
 
       // Check elevation-based blocking if we have elevation information
       if (fromElevation !== undefined && toElevation !== undefined &&
@@ -461,8 +462,8 @@ export class LineOfSightSystem {
     }
 
     // Check if tile exists and has blocking terrain
-    if (mapDefinition.tiles[y] && mapDefinition.tiles[y][x]) {
-      const tileType = mapDefinition.tiles[y][x];
+    if (mapDefinition.tiles[y] && mapDefinition.tiles[y][x] && !mapDefinition.tiles[y][x].isEmpty()) {
+      const tileType = mapDefinition.tiles[y][x].image;
 
       // If we have elevation information, check if terrain is tall enough to block
       if (fromElevation !== undefined && toElevation !== undefined &&

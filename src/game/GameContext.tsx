@@ -29,7 +29,7 @@ export function GameProvider({
 }: {
   children: React.ReactNode;
   initialCreatures: ICreature[];
-  mapDefinition: QuestMap;
+  mapDefinition: QuestMap | null;
 }) {
   const [state, dispatch] = useReducer(
     gameReducer, 

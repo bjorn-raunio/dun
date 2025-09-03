@@ -18,11 +18,14 @@ import { AITurnState } from './turnManagement/types';
  */
 export function endTurn(
   groups: CreatureGroup[],
-  mapDefinition: QuestMap,
+  mapDefinition: QuestMap | undefined,
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
   currentTurnState: TurnState
 ) {
+  if(!mapDefinition) {
+    return;
+  }
   let playerControlledGroup = groups.find(group => group.isPlayerControlled());
 
   if(playerControlledGroup) {

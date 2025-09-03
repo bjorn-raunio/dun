@@ -1,32 +1,130 @@
 // --- Map and Terrain Type Definitions ---
-import { Creature } from '../creatures/index';
+import { Creature, ICreature } from '../creatures/index';
+import { rollD6 } from '../utils';
 import { Section } from './section';
 import { Terrain } from './terrain';
+
+export enum Light {
+  totalDarkness,
+  darkness,
+  lit
+}
+
+export class Tile {
+  public image: string;
+  private _light: Light;
+
+  constructor(image: string = "empty.jpg") {
+    this.image = image;
+    this._light = Light.lit;
+  }
+
+  get light(): Light {
+    return this._light;
+  }
+
+  /**
+   * Set the image for this tile
+   */
+  setImage(image: string): void {
+    this.image = image;
+  }
+
+  /**
+   * Set the light level for this tile
+   */
+  setLight(light: Light): void {
+    this._light = light;
+  }
+
+  /**
+   * Check if this tile is empty
+   */
+  isEmpty(): boolean {
+    return this.image === "empty.jpg";
+  }
+
+  /**
+   * Clone this tile
+   */
+  clone(): Tile {
+    const tile = new Tile(this.image);
+    tile._light = this.light;
+    return tile;
+  }
+}
+
+export class Room {
+  public sections: Section[];
+  private _light: Light;
+
+  constructor(
+    sections: Section[] = []
+  ) {
+    this.sections = sections;
+    this._light = Light.lit;
+  }
+
+  get light(): Light {
+    return this._light;
+  }
+
+  setLight(light: Light, questMap: QuestMap, creatures: ICreature[]) {
+    this._light = light;
+    questMap.updateLighting(creatures);
+  }
+
+  /**
+   * Get all sections at a specific position within this room
+   */
+  getSectionsAt(x: number, y: number): Section[] {
+    return this.sections.filter(section =>
+      x >= section.x && x < section.x + section.rotatedWidth &&
+      y >= section.y && y < section.y + section.rotatedHeight
+    );
+  }
+
+  /**
+   * Get all terrain within this room
+   */
+  getTerrain(): Terrain[] {
+    return this.sections.flatMap(section => section.terrain);
+  }
+}
 
 export class QuestMap {
   public name: string;
   public width: number;
   public height: number;
-  public sections: Section[];
-  public creatures: Creature[];
+  public rooms: Room[];
   public startingTiles: Array<{ x: number; y: number; image?: string; }>;
-  public tiles: string[][] = [];
+  public tiles: Tile[][] = [];
+  public initialCreatures: ICreature[] = [];
+  public night: boolean;
 
   constructor(
     name: string,
     width: number,
     height: number,
-    sections: Section[] = [],
+    rooms: Room[] = [],
     creatures: Creature[] = [],
     startingTiles: Array<{ x: number; y: number; image?: string; }> = [],
   ) {
     this.name = name;
     this.width = width;
     this.height = height;
-    this.sections = sections;
-    this.creatures = creatures;
+    this.rooms = rooms;
     this.startingTiles = startingTiles;
-    this.generateMapTiles();
+    this.initialCreatures = creatures;
+    this.night = rollD6() === 1;
+    if(this.night) {
+      this.rooms.forEach(room => {
+        if(room.sections.some(section => section.outdoors)) {
+          room.setLight(Light.darkness, this, creatures);
+        }
+      });
+    }
+    this.generateMapTiles(creatures);
   }
 
   /**
@@ -48,20 +146,10 @@ export class QuestMap {
   }
 
   /**
-   * Get all creatures at a specific position
-   */
-  getCreaturesAt(x: number, y: number): Creature[] {
-    return this.creatures.filter(creature => {
-      const position = creature['positionManager']?.getPosition();
-      return position && position.x === x && position.y === y;
-    });
-  }
-
-  /**
    * Get terrain at a specific position
    */
   getTerrainAt(x: number, y: number): Terrain[] {
-    return this.sections.flatMap(section => section.terrain).filter(t =>
+    return this.rooms.flatMap(room => room.getTerrain()).filter(t =>
       t.isTileWithinTerrain(x, y)
     );
   }
@@ -70,10 +158,41 @@ export class QuestMap {
    * Get sections at a specific position
    */
   getSectionsAt(x: number, y: number): Section[] {
-    return this.sections.filter(section =>
-      x >= section.x && x < section.x + section.rotatedWidth &&
-      y >= section.y && y < section.y + section.rotatedHeight
+    return this.rooms.flatMap(room => room.getSectionsAt(x, y));
+  }
+
+  /**
+   * Get rooms at a specific position
+   */
+  getRoomAt(x: number, y: number): Room[] {
+    return this.rooms.filter(room => 
+      room.sections.some(section =>
+        x >= section.x && x < section.x + section.rotatedWidth &&
+        y >= section.y && y < section.y + section.rotatedHeight
+      )
     );
+  }
+
+  /**
+   * Get all tiles that belong to a specific room
+   */
+  getTilesInRoom(room: Room): Array<{ x: number; y: number; tile: Tile }> {
+    const tiles: Array<{ x: number; y: number; tile: Tile }> = [];
+    
+    for (const section of room.sections) {
+      const w = section.rotatedWidth;
+      const h = section.rotatedHeight;
+      
+      for (let y = section.y; y < section.y + h; y++) {
+        for (let x = section.x; x < section.x + w; x++) {
+          if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+            tiles.push({ x, y, tile: this.tiles[y][x] });
+          }
+        }
+      }
+    }
+    
+    return tiles;
   }
 
   /**
@@ -83,50 +202,8 @@ export class QuestMap {
     return this.startingTiles.some(tile => tile.x === x && tile.y === y);
   }
 
-  /**
-   * Add a creature to the map
-   */
-  addCreature(creature: Creature): void {
-    this.creatures.push(creature);
-  }
-
-  /**
-   * Remove a creature from the map
-   */
-  removeCreature(creatureId: string): void {
-    this.creatures = this.creatures.filter(c => c.id !== creatureId);
-  }
-
-  /**
-   * Add terrain to the map
-   */
-  addTerrain(terrain: Terrain): void {
-    this.sections.flatMap(section => section.terrain).push(terrain);
-  }
-
-  /**
-   * Add a section to the map
-   */
-  addSection(section: Section): void {
-    this.sections.push(section);
-  }
-
-  /**
-   * Create a copy of the map definition
-   */
-  clone(): QuestMap {
-    return new QuestMap(
-      this.name,
-      this.width,
-      this.height,
-      [...this.sections],
-      [...this.creatures],
-      [...this.startingTiles]
-    );
-  }
-
   getTerrain(): Terrain[] {
-    return this.sections.flatMap(section => section.terrain);
+    return this.rooms.flatMap(room => room.getTerrain());
   }
 
   /**
@@ -134,7 +211,7 @@ export class QuestMap {
    */
   terrainHeightAt(tx: number, ty: number): number {
     let h = 0;
-    for (const t of this.sections.flatMap(section => section.terrain)) {
+    for (const t of this.rooms.flatMap(room => room.getTerrain())) {
       h = Math.max(h, t.getHeightAt(tx, ty));
     }
     return h;
@@ -145,7 +222,7 @@ export class QuestMap {
    */
   terrainMovementCostAt(tx: number, ty: number): number {
     let cost = 1; // Default movement cost
-    for (const t of this.sections.flatMap(section => section.terrain)) {
+    for (const t of this.rooms.flatMap(room => room.getTerrain())) {
       if (t.isTileWithinTerrain(tx, ty)) {
         cost = Math.max(cost, t.getMovementCostAt(tx, ty));
       }
@@ -154,50 +231,80 @@ export class QuestMap {
   }
 
   /**
-   * Validate the map definition
+   * Get the image of a tile at a specific position
    */
-  validate(): boolean {
-    return (
-      this.name.length > 0 &&
-      this.width > 0 &&
-      this.height > 0 &&
-      this.sections.every(section =>
-        section.x >= 0 && section.y >= 0 &&
-        section.x + section.mapWidth <= this.width &&
-        section.y + section.mapHeight <= this.height
-      ) &&
-      this.creatures.every(creature => {
-        const position = creature['positionManager']?.getPosition();
-        return position && this.isWithinBounds(position.x, position.y);
-      }) &&
-      this.startingTiles.every(tile =>
-        this.isWithinBounds(tile.x, tile.y)
-      )
-    );
+  getTileImage(x: number, y: number): string {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      return this.tiles[y][x].image;
+    }
+    return "empty.jpg";
   }
 
-  generateMapTiles() {
+  /**
+   * Get the light level of a tile at a specific position
+   */
+  getTileLight(x: number, y: number): Light {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      return this.tiles[y][x].light;
+    }
+    return Light.lit;
+  }
+
+  /**
+   * Set the light level of a tile at a specific position
+   */
+  setTileLight(x: number, y: number, light: Light): void {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      this.tiles[y][x].setLight(light);
+    }
+  }
+
+  /**
+   * Set light level for a rectangular area
+   */
+  setAreaLight(startX: number, startY: number, width: number, height: number, light: Light): void {
+    for (let y = startY; y < startY + height; y++) {
+      for (let x = startX; x < startX + width; x++) {
+        this.setTileLight(x, y, light);
+      }
+    }
+  }
+
+  updateLighting(allCreatures: ICreature[]): void {
+    for (let y = 0; y < this.rooms.length; y++) {
+      const room = this.rooms[y];
+      const tiles = this.getTilesInRoom(room);
+      for (const tile of tiles) {
+        tile.tile.setLight(room.light);
+      }
+    }
+  }
+
+  generateMapTiles(creatures: ICreature[]) {
     // Initialize empty tiles
     for (let y = 0; y < this.height; y++) {
       this.tiles[y] = [];
       for (let x = 0; x < this.width; x++) {
-        this.tiles[y][x] = "empty.jpg";
+        this.tiles[y][x] = new Tile();
       }
     }
 
-    // Fill in section tiles
-    for (const section of this.sections) {
-      // Use pre-calculated rotated dimensions
-      const w = section.rotatedWidth;
-      const h = section.rotatedHeight;
+    // Fill in section tiles from all rooms
+    for (const room of this.rooms) {
+      for (const section of room.sections) {
+        // Use pre-calculated rotated dimensions
+        const w = section.rotatedWidth;
+        const h = section.rotatedHeight;
 
-      for (let y = section.y; y < section.y + h; y++) {
-        for (let x = section.x; x < section.x + w; x++) {
-          if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
-            this.tiles[y][x] = section.image;
+        for (let y = section.y; y < section.y + h; y++) {
+          for (let x = section.x; x < section.x + w; x++) {
+            if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
+              this.tiles[y][x].setImage(section.image);
+            }
           }
         }
       }
     }
+    this.updateLighting(creatures);
   }
 }

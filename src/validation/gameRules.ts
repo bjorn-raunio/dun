@@ -184,7 +184,7 @@ export function validateMapConsistency(
         }
         
         const tile = mapDefinition.tiles[tileY][tileX];
-        if (!tile || tile === "empty.jpg") {
+        if (!tile || tile.isEmpty()) {
           return {
             isValid: false,
             reason: VALIDATION_MESSAGES.CREATURE_EMPTY_TILE(creature.name, tileX, tileY)

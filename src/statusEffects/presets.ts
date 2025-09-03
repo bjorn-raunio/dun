@@ -9,39 +9,39 @@ export interface StatusEffectPreset {
 }
 
 const standardAttributeModifiers = {
-    movement: -1,
-    combat: -1,
-    ranged: -1,
-    strength: -1,
-    agility: -1,
-    courage: -1,
-    intelligence: -1,
-    perception: -1,
-    dexterity: -1
+  movement: -1,
+  combat: -1,
+  ranged: -1,
+  strength: -1,
+  agility: -1,
+  courage: -1,
+  intelligence: -1,
+  perception: -1,
+  dexterity: -1
 }
 
 export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset> = {
   poison: {
     icon: "/icons/poisoned.png",
     createEffect: (): StatusEffect => {
-        return createStatusEffect('poison', 'poison', null, {
-            name: "Poison",
-            attributeModifiers: {
-              ...standardAttributeModifiers
-            }
-          });
+      return createStatusEffect('poison', 'poison', null, {
+        name: "Poison",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        }
+      });
     }
   },
 
   wounded: {
     icon: "/icons/wounded.png",
     createEffect: (): StatusEffect => {
-        return createStatusEffect('wounded', 'wounded', null, {
-            name: "Wounded",
-            attributeModifiers: {
-              ...standardAttributeModifiers
-            }
-          });
+      return createStatusEffect('wounded', 'wounded', null, {
+        name: "Wounded",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        }
+      });
     }
   },
 
@@ -54,7 +54,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         attributeModifiers: {
           ...standardAttributeModifiers
         },
-        onTurnStart: (creature: Creature) => {          
+        onTurnStart: (creature: Creature) => {
           const recoveryRoll = Math.floor(Math.random() * 6) + 1;
           if (recoveryRoll >= 4) {
             creature.removeStatusEffect('stunned');
@@ -77,7 +77,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         attributeModifiers: {
           ...standardAttributeModifiers
         },
-        onTurnStart: (creature: Creature) => {  
+        onTurnStart: (creature: Creature) => {
           const result = creature.performAttributeTest("agility");
           if (result.success) {
             creature.removeStatusEffect('knockedDown');
@@ -98,6 +98,18 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         description: `+${value} strength`,
         attributeModifiers: {
           strength: value
+        }
+      });
+    }
+  },
+
+  darkness: {
+    icon: "/icons/invisible.png",
+    createEffect: (name?: string, duration: number | null = null): StatusEffect => {
+      return createStatusEffect('darkness', 'darkness', duration, {
+        name: "Darkness",
+        attributeModifiers: {
+          ...standardAttributeModifiers
         }
       });
     }

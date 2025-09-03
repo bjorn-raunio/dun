@@ -1,72 +1,13 @@
 import { QuestMap } from './types';
-import { createSection, sectionPresets } from './section/presets';
-import { createTerrain } from './terrain';
-import { createWeapon, createArmor, createShield, createConsumable } from '../items';
-import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
-import { SKILL_PRESETS } from '../skills';
+import { createQuestMapFromPreset, getAvailableQuestMapPresets } from './presets';
 
-// Terrain presets are now imported from the terrain module
+// Create the default map using the preset system
+export const mapDefinition = createQuestMapFromPreset('freeTheMerchants')
 
-export const mapDefinition = new QuestMap(
-  "Free the Merchants",
-  40,
-  30,
-  [
-    createSection("forest1", 0, 0, {
-      rotation: 270
-    }),
-    createSection("forest2", 10, 0, {
-      rotation: 90,
-      terrain: [
-        { id: "wagon", x: 6, y: 4, rotation: 90 },
-        { id: "horse", x: 8, y: 4, rotation: 270 }
-      ]
-    }),
-  ],
-  [
-    createMonster("human_bandit", "bandits", { position: { x: 12, y: 7, facing: 1 }, weaponLoadout: "broadsword", armorLoadout: "shield" }),
-    createMonster("shooter", "bandits", { position: { x: 10, y: 1, facing: 3 }, weaponLoadout: "shortbow" }),
+// Export available presets for easy access
+export const availableQuestMaps = getAvailableQuestMapPresets();
 
-    createMercenary("civilian", {
-      position: { x: 16, y: 4, facing: 6 },
-      group: CREATURE_GROUPS.PLAYER
-    }),
-    createMercenary("civilian", { position: { x: 17, y: 4, facing: 6 }, group: CREATURE_GROUPS.PLAYER, facing: 6 }),
-    new Hero({
-      name: "Herbod",
-      image: "creatures/human.png",
-      attributes: {
-        movement: 5,
-        combat: 5,
-        ranged: 3,
-        strength: 3,
-        agility: 4,
-        courage: 5,
-        intelligence: 4,
-      },
-      actions: 1,
-      size: 2,
-      inventory: [
-        createConsumable("healingPotion"),
-        createConsumable("strengthPotion"),
-      ],
-      equipment: {
-        mainHand: createWeapon("mace"),
-        offHand: createShield("shield"),
-        armor: createArmor("chainMail"),
-      },
-      vitality: 4,
-      mana: 4,
-      fortune: 3,
-      group: CREATURE_GROUPS.PLAYER,
-      skills: [
-        SKILL_PRESETS.lostInTheDark,
-        SKILL_PRESETS.ironWill,
-      ]
-    }),
-  ],
-  [
-    { x: 0, y: 1 },
-    { x: 0, y: 3 },
-  ]
-);
+// Helper function to create a map from any preset
+export function createMapFromPreset(presetId: string): QuestMap | null {
+  return createQuestMapFromPreset(presetId);
+}

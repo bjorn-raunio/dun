@@ -4,11 +4,11 @@ import { mapDefinition } from './maps';
 import { QuestMap } from './maps/types';
 import { endTurn } from './game';
 import { GameProvider, useGameContext } from './game/GameContext';
-import { MapView, GameUI, TurnTracker } from './components';
+import { MapView, GameUI } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
-import { ICreature } from './creatures/index';
+import { CREATURE_GROUPS, Hero, ICreature } from './creatures/index';
 import { addMessage } from './game/messageSystem';
 
 // Map and game state are now imported from extracted modules
@@ -19,7 +19,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   const { groups, creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode } = gameState;
   const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState, setTurnState, setTargetingMode } = gameActions;
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
-  
+
   // Custom hooks for game logic
   const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, mapDefinition);
   const reachable = useReachableTiles(creatures, selectedCreatureId, mapDefinition, reachableKey);
@@ -43,9 +43,9 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   // Attack function for equipment panel - enters targeting mode
   const handleAttack = React.useCallback((attackingCreature: ICreature) => {
     // Check if creature can attack
-    if (!attackingCreature.isPlayerControlled() || 
-        !attackingCreature.isAlive() || 
-        !attackingCreature.hasActionsRemaining()) {
+    if (!attackingCreature.isPlayerControlled() ||
+      !attackingCreature.isAlive() ||
+      !attackingCreature.hasActionsRemaining()) {
       addMessage(`${attackingCreature.name} cannot attack right now`, gameActions.dispatch);
       return;
     }
@@ -67,10 +67,10 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
 
   // Check if creature can attack
   const canAttack = React.useCallback((creature: ICreature) => {
-    return creature.isPlayerControlled() && 
-           creature.isAlive() && 
-           creature.hasActionsRemaining() &&
-           creature.getHostileCreatures(creatures).length > 0;
+    return creature.isPlayerControlled() &&
+      creature.isAlive() &&
+      creature.hasActionsRemaining() &&
+      creature.getHostileCreatures(creatures).length > 0;
   }, [creatures]);
 
   // Event handlers (extracted)
@@ -106,7 +106,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
         onMouseLeave={onPathMouseLeave}
         onWheel={onWheel}
         onCreatureClick={mouseHandlers.onCreatureClick}
-        onTileClick={() => {}} // Handled in onMouseUp
+        onTileClick={() => { }} // Handled in onMouseUp
         viewportRef={viewportRef}
         panRef={panRef}
         targetingMode={targetingMode}
@@ -121,6 +121,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
         creatures={creatures}
         onCreatureClick={(creature) => setSelectedCreatureId(creature.id)}
         targetingMode={targetingMode}
+        mapDefinition={mapDefinition}
       />
       <CreaturePanel
         selectedCreature={selectedCreature}
@@ -139,10 +140,35 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
 }
 
 function App() {
+
+  const hero = new Hero({
+    name: 'Herbod',
+    image: 'creatures/human.png',
+    attributes: {
+      movement: 5,
+      combat: 5,
+      ranged: 3,
+      strength: 3,
+      agility: 4,
+      courage: 5,
+      intelligence: 4,
+    },
+    actions: 1,
+    size: 2,
+    inventory: [],
+    vitality: 4,
+    mana: 4,
+    fortune: 3,
+    group: CREATURE_GROUPS.PLAYER,
+    skills: []
+  });
+
   return (
-    <GameProvider initialCreatures={mapDefinition.creatures} mapDefinition={mapDefinition}>
+    <GameProvider initialCreatures={mapDefinition?.initialCreatures.concat(hero) ?? [hero]} mapDefinition={mapDefinition}>
       <div className="App">
-        <TileMapView mapDefinition={mapDefinition} />
+        {mapDefinition ?
+          <TileMapView mapDefinition={mapDefinition} />
+          : null}
       </div>
     </GameProvider>
   );

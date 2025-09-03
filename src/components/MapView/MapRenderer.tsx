@@ -20,8 +20,10 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
 
   // Helper function to find if this is the top-left of a block and its size
   function getBlockAt(x: number, y: number): Section | null {
-    for (const section of mapDefinition.sections) {
-      if (section.x === x && section.y === y) return section;
+    for (const room of mapDefinition.rooms) {
+      for (const section of room.sections) {
+        if (section.x === x && section.y === y) return section;
+      }
     }
     return null;
   }
@@ -43,7 +45,7 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
             if (
               y + dy < rows &&
               x + dx < cols &&
-              mapDefinition.tiles[y + dy][x + dx] === section.image
+              mapDefinition.tiles[y + dy][x + dx].image === section.image
             ) {
               rendered[y + dy][x + dx] = true;
             }

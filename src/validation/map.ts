@@ -164,7 +164,7 @@ export function validatePositionStandable(
     return result;
   }
   
-  // Check terrain and room validation (if map definition provided)
+  // Check terrain and section validation (if map definition provided)
   if (mapDefinition) {
     let hasStandableTile = false;
     
@@ -180,8 +180,8 @@ export function validatePositionStandable(
             result.blockingTerrain = true;          
         }
         
-        // A tile is considered standable if it's not empty OR if it's within a room
-        if (tile && tile !== "empty.jpg") {
+        // A tile is considered standable if it's not empty OR if it's within a section
+        if (tile && !tile.isEmpty()) {
           hasStandableTile = true;
         } else if (mapDefinition.isValidTile(cx, cy)) {
           hasStandableTile = true;

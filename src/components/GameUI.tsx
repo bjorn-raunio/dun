@@ -1,8 +1,10 @@
 import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { TurnTracker } from './TurnTracker';
+import { DayNightIndicator } from './DayNightIndicator';
 import { TurnState } from '../game/turnManagement';
 import { ICreature } from '../creatures/index';
+import { QuestMap } from '../maps/types';
 
 // --- Game UI Component ---
 
@@ -14,6 +16,7 @@ interface GameUIProps {
   creatures: ICreature[];
   onCreatureClick?: (creature: ICreature) => void;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  mapDefinition: QuestMap;
 }
 
 export function GameUI({ 
@@ -23,7 +26,8 @@ export function GameUI({
   turnState, 
   creatures, 
   onCreatureClick,
-  targetingMode 
+  targetingMode,
+  mapDefinition
 }: GameUIProps) {
   return (
     <div
@@ -78,6 +82,8 @@ export function GameUI({
           turnState={turnState}
         />        
       </div>
+
+             <DayNightIndicator isNight={mapDefinition.night} />
 
              <button
          onClick={onEndTurn}

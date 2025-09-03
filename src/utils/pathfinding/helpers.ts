@@ -27,7 +27,7 @@ export function getAreaStats(
     for (let ox = 0; ox < dims.w; ox++) {
       const cx = tx + ox;
       const cy = ty + oy;
-      const nonEmpty = mapDefinition.tiles[cy]?.[cx] && mapDefinition.tiles[cy][cx] !== "empty.jpg";
+      const nonEmpty = mapDefinition.tiles[cy]?.[cx] && !mapDefinition.tiles[cy][cx].isEmpty();
       if (!nonEmpty) hasEmpty = true;
       const th = mapDefinition!.terrainHeightAt(cx, cy);
       if (th > maxH) maxH = th;
