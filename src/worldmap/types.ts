@@ -17,10 +17,7 @@ export interface Region {
     x: number; // X coordinate on the world map
     y: number; // Y coordinate on the world map
   };
-  size: {
-    width: number; // Width of the region area
-    height: number; // Height of the region area
-  };
+  vertices: Array<{ x: number; y: number }>; // Vertices defining the region's shape (relative to position)
   connections: RegionConnection[]; // Connections to other regions
   type: 'forest' | 'mountain' | 'plains' | 'desert' | 'swamp' | 'city' | 'village' | 'dungeon' | 'wilderness';
   difficulty: number; // 1-10 scale for encounter difficulty

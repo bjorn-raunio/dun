@@ -6,7 +6,7 @@ export class Region implements RegionType {
   public description: string;
   public image: string;
   public position: { x: number; y: number };
-  public size: { width: number; height: number };
+  public vertices: Array<{ x: number; y: number }>;
   public connections: RegionConnection[];
   public type: RegionType['type'];
   public difficulty: number;
@@ -22,7 +22,7 @@ export class Region implements RegionType {
     this.description = data.description;
     this.image = data.image;
     this.position = data.position;
-    this.size = data.size;
+    this.vertices = data.vertices;
     this.connections = data.connections;
     this.type = data.type;
     this.difficulty = data.difficulty;
@@ -115,23 +115,99 @@ export class Region implements RegionType {
   }
 
   /**
-   * Check if a position is within this region's bounds
+   * Check if a position is within this region's bounds using point-in-polygon algorithm
    */
   isPositionWithinRegion(x: number, y: number): boolean {
-    return x >= this.position.x && 
-           x <= this.position.x + this.size.width &&
-           y >= this.position.y && 
-           y <= this.position.y + this.size.height;
+    // Convert world coordinates to relative coordinates
+    const relativeX = x - this.position.x;
+    const relativeY = y - this.position.y;
+    
+    // Point-in-polygon algorithm (ray casting)
+    let inside = false;
+    for (let i = 0, j = this.vertices.length - 1; i < this.vertices.length; j = i++) {
+      const xi = this.vertices[i].x;
+      const yi = this.vertices[i].y;
+      const xj = this.vertices[j].x;
+      const yj = this.vertices[j].y;
+      
+      if (((yi > relativeY) !== (yj > relativeY)) && 
+          (relativeX < (xj - xi) * (relativeY - yi) / (yj - yi) + xi)) {
+        inside = !inside;
+      }
+    }
+    
+    return inside;
   }
 
   /**
-   * Get the center position of the region
+   * Get the center position of the region based on vertices
    */
   getCenterPosition(): { x: number; y: number } {
+    if (this.vertices.length === 0) {
+      return this.position;
+    }
+    
+    let sumX = 0;
+    let sumY = 0;
+    
+    this.vertices.forEach(vertex => {
+      sumX += vertex.x;
+      sumY += vertex.y;
+    });
+    
     return {
-      x: this.position.x + (this.size.width / 2),
-      y: this.position.y + (this.size.height / 2)
+      x: this.position.x + (sumX / this.vertices.length),
+      y: this.position.y + (sumY / this.vertices.length)
     };
+  }
+
+  /**
+   * Get the bounding box of the region
+   */
+  getBoundingBox(): { minX: number; minY: number; maxX: number; maxY: number } {
+    if (this.vertices.length === 0) {
+      return {
+        minX: this.position.x,
+        minY: this.position.y,
+        maxX: this.position.x,
+        maxY: this.position.y
+      };
+    }
+    
+    let minX = this.position.x + this.vertices[0].x;
+    let minY = this.position.y + this.vertices[0].y;
+    let maxX = this.position.x + this.vertices[0].x;
+    let maxY = this.position.y + this.vertices[0].y;
+    
+    this.vertices.forEach(vertex => {
+      const worldX = this.position.x + vertex.x;
+      const worldY = this.position.y + vertex.y;
+      
+      minX = Math.min(minX, worldX);
+      minY = Math.min(minY, worldY);
+      maxX = Math.max(maxX, worldX);
+      maxY = Math.max(maxY, worldY);
+    });
+    
+    return { minX, minY, maxX, maxY };
+  }
+
+  /**
+   * Get the approximate area of the region
+   */
+  getArea(): number {
+    if (this.vertices.length < 3) {
+      return 0;
+    }
+    
+    let area = 0;
+    for (let i = 0; i < this.vertices.length; i++) {
+      const j = (i + 1) % this.vertices.length;
+      area += this.vertices[i].x * this.vertices[j].y;
+      area -= this.vertices[j].x * this.vertices[i].y;
+    }
+    
+    return Math.abs(area) / 2;
   }
 
   /**

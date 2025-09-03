@@ -11,7 +11,12 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'A peaceful village where your adventure begins. The villagers are friendly and helpful.',
     image: '/rooms/room1.jpg',
     position: { x: 100, y: 100 },
-    size: { width: 80, height: 60 },
+    vertices: [
+      { x: 0, y: 0 },
+      { x: 80, y: 0 },
+      { x: 80, y: 60 },
+      { x: 0, y: 60 }
+    ],
     connections: [],
     type: 'village',
     difficulty: 1,
@@ -26,7 +31,14 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'A dense forest shrouded in shadows. Strange sounds echo through the trees.',
     image: '/rooms/forest1.jpg',
     position: { x: 200, y: 80 },
-    size: { width: 120, height: 100 },
+    vertices: [
+      { x: 0, y: 20 },
+      { x: 40, y: 0 },
+      { x: 120, y: 10 },
+      { x: 100, y: 100 },
+      { x: 60, y: 90 },
+      { x: 20, y: 80 }
+    ],
     connections: [],
     type: 'forest',
     difficulty: 3,
@@ -41,7 +53,15 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'A treacherous path through the mountains. The air is thin and the wind howls.',
     image: '/rooms/room2.jpg',
     position: { x: 350, y: 50 },
-    size: { width: 100, height: 80 },
+    vertices: [
+      { x: 0, y: 40 },
+      { x: 30, y: 0 },
+      { x: 70, y: 10 },
+      { x: 100, y: 30 },
+      { x: 80, y: 80 },
+      { x: 40, y: 70 },
+      { x: 20, y: 60 }
+    ],
     connections: [],
     type: 'mountain',
     difficulty: 5,
@@ -56,7 +76,16 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'Crumbling stone structures from a forgotten civilization. Secrets lie within.',
     image: '/rooms/room1.jpg',
     position: { x: 480, y: 120 },
-    size: { width: 90, height: 70 },
+    vertices: [
+      { x: 0, y: 0 },
+      { x: 90, y: 0 },
+      { x: 90, y: 70 },
+      { x: 70, y: 70 },
+      { x: 70, y: 50 },
+      { x: 50, y: 50 },
+      { x: 50, y: 70 },
+      { x: 0, y: 70 }
+    ],
     connections: [],
     type: 'dungeon',
     difficulty: 7,
@@ -71,7 +100,14 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'A lush green area surrounded by endless sand dunes. Water flows freely here.',
     image: '/rooms/forest2.jpg',
     position: { x: 600, y: 200 },
-    size: { width: 70, height: 60 },
+    vertices: [
+      { x: 35, y: 0 },
+      { x: 70, y: 20 },
+      { x: 60, y: 60 },
+      { x: 35, y: 60 },
+      { x: 10, y: 40 },
+      { x: 0, y: 20 }
+    ],
     connections: [],
     type: 'wilderness',
     difficulty: 4,
@@ -86,7 +122,18 @@ export const SAMPLE_REGIONS: RegionType[] = [
     description: 'A bustling port city with ships coming and going. Trade flourishes here.',
     image: '/rooms/room2.jpg',
     position: { x: 700, y: 300 },
-    size: { width: 110, height: 90 },
+    vertices: [
+      { x: 0, y: 30 },
+      { x: 20, y: 0 },
+      { x: 90, y: 0 },
+      { x: 110, y: 20 },
+      { x: 110, y: 90 },
+      { x: 90, y: 90 },
+      { x: 80, y: 70 },
+      { x: 60, y: 70 },
+      { x: 40, y: 90 },
+      { x: 0, y: 90 }
+    ],
     connections: [],
     type: 'city',
     difficulty: 2,
@@ -250,7 +297,7 @@ export function createSimpleRegion(
   name: string,
   type: RegionType['type'],
   position: { x: number; y: number },
-  size: { width: number; height: number },
+  vertices: Array<{ x: number; y: number }>,
   difficulty: number = 1
 ): Region {
   const regionData: RegionType = {
@@ -259,7 +306,7 @@ export function createSimpleRegion(
     description: `A ${type} area.`,
     image: '/rooms/room1.jpg',
     position,
-    size,
+    vertices,
     connections: [],
     type,
     difficulty,

@@ -18,69 +18,87 @@ export function GameRegionOverlay({
   const currentRegionId = state.party.currentRegionId;
   
   return (
-    <>
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 10,
+      }}
+    >
       {regions.map(region => {
         const isCurrentRegion = region.id === currentRegionId;
         const isExplored = region.isExplored;
         
+        // Convert vertices to absolute world coordinates
+        const points = region.vertices.map(vertex => 
+          `${region.position.x + vertex.x},${region.position.y + vertex.y}`
+        ).join(' ');
+        
+        // Determine colors based on region state
+        const borderColor = isCurrentRegion 
+          ? '#00e5ff' 
+          : isExplored 
+            ? '#4caf50' 
+            : '#666';
+        
+        const fillColor = isCurrentRegion 
+          ? 'rgba(0, 229, 255, 0.2)' 
+          : isExplored 
+            ? 'rgba(76, 175, 80, 0.1)' 
+            : 'rgba(102, 102, 102, 0.1)';
+        
+        const strokeWidth = isCurrentRegion ? 3 : 2;
+        
         return (
-          <div
-            key={region.id}
-            style={{
-              position: 'absolute',
-              left: region.position.x,
-              top: region.position.y,
-              width: region.size.width,
-              height: region.size.height,
-              border: isCurrentRegion 
-                ? '3px solid #00e5ff' 
-                : isExplored 
-                  ? '2px solid #4caf50' 
-                  : '2px solid #666',
-              borderRadius: 8,
-              backgroundColor: isCurrentRegion 
-                ? 'rgba(0, 229, 255, 0.2)' 
-                : isExplored 
-                  ? 'rgba(76, 175, 80, 0.1)' 
-                  : 'rgba(102, 102, 102, 0.1)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              color: isCurrentRegion ? '#00e5ff' : isExplored ? '#4caf50' : '#999',
-              textAlign: 'center',
-              padding: '4px',
-              boxSizing: 'border-box',
-              transition: 'all 0.2s ease',
-              zIndex: 10,
-            }}
-            onClick={() => onRegionClick?.(region)}
-            onMouseEnter={() => onRegionHover?.(region)}
-            onMouseLeave={() => onRegionHover?.(null)}
-            title={`${region.name} (${region.type}) - Difficulty: ${region.difficulty}/10`}
-          >
-            <div>
-              <div style={{ fontSize: '10px', marginBottom: '2px' }}>
+          <g key={region.id}>
+            {/* Region polygon */}
+            <polygon
+              points={points}
+              fill={fillColor}
+              stroke={borderColor}
+              strokeWidth={strokeWidth}
+              style={{
+                cursor: 'pointer',
+                pointerEvents: 'all',
+              }}
+              onClick={() => onRegionClick?.(region)}
+              onMouseEnter={() => onRegionHover?.(region)}
+              onMouseLeave={() => onRegionHover?.(null)}
+            />
+            
+            {/* Region label */}
+            <text
+              x={region.getCenterPosition().x}
+              y={region.getCenterPosition().y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{
+                fontSize: '10px',
+                fontWeight: 'bold',
+                fill: isCurrentRegion ? '#00e5ff' : isExplored ? '#4caf50' : '#999',
+                pointerEvents: 'none',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+              }}
+            >
+              <tspan x={region.getCenterPosition().x} dy="-8">
                 {region.type.toUpperCase()}
-              </div>
-              <div style={{ fontSize: '11px' }}>
+              </tspan>
+              <tspan x={region.getCenterPosition().x} dy="12">
                 {region.name}
-              </div>
+              </tspan>
               {isCurrentRegion && (
-                <div style={{ 
-                  fontSize: '9px', 
-                  color: '#00e5ff',
-                  marginTop: '2px'
-                }}>
+                <tspan x={region.getCenterPosition().x} dy="12" fill="#00e5ff">
                   CURRENT
-                </div>
+                </tspan>
               )}
-            </div>
-          </div>
+            </text>
+          </g>
         );
       })}
-    </>
+    </svg>
   );
 }
