@@ -1,8 +1,10 @@
-import { ICreature, CreatureGroup } from '../creatures/index';
+import { ICreature, CreatureGroup, Party } from '../creatures/index';
 import { GameState, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, AITurnState } from './turnManagement';
 import { QuestMap } from '../maps/types';
 import { WeatherState, createWeatherEffect } from './weather';
+import { WorldMap } from '../worldmap/WorldMap';
+import { createSampleWorldMap } from '../worldmap/presets';
 
 // --- Game Action Types ---
 
@@ -21,6 +23,9 @@ export type GameAction =
   | { type: 'SET_TURN_STATE'; payload: TurnState }
   | { type: 'SET_TARGETING_MODE'; payload: TargetingMode }
   | { type: 'SET_WEATHER'; payload: WeatherState }
+  | { type: 'SET_VIEW_MODE'; payload: 'quest' | 'world' }
+  | { type: 'SET_PARTY'; payload: Party }
+  | { type: 'SET_WORLDMAP'; payload: WorldMap }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
   | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } };
 
@@ -80,6 +85,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_WEATHER':
       return { ...state, weather: action.payload };
     
+    case 'SET_VIEW_MODE':
+      return { ...state, viewMode: action.payload };
+    
+    case 'SET_PARTY':
+      return { ...state, party: action.payload };
+    
+    case 'SET_WORLDMAP':
+      return { ...state, worldMap: action.payload };
+    
     case 'RESET_VIEWPORT_CENTER':
       return {
         ...state,
@@ -95,6 +109,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 }
 
 // --- Initial State Helper ---
+
+// Cache the world map to prevent recreation on re-renders
+let cachedWorldMap: WorldMap = createSampleWorldMap();
 
 export function getInitialGameState(
   initialCreatures: ICreature[], 
@@ -155,6 +172,13 @@ export function getInitialGameState(
       current: createWeatherEffect('clear'),
       transitionTime: 0,
       isTransitioning: false
-    }
+    },
+    viewMode: 'quest',
+    worldMap: cachedWorldMap,
+    party: (() => {
+      const playerCreatures = initialCreatures.filter(c => c.group === CreatureGroup.PLAYER);
+      const startingRegionId = 'starting_village'; // Default starting region
+      return new Party(startingRegionId, playerCreatures);
+    })()
   };
 }

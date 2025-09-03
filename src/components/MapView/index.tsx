@@ -8,6 +8,7 @@ import { StartingTilesOverlay } from './StartingTilesOverlay';
 import { ReachableOverlay } from './ReachableOverlay';
 import { PathOverlay } from './PathOverlay';
 import { CreatureOverlay } from './CreatureOverlay';
+import { ItemOverlay } from './ItemOverlay';
 import { WeatherOverlay } from './WeatherOverlay';
 
 export function MapView({
@@ -104,6 +105,9 @@ export function MapView({
 
           {/* Starting tiles overlay */}
           <StartingTilesOverlay mapDefinition={mapDefinition} />
+          
+          {/* Items overlay */}
+          <ItemOverlay mapDefinition={mapDefinition} />
 
           {/* Reachable tiles overlay */}
           <ReachableOverlay
@@ -130,6 +134,7 @@ export function MapView({
             targetingMode={targetingMode}
             mapDefinition={mapDefinition}
           />
+
 
         </div>
 

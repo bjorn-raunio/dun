@@ -7,7 +7,8 @@ export type StatusEffectType =
   | "stunned"
   | "knockedDown"
   | "strength"
-  | "darkness";
+  | "darkness"
+  | "totalDarkness";
 
 export interface StatusEffect {
   id: string;

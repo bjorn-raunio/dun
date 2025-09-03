@@ -45,7 +45,14 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
   "lostInTheDark": {
     name: "Lost In The Dark",
     type: "natural",
-    description: "-1 to all attributes in darkness"
+    description: "-1 to all attributes in darkness",
+    darkVision: -1
+  },
+  "undead": {
+    name: "Undead",
+    type: "natural",
+    description: "",
+    darkVision: 1
   },
 };
 

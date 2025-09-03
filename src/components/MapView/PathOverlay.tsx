@@ -26,7 +26,7 @@ export function PathOverlay({
         width: TILE_SIZE * cols,
         height: TILE_SIZE * rows,
         pointerEvents: "none",
-        zIndex: 3,
+        zIndex: 4,
       }}
     >
       {highlightedPath.map((tile, index) => (

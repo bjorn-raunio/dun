@@ -72,6 +72,7 @@ export const COMBAT_CONSTANTS = {
   HEALTH_RATIO_DENOMINATOR: 10,
   ARMOR_EFFECTIVENESS_MULTIPLIER: 0.5,
   VULNERABILITY_MULTIPLIER: 0.3,
+  LIGHTING_PENALTY: -1, // Penalty for ranged attacks against targets in dimly lit or darker conditions
 } as const;
 
 export const MOVEMENT_CONSTANTS = {

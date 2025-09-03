@@ -97,6 +97,8 @@ export interface ICreature {
   // Movement
   getReachableTiles(allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult;
   moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapDefinition?: QuestMap): MovementResult;
+  enterTile(x: number, y: number, mapDefinition: QuestMap): void;
+  getVision(x: number, y: number, mapDefinition: QuestMap): number;
   
   // Combat
   attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap): CombatResult;
@@ -158,6 +160,7 @@ export interface ICreature {
 export interface ICreatureStateManager {
   getState(): CreatureState;
   getTurnStartPosition(): CreaturePositionOrUndefined;
+  validateState(): void;
   isAlive(): boolean;
   isDead(): boolean;
   hasMoved(effectiveMovement?: number): boolean;
@@ -184,6 +187,14 @@ export interface ICreatureStateManager {
   recordTurnStartPosition(position: CreaturePositionOrUndefined): void;
   canPushCreature(targetId: string): boolean;
   recordPushedCreature(targetId: string): void;
+  updateGetters(
+    getMaxMovement: () => number,
+    getMaxActions: () => number,
+    getMaxQuickActions: () => number,
+    getMaxVitality: () => number,
+    getMaxMana: () => number,
+    getMaxFortune: () => number
+  ): void;
 }
 
 export interface ICreaturePositionManager {
@@ -232,6 +243,7 @@ export interface ICreatureRelationshipsManager {
 export interface ICreatureMovement {
   getReachableTiles(creature: ICreature, allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult;
   moveTo(creature: ICreature, path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapDefinition?: QuestMap): MovementResult;
+  enterTile(creature: ICreature, x: number, y: number, mapDefinition: QuestMap): void;
 }
 
 // --- Combat Interface ---

@@ -12,6 +12,7 @@ export interface Skill {
     attribute: keyof Attributes;
     value: number;
   }>;
+  darkVision?: number;
   
   // Combat triggers  
   combatTriggers?: CombatTrigger[];

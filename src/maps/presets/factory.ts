@@ -15,7 +15,6 @@ import { Attributes } from '../../statusEffects/types';
 export function createQuestMapFromPreset(presetId: string): QuestMap | null {
   const preset = questMapPresets[presetId];
   if (!preset) {
-    console.warn(`QuestMap preset '${presetId}' not found`);
     return null;
   }
 
@@ -30,7 +29,7 @@ export function createQuestMapFromPreset(presetId: string): QuestMap | null {
         });
       });
 
-      const room = new Room(sections);      
+      const room = new Room(sections);
 
       return room;
     });
@@ -55,13 +54,12 @@ export function createQuestMapFromPreset(presetId: string): QuestMap | null {
           });
 
         default:
-          console.warn(`Unknown creature type: ${type}`);
           return createMercenary('civilian', { position, group: CREATURE_GROUPS.NEUTRAL });
       }
     });
 
     // Create the QuestMap
-    return new QuestMap(
+    const questMap = new QuestMap(
       preset.name,
       preset.width,
       preset.height,
@@ -69,9 +67,17 @@ export function createQuestMapFromPreset(presetId: string): QuestMap | null {
       creatures,
       preset.startingTiles
     );
+    questMap.updateLighting(creatures);
+
+    creatures.forEach(creature => {
+      if (creature.x !== undefined && creature.y !== undefined) {
+        creature.enterTile(creature.x, creature.y, questMap);
+      }
+    });
+
+    return questMap;
 
   } catch (error) {
-    console.error(`Error creating QuestMap from preset '${presetId}':`, error);
     return null;
   }
 }
@@ -115,7 +121,7 @@ export function getQuestMapPresetsByDifficulty(difficulty: 'easy' | 'medium' | '
  * Get QuestMap presets suitable for a given level
  */
 export function getQuestMapPresetsByLevel(level: number): QuestMapPreset[] {
-  return Object.values(questMapPresets).filter(preset => 
+  return Object.values(questMapPresets).filter(preset =>
     !preset.recommendedLevel || preset.recommendedLevel <= level
   );
 }

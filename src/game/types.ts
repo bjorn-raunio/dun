@@ -1,12 +1,15 @@
-import { Creature, ICreature, CreatureGroup } from '../creatures/index';
+import { Creature, ICreature, CreatureGroup, Party } from '../creatures/index';
 import { TurnState, AITurnState } from './turnManagement';
 import { WeatherState } from './weather';
+import { WorldMap } from '../worldmap/WorldMap';
 
 // --- Game State Types ---
 
 export type GameState = {
   creatures: ICreature[];
   groups: CreatureGroup[]; // NEW
+  party: Party;
+  worldMap: WorldMap;
   selectedCreatureId: string | null;
   messages: string[];
   viewport: ViewportState;
@@ -18,6 +21,7 @@ export type GameState = {
   turnState: TurnState;
   targetingMode: TargetingMode;
   weather: WeatherState;
+  viewMode: 'quest' | 'world';
 };
 
 export type TargetingMode = {
@@ -63,5 +67,8 @@ export type GameActions = {
   setZoom: (zoom: number) => void;
   setTargetingMode: (targetingMode: TargetingMode) => void;
   setWeather: (weather: WeatherState) => void;
+  setViewMode: (viewMode: 'quest' | 'world') => void;
+  setParty: (updater: (prev: Party) => Party) => void;
+  setWorldMap: (updater: (prev: WorldMap) => WorldMap) => void;
   dispatch: React.Dispatch<any>;
 };

@@ -14,6 +14,7 @@ export { Monster, MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS, type MonsterFaction, 
 export { Mercenary } from './mercenary';
 export { CreatureMovement } from './movement';
 export { createMonster, monsterPresets, monsterPresetsByFaction, type MonsterPreset, createMercenary, mercenaryPresets, type MercenaryPreset } from './presets';
+export { Party } from './Party';
 
 // Export new interfaces and services
 export * from './interfaces';

@@ -2,15 +2,13 @@ import { Creature } from './base';
 import { ICreatureMovement } from './interfaces';
 import { PathfindingSystem } from '../utils/pathfinding';
 import {
-  isInZoneOfControl,
   getEngagingCreatures
 } from '../utils/zoneOfControl';
 import { updateCombatStates } from '../utils/combatStateUtils';
 import { calculateMovementCost } from '../utils/movement';
 import { MovementResult, MovementStatus } from '../utils/movement';
 import { Light, QuestMap } from '../maps/types';
-import { logMovement, STATUS_EFFECT_PRESETS } from '../utils';
-import { CreaturePositionOrUndefined } from './types';
+import { STATUS_EFFECT_PRESETS } from '../statusEffects';
 
 // Movement and pathfinding logic for creatures
 export class CreatureMovement implements ICreatureMovement {
@@ -47,6 +45,15 @@ export class CreatureMovement implements ICreatureMovement {
 
   // Move creature through a sequence of adjacent tiles (prevents teleporting)
   moveTo(creature: Creature, path: Array<{ x: number; y: number }>, allCreatures: Creature[] = [], mapDefinition?: QuestMap): MovementResult {
+    if (!mapDefinition) {
+      return {
+        status: 'failed',
+        message: 'No map definition provided',
+        cost: 0,
+        tilesMoved: 0,
+        totalPathLength: 0
+      };
+    }
     if (path.length === 0) {
       return {
         status: 'failed',
@@ -97,25 +104,23 @@ export class CreatureMovement implements ICreatureMovement {
       if (currentX !== undefined && currentY !== undefined) {
         // Calculate movement cost for this step if map data is available
         stepCost = 1; // Default cost
-        if (mapDefinition) {
-          stepCost = calculateMovementCost(
-            currentX,
-            currentY,
-            nextTile.x,
-            nextTile.y,
-            allCreatures,
-            mapDefinition,
-            {
-              areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
-              mapDimensions: { cols: mapDefinition.tiles[0]?.length || 0, rows: mapDefinition.tiles.length || 0 }
-            },
-            creature
-          );
+        stepCost = calculateMovementCost(
+          currentX,
+          currentY,
+          nextTile.x,
+          nextTile.y,
+          allCreatures,
+          mapDefinition,
+          {
+            areaDimensions: { w: creature.mapWidth, h: creature.mapHeight },
+            mapDimensions: { cols: mapDefinition.tiles[0]?.length || 0, rows: mapDefinition.tiles.length || 0 }
+          },
+          creature
+        );
 
-          // If movement is blocked, stop here
-          if (stepCost === Infinity) {
-            break;
-          }
+        // If movement is blocked, stop here
+        if (stepCost === Infinity) {
+          break;
         }
       }
 
@@ -140,12 +145,7 @@ export class CreatureMovement implements ICreatureMovement {
       // Update combat states for all creatures
       updateCombatStates(allCreatures);
 
-      // Move to the next position
-      creature.x = nextTile.x;
-      creature.y = nextTile.y;
-
-      // On enter tile
-      this.onEnterTile(creature, mapDefinition);
+      this.enterTile(creature, nextTile.x, nextTile.y, mapDefinition);
 
       // Update current position for next iteration
       currentX = nextTile.x;
@@ -161,7 +161,7 @@ export class CreatureMovement implements ICreatureMovement {
         break;
       }
     }
-    
+
     // Determine if movement was complete or partial
     const totalPathLength = path.length - 1; // Exclude starting position
     let status: MovementStatus = 'success';
@@ -185,13 +185,17 @@ export class CreatureMovement implements ICreatureMovement {
     };
   }
 
-  onEnterTile(creature: Creature, mapDefinition?: QuestMap): void {
-    if(!mapDefinition || creature.x === undefined || creature.y === undefined) {
-      return;
-    }
-    const tile = mapDefinition.tiles[creature.y][creature.x];
-    if(tile.light === Light.darkness) {
+  enterTile(creature: Creature, x: number, y: number, mapDefinition: QuestMap): void {
+    creature.x = x;
+    creature.y = y;
+
+    const vision = creature.getVision(x, y, mapDefinition);   
+    if (vision < Light.darkness) {
+      creature.addStatusEffect(STATUS_EFFECT_PRESETS.totalDarkness.createEffect());
+    } else if (vision < Light.lit) {
       creature.addStatusEffect(STATUS_EFFECT_PRESETS.darkness.createEffect());
+    } else {
+      creature.removeStatusEffect("darkness");
     }
   }
 }

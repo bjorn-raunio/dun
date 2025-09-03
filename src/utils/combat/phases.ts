@@ -1,6 +1,7 @@
 import { Creature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { Weapon } from '../../items/types';
+import { Light } from '../../maps/types';
 import { calculateAttributeRoll, displayDiceRoll, displayDiceSum, isCriticalHit, rollXd6 } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
 import { logCombat } from '../logging';
@@ -124,6 +125,12 @@ export function executeToHitRollMelee(
 
 /**
  * Execute to-hit roll for ranged combat
+ * 
+ * Applies various penalties including:
+ * - Range penalty: -1 over 3, -2 over 6, -3 over 9
+ * - Agility penalty: -1 if target has higher agility
+ * - Movement penalty: -1 if moved up to half movement, -2 if moved more than half
+ * - Lighting penalty: -1 if target is in dimly lit or darker conditions
  */
 export function executeToHitRollRanged(
   combatEventData: CombatEventData
@@ -180,7 +187,17 @@ export function executeToHitRollRanged(
     }
   }
 
-  const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty;
+  // Apply lighting penalty: -1 to hit if target is in dimly lit or darker conditions
+  let lightingPenalty = 0;
+  if (combatEventData.mapDefinition && combatEventData.target.x !== undefined && combatEventData.target.y !== undefined) {
+    // Light.lit = 2, Light.darkness = 1, Light.totalDarkness = 0
+    // Apply penalty if light level is below lit (i.e., darkness or totalDarkness)
+    if (combatEventData.attacker.getVision(combatEventData.target.x, combatEventData.target.y, combatEventData.mapDefinition) < Light.lit) {
+      lightingPenalty = COMBAT_CONSTANTS.LIGHTING_PENALTY;
+    }
+  }
+
+  const totalModifier = backAttackBonus + agilityPenalty + movementPenalty + rangePenalty + lightingPenalty;
   const toHitRollResult = combatEventData.attacker.performAttributeTest('ranged', totalModifier);
   if (toHitRollResult.criticalSuccess) {
     combatEventData.attacker.endTurn();

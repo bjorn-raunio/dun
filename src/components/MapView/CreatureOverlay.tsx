@@ -32,7 +32,7 @@ export function CreatureOverlay({
         width: "100%",
         height: "100%",
         pointerEvents: "none",
-        zIndex: 3,
+        zIndex: 4,
       }}
     >
       {getLivingCreatures(creatures).filter(cr => cr.x !== undefined && cr.y !== undefined).map((cr) => {

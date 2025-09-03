@@ -230,7 +230,6 @@ export function executeAIDecision(
       if (decision.destination) {
         // Get the actual movement cost and path from the reachable tiles calculation
         const { costMap, pathMap } = creatureServices.getMovementService().getReachableTiles(creature, allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
-        console.log(costMap, pathMap);
         const destKey = `${decision.destination.x},${decision.destination.y}`;
         const cost = costMap.get(destKey) ?? Infinity;
         const path = pathMap.get(destKey);

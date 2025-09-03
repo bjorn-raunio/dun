@@ -74,5 +74,5 @@ export function displayDiceRoll(dice: number[]): string {
 }
 
 export function displayDiceSum(roll: { total: number; dice: number[] }, modifier?: number): string {
-  return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier}`}` : ''} = ${roll.total}`;
+  return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier * -1}`}` : ''} = ${roll.total}`;
 }

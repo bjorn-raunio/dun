@@ -1,6 +1,8 @@
 // Export all UI components
 export * from './styles';
 export * from './MapView';
+export * from './WorldMapView/index';
+export * from './ViewToggle';
 export * from './GameUI';
 export * from './CreaturePanel';
 export * from './TurnTracker';

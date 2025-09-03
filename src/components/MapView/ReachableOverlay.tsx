@@ -32,7 +32,7 @@ export function ReachableOverlay({
         width: TILE_SIZE * cols,
         height: TILE_SIZE * rows,
         pointerEvents: "none",
-        zIndex: 2,
+        zIndex: 3,
       }}
     >
       {reachable.tiles.map((t: { x: number; y: number }) => (

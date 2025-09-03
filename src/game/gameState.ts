@@ -1,6 +1,5 @@
 import React from 'react';
-import { ICreature } from '../creatures/index';
-import { CreatureGroup } from '../creatures/CreatureGroup';
+import { ICreature, CreatureGroup, Party } from '../creatures/index';
 import { GameState, GameRefs, GameActions, ViewportState, PanState, TargetingMode } from './types';
 import { TurnState, initializeAITurnState, initializeTurnState } from './turnManagement';
 import { GAME_SETTINGS } from '../utils/constants';
@@ -84,6 +83,11 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: Ques
     attackerId: null,
     message: ''
   });
+  const [party, setParty] = React.useState<Party>(() => {
+    const playerCreatures = initialCreatures.filter(c => c.group === CreatureGroup.PLAYER);
+    const startingRegionId = 'starting_village'; // Default starting region
+    return new Party(startingRegionId, playerCreatures);
+  });
 
   // Weather state
   const [weather, setWeather] = React.useState({
@@ -125,6 +129,8 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: Ques
   const gameState: GameState = {
     creatures,
     groups, // NEW
+    party,
+    worldMap: null as any, // This function is not being used - GameContext.tsx handles worldMap initialization
     selectedCreatureId,
     messages,
     viewport,
@@ -136,6 +142,7 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: Ques
     turnState,
     targetingMode,
     weather,
+    viewMode: 'quest',
   };
 
   const gameRefs: GameRefs = {
@@ -164,6 +171,9 @@ export function useGameState(initialCreatures: ICreature[], mapDefinition?: Ques
     setZoom,
     setTargetingMode,
     setWeather,
+    setViewMode: () => {}, // Placeholder - implement actual dispatch logic if needed
+    setParty,
+    setWorldMap: () => {}, // Placeholder - implement actual dispatch logic if needed
     dispatch: () => {}, // Placeholder - implement actual dispatch logic if needed
   };
 

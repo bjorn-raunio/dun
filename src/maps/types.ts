@@ -1,5 +1,6 @@
 // --- Map and Terrain Type Definitions ---
 import { Creature, ICreature } from '../creatures/index';
+import { createRangedWeapon, Item } from '../items';
 import { rollD6 } from '../utils';
 import { Section } from './section';
 import { Terrain } from './terrain';
@@ -13,6 +14,7 @@ export enum Light {
 export class Tile {
   public image: string;
   private _light: Light;
+  public items: Item[] = [];
 
   constructor(image: string = "empty.jpg") {
     this.image = image;
@@ -69,9 +71,9 @@ export class Room {
     return this._light;
   }
 
-  setLight(light: Light, questMap: QuestMap, creatures: ICreature[]) {
+  setLight(light: Light, creatures: ICreature[], questMap?: QuestMap) {
     this._light = light;
-    questMap.updateLighting(creatures);
+    questMap?.updateLighting(creatures);
   }
 
   /**
@@ -116,15 +118,15 @@ export class QuestMap {
     this.rooms = rooms;
     this.startingTiles = startingTiles;
     this.initialCreatures = creatures;
-    this.night = rollD6() === 1;
+    this.generateMapTiles(creatures);   
+    this.night = rollD6() === 1; 
     if(this.night) {
       this.rooms.forEach(room => {
         if(room.sections.some(section => section.outdoors)) {
-          room.setLight(Light.darkness, this, creatures);
+          room.setLight(Light.darkness, creatures);
         }
       });
     }
-    this.generateMapTiles(creatures);
   }
 
   /**
@@ -304,7 +306,6 @@ export class QuestMap {
           }
         }
       }
-    }
-    this.updateLighting(creatures);
+    }    
   }
 }

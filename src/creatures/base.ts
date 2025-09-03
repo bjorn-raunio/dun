@@ -25,11 +25,11 @@ import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
 import { MovementResult } from '../utils/movement';
-import { QuestMap } from '../maps/types';
+import { Light, QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
 import { calculateAttributeRoll, displayDiceRoll } from '../utils';
-import { validateAction} from '../validation';
+import { validateAction } from '../validation';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -108,6 +108,25 @@ export abstract class Creature implements ICreature {
 
     // Add this creature to its group
     this.group.addCreature(this);
+
+    // Update state manager with effective values after all managers are initialized
+    this.updateStateManagerWithEffectiveValues();
+  }
+
+  /**
+   * Update the state manager with effective values after all managers are initialized
+   * This ensures that skill modifiers and status effects are properly considered
+   */
+  private updateStateManagerWithEffectiveValues(): void {
+    // Update the state manager's getter functions to use effective values
+    this.stateManager.updateGetters(
+      () => this.getEffectiveAttribute('movement'),
+      () => this.effectiveActions,
+      () => this.effectiveQuickActions,
+      () => this.vitality,
+      () => this.mana,
+      () => this.fortune
+    );
   }
 
   // --- Abstract Methods ---
@@ -354,7 +373,7 @@ export abstract class Creature implements ICreature {
   }
 
   performAction(action: CreatureAction, allCreatures: ICreature[]): { success: boolean, message: string } {
-    switch(action) {
+    switch (action) {
       case 'run':
         return this.run(allCreatures);
       case 'disengage':
@@ -477,18 +496,33 @@ export abstract class Creature implements ICreature {
 
   moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): MovementResult {
     if (!this.positionManager) {
-      return { 
-        status: 'failed', 
+      return {
+        status: 'failed',
         message: 'No position manager',
         cost: 0,
         tilesMoved: 0,
         totalPathLength: 0
       };
     }
-    if(this.positionManager.getX() === undefined || this.positionManager.getY() === undefined) {
+    if (this.positionManager.getX() === undefined || this.positionManager.getY() === undefined) {
       path = [path[0], ...path];
     }
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapDefinition);
+  }
+
+  enterTile(x: number, y: number, mapDefinition: QuestMap): void {
+    this.x = x;
+    this.y = y;
+    creatureServices.getMovementService().enterTile(this, x, y, mapDefinition);
+  }
+
+  getVision(x: number, y: number, mapDefinition: QuestMap): number {
+    const tile = mapDefinition.tiles[y][x];
+    const darkvision = this.skills
+      .map(skill => skill.darkVision)
+      .filter((dv): dv is number => dv !== undefined)
+      .sort((a, b) => b - a)[0] ?? 0;
+    return tile.light + (darkvision + 1);
   }
 
   attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): CombatResult {
@@ -521,10 +555,14 @@ export abstract class Creature implements ICreature {
 
   addStatusEffect(effect: StatusEffect): void {
     this.statusEffectManager.addEffect(effect);
+
+    this.stateManager.validateState();
   }
 
   removeStatusEffect(effectId: string): void {
     this.statusEffectManager.removeEffect(effectId);
+
+    this.stateManager.validateState();
   }
 
   removeAllStatusEffects(): void {

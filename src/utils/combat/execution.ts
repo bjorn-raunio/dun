@@ -87,6 +87,7 @@ export interface CombatEventData {
   target: Creature;
   isRanged: boolean;
   messages: string[];
+  mapDefinition?: QuestMap;
 }
 
 /**
@@ -103,7 +104,8 @@ function executeCombatPhase(
     attacker,
     target,
     isRanged,
-    messages: []
+    messages: [],
+    mapDefinition
   };
 
   // === PART 1: TO-HIT ROLL ===
@@ -263,11 +265,9 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
         }
         
         if (takePosition) {
-          attacker.x = target.x!;
-          attacker.y = target.y!;
-        }
-        target.x = chosen.x;
-        target.y = chosen.y;
+          attacker.enterTile(target.x!, target.y!, mapDefinition);
+        }        
+        target.enterTile(chosen.x, chosen.y, mapDefinition);
         
         // Record that this attacker has pushed this target this turn
         attacker.recordPushedCreature(target.id);
@@ -275,8 +275,7 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
         return false;
       }
     } else if (takePosition) {
-      attacker.x = target.x!;
-      attacker.y = target.y!;
+      attacker.enterTile(target.x!, target.y!, mapDefinition);
     }
   }
   return true;

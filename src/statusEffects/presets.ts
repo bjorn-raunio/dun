@@ -105,8 +105,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
 
   darkness: {
     icon: "/icons/invisible.png",
-    createEffect: (name?: string, duration: number | null = null): StatusEffect => {
-      return createStatusEffect('darkness', 'darkness', duration, {
+    createEffect: (): StatusEffect => {
+      return createStatusEffect('darkness', 'darkness', null, {
         name: "Darkness",
         attributeModifiers: {
           ...standardAttributeModifiers
@@ -114,6 +114,27 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
       });
     }
   },
+
+  totalDarkness: {
+    icon: "/icons/invisible.png",
+    createEffect: (): StatusEffect => {
+      return createStatusEffect('darkness', 'darkness', null, {
+        name: "Total Darkness",
+        attributeModifiers: {
+          movement: -2,
+          combat: -2,
+          ranged: -2,
+          strength: -2,
+          agility: -2,
+          courage: -2,
+          intelligence: -2,
+          perception: -2,
+          dexterity: -2
+        }
+      });
+    }
+  },
+
 };
 
 // Helper functions that use the presets
