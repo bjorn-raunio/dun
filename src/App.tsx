@@ -131,14 +131,15 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
           regions={Array.from(gameState.worldMap.regions.values())}
           currentRegionId={gameState.party.currentRegionId}
           onRegionClick={(region) => {
-            // Handle region click - could implement travel logic here
-            console.log('Clicked region:', region.name);
+            // Handle region click - implement travel logic here
+            gameActions.setParty(prevParty => {
+              const newParty = prevParty.clone();
+              newParty.travelToRegion(region.id);
+              return newParty;
+            });
           }}
           onRegionHover={(region) => {
             // Handle region hover - could show tooltip or highlight
-            if (region) {
-              console.log('Hovering region:', region.name);
-            }
           }}
         />
       )}

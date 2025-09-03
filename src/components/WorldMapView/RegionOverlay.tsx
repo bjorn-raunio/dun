@@ -31,25 +31,17 @@ export function RegionOverlay({
         const isCurrentRegion = region.id === currentRegionId;
         const isExplored = region.isExplored;
         
-        // Convert vertices to absolute world coordinates
+        // Vertices are now absolute world coordinates
         const points = region.vertices.map(vertex => 
-          `${region.position.x + vertex.x},${region.position.y + vertex.y}`
+          `${vertex.x},${vertex.y}`
         ).join(' ');
         
         // Determine colors based on region state
-        const borderColor = isCurrentRegion 
-          ? '#00e5ff' 
-          : isExplored 
-            ? '#4caf50' 
-            : '#666';
+        const borderColor = 'transparent'; // No border for all regions
         
-        const fillColor = isCurrentRegion 
-          ? 'rgba(0, 229, 255, 0.2)' 
-          : isExplored 
-            ? 'rgba(76, 175, 80, 0.1)' 
-            : 'rgba(102, 102, 102, 0.1)';
+        const fillColor = 'transparent'; // Transparent by default
         
-        const strokeWidth = isCurrentRegion ? 3 : 2;
+        const strokeWidth = 0; // No border width
         
         return (
           <g key={region.id}>
@@ -64,36 +56,16 @@ export function RegionOverlay({
                 pointerEvents: 'all',
               }}
               onClick={() => onRegionClick?.(region)}
-              onMouseEnter={() => onRegionHover?.(region)}
-              onMouseLeave={() => onRegionHover?.(null)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.fill = 'rgba(0, 229, 255, 0.5)';
+                onRegionHover?.(region);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.fill = 'transparent';
+                onRegionHover?.(null);
+              }}
             />
             
-            {/* Region label */}
-            <text
-              x={region.getCenterPosition().x}
-              y={region.getCenterPosition().y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              style={{
-                fontSize: '10px',
-                fontWeight: 'bold',
-                fill: isCurrentRegion ? '#00e5ff' : isExplored ? '#4caf50' : '#999',
-                pointerEvents: 'none',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-              }}
-            >
-              <tspan x={region.getCenterPosition().x} dy="-8">
-                {region.type.toUpperCase()}
-              </tspan>
-              <tspan x={region.getCenterPosition().x} dy="12">
-                {region.name}
-              </tspan>
-              {isCurrentRegion && (
-                <tspan x={region.getCenterPosition().x} dy="12" fill="#00e5ff">
-                  CURRENT
-                </tspan>
-              )}
-            </text>
           </g>
         );
       })}

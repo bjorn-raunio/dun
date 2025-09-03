@@ -2,198 +2,59 @@ import { WorldMap as WorldMapType, Region as RegionType, RegionConnection } from
 import { WorldMap } from './WorldMap';
 import { Region } from './Region';
 
-// --- Sample Region Data ---
-
-export const SAMPLE_REGIONS: RegionType[] = [
+export const WORLD_REGIONS: RegionType[] = [
   {
-    id: 'starting_village',
-    name: 'Starting Village',
-    description: 'A peaceful village where your adventure begins. The villagers are friendly and helpful.',
-    image: '/rooms/room1.jpg',
-    position: { x: 100, y: 100 },
+    id: 't26',
+    name: 'Verneck',
     vertices: [
-      { x: 0, y: 0 },
-      { x: 80, y: 0 },
-      { x: 80, y: 60 },
-      { x: 0, y: 60 }
+      { x: 2471, y: 1791 },
+      { x: 2475, y: 1597 },
+      { x: 2538, y: 1605 },
+      { x: 2661, y: 1643 },
+      { x: 2764, y: 1632 },
+      { x: 2754, y: 1694 },
+      { x: 2670, y: 1791 },
     ],
     connections: [],
     type: 'village',
-    difficulty: 1,
     isExplored: true,
     isAccessible: true,
     encounters: ['friendly_villager', 'merchant'],
     resources: ['food', 'water', 'basic_supplies']
   },
   {
-    id: 'dark_forest',
+    id: 't25',
     name: 'Dark Forest',
-    description: 'A dense forest shrouded in shadows. Strange sounds echo through the trees.',
-    image: '/rooms/forest1.jpg',
-    position: { x: 200, y: 80 },
     vertices: [
-      { x: 0, y: 20 },
-      { x: 40, y: 0 },
-      { x: 120, y: 10 },
-      { x: 100, y: 100 },
-      { x: 60, y: 90 },
-      { x: 20, y: 80 }
+      { x: 2475, y: 1597 },
+      { x: 2538, y: 1605 },
+      { x: 2661, y: 1643 },
+      { x: 2764, y: 1632 },
+      { x: 2748, y: 1580 },
+      { x: 2798, y: 1550 },
+      { x: 2680, y: 1497 },
+      { x: 2674, y: 1464 },
+      { x: 2454, y: 1496 },
     ],
     connections: [],
     type: 'forest',
-    difficulty: 3,
     isExplored: false,
     isAccessible: true,
     encounters: ['wolf', 'bandit', 'mysterious_traveler'],
     resources: ['wood', 'herbs', 'mushrooms']
   },
-  {
-    id: 'mountain_pass',
-    name: 'Mountain Pass',
-    description: 'A treacherous path through the mountains. The air is thin and the wind howls.',
-    image: '/rooms/room2.jpg',
-    position: { x: 350, y: 50 },
-    vertices: [
-      { x: 0, y: 40 },
-      { x: 30, y: 0 },
-      { x: 70, y: 10 },
-      { x: 100, y: 30 },
-      { x: 80, y: 80 },
-      { x: 40, y: 70 },
-      { x: 20, y: 60 }
-    ],
-    connections: [],
-    type: 'mountain',
-    difficulty: 5,
-    isExplored: false,
-    isAccessible: true,
-    encounters: ['mountain_lion', 'rockfall', 'lost_traveler'],
-    resources: ['iron_ore', 'precious_stones', 'mountain_herbs']
-  },
-  {
-    id: 'ancient_ruins',
-    name: 'Ancient Ruins',
-    description: 'Crumbling stone structures from a forgotten civilization. Secrets lie within.',
-    image: '/rooms/room1.jpg',
-    position: { x: 480, y: 120 },
-    vertices: [
-      { x: 0, y: 0 },
-      { x: 90, y: 0 },
-      { x: 90, y: 70 },
-      { x: 70, y: 70 },
-      { x: 70, y: 50 },
-      { x: 50, y: 50 },
-      { x: 50, y: 70 },
-      { x: 0, y: 70 }
-    ],
-    connections: [],
-    type: 'dungeon',
-    difficulty: 7,
-    isExplored: false,
-    isAccessible: true,
-    encounters: ['skeleton', 'ancient_trap', 'treasure_hunter'],
-    resources: ['ancient_artifacts', 'gold', 'magical_items']
-  },
-  {
-    id: 'desert_oasis',
-    name: 'Desert Oasis',
-    description: 'A lush green area surrounded by endless sand dunes. Water flows freely here.',
-    image: '/rooms/forest2.jpg',
-    position: { x: 600, y: 200 },
-    vertices: [
-      { x: 35, y: 0 },
-      { x: 70, y: 20 },
-      { x: 60, y: 60 },
-      { x: 35, y: 60 },
-      { x: 10, y: 40 },
-      { x: 0, y: 20 }
-    ],
-    connections: [],
-    type: 'wilderness',
-    difficulty: 4,
-    isExplored: false,
-    isAccessible: true,
-    encounters: ['desert_nomad', 'scorpion', 'caravan'],
-    resources: ['water', 'dates', 'desert_spices']
-  },
-  {
-    id: 'coastal_city',
-    name: 'Coastal City',
-    description: 'A bustling port city with ships coming and going. Trade flourishes here.',
-    image: '/rooms/room2.jpg',
-    position: { x: 700, y: 300 },
-    vertices: [
-      { x: 0, y: 30 },
-      { x: 20, y: 0 },
-      { x: 90, y: 0 },
-      { x: 110, y: 20 },
-      { x: 110, y: 90 },
-      { x: 90, y: 90 },
-      { x: 80, y: 70 },
-      { x: 60, y: 70 },
-      { x: 40, y: 90 },
-      { x: 0, y: 90 }
-    ],
-    connections: [],
-    type: 'city',
-    difficulty: 2,
-    isExplored: false,
-    isAccessible: true,
-    encounters: ['merchant', 'sailor', 'city_guard'],
-    resources: ['trade_goods', 'fish', 'ship_parts']
-  }
 ];
 
 // --- Sample Connections ---
 
-export const SAMPLE_CONNECTIONS: Array<{ from: string; to: string; connection: RegionConnection }> = [
+export const REGION_CONNECTIONS: Array<{ from: string; to: string; connection: RegionConnection }> = [
   {
-    from: 'starting_village',
-    to: 'dark_forest',
+    from: 't26',
+    to: 't25',
     connection: {
-      targetRegionId: 'dark_forest',
+      targetRegionId: 't25',
       connectionType: 'path',
       distance: 2,
-      isBlocked: false
-    }
-  },
-  {
-    from: 'dark_forest',
-    to: 'mountain_pass',
-    connection: {
-      targetRegionId: 'mountain_pass',
-      connectionType: 'mountain_pass',
-      distance: 4,
-      isBlocked: false
-    }
-  },
-  {
-    from: 'mountain_pass',
-    to: 'ancient_ruins',
-    connection: {
-      targetRegionId: 'ancient_ruins',
-      connectionType: 'path',
-      distance: 3,
-      isBlocked: false
-    }
-  },
-  {
-    from: 'ancient_ruins',
-    to: 'desert_oasis',
-    connection: {
-      targetRegionId: 'desert_oasis',
-      connectionType: 'path',
-      distance: 5,
-      isBlocked: false
-    }
-  },
-  {
-    from: 'desert_oasis',
-    to: 'coastal_city',
-    connection: {
-      targetRegionId: 'coastal_city',
-      connectionType: 'road',
-      distance: 6,
       isBlocked: false
     }
   }
@@ -236,13 +97,13 @@ export function createSampleWorldMap(): WorldMap {
   const worldMap = new WorldMap(SAMPLE_WORLD_MAP);
   
   // Add all regions
-  SAMPLE_REGIONS.forEach(regionData => {
+  WORLD_REGIONS.forEach(regionData => {
     const region = new Region(regionData);
     worldMap.addRegion(region);
   });
   
   // Add all connections
-  SAMPLE_CONNECTIONS.forEach(({ from, to, connection }) => {
+  REGION_CONNECTIONS.forEach(({ from, to, connection }) => {
     const fromRegion = worldMap.getRegion(from);
     if (fromRegion) {
       fromRegion.addConnection(connection);
@@ -287,49 +148,4 @@ export function createCustomWorldMap(
   });
   
   return worldMap;
-}
-
-/**
- * Create a simple region with basic properties
- */
-export function createSimpleRegion(
-  id: string,
-  name: string,
-  type: RegionType['type'],
-  position: { x: number; y: number },
-  vertices: Array<{ x: number; y: number }>,
-  difficulty: number = 1
-): Region {
-  const regionData: RegionType = {
-    id,
-    name,
-    description: `A ${type} area.`,
-    image: '/rooms/room1.jpg',
-    position,
-    vertices,
-    connections: [],
-    type,
-    difficulty,
-    isExplored: false,
-    isAccessible: true
-  };
-  
-  return new Region(regionData);
-}
-
-/**
- * Create a connection between two regions
- */
-export function createConnection(
-  targetRegionId: string,
-  connectionType: RegionConnection['connectionType'] = 'path',
-  distance: number = 1,
-  isBlocked: boolean = false
-): RegionConnection {
-  return {
-    targetRegionId,
-    connectionType,
-    distance,
-    isBlocked
-  };
 }

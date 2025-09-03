@@ -11,6 +11,7 @@ import { AITurnState } from './turnManagement/types';
 import { Party } from '../creatures/index';
 import { WorldMap } from '../worldmap/WorldMap';
 
+
 // --- Game Context Types ---
 
 interface GameContextValue {
@@ -76,6 +77,13 @@ export function GameProvider({
   useEffect(() => {
     updateCombatStates(state.creatures);
   }, []); // Only run once on mount
+
+  // --- MAP DEFINITION INITIALIZATION ---
+  useEffect(() => {
+    if (mapDefinition && !state.mapDefinition) {
+      dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
+    }
+  }, [mapDefinition, state.mapDefinition, dispatch]);
 
   // --- ACTIONS ---
   const setCreatures = useCallback((updater: (prev: ICreature[]) => ICreature[]) => {
@@ -158,6 +166,12 @@ export function GameProvider({
     dispatch({ type: 'SET_WORLDMAP', payload: newWorldMap });
   }, [state.worldMap, dispatch]);
 
+  const setMapDefinition = useCallback((mapDefinition: QuestMap | null) => {
+    dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
+  }, [dispatch]);
+
+
+
   const actions = useMemo((): GameActions => ({
     setCreatures,
     setSelectedCreatureId,
@@ -175,8 +189,9 @@ export function GameProvider({
     setViewMode,
     setParty,
     setWorldMap,
+    setMapDefinition,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {

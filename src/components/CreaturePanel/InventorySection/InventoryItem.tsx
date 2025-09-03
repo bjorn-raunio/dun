@@ -13,6 +13,7 @@ interface InventoryItemProps {
   canEquipToSlot: (item: Item, slot: EquipmentSlot) => boolean;
   canSwitchWeaponOrShield: (item: Item, slot: EquipmentSlot) => boolean;
   onUpdate?: (creature: ICreature) => void;
+  onDrop?: (item: Item) => void;
 }
 
 // Extracted button components for better organization
@@ -69,13 +70,33 @@ function UseButton({ item, canUse, onUse }: UseButtonProps) {
   );
 }
 
+interface DropButtonProps {
+  item: Item;
+  onDrop: (item: Item) => void;
+}
+
+function DropButton({ item, onDrop }: DropButtonProps) {
+  const buttonStyle = createButtonStyle('medium', 'enabled');
+  
+  return (
+    <button
+      onClick={() => onDrop(item)}
+      style={buttonStyle}
+      title="Drop item on current tile"
+    >
+      Drop
+    </button>
+  );
+}
+
 export function InventoryItem({ 
   item, 
   creature, 
   onEquip, 
   canEquipToSlot, 
   canSwitchWeaponOrShield,
-  onUpdate
+  onUpdate,
+  onDrop
 }: InventoryItemProps) {
   const canEquipMainHand = canEquipToSlot(item, 'mainHand');
   const canEquipOffHand = canEquipToSlot(item, 'offHand');
@@ -148,6 +169,14 @@ export function InventoryItem({
             onEquip={onEquip}
             iconSrc="/icons/armor.png"
             title="Equip Armor"
+          />
+        )}
+        
+        {/* Drop button */}
+        {!isAIControlled && onDrop && (
+          <DropButton
+            item={item}
+            onDrop={onDrop}
           />
         )}
       </div>

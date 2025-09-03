@@ -3,8 +3,14 @@ import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentManager, EquipmentValidator } from '../../items/equipment';
 import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items/types';
 import { EquipmentSlot } from '../../items/equipment';
+import { QuestMap } from '../../maps/types';
 
-export function useEquipment(creature: ICreature, onUpdate?: (creature: ICreature) => void) {
+export function useEquipment(
+  creature: ICreature, 
+  mapDefinition: QuestMap | null, 
+  onUpdate?: (creature: ICreature) => void
+) {
+
   const handleEquip = useCallback((item: Item, slot: EquipmentSlot) => {
     // Prevent equipment changes for AI-controlled creatures
     if (creature.isAIControlled()) {
@@ -133,9 +139,38 @@ export function useEquipment(creature: ICreature, onUpdate?: (creature: ICreatur
     return EquipmentValidator.canPerformUnequipAction(slot, creature);
   }, [creature]);
 
+  const handleDropItem = useCallback((item: Item) => {
+    // Prevent dropping items for AI-controlled creatures
+    if (creature.isAIControlled()) {
+      return;
+    }
+
+    // Check if creature has position
+    if (creature.x === undefined || creature.y === undefined) {
+      return;
+    }
+
+    // Check if mapDefinition is available
+    if (!mapDefinition) {
+      return;
+    }
+
+    // Remove item from inventory
+    const itemIndex = creature.inventory.findIndex(invItem => invItem.id === item.id);
+    if (itemIndex !== -1) {
+      creature.inventory.splice(itemIndex, 1);
+      
+      // Add item to the tile the creature is standing on
+      mapDefinition.addItemToTile(creature.x, creature.y, item);
+      
+      onUpdate?.(creature);
+    }
+  }, [creature, mapDefinition, onUpdate]);
+
   return {
     handleEquip,
     handleUnequip,
+    handleDropItem,
     canEquipToSlot,
     canSwitchWeaponOrShield,
     canUnequipWeaponOrShield,

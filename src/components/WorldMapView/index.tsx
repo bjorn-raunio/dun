@@ -3,6 +3,7 @@ import { COLORS } from '../styles';
 import { RegionOverlay } from './RegionOverlay';
 import { ConnectionOverlay } from './ConnectionOverlay';
 import { PartyIconOverlay } from './PartyIconOverlay';
+import { RegionClass } from '../../worldmap';
 
 interface WorldMapViewProps {
   onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -14,8 +15,8 @@ interface WorldMapViewProps {
   panRef: React.MutableRefObject<HTMLDivElement | null>;
   regions?: any[];
   currentRegionId?: string;
-  onRegionClick?: (region: any) => void;
-  onRegionHover?: (region: any | null) => void;
+  onRegionClick?: (region: RegionClass) => void;
+  onRegionHover?: (region: RegionClass | null) => void;
 }
 
 export function WorldMapView({
@@ -105,10 +106,10 @@ export function WorldMapView({
               onRegionClick={onRegionClick}
               onRegionHover={onRegionHover}
             />
-            <ConnectionOverlay
+            {/*<ConnectionOverlay
               regions={regions}
               currentRegionId={currentRegionId}
-            />
+            />*/}
             <PartyIconOverlay
               regions={regions}
               currentRegionId={currentRegionId}

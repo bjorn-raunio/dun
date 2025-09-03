@@ -6,6 +6,7 @@ import { WeatherState, createWeatherEffect } from './weather';
 import { WorldMap } from '../worldmap/WorldMap';
 import { createSampleWorldMap } from '../worldmap/presets';
 
+
 // --- Game Action Types ---
 
 export type GameAction = 
@@ -26,6 +27,7 @@ export type GameAction =
   | { type: 'SET_VIEW_MODE'; payload: 'quest' | 'world' }
   | { type: 'SET_PARTY'; payload: Party }
   | { type: 'SET_WORLDMAP'; payload: WorldMap }
+  | { type: 'SET_MAP_DEFINITION'; payload: QuestMap | null }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
   | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } };
 
@@ -93,6 +95,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     
     case 'SET_WORLDMAP':
       return { ...state, worldMap: action.payload };
+    
+    case 'SET_MAP_DEFINITION':
+      return { ...state, mapDefinition: action.payload };
+    
+
     
     case 'RESET_VIEWPORT_CENTER':
       return {
@@ -175,9 +182,10 @@ export function getInitialGameState(
     },
     viewMode: 'quest',
     worldMap: cachedWorldMap,
+    mapDefinition: mapDefinition,
     party: (() => {
       const playerCreatures = initialCreatures.filter(c => c.group === CreatureGroup.PLAYER);
-      const startingRegionId = 'starting_village'; // Default starting region
+      const startingRegionId = 't26'; // Default starting region
       return new Party(startingRegionId, playerCreatures);
     })()
   };

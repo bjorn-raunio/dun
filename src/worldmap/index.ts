@@ -5,4 +5,4 @@ export { WorldMap as WorldMapClass } from './WorldMap';
 export * from './presets';
 
 // Convenience exports
-export { createSampleWorldMap, createCustomWorldMap, createSimpleRegion, createConnection } from './presets';
+export { createSampleWorldMap, createCustomWorldMap } from './presets';

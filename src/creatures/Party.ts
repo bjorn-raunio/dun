@@ -56,6 +56,11 @@ export class Party {
     this._currentRegionId = regionId;
   }
 
+  // Clone method for creating copies
+  clone(): Party {
+    return new Party(this._currentRegionId, [...this._creatures]);
+  }
+
   // Serialization for game state
   toJSON() {
     return {

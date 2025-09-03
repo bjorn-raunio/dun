@@ -3,13 +3,9 @@ import { Region as RegionType, RegionConnection } from './types';
 export class Region implements RegionType {
   public id: string;
   public name: string;
-  public description: string;
-  public image: string;
-  public position: { x: number; y: number };
   public vertices: Array<{ x: number; y: number }>;
   public connections: RegionConnection[];
   public type: RegionType['type'];
-  public difficulty: number;
   public isExplored: boolean;
   public isAccessible: boolean;
   public requirements?: string[];
@@ -19,13 +15,9 @@ export class Region implements RegionType {
   constructor(data: RegionType) {
     this.id = data.id;
     this.name = data.name;
-    this.description = data.description;
-    this.image = data.image;
-    this.position = data.position;
     this.vertices = data.vertices;
     this.connections = data.connections;
     this.type = data.type;
-    this.difficulty = data.difficulty;
     this.isExplored = data.isExplored;
     this.isAccessible = data.isAccessible;
     this.requirements = data.requirements;
@@ -118,10 +110,6 @@ export class Region implements RegionType {
    * Check if a position is within this region's bounds using point-in-polygon algorithm
    */
   isPositionWithinRegion(x: number, y: number): boolean {
-    // Convert world coordinates to relative coordinates
-    const relativeX = x - this.position.x;
-    const relativeY = y - this.position.y;
-    
     // Point-in-polygon algorithm (ray casting)
     let inside = false;
     for (let i = 0, j = this.vertices.length - 1; i < this.vertices.length; j = i++) {
@@ -130,8 +118,8 @@ export class Region implements RegionType {
       const xj = this.vertices[j].x;
       const yj = this.vertices[j].y;
       
-      if (((yi > relativeY) !== (yj > relativeY)) && 
-          (relativeX < (xj - xi) * (relativeY - yi) / (yj - yi) + xi)) {
+      if (((yi > y) !== (yj > y)) && 
+          (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
         inside = !inside;
       }
     }
@@ -144,7 +132,7 @@ export class Region implements RegionType {
    */
   getCenterPosition(): { x: number; y: number } {
     if (this.vertices.length === 0) {
-      return this.position;
+      return { x: 0, y: 0 }; // Default to origin if no vertices
     }
     
     let sumX = 0;
@@ -156,8 +144,8 @@ export class Region implements RegionType {
     });
     
     return {
-      x: this.position.x + (sumX / this.vertices.length),
-      y: this.position.y + (sumY / this.vertices.length)
+      x: sumX / this.vertices.length,
+      y: sumY / this.vertices.length
     };
   }
 
@@ -167,26 +155,23 @@ export class Region implements RegionType {
   getBoundingBox(): { minX: number; minY: number; maxX: number; maxY: number } {
     if (this.vertices.length === 0) {
       return {
-        minX: this.position.x,
-        minY: this.position.y,
-        maxX: this.position.x,
-        maxY: this.position.y
+        minX: 0,
+        minY: 0,
+        maxX: 0,
+        maxY: 0
       };
     }
     
-    let minX = this.position.x + this.vertices[0].x;
-    let minY = this.position.y + this.vertices[0].y;
-    let maxX = this.position.x + this.vertices[0].x;
-    let maxY = this.position.y + this.vertices[0].y;
+    let minX = this.vertices[0].x;
+    let minY = this.vertices[0].y;
+    let maxX = this.vertices[0].x;
+    let maxY = this.vertices[0].y;
     
     this.vertices.forEach(vertex => {
-      const worldX = this.position.x + vertex.x;
-      const worldY = this.position.y + vertex.y;
-      
-      minX = Math.min(minX, worldX);
-      minY = Math.min(minY, worldY);
-      maxX = Math.max(maxX, worldX);
-      maxY = Math.max(maxY, worldY);
+      minX = Math.min(minX, vertex.x);
+      minY = Math.min(minY, vertex.y);
+      maxX = Math.max(maxX, vertex.x);
+      maxY = Math.max(maxY, vertex.y);
     });
     
     return { minX, minY, maxX, maxY };
@@ -234,12 +219,5 @@ export class Region implements RegionType {
       encounters: this.encounters ? [...this.encounters] : undefined,
       resources: this.resources ? [...this.resources] : undefined,
     });
-  }
-
-  /**
-   * Get a summary of the region
-   */
-  getSummary(): string {
-    return `${this.name} (${this.type}) - Difficulty: ${this.difficulty}/10 - ${this.connections.length} connections`;
   }
 }

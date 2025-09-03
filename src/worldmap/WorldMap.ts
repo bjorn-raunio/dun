@@ -183,19 +183,6 @@ export class WorldMap implements WorldMapType {
   }
 
   /**
-   * Get all regions within a certain difficulty range
-   */
-  getRegionsByDifficulty(minDifficulty: number, maxDifficulty: number): Region[] {
-    const regions: Region[] = [];
-    this.regions.forEach(region => {
-      if (region.difficulty >= minDifficulty && region.difficulty <= maxDifficulty) {
-        regions.push(region);
-      }
-    });
-    return regions;
-  }
-
-  /**
    * Get all unexplored regions
    */
   getUnexploredRegions(): Region[] {

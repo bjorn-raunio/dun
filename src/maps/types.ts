@@ -272,6 +272,50 @@ export class QuestMap {
     }
   }
 
+  /**
+   * Add an item to a specific tile
+   */
+  addItemToTile(x: number, y: number, item: Item): boolean {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      this.tiles[y][x].items.push(item);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Remove an item from a specific tile
+   */
+  removeItemFromTile(x: number, y: number, itemId: string): Item | null {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      const itemIndex = this.tiles[y][x].items.findIndex(item => item.id === itemId);
+      if (itemIndex !== -1) {
+        return this.tiles[y][x].items.splice(itemIndex, 1)[0] || null;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get all items on a specific tile
+   */
+  getItemsOnTile(x: number, y: number): Item[] {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      return [...this.tiles[y][x].items];
+    }
+    return [];
+  }
+
+  /**
+   * Check if a tile has any items
+   */
+  hasItemsOnTile(x: number, y: number): boolean {
+    if (this.isWithinBounds(x, y) && this.tiles[y] && this.tiles[y][x]) {
+      return this.tiles[y][x].items.length > 0;
+    }
+    return false;
+  }
+
   updateLighting(allCreatures: ICreature[]): void {
     for (let y = 0; y < this.rooms.length; y++) {
       const room = this.rooms[y];

@@ -3,6 +3,8 @@ import { TurnState, AITurnState } from './turnManagement';
 import { WeatherState } from './weather';
 import { WorldMap } from '../worldmap/WorldMap';
 
+import { QuestMap } from '../maps/types';
+
 // --- Game State Types ---
 
 export type GameState = {
@@ -10,6 +12,7 @@ export type GameState = {
   groups: CreatureGroup[]; // NEW
   party: Party;
   worldMap: WorldMap;
+  mapDefinition: QuestMap | null;
   selectedCreatureId: string | null;
   messages: string[];
   viewport: ViewportState;
@@ -70,5 +73,6 @@ export type GameActions = {
   setViewMode: (viewMode: 'quest' | 'world') => void;
   setParty: (updater: (prev: Party) => Party) => void;
   setWorldMap: (updater: (prev: WorldMap) => WorldMap) => void;
+  setMapDefinition: (mapDefinition: QuestMap | null) => void;
   dispatch: React.Dispatch<any>;
 };

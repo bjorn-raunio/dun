@@ -11,16 +11,9 @@ export interface RegionConnection {
 export interface Region {
   id: string;
   name: string;
-  description: string;
-  image: string; // Background image for the region
-  position: {
-    x: number; // X coordinate on the world map
-    y: number; // Y coordinate on the world map
-  };
-  vertices: Array<{ x: number; y: number }>; // Vertices defining the region's shape (relative to position)
+  vertices: Array<{ x: number; y: number }>; // Vertices defining the region's shape (absolute world coordinates)
   connections: RegionConnection[]; // Connections to other regions
   type: 'forest' | 'mountain' | 'plains' | 'desert' | 'swamp' | 'city' | 'village' | 'dungeon' | 'wilderness';
-  difficulty: number; // 1-10 scale for encounter difficulty
   isExplored: boolean; // Whether the player has explored this region
   isAccessible: boolean; // Whether the region is currently accessible
   requirements?: string[]; // Requirements to access this region

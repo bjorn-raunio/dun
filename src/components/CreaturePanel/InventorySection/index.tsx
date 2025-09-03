@@ -2,6 +2,7 @@ import React from 'react';
 import { Creature, ICreature } from '../../../creatures/index';
 import { InventoryItem } from './InventoryItem';
 import { useEquipment } from '../../../game/hooks/useEquipment';
+import { useGameState } from '../../../game/GameContext';
 
 interface InventorySectionProps {
   creature: ICreature;
@@ -9,7 +10,8 @@ interface InventorySectionProps {
 }
 
 export function InventorySection({ creature, onUpdate }: InventorySectionProps) {
-  const { handleEquip, canEquipToSlot, canSwitchWeaponOrShield } = useEquipment(creature, onUpdate);
+  const { mapDefinition } = useGameState();
+  const { handleEquip, handleDropItem, canEquipToSlot, canSwitchWeaponOrShield } = useEquipment(creature, mapDefinition, onUpdate);
 
   return (
     <div style={{ marginTop: 12, borderTop: `1px solid #ccc`, paddingTop: 12 }}>
@@ -27,6 +29,7 @@ export function InventorySection({ creature, onUpdate }: InventorySectionProps) 
               canEquipToSlot={canEquipToSlot}
               canSwitchWeaponOrShield={canSwitchWeaponOrShield}
               onUpdate={onUpdate}
+              onDrop={handleDropItem}
             />
           ))}
         </div>
