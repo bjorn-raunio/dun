@@ -1,16 +1,9 @@
 import { QuestMap } from './types';
-import { createRoom, roomPresets } from './room/presets';
+import { createSection, sectionPresets } from './section/presets';
 import { createTerrain } from './terrain';
 import { createWeapon, createArmor, createShield, createConsumable } from '../items';
 import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../creatures/index';
 import { SKILL_PRESETS } from '../skills';
-
-// --- Generate tiles from map definition ---
-// Generate typeToImage mapping from room presets
-export const typeToImage: Record<string, string> = Object.entries(roomPresets).reduce((acc, [presetId, preset]) => {
-  acc[presetId] = preset.image;
-  return acc;
-}, {} as Record<string, string>);
 
 // Terrain presets are now imported from the terrain module
 
@@ -19,10 +12,10 @@ export const mapDefinition = new QuestMap(
   40,
   30,
   [
-    createRoom("forest1", 0, 0, {
+    createSection("forest1", 0, 0, {
       rotation: 270
     }),
-    createRoom("forest2", 10, 0, {
+    createSection("forest2", 10, 0, {
       rotation: 90,
       terrain: [
         { id: "wagon", x: 6, y: 4, rotation: 90 },

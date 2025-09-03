@@ -22,7 +22,7 @@ const standardAttributeModifiers = {
 
 export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset> = {
   poison: {
-    icon: "☠️",
+    icon: "/icons/poisoned.png",
     createEffect: (): StatusEffect => {
         return createStatusEffect('poison', 'poison', null, {
             name: "Poison",
@@ -34,7 +34,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   wounded: {
-    icon: "🩸",
+    icon: "/icons/wounded.png",
     createEffect: (): StatusEffect => {
         return createStatusEffect('wounded', 'wounded', null, {
             name: "Wounded",
@@ -46,7 +46,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   stunned: {
-    icon: "💫",
+    icon: "/icons/stunned.png",
     createEffect: (): StatusEffect => {
       return createStatusEffect('stunned', 'stunned', null, {
         name: "Stunned",
@@ -67,7 +67,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   knockedDown: {
-    icon: "🔄",
+    icon: "/icons/knockedDown.png",
     createEffect: (): StatusEffect => {
       return createStatusEffect('knockedDown', 'knockedDown', null, {
         name: "Knocked Down",
@@ -91,7 +91,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   strength: {
-    icon: "💪",
+    icon: "/icons/strength.png",
     createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
       return createStatusEffect('strength', 'strength', duration, {
         name: name ?? "Strength",

@@ -1,7 +1,6 @@
 import React from 'react';
 import { TILE_SIZE } from '../styles';
 import { getRotatedDimensions } from '../../utils/dimensions';
-import { TerrainItem } from './types';
 import { QuestMap } from '../../maps/types';
 import { Terrain } from '../../maps/terrain';
 
@@ -70,8 +69,7 @@ export function TerrainOverlay({ mapDefinition }: TerrainOverlayProps) {
               }}
             >
               <img
-                src={process.env.PUBLIC_URL + "/" + (t.image || "terrain_unknown.png")}
-                alt={t.type}
+                src={process.env.PUBLIC_URL + "/terrain/" + (t.image || "terrain_unknown.png")}
                 draggable={false}
                 style={{
                   width: "100%",

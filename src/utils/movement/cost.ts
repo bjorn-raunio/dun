@@ -76,14 +76,14 @@ export function calculateMovementCost(
 
   const isMultiTile = areaDimensions.w > 1 || areaDimensions.h > 1;
 
-  // Use validatePositionStandable for basic position validation (bounds, creatures, terrain, rooms)
+  // Use validatePositionStandable for basic position validation (bounds, creatures, terrain, sections)
   // Note: We'll use a custom elevation check later since validatePositionStandable uses a fixed limit of 1
   const basicValidation = validatePositionStandable(
     toX,
     toY,
     areaDimensions,
     allCreatures,
-    mapDefinition, // Now pass mapDefinition since it handles room validation
+    mapDefinition, // Now pass mapDefinition since it handles section validation
     considerCreatures,
     movingCreature?.id
   );
@@ -138,7 +138,7 @@ export function calculateMovementCost(
       // Add terrain cost (terrainCost already includes the base cost of 1 for normal terrain)
       totalCost += terrainCost;
 
-      // Track elevation for multi-tile creatures (room validation now handled by validatePositionStandable)
+      // Track elevation for multi-tile creatures (section validation now handled by validatePositionStandable)
       if (isMultiTile && mapDefinition) {
         const th = mapDefinition!.terrainHeightAt(cx, cy);
         if (th > maxHeight) maxHeight = th;
@@ -146,7 +146,7 @@ export function calculateMovementCost(
     }
   }
 
-  // Creature blocking and room validation are now handled by validatePositionStandable above
+  // Creature blocking and section validation are now handled by validatePositionStandable above
 
   // Handle elevation differences and climbing costs
   if (mapDefinition && (fromX !== undefined && fromY !== undefined)) {
@@ -250,7 +250,7 @@ export function getTileCost(
   }
   
   if (!mapDefinition.isValidTile(x, y)) {
-    return returnInfinityForBlocked ? Infinity : 0; // Tiles outside rooms and terrain block movement
+    return returnInfinityForBlocked ? Infinity : 0; // Tiles outside sections and terrain block movement
   }
 
   // Check terrain height and movement cost

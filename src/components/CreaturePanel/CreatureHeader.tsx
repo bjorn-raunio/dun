@@ -19,8 +19,8 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
           alt={creature.name}
           draggable={false}
           style={{
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             objectFit: "cover" as const,
             borderRadius: "50%",
             border: creature.isPlayerControlled() ? "2px solid #00ff00" : "2px solid #ff0000",
@@ -41,7 +41,7 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
       )}
       <div style={{ ...LAYOUT_PATTERNS.flexColumn, alignItems: "flex-start" }}>
         <div style={{
-          fontSize: 18,
+          fontSize: 22,
           fontWeight: 700,
           marginBottom: 4,
           textAlign: "left"
@@ -73,9 +73,19 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
                   minWidth: '18px',
                   minHeight: '18px'
                 }}>
-                  <span>{effect.icon}</span>
-                  
-
+                  {effect.icon.startsWith('/') ? (
+                    <img 
+                      src={effect.icon} 
+                      alt={effect.name}
+                      style={{
+                        width: '27px',
+                        height: '27px',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  ) : (
+                    <span>{effect.icon}</span>
+                  )}
                 </div>
 
                 {/* Tooltip */}

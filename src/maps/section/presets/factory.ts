@@ -1,17 +1,9 @@
-import { Room } from '../Room';
-import { RoomPreset } from './types';
-import { roomPresets } from './roomPresets';
-import { createTerrain, TerrainFactoryType } from '../../terrain/presets/factory';
+import { Section } from '../Section';
+import { SectionPreset } from './types';
+import { sectionPresets } from './sectionPresets';
+import { createTerrain } from '../../terrain/presets/factory';
 
-/**
- * Create a room from a preset
- * @param presetId The preset ID to use as base configuration
- * @param x X coordinate for the room
- * @param y Y coordinate for the room
- * @param overrides Optional overrides to apply to the preset
- * @returns A new Room instance
- */
-export function createRoom(
+export function createSection(
   presetId: string,
   x: number,
   y: number,
@@ -19,23 +11,30 @@ export function createRoom(
     rotation?: 0 | 90 | 180 | 270;
     mapWidth?: number;
     mapHeight?: number;
+    image?: string;
     outdoors?: boolean;
-    terrain?: TerrainFactoryType[];
+    terrain?: {
+      id: string;
+      x: number;
+      y: number;
+      rotation?: 0 | 90 | 180 | 270;
+    }[];
   }
-): Room {
-  const preset = roomPresets[presetId];
+): Section {
+  const preset = sectionPresets[presetId];
   if (!preset) {
-    throw new Error(`Room preset '${presetId}' not found. Available presets: ${Object.keys(roomPresets).join(', ')}`);
+    throw new Error(`Section preset '${presetId}' not found. Available presets: ${Object.keys(sectionPresets).join(', ')}`);
   }
 
   // Use preset values with overrides
   const mapWidth = overrides?.mapWidth ?? preset.mapWidth;
   const mapHeight = overrides?.mapHeight ?? preset.mapHeight;
   const rotation = overrides?.rotation ?? 0;
+  const image = overrides?.image ?? preset.image;
   const outdoors = overrides?.outdoors ?? preset.outdoors ?? false;
-  const terrain = overrides?.terrain?.map(t => createTerrain({ ...t, x: t.x + x, y: t.y + y })) ?? [];
+  const terrain = overrides?.terrain?.map(t => createTerrain(t.id, t.x + x, t.y + y, t.rotation)) ?? [];
   if (preset.terrain) {
-    const presetTerrain = preset.terrain.map(t => createTerrain({...t, rotation: calculateAdjustedTerrainRotation(t.rotation || 0, rotation)}));
+    const presetTerrain = preset.terrain.map(t => createTerrain(t.id, t.x, t.y, calculateAdjustedTerrainRotation(t.rotation || 0, rotation)));
     presetTerrain.forEach(t => {
       const rotatedPosition = calculateRotatedTerrainPosition(t.x, t.y, t.mapWidth, t.mapHeight, rotation, mapWidth, mapHeight);
       t.x = rotatedPosition.x + x;
@@ -43,12 +42,12 @@ export function createRoom(
     });
     terrain.push(...presetTerrain);
   }
-  return new Room(
-    presetId, // Use presetId as the type
+  return new Section(
     x,
     y,
     mapWidth,
     mapHeight,
+    image,
     rotation,
     outdoors,
     terrain
@@ -57,15 +56,15 @@ export function createRoom(
 
 
 /**
- * Calculate the position of terrain after applying room rotation
- * @param localX Local X coordinate within the room (0-based)
- * @param localY Local Y coordinate within the room (0-based)
+ * Calculate the position of terrain after applying section rotation
+ * @param localX Local X coordinate within the section (0-based)
+ * @param localY Local Y coordinate within the section (0-based)
  * @param terrainWidth Width of the terrain object
  * @param terrainHeight Height of the terrain object
- * @param rotation Room rotation in degrees
- * @param mapWidth Width of the room
- * @param mapHeight Height of the room
- * @returns Rotated coordinates relative to room origin
+ * @param rotation section rotation in degrees
+ * @param mapWidth Width of the section
+ * @param mapHeight Height of the section
+ * @returns Rotated coordinates relative to section origin
  */
 function calculateRotatedTerrainPosition(localX: number, localY: number, terrainWidth: number, terrainHeight: number, rotation: 0 | 90 | 180 | 270, mapWidth: number, mapHeight: number): { x: number, y: number } {
   switch (rotation) {
@@ -74,19 +73,19 @@ function calculateRotatedTerrainPosition(localX: number, localY: number, terrain
       return { x: localX, y: localY };
 
     case 90:
-      // Rotate 90 degrees clockwise around room center
+      // Rotate 90 degrees clockwise around section center
       // For terrain with dimensions, we need to consider the terrain's bounds
       // (x, y) -> (height - terrainHeight - y, x)
       return { x: mapHeight - terrainHeight - localY, y: localX };
 
     case 180:
-      // Rotate 180 degrees around room center
+      // Rotate 180 degrees around section center
       // For terrain with dimensions, we need to consider the terrain's bounds
       // (x, y) -> (width - terrainWidth - x, height - terrainHeight - y)
       return { x: mapWidth - terrainWidth - localX, y: mapHeight - terrainHeight - localY };
 
     case 270:
-      // Rotate 270 degrees clockwise (90 degrees counter-clockwise) around room center
+      // Rotate 270 degrees clockwise (90 degrees counter-clockwise) around section center
       // For terrain with dimensions, we need to consider the terrain's bounds
       // (x, y) -> (y, width - terrainWidth - x)
       return { x: localY, y: mapWidth - terrainWidth - localX };
@@ -97,31 +96,31 @@ function calculateRotatedTerrainPosition(localX: number, localY: number, terrain
 }
 
 /**
- * Calculate the adjusted rotation for terrain based on room rotation.
- * This ensures that terrain maintains its orientation relative to the room.
+ * Calculate the adjusted rotation for terrain based on section rotation.
+ * This ensures that terrain maintains its orientation relative to the section.
  * @param localRotation The local rotation of the terrain (0, 90, 180, 270)
  * @returns The adjusted rotation for the terrain.
  */
 function calculateAdjustedTerrainRotation(localRotation: 0 | 90 | 180 | 270, rotation: 0 | 90 | 180 | 270): 0 | 90 | 180 | 270 {
-  // Add room rotation to terrain rotation and normalize to 0-270 range
+  // Add section rotation to terrain rotation and normalize to 0-270 range
   const adjustedRotation = (localRotation + rotation) % 360;
   // Convert to valid rotation values (0, 90, 180, 270)
   return Math.floor(adjustedRotation / 90) * 90 as 0 | 90 | 180 | 270;
 }
 
 /**
- * Get all available room preset IDs
+ * Get all available section preset IDs
  * @returns Array of preset IDs
  */
-export function getAvailableRoomPresets(): string[] {
-  return Object.keys(roomPresets);
+export function getAvailableSectionPresets(): string[] {
+  return Object.keys(sectionPresets);
 }
 
 /**
- * Get room preset by ID
+ * Get section preset by ID
  * @param presetId The preset ID
- * @returns The room preset or undefined if not found
+ * @returns The section preset or undefined if not found
  */
-export function getRoomPreset(presetId: string): RoomPreset | undefined {
-  return roomPresets[presetId];
+export function getSectionPreset(presetId: string): SectionPreset | undefined {
+  return sectionPresets[presetId];
 }

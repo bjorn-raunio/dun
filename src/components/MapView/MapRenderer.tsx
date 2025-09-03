@@ -1,8 +1,7 @@
 import React from 'react';
 import { TILE_SIZE, COLORS } from '../styles';
-import { typeToImage } from '../../maps';
-import { MapBlock } from './types';
 import { QuestMap } from '../../maps/types';
+import { Section } from '../../maps/section';
 
 interface MapRendererProps {
   mapDefinition: QuestMap;
@@ -20,9 +19,9 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
   );
 
   // Helper function to find if this is the top-left of a block and its size
-  function getBlockAt(x: number, y: number): MapBlock | null {
-    for (const room of mapDefinition.rooms) {
-      if (room.x === x && room.y === y) return room;
+  function getBlockAt(x: number, y: number): Section | null {
+    for (const section of mapDefinition.sections) {
+      if (section.x === x && section.y === y) return section;
     }
     return null;
   }
@@ -32,40 +31,39 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
     for (let x = 0; x < cols; x++) {
       if (rendered[y][x]) continue;
       
-      const block = getBlockAt(x, y);
-      if (block) {
+      const section = getBlockAt(x, y);
+      if (section) {
         // Use pre-calculated rotated dimensions
-        const blockWidth = block.rotatedWidth;
-        const blockHeight = block.rotatedHeight;
+        const sectionWidth = section.rotatedWidth;
+        const sectionHeight = section.rotatedHeight;
         
-        // Mark all tiles in the block as rendered
-        for (let dy = 0; dy < blockHeight; dy++) {
-          for (let dx = 0; dx < blockWidth; dx++) {
+        // Mark all tiles in the section as rendered
+        for (let dy = 0; dy < sectionHeight; dy++) {
+          for (let dx = 0; dx < sectionWidth; dx++) {
             if (
               y + dy < rows &&
               x + dx < cols &&
-              mapDefinition.tiles[y + dy][x + dx] === typeToImage[block.type]
+              mapDefinition.tiles[y + dy][x + dx] === section.image
             ) {
               rendered[y + dy][x + dx] = true;
             }
           }
         }
         
-        const wrapperWidth = TILE_SIZE * blockWidth;
-        const wrapperHeight = TILE_SIZE * blockHeight;
+        const wrapperWidth = TILE_SIZE * sectionWidth;
+        const wrapperHeight = TILE_SIZE * sectionHeight;
         // Inner wrapper size before rotation
-        const innerWidth = (block.rotation === 90 || block.rotation === 270) ? wrapperHeight : wrapperWidth;
-        const innerHeight = (block.rotation === 90 || block.rotation === 270) ? wrapperWidth : wrapperHeight;
+        const innerWidth = (section.rotation === 90 || section.rotation === 270) ? wrapperHeight : wrapperWidth;
+        const innerHeight = (section.rotation === 90 || section.rotation === 270) ? wrapperWidth : wrapperHeight;
         
         gridItems.push(
           <div
-            key={`${block.type}-${x}-${y}`}
+            key={`${section.image}-${x}-${y}`}
             style={{
-              gridColumn: `${x + 1} / span ${blockWidth}`,
-              gridRow: `${y + 1} / span ${blockHeight}`,
+              gridColumn: `${x + 1} / span ${sectionWidth}`,
+              gridRow: `${y + 1} / span ${sectionHeight}`,
               width: wrapperWidth,
               height: wrapperHeight,
-              border: "1px solid #444",
               boxSizing: "border-box",
               background: COLORS.background,
               display: "flex",
@@ -83,11 +81,11 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 transform:
-                  block.rotation === 90
+                  section.rotation === 90
                     ? `rotate(90deg)`
-                    : block.rotation === 180
+                    : section.rotation === 180
                     ? `rotate(180deg)`
-                    : block.rotation === 270
+                    : section.rotation === 270
                     ? `rotate(270deg)`
                     : undefined,
                 transformOrigin: "center",
@@ -99,8 +97,7 @@ export function MapRenderer({ mapDefinition }: MapRendererProps) {
               }}
             >
               <img
-                src={process.env.PUBLIC_URL + "/" + typeToImage[block.type]}
-                alt={block.type}
+                src={process.env.PUBLIC_URL + "/rooms/" + section.image}
                 draggable={false}
                 style={{
                   width: "100%",

@@ -2,13 +2,6 @@ import { Terrain } from '../Terrain';
 import { TerrainPreset } from './types';
 import { terrainPresets, terrainPresetsByCategory } from './terrainPresets';
 
-export type TerrainFactoryType = {
-  id: string;
-  x: number;
-  y: number;
-  rotation?: 0 | 90 | 180 | 270;
-};
-
 /**
  * Create terrain from a preset
  * @param presetId The preset ID to use as base configuration
@@ -18,7 +11,10 @@ export type TerrainFactoryType = {
  * @returns A new Terrain instance
  */
 export function createTerrain(
-  type: TerrainFactoryType,
+  presetId: string,
+  x: number,
+  y: number,
+  rotation?: 0 | 90 | 180 | 270,
   overrides?: {    
     mapWidth?: number;
     mapHeight?: number;
@@ -27,9 +23,9 @@ export function createTerrain(
     movementCost?: number;
   }
 ): Terrain {
-  const preset = terrainPresets[type.id];
+  const preset = terrainPresets[presetId];
   if (!preset) {
-    throw new Error(`Terrain preset '${type}' not found. Available presets: ${Object.keys(terrainPresets).join(', ')}`);
+    throw new Error(`Terrain preset '${presetId}' not found. Available presets: ${Object.keys(terrainPresets).join(', ')}`);
   }
 
   // Use preset values with overrides
@@ -40,14 +36,13 @@ export function createTerrain(
   const movementCost = overrides?.movementCost ?? preset.movementCost;
 
   return new Terrain(
-    type.id, // Use presetId as the type
-    type.x,
-    type.y,
+    x,
+    y,
     mapWidth,
     mapHeight,
     image,
     height,
-    type.rotation,
+    rotation,
     movementCost
   );
 }

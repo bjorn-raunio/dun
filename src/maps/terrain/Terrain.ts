@@ -1,5 +1,4 @@
 export class Terrain {
-  type: string; // e.g. "tree", "wagon", "horse"
   x: number;
   y: number;
   mapWidth: number;
@@ -12,7 +11,6 @@ export class Terrain {
   movementCost: number; // Movement cost multiplier for this terrain type
 
   constructor(
-    type: string,
     x: number,
     y: number,
     mapWidth: number,
@@ -22,7 +20,6 @@ export class Terrain {
     rotation: 0 | 90 | 180 | 270 = 0,
     movementCost: number = 1, // Default movement cost multiplier
   ) {
-    this.type = type;
     this.x = x;
     this.y = y;
     this.mapWidth = mapWidth;

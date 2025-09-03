@@ -36,7 +36,7 @@ export interface StatusEffect {
   onDeath?: (creature: Creature) => void;
   
   // Visual properties
-  icon?: string;
+  icon: string;
   
   // Internal properties
   isAutomatic?: boolean; // Marks effects that are automatically generated (e.g., wounded status)

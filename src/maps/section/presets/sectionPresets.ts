@@ -1,18 +1,18 @@
-import { RoomPreset, RoomPresetCategory } from './types';
+import { SectionPreset, SectionPresetCategory } from './types';
 
-// --- Room Presets by Category ---
+// --- Section Presets by Category ---
 
-export const roomPresetsByCategory: Record<string, RoomPresetCategory> = {
+export const sectionPresetsByCategory: Record<string, SectionPresetCategory> = {
     standard: {
         presets: {
             forest1: {
-                image: "rooms/forest1.jpg",
+                image: "forest1.jpg",
                 mapWidth: 8,
                 mapHeight: 10,
                 outdoors: true
             },
             forest2: {
-                image: "rooms/forest2.jpg",
+                image: "forest2.jpg",
                 mapWidth: 8,
                 mapHeight: 10,
                 outdoors: true,
@@ -30,8 +30,8 @@ export const roomPresetsByCategory: Record<string, RoomPresetCategory> = {
     },
 };
 
-// Flattened room presets for easy access
-export const roomPresets: Record<string, RoomPreset> = Object.values(roomPresetsByCategory)
+// Flattened section presets for easy access
+export const sectionPresets: Record<string, SectionPreset> = Object.values(sectionPresetsByCategory)
     .reduce((acc, category) => {
         return { ...acc, ...category.presets };
-    }, {} as Record<string, RoomPreset>);
+    }, {} as Record<string, SectionPreset>);

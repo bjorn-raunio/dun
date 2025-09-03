@@ -1,13 +1,13 @@
 // --- Map and Terrain Type Definitions ---
 import { Creature } from '../creatures/index';
-import { Room } from './room';
+import { Section } from './section';
 import { Terrain } from './terrain';
 
 export class QuestMap {
   public name: string;
   public width: number;
   public height: number;
-  public rooms: Room[];
+  public sections: Section[];
   public creatures: Creature[];
   public startingTiles: Array<{ x: number; y: number; image?: string; }>;
   public tiles: string[][] = [];
@@ -16,14 +16,14 @@ export class QuestMap {
     name: string,
     width: number,
     height: number,
-    rooms: Room[] = [],
+    sections: Section[] = [],
     creatures: Creature[] = [],
     startingTiles: Array<{ x: number; y: number; image?: string; }> = [],
   ) {
     this.name = name;
     this.width = width;
     this.height = height;
-    this.rooms = rooms;
+    this.sections = sections;
     this.creatures = creatures;
     this.startingTiles = startingTiles;
     this.generateMapTiles();
@@ -37,7 +37,7 @@ export class QuestMap {
   }
 
   isValidTile(x: number, y: number): boolean {
-    return this.getRoomsAt(x, y).length > 0;
+    return this.getSectionsAt(x, y).length > 0;
   }
 
   /**
@@ -61,18 +61,18 @@ export class QuestMap {
    * Get terrain at a specific position
    */
   getTerrainAt(x: number, y: number): Terrain[] {
-    return this.rooms.flatMap(room => room.terrain).filter(t =>
+    return this.sections.flatMap(section => section.terrain).filter(t =>
       t.isTileWithinTerrain(x, y)
     );
   }
 
   /**
-   * Get rooms at a specific position
+   * Get sections at a specific position
    */
-  getRoomsAt(x: number, y: number): Room[] {
-    return this.rooms.filter(room =>
-      x >= room.x && x < room.x + room.rotatedWidth &&
-      y >= room.y && y < room.y + room.rotatedHeight
+  getSectionsAt(x: number, y: number): Section[] {
+    return this.sections.filter(section =>
+      x >= section.x && x < section.x + section.rotatedWidth &&
+      y >= section.y && y < section.y + section.rotatedHeight
     );
   }
 
@@ -101,14 +101,14 @@ export class QuestMap {
    * Add terrain to the map
    */
   addTerrain(terrain: Terrain): void {
-    this.rooms.flatMap(room => room.terrain).push(terrain);
+    this.sections.flatMap(section => section.terrain).push(terrain);
   }
 
   /**
-   * Add a room to the map
+   * Add a section to the map
    */
-  addRoom(room: Room): void {
-    this.rooms.push(room);
+  addSection(section: Section): void {
+    this.sections.push(section);
   }
 
   /**
@@ -119,14 +119,14 @@ export class QuestMap {
       this.name,
       this.width,
       this.height,
-      [...this.rooms],
+      [...this.sections],
       [...this.creatures],
       [...this.startingTiles]
     );
   }
 
   getTerrain(): Terrain[] {
-    return this.rooms.flatMap(room => room.terrain);
+    return this.sections.flatMap(section => section.terrain);
   }
 
   /**
@@ -134,7 +134,7 @@ export class QuestMap {
    */
   terrainHeightAt(tx: number, ty: number): number {
     let h = 0;
-    for (const t of this.rooms.flatMap(room => room.terrain)) {
+    for (const t of this.sections.flatMap(section => section.terrain)) {
       h = Math.max(h, t.getHeightAt(tx, ty));
     }
     return h;
@@ -145,7 +145,7 @@ export class QuestMap {
    */
   terrainMovementCostAt(tx: number, ty: number): number {
     let cost = 1; // Default movement cost
-    for (const t of this.rooms.flatMap(room => room.terrain)) {
+    for (const t of this.sections.flatMap(section => section.terrain)) {
       if (t.isTileWithinTerrain(tx, ty)) {
         cost = Math.max(cost, t.getMovementCostAt(tx, ty));
       }
@@ -161,10 +161,10 @@ export class QuestMap {
       this.name.length > 0 &&
       this.width > 0 &&
       this.height > 0 &&
-      this.rooms.every(room =>
-        room.x >= 0 && room.y >= 0 &&
-        room.x + room.mapWidth <= this.width &&
-        room.y + room.mapHeight <= this.height
+      this.sections.every(section =>
+        section.x >= 0 && section.y >= 0 &&
+        section.x + section.mapWidth <= this.width &&
+        section.y + section.mapHeight <= this.height
       ) &&
       this.creatures.every(creature => {
         const position = creature['positionManager']?.getPosition();
@@ -185,16 +185,16 @@ export class QuestMap {
       }
     }
 
-    // Fill in room tiles
-    for (const room of this.rooms) {
+    // Fill in section tiles
+    for (const section of this.sections) {
       // Use pre-calculated rotated dimensions
-      const w = room.rotatedWidth;
-      const h = room.rotatedHeight;
+      const w = section.rotatedWidth;
+      const h = section.rotatedHeight;
 
-      for (let y = room.y; y < room.y + h; y++) {
-        for (let x = room.x; x < room.x + w; x++) {
+      for (let y = section.y; y < section.y + h; y++) {
+        for (let x = section.x; x < section.x + w; x++) {
           if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
-            this.tiles[y][x] = `${room.type}.jpg`;
+            this.tiles[y][x] = section.image;
           }
         }
       }

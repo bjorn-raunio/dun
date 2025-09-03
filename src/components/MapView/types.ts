@@ -23,24 +23,3 @@ export interface MapViewProps {
   panRef: React.MutableRefObject<HTMLDivElement | null>;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
 }
-
-export interface MapBlock {
-  type: string;
-  x: number;
-  y: number;
-  mapWidth: number;
-  mapHeight: number;
-  rotation: number;
-  rotatedWidth: number;
-  rotatedHeight: number;
-}
-
-export interface TerrainItem {
-  key: string;
-  x: number;
-  y: number;
-  mapWidth: number;
-  mapHeight: number;
-  rotation: number;
-  image?: string;
-}
