@@ -189,7 +189,7 @@ export class CreatureMovement implements ICreatureMovement {
     creature.x = x;
     creature.y = y;
 
-    const vision = creature.getVision(x, y, mapDefinition);   
+    const vision = creature.getVision(x, y, mapDefinition);
     if (vision < Light.darkness) {
       creature.addStatusEffect(STATUS_EFFECT_PRESETS.totalDarkness.createEffect());
     } else if (vision < Light.lit) {

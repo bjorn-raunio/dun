@@ -18,10 +18,7 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
     },
     size: 2,
     inventory: [],
-    equipment: {
-      mainHand: { type: "weapon", preset: "broadsword" },
-      offHand: { type: "weapon", preset: "dagger" },
-    },
+    equipment: {},
     vitality: 4,
     hireCost: 75,
     skills: [

@@ -90,19 +90,6 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     }
   },
 
-  strength: {
-    icon: "/icons/strength.png",
-    createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
-      return createStatusEffect('strength', 'strength', duration, {
-        name: name ?? "Strength",
-        description: `+${value} strength`,
-        attributeModifiers: {
-          strength: value
-        }
-      });
-    }
-  },
-
   darkness: {
     icon: "/icons/invisible.png",
     createEffect: (): StatusEffect => {
@@ -131,6 +118,44 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
           perception: -2,
           dexterity: -2
         }
+      });
+    }
+  },
+
+  strength: {
+    icon: "/icons/strength.png",
+    createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
+      return createStatusEffect('strength', 'strength', duration, {
+        name: name ?? "Strength",
+        description: `+${value} strength`,
+        attributeModifiers: {
+          strength: value
+        }
+      });
+    }
+  },
+
+  speed: {
+    icon: "/icons/dexterity.png",
+    createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
+      return createStatusEffect('speed', 'speed', duration, {
+        name: name ?? "Speed",
+        description: `+${value} movement/agility`,
+        attributeModifiers: {
+          movement: value,
+          agility: value
+        }
+      });
+    }
+  },
+
+  heroism: {
+    icon: "/icons/heroism.png",
+    createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
+      return createStatusEffect('heroism', 'heroism', duration, {
+        name: name ?? "Heroism",
+        description: `+${value} action`,
+        actionModifier: value
       });
     }
   },

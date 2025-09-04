@@ -130,6 +130,32 @@ export const consumablePresets: Record<string, ConsumablePreset> = {
     weight: 0.5, 
     value: 60 
   },
+  speedPotion: { 
+    name: "Speed Potion", 
+    effect: "+2 move/agility for 3 turns", 
+    targetType: "self", 
+    properties: ["magical"], 
+    statusEffect: {
+      type: "speed",
+      duration: 3,
+      value: 2
+    },
+    weight: 0.5, 
+    value: 60 
+  },
+  heroicPotion: { 
+    name: "Heroic Potion", 
+    effect: "+1 action for 2 turns", 
+    targetType: "self", 
+    properties: ["magical"], 
+    statusEffect: {
+      type: "heroism",
+      duration: 2,
+      value: 1
+    },
+    weight: 0.5, 
+    value: 60 
+  },
   
   // Utility items
   torch: { 

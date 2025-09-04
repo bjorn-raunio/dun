@@ -160,7 +160,6 @@ export interface ICreature {
 export interface ICreatureStateManager {
   getState(): CreatureState;
   getTurnStartPosition(): CreaturePositionOrUndefined;
-  validateState(): void;
   isAlive(): boolean;
   isDead(): boolean;
   hasMoved(effectiveMovement?: number): boolean;

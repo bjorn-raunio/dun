@@ -94,10 +94,10 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
 
   return (
     <div className="App">
-      <ViewToggle
+      {/*<ViewToggle
         currentView={viewMode}
         onViewChange={setViewMode}
-      />
+      />*/}
       
       {viewMode === 'quest' ? (
         <MapView
@@ -198,7 +198,7 @@ const hero = new Hero({
   },
   inventory: [
     createConsumable('healingPotion'),
-    createConsumable('strengthPotion')
+    createConsumable('strengthPotion'),
   ],
   vitality: 4,
   mana: 4,

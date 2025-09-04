@@ -61,33 +61,6 @@ export class CreatureStateManager {
     this.getMaxFortune = getMaxFortune;
   }
 
-  validateState(): void {
-    let maxMovement = this.getMaxMovement();
-    let maxActions = this.getMaxActions();
-    let maxQuickActions = this.getMaxQuickActions();
-    let maxVitality = this.getMaxVitality();
-    let maxMana = this.getMaxMana();
-    let maxFortune = this.getMaxFortune();
-    if (this.state.remainingMovement > maxMovement) {
-      this.state.remainingMovement = maxMovement;
-    }
-    if (this.state.remainingActions > maxActions) {
-      this.state.remainingActions = maxActions;
-    }
-    if (this.state.remainingQuickActions > maxQuickActions) {
-      this.state.remainingQuickActions = maxQuickActions;
-    }
-    if (this.state.remainingVitality > maxVitality) {
-      this.state.remainingVitality = maxVitality;
-    }
-    if (this.state.remainingMana > maxMana) {
-      this.state.remainingMana = maxMana;
-    }
-    if (this.state.remainingFortune > maxFortune) {
-      this.state.remainingFortune = maxFortune;
-    }
-  }
-
   // --- State Checks ---
 
   isAlive(): boolean {

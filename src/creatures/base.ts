@@ -437,13 +437,14 @@ export abstract class Creature implements ICreature {
   }
 
   startTurn(): string[] {
-    this.running = false;
-    this.stateManager.startTurn();
-
     const messages: string[] = [];
+
+    this.running = false;
 
     // Process status effects at turn start
     this.statusEffectManager.updateEffects();
+
+    this.stateManager.startTurn();
 
     // Apply turn-start effects
     const activeEffects = this.statusEffectManager.getActiveEffects();
@@ -557,15 +558,21 @@ export abstract class Creature implements ICreature {
   }
 
   addStatusEffect(effect: StatusEffect): void {
-    this.statusEffectManager.addEffect(effect);
-
-    this.stateManager.validateState();
+    const previousMovement = this.movement;
+    this.statusEffectManager.addEffect(effect);    
+    this.updateRemaining(previousMovement);
   }
 
   removeStatusEffect(effectId: string): void {
+    const previousMovement = this.movement;
     this.statusEffectManager.removeEffect(effectId);
+    this.updateRemaining(previousMovement);
+  }
 
-    this.stateManager.validateState();
+  private updateRemaining(previousMovement: number) {
+    if(previousMovement !== this.movement) {
+      this.stateManager.setRemainingMovement(this.stateManager.getState().remainingMovement + (this.movement - previousMovement));
+    }
   }
 
   removeAllStatusEffects(): void {

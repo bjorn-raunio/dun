@@ -6,9 +6,11 @@ export type StatusEffectType =
   | "wounded" 
   | "stunned"
   | "knockedDown"
-  | "strength"
   | "darkness"
-  | "totalDarkness";
+  | "totalDarkness"
+  | "strength"
+  | "speed"
+  | "heroism";
 
 export interface StatusEffect {
   id: string;
