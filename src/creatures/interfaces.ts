@@ -101,14 +101,14 @@ export interface ICreature {
   getVision(x: number, y: number, mapDefinition: QuestMap): number;
   
   // Combat
-  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap): CombatResult;
+  attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap, offhand?: boolean): CombatResult;
   
   // Actions
   canAct(): boolean;
   performAction(action: 'run' | 'disengage' | 'search', allCreatures: ICreature[]): { success: boolean, message: string };
   
   // State modifiers
-  takeDamage(damage: number): number;
+  takeDamage(damage: number): boolean;
   useMovement(points: number): void;
   useAction(): void;
   canUseQuickAction(): boolean;
@@ -168,7 +168,7 @@ export interface ICreatureStateManager {
   hasMana(amount: number): boolean;
   hasFortune(amount: number): boolean;
   hasTakenActionsThisTurn(): boolean;
-  takeDamage(damage: number): number;
+  takeDamage(damage: number): boolean;
   useMovement(points: number): void;
   useAction(): void;
   canUseQuickAction(): boolean;
@@ -249,5 +249,5 @@ export interface ICreatureMovement {
 // --- Combat Interface ---
 
 export interface ICombatExecutor {
-  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: QuestMap): CombatResult;
+  executeCombat(attacker: ICreature, target: ICreature, allCreatures: ICreature[], mapDefinition?: QuestMap, offhand?: boolean): CombatResult;
 }

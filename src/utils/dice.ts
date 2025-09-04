@@ -73,6 +73,28 @@ export function displayDiceRoll(dice: number[]): string {
   return `${dice.map(d => `[${d}]`).join('')}`;
 }
 
+export function displayDieRoll(die: number): string {
+  return displayDiceRoll([die]);
+}
+
 export function displayDiceSum(roll: { total: number; dice: number[] }, modifier?: number): string {
   return `${displayDiceRoll(roll.dice)}${modifier !== undefined ? `${modifier >= 0 ? ` + ${modifier}` : ` - ${modifier * -1}`}` : ''} = ${roll.total}`;
+}
+
+/**
+ * Check if two or more dice show the same result
+ * @param diceResults Array of dice roll results
+ * @returns True if any value appears two or more times
+ */
+export function isDoubles(diceResults: number[]): boolean {
+  if (diceResults.length < 2) return false;
+  
+  // Count occurrences of each value
+  const counts: { [key: number]: number } = {};
+  for (const result of diceResults) {
+    counts[result] = (counts[result] || 0) + 1;
+  }
+  
+  // Check if any value appears two or more times
+  return Object.values(counts).some(count => count >= 2);
 }

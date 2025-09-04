@@ -11,26 +11,27 @@ interface EquipmentSlotProps {
   creature: ICreature;
   onUnequip: (slot: EquipmentSlotType) => void;
   canUnequip: (slot: EquipmentSlotType) => boolean;
-  onAttack?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature, offhand?: boolean) => void;
   canAttack?: (creature: ICreature) => boolean;
 }
 
 // Extracted button components for better organization
 interface AttackButtonProps {
-  onAttack: (creature: ICreature) => void;
+  onAttack: (creature: ICreature, offhand?: boolean) => void;
   canAttack: boolean;
   creature: ICreature;
+  offhand: boolean;
 }
 
-function AttackButton({ onAttack, canAttack, creature }: AttackButtonProps) {
+function AttackButton({ onAttack, canAttack, creature, offhand }: AttackButtonProps) {
   const buttonStyle = createConditionalButtonStyle('medium', canAttack, 'disabled');
   
   return (
     <button
-      onClick={() => onAttack(creature)}
+      onClick={() => onAttack(creature, offhand)}
       disabled={!canAttack}
       style={buttonStyle}
-      title="Attack"
+      title={`Attack with ${offhand ? 'offhand' : 'main hand'} weapon`}
     >
       <img 
         src={"/icons/attack.png"} 
@@ -122,6 +123,7 @@ export function EquipmentSlot({
               onAttack={onAttack}
               canAttack={canAttackWithWeapon}
               creature={creature}
+              offhand={slot === 'offHand'}
             />
           )}
           <div style={{ 

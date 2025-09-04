@@ -20,9 +20,7 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
         type: "melee",
         effect: (data: CombatEventData) => {
           if (data.target.size < 4) {
-            applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect(), (msg: string) => {
-              data.messages.push(msg);
-            });
+            applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect());
           }
         }
       }

@@ -31,6 +31,7 @@ export type TargetingMode = {
   isActive: boolean;
   attackerId: string | null;
   message: string;
+  offhand?: boolean;
 };
 
 export type ViewportState = {

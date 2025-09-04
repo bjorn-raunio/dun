@@ -145,6 +145,41 @@ export class EquipmentSystem {
   }
 
   /**
+   * Get the offhand weapon
+   * Returns unarmed weapon if no offhand weapon is equipped
+   */
+  getOffHandWeapon(): Weapon | RangedWeapon {
+    if (this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon) {
+      return this.slots.offHand;
+    }
+    // Return unarmed weapon if no offhand weapon is equipped
+    return this.unarmedWeapon;
+  }
+
+  /**
+   * Get the weapon with the highest combat bonus
+   * Compares main hand, offhand, and unarmed weapons
+   */
+  getHighestCombatBonusWeapon(): Weapon | RangedWeapon {
+    const mainWeapon = this.slots.mainHand instanceof Weapon || this.slots.mainHand instanceof RangedWeapon ? this.slots.mainHand : null;
+    const offHandWeapon = this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon ? this.slots.offHand : null;
+    
+    // Calculate combat bonuses for each weapon
+    const mainBonus = mainWeapon ? CombatCalculator.getAttackBonus(mainWeapon, 0, 0) : -Infinity;
+    const offHandBonus = offHandWeapon ? CombatCalculator.getAttackBonus(offHandWeapon, 0, 0) : -Infinity;
+    const unarmedBonus = CombatCalculator.getAttackBonus(this.unarmedWeapon, 0, 0);
+    
+    // Find the weapon with the highest bonus
+    if (mainBonus >= offHandBonus && mainBonus >= unarmedBonus) {
+      return mainWeapon!;
+    } else if (offHandBonus >= unarmedBonus) {
+      return offHandWeapon!;
+    } else {
+      return this.unarmedWeapon;
+    }
+  }
+
+  /**
    * Get the equipped armor
    */
   getArmor(): Armor | undefined {

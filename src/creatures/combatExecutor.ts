@@ -12,9 +12,10 @@ export class CombatExecutor implements ICombatExecutor {
     attacker: ICreature,
     target: ICreature,
     allCreatures: ICreature[],
-    mapDefinition?: QuestMap
+    mapDefinition?: QuestMap,
+    offhand?: boolean
   ): CombatResult {
-    return executeCombatUtil(attacker as Creature, target as Creature, allCreatures as Creature[], mapDefinition || {} as QuestMap);
+    return executeCombatUtil(attacker as Creature, target as Creature, allCreatures as Creature[], mapDefinition || {} as QuestMap, offhand || false);
   }
 }
 

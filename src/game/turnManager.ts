@@ -10,6 +10,7 @@ import {
 } from './turnManagement';
 import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
+import { addTurnMessage } from '../utils/messageSystem';
 
 // --- Game-Specific Turn Management ---
 
@@ -54,9 +55,8 @@ export function endTurn(
 
   if(playerControlledGroup) {
     const messages = playerControlledGroup.startTurn();
-    messages.forEach(message => {
-      dispatch({ type: 'ADD_MESSAGE', payload: message });
-    });
+    // Messages are now handled by the centralized message system
+    // The startTurn method already calls addTurnMessage for each message
   }
   
 }

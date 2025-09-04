@@ -1,3 +1,5 @@
+import { displayDieRoll, rollD6 } from '../utils/dice';
+import { addGameMessage } from '../utils/messageSystem';
 import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 
 // --- Creature State Management ---
@@ -66,22 +68,22 @@ export class CreatureStateManager {
     let maxVitality = this.getMaxVitality();
     let maxMana = this.getMaxMana();
     let maxFortune = this.getMaxFortune();
-    if(this.state.remainingMovement > maxMovement) {
+    if (this.state.remainingMovement > maxMovement) {
       this.state.remainingMovement = maxMovement;
     }
-    if(this.state.remainingActions > maxActions) {
+    if (this.state.remainingActions > maxActions) {
       this.state.remainingActions = maxActions;
     }
-    if(this.state.remainingQuickActions > maxQuickActions) {
+    if (this.state.remainingQuickActions > maxQuickActions) {
       this.state.remainingQuickActions = maxQuickActions;
     }
-    if(this.state.remainingVitality > maxVitality) {
+    if (this.state.remainingVitality > maxVitality) {
       this.state.remainingVitality = maxVitality;
     }
-    if(this.state.remainingMana > maxMana) {
+    if (this.state.remainingMana > maxMana) {
       this.state.remainingMana = maxMana;
     }
-    if(this.state.remainingFortune > maxFortune) {
+    if (this.state.remainingFortune > maxFortune) {
       this.state.remainingFortune = maxFortune;
     }
   }
@@ -130,9 +132,21 @@ export class CreatureStateManager {
 
   // --- State Modifiers ---
 
-  takeDamage(damage: number): number {
+  takeDamage(damage: number): boolean {
+    const remainingVitality = Math.max(0, this.state.remainingVitality - damage);
+    if (remainingVitality <= 0) {
+      const roll = rollD6();
+      if (this.useFortune(1)) {
+        addGameMessage(`Fortune ${displayDieRoll(roll)}`);
+        if (roll >= 5) {
+          return false;
+        } else if (this.useFortune(1)) {
+          return false;
+        }
+      }
+    }
     this.state.remainingVitality = Math.max(0, this.state.remainingVitality - damage);
-    return this.state.remainingVitality;
+    return true;
   }
 
   useMovement(points: number): void {

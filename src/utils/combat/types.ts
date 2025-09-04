@@ -6,7 +6,6 @@ export interface CombatResult {
   success: boolean;
   damage: number;
   targetDefeated: boolean;
-  messages: string[]; // Array containing to hit, block, and damage messages (if applicable)
 }
 
 export interface CombatValidationResult extends BaseValidationResult { }

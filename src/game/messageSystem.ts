@@ -1,10 +1,11 @@
 import { GameActions } from './types';
 import { VALIDATION_MESSAGES } from '../validation/messages';
 import { logGame } from '../utils/logging';
+import { addCombatMessage, addMovementMessage, addErrorMessage, addMessage } from '../utils/messageSystem';
 
-// --- Message System ---
+// --- Legacy Message System (for backward compatibility) ---
 
-export function addMessage(
+export function addMessageLegacy(
   message: string, 
   dispatch: React.Dispatch<any>
 ) {
@@ -14,7 +15,7 @@ export function addMessage(
   dispatch({ type: 'ADD_MESSAGE', payload: message });
 }
 
-export function addCombatMessage(
+export function addCombatMessageLegacy(
   combatResult: { messages: string[]; targetDefeated: boolean },
   targetName: string,
   dispatch: React.Dispatch<any>
@@ -22,17 +23,17 @@ export function addCombatMessage(
   // Add combat messages
   if (combatResult.messages && combatResult.messages.length > 0) {
     combatResult.messages.forEach(message => {
-      addMessage(message, dispatch);
+      addMessageLegacy(message, dispatch);
     });
   }
   
   // Add defeat message if target was defeated
   if (combatResult.targetDefeated) {
-    addMessage(VALIDATION_MESSAGES.TARGET_DEFEATED(targetName), dispatch);
+    addMessageLegacy(VALIDATION_MESSAGES.TARGET_DEFEATED(targetName), dispatch);
   }
 }
 
-export function addMovementMessage(
+export function addMovementMessageLegacy(
   creatureName: string, 
   facingDirection: string,
   dispatch: React.Dispatch<any>
@@ -40,9 +41,12 @@ export function addMovementMessage(
   logGame(`${creatureName} faces ${facingDirection}`);
 }
 
-export function addErrorMessage(
+export function addErrorMessageLegacy(
   message: string,
   dispatch: React.Dispatch<any>
 ) {
-  addMessage(message, dispatch);
+  addMessageLegacy(message, dispatch);
 }
+
+// --- New Message System (re-exports for convenience) ---
+export { addMessage, addCombatMessage, addMovementMessage, addErrorMessage };

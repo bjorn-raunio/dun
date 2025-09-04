@@ -2,7 +2,7 @@ import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { QuestMap } from '../../maps/types';
 import { tileFromPointer, GAME_SETTINGS } from '../../utils';
-import { addMessage } from '../../game/messageSystem';
+import { addMessage } from '../../utils/messageSystem';
 import { findCreatureById } from '../../utils/pathfinding';
 
 export interface TileInteractionHandlers {

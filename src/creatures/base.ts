@@ -30,6 +30,7 @@ import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
 import { calculateAttributeRoll, displayDiceRoll } from '../utils';
 import { validateAction } from '../validation';
+import { addGameMessage, addTurnMessage } from '../utils/messageSystem';
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -346,11 +347,12 @@ export abstract class Creature implements ICreature {
   isFriendlyTo(other: ICreature): boolean { return this.relationshipsManager.isFriendlyTo(other.group); }
 
   // --- State Modifiers ---
-  takeDamage(damage: number): number {
+  takeDamage(damage: number): boolean {
     const takenDamage = this.stateManager.takeDamage(damage);
     this.updateWoundedStatus();
     if (this.isDead()) {
       this.removeAllStatusEffects();
+      addGameMessage(`${this.name} has fallen`);
     }
     return takenDamage;
   }
@@ -447,7 +449,9 @@ export abstract class Creature implements ICreature {
     const activeEffects = this.statusEffectManager.getActiveEffects();
     activeEffects.forEach(effect => {
       if (effect.onTurnStart) {
-        messages.push(...effect.onTurnStart(this));
+        const effectMessages = effect.onTurnStart(this);
+        effectMessages.forEach(msg => addTurnMessage(msg));
+        messages.push(...effectMessages);
       }
     });
 
@@ -525,17 +529,16 @@ export abstract class Creature implements ICreature {
     return tile.light + (darkvision + 1);
   }
 
-  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): CombatResult {
+  attack(target: ICreature, allCreatures: ICreature[] = [], mapDefinition?: QuestMap, offhand: boolean = false): CombatResult {
     if (this.x === undefined || this.y === undefined) {
-      return { success: false, damage: 0, targetDefeated: false, messages: ["Creature is not on the map"] };
+      return { success: false, damage: 0, targetDefeated: false };
     }
-    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition);
+    const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, offhand);
 
     return {
       success: result.success,
       damage: result.damage,
-      targetDefeated: result.targetDefeated,
-      messages: result.messages
+      targetDefeated: result.targetDefeated
     };
   }
 

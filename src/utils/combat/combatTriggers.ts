@@ -1,4 +1,5 @@
 import { CombatEventData, CombatEventName } from './execution';
+import { addCombatMessage } from '../messageSystem';
 
 export class CombatTriggers {
 
@@ -11,7 +12,7 @@ export class CombatTriggers {
       if (skill.combatTriggers) {
         for (const trigger of skill.combatTriggers) {
           if (trigger.event === triggerType && (!trigger.type || (data.isRanged && trigger.type === "ranged" || !data.isRanged && trigger.type === "melee"))) {
-            data.messages.push(
+            addCombatMessage(
               `${data.attacker.name}'s ${skill.name} activates`
             );
             trigger.effect(data);

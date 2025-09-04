@@ -4,7 +4,7 @@ import { QuestMap } from '../../maps/types';
 import { tileFromPointer } from '../../utils';
 import { findCreatureById, getVisibleCreatures } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
-import { addMessage } from '../../game/messageSystem';
+import { addMessage } from '../../utils/messageSystem';
 import { 
   createPanningHandlers, 
   createCombatHandlers, 
@@ -67,11 +67,12 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   // Handle targeting mode attack
   function handleTargetingModeAttack(attacker: ICreature, target: ICreature) {
     if (!targetsInRangeIds.has(target.id)) {
-      addMessage(`Cannot reach target: ${attacker.name} cannot reach ${target.name}`, gameActions.dispatch);
+      addMessage(`Cannot reach target: ${attacker.name} cannot reach ${target.name}`);
       return false;
     }
 
-    combatHandlers.handleTargetingModeAttack(attacker, target, creatures, mapDefinition);
+    const offhand = targetingMode && 'offhand' in targetingMode ? (targetingMode.offhand as boolean) : false;
+    combatHandlers.handleTargetingModeAttack(attacker, target, creatures, mapDefinition, offhand);
     return true;
   }
 
@@ -129,7 +130,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
         }
       } else {
         gameActions.setTargetingMode({ isActive: false, attackerId: null, message: '' });
-        addMessage(`Invalid target: ${creature.name} is not a valid target for ${attacker.name}`, gameActions.dispatch);
+        addMessage(`Invalid target: ${creature.name} is not a valid target for ${attacker.name}`);
         return;
       }
     }

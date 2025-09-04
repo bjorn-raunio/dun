@@ -1,7 +1,7 @@
 import { Creature, CreatureGroup, ICreature } from '../../creatures/index';
 import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../../ai/decisionMaking';
 import { calculateTargetsInRange } from '../../utils/combat';
-import { addMessage } from '../messageSystem';
+import { addMessage } from '../../utils/messageSystem';
 import { getVisibleCreatures } from '../../utils/pathfinding';
 import { logTurn, logAI } from '../../utils/logging';
 import creatureServices from '../../creatures/services';
@@ -155,9 +155,8 @@ function executeSingleAIAction(
       logAI(message);
     }); 
   } else {
-    executionResult.messages.forEach(message => {
-      addMessage(message, context.dispatch);
-    }); 
+    // Messages are now handled by the centralized message system
+    // The executeAIDecision function already calls addMessage for each message
   }
   
   return {

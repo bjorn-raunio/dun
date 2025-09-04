@@ -9,7 +9,7 @@ import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
 import { CREATURE_GROUPS, Hero, ICreature } from './creatures/index';
-import { addMessage } from './game/messageSystem';
+import { addMessage } from './utils/messageSystem';
 import { createArmor, createConsumable, createShield, createWeapon } from "./items";
 import { SKILL_PRESETS } from "./skills";
 
@@ -43,19 +43,19 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
 
   // Attack function for equipment panel - enters targeting mode
-  const handleAttack = React.useCallback((attackingCreature: ICreature) => {
+  const handleAttack = React.useCallback((attackingCreature: ICreature, offhand: boolean = false) => {
     // Check if creature can attack
     if (!attackingCreature.isPlayerControlled() ||
       !attackingCreature.isAlive() ||
       !attackingCreature.hasActionsRemaining()) {
-      addMessage(`${attackingCreature.name} cannot attack right now`, gameActions.dispatch);
+      addMessage(`${attackingCreature.name} cannot attack right now`);
       return;
     }
 
     // Check if there are any hostile creatures
     const hostileCreatures = attackingCreature.getHostileCreatures(creatures);
     if (hostileCreatures.length === 0) {
-      addMessage(`No enemies to attack`, gameActions.dispatch);
+      addMessage(`No enemies to attack`);
       return;
     }
 
@@ -63,7 +63,8 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
     setTargetingMode({
       isActive: true,
       attackerId: attackingCreature.id,
-      message: `Select a target for ${attackingCreature.name}'s attack`
+      message: `Select a target for ${attackingCreature.name}'s attack`,
+      offhand
     });
   }, [creatures, setTargetingMode]);
 

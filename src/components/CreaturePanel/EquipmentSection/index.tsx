@@ -7,7 +7,7 @@ import { useGameState } from '../../../game/GameContext';
 interface EquipmentSectionProps {
   creature: ICreature;
   onUpdate?: (creature: ICreature) => void;
-  onAttack?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature, offhand?: boolean) => void;
   canAttack?: (creature: ICreature) => boolean;
 }
 

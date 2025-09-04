@@ -10,6 +10,7 @@ import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
 import { Party } from '../creatures/index';
 import { WorldMap } from '../worldmap/WorldMap';
+import { messageManager } from '../utils/messageSystem';
 
 
 // --- Game Context Types ---
@@ -38,6 +39,11 @@ export function GameProvider({
     gameReducer, 
     getInitialGameState(initialCreatures, mapDefinition)
   );
+  
+  // Initialize message system with dispatch function
+  useEffect(() => {
+    messageManager.setDispatchFunction(dispatch);
+  }, [dispatch]);
   
   // --- REFS ---
   const dragStart = useRef<{ x: number; y: number } | null>(null);

@@ -1,5 +1,6 @@
 import { Creature } from '../creatures/index';
 import { StatusEffect, StatusEffectType } from './types';
+import { addStatusEffectMessage } from '../utils/messageSystem';
 
 /**
  * Apply a status effect to a creature
@@ -13,6 +14,11 @@ export function applyStatusEffect(
   // Compose a message about the status effect
   const effectName = effect.name || effect.type;
   const message = `${creature.name} is ${effectName}`;
+  
+  // Use the new message system
+  addStatusEffectMessage(message);
+  
+  // Keep backward compatibility for any existing callbacks
   if (messageCallback) {
     // If it's a dispatch function, use addMessage; otherwise, call directly
     // (duck typing: if it has 'length' property of 1, it's likely a dispatch)

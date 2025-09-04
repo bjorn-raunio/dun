@@ -8,6 +8,7 @@ import { canAttackImmediately, isCreatureVisible } from '../utils/pathfinding';
 import { validateCombat } from '../validation/combat';
 import { executeMovement } from '../utils/movement';
 import { CreatureMovement } from '../creatures/movement';
+import { addCombatMessage } from '../utils/messageSystem';
 import { AI_MESSAGES, createMovementMessage } from '../utils/messageUtils';
 import { createAIDecision } from './helpers';
 import creatureServices from '../creatures/services';
@@ -219,7 +220,7 @@ export function executeAIDecision(
 
         return {
           success: true,
-          messages: attackResult.messages && attackResult.messages.length > 0 ? attackResult.messages : ['Attack completed'],
+          messages: [], // Messages are now handled by the centralized message system
           newState,
           targetDefeated: attackResult.targetDefeated
         };
@@ -235,9 +236,10 @@ export function executeAIDecision(
         const path = pathMap.get(destKey);
 
         if (!path) {
+          addCombatMessage(`No path found to destination (${decision.destination.x}, ${decision.destination.y})`);
           return {
             success: false,
-            messages: [`No path found to destination (${decision.destination.x}, ${decision.destination.y})`],
+            messages: [],
             newState: ai,
             targetDefeated: false
           };
@@ -262,17 +264,19 @@ export function executeAIDecision(
               message = `${message} (partial: moved ${moveResult.tilesMoved}/${moveResult.totalPathLength} tiles)`;
             }
 
+            addCombatMessage(message);
             return {
               success: true,
-              messages: [message],
+              messages: [],
               newState,
               targetDefeated: false
             };
           }
         } else {
+          addCombatMessage(moveResult.message || AI_MESSAGES.cannotMove(creature.name));
           return {
             success: false,
-            messages: [moveResult.message || AI_MESSAGES.cannotMove(creature.name)],
+            messages: [],
             newState: ai,
             targetDefeated: false
           };
@@ -282,34 +286,38 @@ export function executeAIDecision(
 
     case 'flee':
       // For now, fleeing just means ending the turn
+      addCombatMessage(AI_MESSAGES.flee(creature.name));
       return {
         success: true,
-        messages: [AI_MESSAGES.flee(creature.name)],
+        messages: [],
         newState: ai,
         targetDefeated: false
       };
 
     case 'wait':
+      addCombatMessage(AI_MESSAGES.wait(creature.name));
       return {
         success: true,
-        messages: [AI_MESSAGES.wait(creature.name)],
+        messages: [],
         newState: ai,
         targetDefeated: false
       };
 
     case 'special':
       // Handle special abilities (to be implemented)
+      addCombatMessage(AI_MESSAGES.specialAbility(creature.name));
       return {
         success: true,
-        messages: [AI_MESSAGES.specialAbility(creature.name)],
+        messages: [],
         newState: ai,
         targetDefeated: false
       };
   }
 
+  addCombatMessage(AI_MESSAGES.unknownAction(decision.type));
   return {
     success: false,
-    messages: [AI_MESSAGES.unknownAction(decision.type)],
+    messages: [],
     newState: ai,
     targetDefeated: false
   };

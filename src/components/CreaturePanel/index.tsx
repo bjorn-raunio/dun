@@ -17,7 +17,7 @@ interface CreaturePanelProps {
   onDeselect: () => void;
   onSelectCreature?: (creature: ICreature) => void;
   onCreatureUpdate?: (creature: ICreature) => void;
-  onAttack?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature, offhand?: boolean) => void;
   canAttack?: (creature: ICreature) => boolean;
 }
 
