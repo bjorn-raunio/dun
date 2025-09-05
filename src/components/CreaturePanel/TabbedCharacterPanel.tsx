@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ICreature } from '../../creatures/index';
 import { TabButton } from './TabButton';
-import { SimpleCreatureStats } from './SimpleCreatureStats';
+import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
 import { SkillsSection } from './SkillsSection';
@@ -27,36 +27,57 @@ export function TabbedCharacterPanel({
   const renderTabContent = () => {
     switch (activeTab) {
       case 'stats':
-        return <SimpleCreatureStats creature={creature} />;
+        return <CreatureStats creature={creature} />;
       case 'equipment':
         return (
-          <>
-            <EquipmentSection 
-              creature={creature} 
-              onUpdate={onUpdate}
-              onAttack={onAttack}
-              canAttack={canAttack}
-            />
-            <InventorySection 
-              creature={creature} 
-              onUpdate={onUpdate} 
-            />
-          </>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            flex: 1,
+            minHeight: 0 // Allow flex item to shrink below content size
+          }}>
+            <div style={{ flexShrink: 0 }}>
+              <EquipmentSection 
+                creature={creature} 
+                onUpdate={onUpdate}
+                onAttack={onAttack}
+                canAttack={canAttack}
+              />
+            </div>
+            <div style={{ 
+              flex: 1, 
+              overflow: 'hidden', 
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <InventorySection 
+                creature={creature} 
+                onUpdate={onUpdate} 
+              />
+            </div>
+          </div>
         );
       case 'skills':
         return <SkillsSection creature={creature} />;
       default:
-        return <SimpleCreatureStats creature={creature} />;
+        return <CreatureStats creature={creature} />;
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      flex: 1,
+      marginTop: 12,
+      minHeight: 0
+    }}>
       {/* Tab Navigation */}
       <div style={{
         display: 'flex',
         borderBottom: `1px solid ${COLORS.border}`,
-        marginBottom: 12,
+        marginBottom: 8,
       }}>
         <TabButton 
           active={activeTab === 'stats'} 
@@ -81,8 +102,10 @@ export function TabbedCharacterPanel({
       {/* Tab Content */}
       <div style={{ 
         flex: 1, 
-        overflowY: 'auto' as const,
-        paddingRight: 4, // Add some padding for scrollbar
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0 // Allow flex item to shrink below content size
       }}>
         {renderTabContent()}
       </div>

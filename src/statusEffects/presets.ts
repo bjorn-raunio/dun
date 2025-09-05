@@ -91,7 +91,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   darkness: {
-    icon: "/icons/invisible.png",
+    icon: "/icons/darkness.png",
     createEffect: (): StatusEffect => {
       return createStatusEffect('darkness', 'darkness', null, {
         name: "Darkness",
@@ -103,7 +103,7 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
   },
 
   totalDarkness: {
-    icon: "/icons/invisible.png",
+    icon: "/icons/darkness.png",
     createEffect: (): StatusEffect => {
       return createStatusEffect('darkness', 'darkness', null, {
         name: "Total Darkness",

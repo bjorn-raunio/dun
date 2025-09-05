@@ -100,7 +100,7 @@ export function EquipmentSlot({
   const shouldShowAttackButton = Boolean(onAttack && canAttack && isWeapon && !isAIControlled);
 
   return (
-    <div style={{ marginBottom: 8 }}>
+    <div style={{ marginBottom: 4 }}>
       <div style={{
         ...LAYOUT_PATTERNS.flexRowCenter,
         justifyContent: 'space-between',

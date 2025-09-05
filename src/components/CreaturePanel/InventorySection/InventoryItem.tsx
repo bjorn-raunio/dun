@@ -117,7 +117,7 @@ export function InventoryItem({
       justifyContent: 'space-between',
       padding: 6,
       ...LAYOUT_PATTERNS.card,
-      marginBottom: 4
+      marginBottom: 2
     }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 600, fontSize: 12 }}>{item.name}</div>

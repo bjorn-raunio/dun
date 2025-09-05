@@ -95,10 +95,9 @@ const CLOSE_BUTTON_STYLES = {
 };
 
 const CONTENT_STYLES = {
-  padding: 20,
-  overflowY: 'auto' as const,
+  padding: 16,
   display: 'flex',
   flexDirection: 'column' as const,
-  gap: 16,
   flex: 1,
+  overflow: 'hidden',
 };

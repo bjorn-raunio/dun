@@ -8,8 +8,8 @@ interface CreatureStatsProps {
 
 export function CreatureStats({ creature }: CreatureStatsProps) {
   return (
-    <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 20, marginTop: 8 }}>
+    <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 20, marginTop: 6 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>Movement:</span>
           <strong>{creature.movement}</strong>

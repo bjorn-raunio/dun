@@ -28,8 +28,8 @@ export function SkillsSection({ creature }: SkillsSectionProps) {
   };
 
   return (
-    <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
-      <div style={{ fontWeight: 700, marginBottom: 8, color: COLORS.text }}>Skills</div>
+    <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 8 }}>
+      <div style={{ fontWeight: 700, marginBottom: 6, color: COLORS.text }}>Skills</div>
       
       {creature.skills.length === 0 ? (
         <div style={{ opacity: 0.6, fontSize: 12, color: COLORS.textMuted }}>
@@ -75,26 +75,6 @@ export function SkillsSection({ creature }: SkillsSectionProps) {
                         lineHeight: '1.3'
                       }}>
                         {skill.description}
-                      </div>
-                    )}
-                    {skill.attributeModifiers && skill.attributeModifiers.length > 0 && (
-                      <div style={{ 
-                        fontSize: '10px',
-                        color: COLORS.primary,
-                        marginTop: 2
-                      }}>
-                        {skill.attributeModifiers.map(mod => 
-                          `${mod.value > 0 ? '+' : ''}${mod.value} ${mod.attribute}`
-                        ).join(', ')}
-                      </div>
-                    )}
-                    {skill.darkVision !== undefined && (
-                      <div style={{ 
-                        fontSize: '10px',
-                        color: COLORS.primary,
-                        marginTop: 2
-                      }}>
-                        Dark Vision: {skill.darkVision > 0 ? '+' : ''}{skill.darkVision}
                       </div>
                     )}
                   </div>

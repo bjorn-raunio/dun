@@ -16,7 +16,13 @@ export function EquipmentSection({ creature, onUpdate, onAttack, canAttack }: Eq
   const { handleUnequip, canUnequipWeaponOrShield } = useEquipment(creature, mapDefinition, onUpdate);
 
   return (
-    <div style={{ marginTop: 12, borderTop: `1px solid #ccc`, paddingTop: 12 }}>
+    <div style={{ 
+      marginTop: 8, 
+      borderTop: `1px solid #ccc`, 
+      paddingTop: 8,
+      flexShrink: 0,
+      overflow: 'hidden'
+    }}>
       <div style={{ fontWeight: 700, marginBottom: 8 }}>Equipment</div>
       <EquipmentSlot 
         slot="mainHand" 

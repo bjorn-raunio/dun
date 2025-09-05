@@ -119,7 +119,7 @@ export class QuestMap {
     this.startingTiles = startingTiles;
     this.initialCreatures = creatures;
     this.generateMapTiles(creatures);   
-    this.night = rollD6() === 1; 
+    this.night = rollD6() === 1 || true; 
     if(this.night) {
       this.rooms.forEach(room => {
         if(room.sections.some(section => section.outdoors)) {
