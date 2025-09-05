@@ -7,6 +7,7 @@ import { validateCombat } from '../../validation/combat';
 import { QuestMap } from '../../maps/types';
 import { EquipmentSystem } from '../../items/equipment';
 import { TargetingMode } from '../../game/types';
+import { DamageIndicator } from './DamageIndicator';
 
 interface CreatureOverlayProps {
   creatures: ICreature[];
@@ -130,6 +131,11 @@ export function CreatureOverlay({
             >
               ▲
             </div>
+            
+            {/* Damage indicator */}
+            <DamageIndicator 
+              creature={cr} 
+            />
           </div>
         );
       })}

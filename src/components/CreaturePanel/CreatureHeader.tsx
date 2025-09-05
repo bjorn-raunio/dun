@@ -5,9 +5,10 @@ import { COLORS, LAYOUT_PATTERNS } from '../styles';
 
 interface CreatureHeaderProps {
   creature: ICreature;
+  onExamine?: (creature: ICreature) => void;
 }
 
-export function CreatureHeader({ creature }: CreatureHeaderProps) {
+export function CreatureHeader({ creature, onExamine }: CreatureHeaderProps) {
   const activeEffects = creature.getStatusEffectManager().getActiveEffectsByPriority();
   const [hoveredEffect, setHoveredEffect] = useState<string | null>(null);
 
@@ -41,12 +42,49 @@ export function CreatureHeader({ creature }: CreatureHeaderProps) {
       )}
       <div style={{ ...LAYOUT_PATTERNS.flexColumn, alignItems: "flex-start" }}>
         <div style={{
-          fontSize: 22,
-          fontWeight: 700,
-          marginBottom: 4,
-          textAlign: "left"
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 4
         }}>
-          {creature.name}
+          <div style={{
+            fontSize: 22,
+            fontWeight: 700,
+            textAlign: "left"
+          }}>
+            {creature.name}
+          </div>
+          {onExamine && creature.isPlayerControlled() && (
+            <button
+              onClick={() => onExamine(creature)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                borderRadius: 4,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background-color 0.2s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <img
+                src={process.env.PUBLIC_URL + "/icons/examine.png"}
+                alt="Examine"
+                style={{
+                  width: 20,
+                  height: 20
+                }}
+              />
+            </button>
+          )}
         </div>
         
         {/* Status Effects */}

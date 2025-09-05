@@ -9,28 +9,60 @@ interface CreatureStatsProps {
 export function CreatureStats({ creature }: CreatureStatsProps) {
   return (
     <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 8 }}>
-        <div>Movement: <strong>{creature.remainingMovement}/{creature.movement}</strong></div>
-        <div>Agility: <strong>{creature.agility}</strong></div>
-        <div>Combat: <strong>{creature.combat}</strong></div>
-        <div>Intelligence: <strong>{creature.intelligence}</strong></div>
-        <div>Strength: <strong>{creature.strength}</strong></div>
-        <div>Mana: <strong>{creature.mana > 0 ? `${creature.remainingMana}/${creature.mana}` : '-'}</strong></div>
-        <div>Ranged: <strong>{creature.ranged}</strong></div>
-        <div>Courage: <strong>{creature.courage}</strong></div>
-        <div>Armor: <strong>{creature.naturalArmor}/{creature.getArmorValue()}</strong></div>
-        <div>Vitality: <strong style={{
-          color: creature.isDead() ? COLORS.error :
-            creature.isWounded() ? COLORS.warning : COLORS.text
-        }}>
-          {creature.remainingVitality}/{creature.vitality}
-        </strong></div>
-        <div>Perception: <strong>{creature.perception}</strong></div>
-        <div>Dexterity: <strong>{creature.dexterity}</strong></div>
-        <div>Fortune: <strong>{creature.remainingFortune}/{creature.fortune}</strong></div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", columnGap: 20, marginTop: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Movement:</span>
+          <strong>{creature.movement}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Agility:</span>
+          <strong>{creature.agility}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Combat:</span>
+          <strong>{creature.combat}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Intelligence:</span>
+          <strong>{creature.intelligence}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Strength:</span>
+          <strong>{creature.strength}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Mana:</span>
+          <strong>{creature.mana > 0 ? `${creature.mana}` : '-'}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Ranged:</span>
+          <strong>{creature.ranged}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Courage:</span>
+          <strong>{creature.courage}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Armor:</span>
+          <strong>{creature.naturalArmor}/{creature.getArmorValue()}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Vitality:</span>
+            {creature.vitality}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Perception:</span>
+          <strong>{creature.perception}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Dexterity:</span>
+          <strong>{creature.dexterity}</strong>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Fortune:</span>
+          <strong>{creature.fortune}</strong>
+        </div>
       </div>
-      <div>Actions: <strong>{creature.remainingActions}/{creature.effectiveActions}</strong></div>
-      <div>Quick Actions: <strong>{creature.remainingQuickActions}/{creature.effectiveQuickActions}</strong></div>
     </div>
   );
 }

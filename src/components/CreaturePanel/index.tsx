@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ICreature } from '../../creatures/index';
 import { CreatureHeader } from './CreatureHeader';
-import { CreatureStats } from './CreatureStats';
+import { SimpleCreatureStats } from './SimpleCreatureStats';
 import { EquipmentSection } from './EquipmentSection';
-import { InventorySection } from './InventorySection';
-import { SkillsSection } from './SkillsSection';
 import { HeroSelector } from './HeroSelector';
 import { ActionPanel } from './ActionPanel';
+import { CharacterPopup } from './CharacterPopup';
 import { useActions } from '../../game/hooks/useActions';
 
 import { COMMON_STYLES } from '../styles';
@@ -32,6 +31,17 @@ export function CreaturePanel({
 }: CreaturePanelProps) {
   // Use the useActions hook for run, search, and disengage actions
   const { handleAction } = useActions(creatures, onCreatureUpdate);
+  
+  // State for character popup
+  const [popupCreature, setPopupCreature] = useState<ICreature | null>(null);
+  
+  const handleExamine = (creature: ICreature) => {
+    setPopupCreature(creature);
+  };
+  
+  const handleClosePopup = () => {
+    setPopupCreature(null);
+  };
 
   if (!selectedCreature) {
     return (
@@ -45,26 +55,32 @@ export function CreaturePanel({
   }
 
   return (
-    <div style={PANEL_STYLES}>
-      <CreatureHeader creature={selectedCreature} />
-      <CreatureStats creature={selectedCreature} />
-      <SkillsSection creature={selectedCreature} />
-      <ActionPanel 
-        creature={selectedCreature}
-        allCreatures={creatures}
-        onAction={handleAction}
-      />
-      <EquipmentSection 
-        creature={selectedCreature} 
-        onUpdate={onCreatureUpdate}
-        onAttack={onAttack}
-        canAttack={canAttack}
-      />
-      <InventorySection 
-        creature={selectedCreature} 
-        onUpdate={onCreatureUpdate} 
-      />
-    </div>
+    <>
+      <div style={PANEL_STYLES}>
+        <CreatureHeader creature={selectedCreature} onExamine={handleExamine} />
+        <EquipmentSection 
+          creature={selectedCreature} 
+          onUpdate={onCreatureUpdate}
+          onAttack={onAttack}
+          canAttack={canAttack}
+        />
+        <SimpleCreatureStats creature={selectedCreature} />
+        <ActionPanel 
+          creature={selectedCreature}
+          allCreatures={creatures}
+          onAction={handleAction}
+        />
+      </div>
+      
+      {/* Character popup */}
+      {popupCreature && (
+        <CharacterPopup
+          creature={popupCreature}
+          onClose={handleClosePopup}
+          onCreatureUpdate={onCreatureUpdate}
+        />
+      )}
+    </>
   );
 }
 
