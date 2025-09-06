@@ -9,8 +9,7 @@ export function useActions(
     if (!creature.isPlayerControlled()) {
       return;
     }
-    const result = creature.performAction(action, allCreatures);
-    if (result.success) {
+    if (creature.performAction(action, allCreatures)) {
       onUpdate?.(creature);
     }
   }, [allCreatures, onUpdate]);

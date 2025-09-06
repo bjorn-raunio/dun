@@ -12,7 +12,7 @@ export function TabButton({ active, onClick, children }: TabButtonProps) {
     <button
       onClick={onClick}
       style={{
-        background: active ? COLORS.backgroundLight : 'transparent',
+        backgroundColor: active ? COLORS.backgroundLight : 'transparent',
         border: 'none',
         borderBottom: active ? `2px solid ${COLORS.primary}` : '2px solid transparent',
         color: active ? COLORS.text : COLORS.textMuted,

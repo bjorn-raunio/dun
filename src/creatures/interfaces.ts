@@ -2,7 +2,7 @@
 // This file contains interfaces that can be imported by other modules
 // without creating circular dependencies
 
-import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem } from '../items';
 import { MovementResult } from '../utils/movement';
 import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { CreatureGroup } from './CreatureGroup';
@@ -77,16 +77,15 @@ export interface ICreature {
   
   // Combat
   getArmorValue(): number;
-  getMainWeapon(): Weapon | RangedWeapon;
+  getMainWeapon(): BaseWeapon;
+  getMaxAttackRange(): number;
+  getUnarmedWeapon(): BaseWeapon;
   hasRangedWeapon(): boolean;
   hasShield(): boolean;
-  getAttackBonus(): number;
-  getWeaponDamage(): number;
-  getAttackRange(): number;
-  getMaxAttackRange(): number;
   getZoneOfControlRange(): number;
   getCombatState(): boolean;
   getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[];
+  getEquipmentSystem(): EquipmentSystem; // Returns cached EquipmentSystem instance
   
   // Relationships
   isPlayerControlled(): boolean;
@@ -105,7 +104,7 @@ export interface ICreature {
   
   // Actions
   canAct(): boolean;
-  performAction(action: 'run' | 'disengage' | 'search', allCreatures: ICreature[]): { success: boolean, message: string };
+  performAction(action: 'run' | 'disengage' | 'search', allCreatures: ICreature[]): boolean;
   
   // State modifiers
   takeDamage(damage: number): boolean;
@@ -143,9 +142,10 @@ export interface ICreature {
   hasStatusEffect(type: string): boolean;
   getStatusEffect(type: string): StatusEffect | null;
   getActiveStatusEffects(): StatusEffect[];
+  updateRemainingMovement(previousMovement: number): void;
   
   // Health Management
-  heal(amount: number): void;
+  heal(amount: number, removeStatusEffects: boolean): void;
   
   // Utility methods
   getDimensions(): { w: number; h: number };
@@ -153,6 +153,7 @@ export interface ICreature {
   recordTurnEndPosition(): void;
   getFacingShortName(): string | undefined;
   getAllSkills(): Array<{ name: string; type: string; description?: string }>;
+  invalidateEquipmentCache?(): void;
 }
 
 // --- Manager Interfaces ---
@@ -216,14 +217,13 @@ export interface ICreaturePositionManager {
 
 export interface ICreatureCombatManager {
   getArmorValue(): number;
-  getMainWeapon(): Weapon | RangedWeapon;
+  getMainWeapon(): BaseWeapon;
+  getUnarmedWeapon(): BaseWeapon;
+  getMaxAttackRange(): number;
   hasRangedWeapon(): boolean;
   hasShield(): boolean;
-  getAttackBonus(): number;
-  getWeaponDamage(): number;
-  getAttackRange(): number;
-  getMaxAttackRange(): number;
   getZoneOfControlRange(): number;
+  getEquipmentSystem(): EquipmentSystem;
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean;
   wasBehindTargetAtTurnStart(targetX: number, targetY: number, targetTurnStartFacing: number, attackerTurnStartX: number, attackerTurnStartY: number): boolean;
 }

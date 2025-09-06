@@ -3,6 +3,7 @@ import {
   getStatusEffectIcon
 } from './presets';
 import { Creature } from '../creatures/index';
+import { addGameMessage } from '../utils/messageSystem';
 
 export class CreatureStatusEffectManager implements StatusEffectManager {
   effects: Map<string, StatusEffect> = new Map();
@@ -15,14 +16,25 @@ export class CreatureStatusEffectManager implements StatusEffectManager {
   addEffect(effect: StatusEffect): void {
     // Check if effect of same type already exists
     const existingEffect = this.getEffect(effect.type);
-    
+    let applyEffect = false;
     if (existingEffect) {
-      // Remove existing effect to replace with new one
-      this.removeEffect(existingEffect.id);
+      // Only replace if the new effect has higher or equal priority
+      if (effect.priority >= existingEffect.priority) {
+        // Remove existing effect to replace with new one
+        this.removeEffect(existingEffect.id);
+        // Add new effect
+        applyEffect = true;
+      }
+    } else {
+      applyEffect = true;
     }
-
-    // Add new effect
-    this.effects.set(effect.id, effect);
+    if(applyEffect) {
+      // Only show message if showMessage is not explicitly set to false
+      if (effect.showMessage !== false) {
+        addGameMessage(`${this.creature.name} is ${effect.name.toLowerCase()}`);
+      }
+      this.effects.set(effect.id, effect);
+    }
   }
 
   removeEffect(effectId: string): void {
@@ -98,6 +110,7 @@ export function createStatusEffect(
     remainingTurns: duration,
     priority: 0, // Default priority
     icon: getStatusEffectIcon(type),
+    showMessage: true, // Default to showing messages
     ...overrides
   };
 

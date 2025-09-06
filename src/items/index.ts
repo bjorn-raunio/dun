@@ -1,11 +1,15 @@
-// Export all item types and classes
-export * from './types';
+// Export base classes
+export * from './base';
 
-// Export all presets
-export * from './presets';
-
-// Export all factory functions
+// Export generic factory function
 export * from './factories';
+
+// Export all presets and factories from their respective folders
+export * from './meleeWeapons';
+export * from './rangedWeapons';
+export * from './armor';
+export * from './shields';
+export * from './consumables';
 
 // Export unified equipment system
 export * from './equipment';

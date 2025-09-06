@@ -15,7 +15,7 @@ export type BasePreset = {
   mapHeight?: number;
   size: number; // 1=small, 2=medium, 3=large, 4=huge
   facing?: number; // 0-7: 0=North, 1=NE, 2=East, 3=SE, 4=South, 5=SW, 6=West, 7=NW
-  inventory?: Array<{ type: "weapon" | "ranged_weapon" | "armor" | "shield"; preset: string; id?: string }>;
+  inventory?: Array<{ type: "weapon" | "ranged_weapon" | "armor" | "shield" | "consumable"; preset: string; id?: string }>;
   equipment?: {
     mainHand?: { type: "weapon" | "ranged_weapon"; preset: string; id?: string };
     offHand?: { type: "weapon" | "ranged_weapon" | "shield"; preset: string; id?: string };
@@ -38,4 +38,9 @@ export type MonsterPreset = BasePreset & {
 
 export type MercenaryPreset = BasePreset & {
   hireCost: number;
+};
+
+export type HeroPreset = BasePreset & {
+  // Hero-specific properties can be added here
+  // For example: starting level, experience, special abilities, etc.
 };

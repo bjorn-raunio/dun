@@ -1,6 +1,6 @@
 import React from 'react';
 import { Creature, ICreature } from '../../../creatures/index';
-import { Item, Weapon, RangedWeapon } from '../../../items/types';
+import { Item, Weapon, RangedWeapon } from '../../../items';
 import { EquipmentSlot as EquipmentSlotType } from '../../../items/equipment';
 import { EquipmentSystem } from '../../../items/equipment';
 import { COLORS, LAYOUT_PATTERNS, createConditionalButtonStyle } from '../../styles';
@@ -95,7 +95,8 @@ export function EquipmentSlot({
   }
 
   // Check if this is a weapon that can be used for attack
-  const isWeapon = displayItem instanceof Weapon || displayItem instanceof RangedWeapon;
+  const isWeapon = displayItem.isWeapon();
+  const isBroken = isWeapon && (displayItem as Weapon | RangedWeapon).isBroken();
   const canAttackWithWeapon = Boolean(onAttack && canAttack && isWeapon && !isAIControlled && canAttack(creature));
   const shouldShowAttackButton = Boolean(onAttack && canAttack && isWeapon && !isAIControlled);
 
@@ -105,7 +106,8 @@ export function EquipmentSlot({
         ...LAYOUT_PATTERNS.flexRowCenter,
         justifyContent: 'space-between',
         padding: 8,
-        ...LAYOUT_PATTERNS.card
+        ...LAYOUT_PATTERNS.card,
+        ...(isBroken && { backgroundColor: '#8B0000', borderColor: '#DC143C' })
       }}>
         <div style={{ ...LAYOUT_PATTERNS.flexRowCenter, gap: 8, flex: 1 }}>
           {!shouldShowAttackButton && (
@@ -129,9 +131,9 @@ export function EquipmentSlot({
           <div style={{ 
             fontWeight: 600, 
             fontSize: 14,
-            color: COLORS.text
+            color: isBroken ? '#FFFFFF' : COLORS.text
           }}>
-            {displayItem.name}
+            {displayItem.name}{isBroken && ' (Broken)'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>

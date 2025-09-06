@@ -29,7 +29,7 @@ export const COLORS = {
 // Common styles
 export const COMMON_STYLES = {
   button: {
-    backgroundColor: COLORS.backgroundLight,
+    background: COLORS.backgroundLight,
     color: COLORS.text,
     border:  `1px solid ${COLORS.border}`,
     borderRadius: 6,
@@ -92,21 +92,21 @@ export const BUTTON_VARIANTS = {
     fontWeight: 'bold',
   },
   disabled: {
-    backgroundColor: COLORS.border,
+    background: COLORS.border,
     opacity: 0.5,
     cursor: 'not-allowed',
   },
   enabled: {
-    backgroundColor: COLORS.backgroundLight,
+    background: COLORS.backgroundLight,
     opacity: 1,
     cursor: 'pointer',
   },
   error: {
-    backgroundColor: COLORS.error,
+    background: COLORS.error,
     color: COLORS.text,
   },
   attack: {
-    backgroundColor: '#000',
+    background: '#000',
     color: COLORS.text,
     border: `2px solid ${COLORS.border}`,
   },

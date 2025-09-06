@@ -1,6 +1,6 @@
-import { Creature } from './base';
-import { CREATURE_GROUPS } from './CreatureGroup';
-import { CreatureConstructorParams } from './types';
+import { Creature } from '../base';
+import { CREATURE_GROUPS } from '../CreatureGroup';
+import { CreatureConstructorParams } from '../types';
 
 // --- Hero Class ---
 export class Hero extends Creature {

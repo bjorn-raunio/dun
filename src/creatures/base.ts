@@ -20,7 +20,7 @@ import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
 import { SkillProcessor } from '../skills';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
-import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
@@ -260,14 +260,13 @@ export abstract class Creature implements ICreature {
 
   // --- Combat Methods ---
   getArmorValue(): number { return this.combatManager.getArmorValue(); }
-  getMainWeapon(): Weapon | RangedWeapon { return this.combatManager.getMainWeapon(); }
+  getMainWeapon(): BaseWeapon { return this.combatManager.getMainWeapon(); }
+  getUnarmedWeapon(): BaseWeapon { return this.combatManager.getUnarmedWeapon(); }
+  getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
   hasRangedWeapon(): boolean { return this.combatManager.hasRangedWeapon(); }
   hasShield(): boolean { return this.combatManager.hasShield(); }
-  getAttackBonus(): number { return this.combatManager.getAttackBonus(); }
-  getWeaponDamage(): number { return this.combatManager.getWeaponDamage(); }
-  getAttackRange(): number { return this.combatManager.getAttackRange(); }
-  getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
+  getEquipmentSystem(): EquipmentSystem { return this.combatManager.getEquipmentSystem(); }
 
   // --- Skill Management ---
 
@@ -374,7 +373,7 @@ export abstract class Creature implements ICreature {
     );
   }
 
-  performAction(action: CreatureAction, allCreatures: ICreature[]): { success: boolean, message: string } {
+  performAction(action: CreatureAction, allCreatures: ICreature[]): boolean {
     switch (action) {
       case 'run':
         return this.run(allCreatures);
@@ -385,9 +384,9 @@ export abstract class Creature implements ICreature {
     }
   }
 
-  private run(allCreatures: ICreature[]): { success: boolean, message: string } {
+  private run(allCreatures: ICreature[]): boolean {
     if (!validateAction(this, 'run', allCreatures)) {
-      return { success: false, message: '' };
+      return false;
     }
 
     this.useAction();
@@ -401,26 +400,28 @@ export abstract class Creature implements ICreature {
       }
       this.setRemainingMovement(this.remainingMovement + roll.total);
     }
-    return { success: true, message: `${this.name} runs ${displayDiceRoll(roll.dice)}${roll.fumble ? ' (Fumble)' : ''}` };
+    addGameMessage(`${this.name} runs ${displayDiceRoll(roll.dice)}${roll.fumble ? ' (Fumble)' : ''}`);
+    return true;
   }
 
-  private disengage(allCreatures: ICreature[]): { success: boolean, message: string } {
+  private disengage(allCreatures: ICreature[]): boolean {
     if (!validateAction(this, 'disengage', allCreatures)) {
-      return { success: false, message: '' };
+      return false;
     }
     this.endTurn();
-    return { success: true, message: `${this.name} disengages` };
+    addGameMessage(`${this.name} disengages`);
+    return true;
   }
 
-  private search(): { success: boolean, message: string } {
+  private search(): boolean {
     if (!validateAction(this, 'search', [])) {
-      return { success: false, message: '' };
+      return false;
     }
 
     // Use an action to search (could reveal hidden items, traps, or enemies)
     this.useAction();
-
-    return { success: true, message: `${this.name} searches` };
+    addGameMessage(`${this.name} searches`);
+    return true;
   }
 
   performAttributeTest(attributeName: keyof Attributes, modifier: number = 0): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
@@ -560,19 +561,13 @@ export abstract class Creature implements ICreature {
   addStatusEffect(effect: StatusEffect): void {
     const previousMovement = this.movement;
     this.statusEffectManager.addEffect(effect);    
-    this.updateRemaining(previousMovement);
+    this.updateRemainingMovement(previousMovement);
   }
 
   removeStatusEffect(effectId: string): void {
     const previousMovement = this.movement;
     this.statusEffectManager.removeEffect(effectId);
-    this.updateRemaining(previousMovement);
-  }
-
-  private updateRemaining(previousMovement: number) {
-    if(previousMovement !== this.movement) {
-      this.stateManager.setRemainingMovement(this.stateManager.getState().remainingMovement + (this.movement - previousMovement));
-    }
+    this.updateRemainingMovement(previousMovement);
   }
 
   removeAllStatusEffects(): void {
@@ -591,11 +586,24 @@ export abstract class Creature implements ICreature {
     return this.statusEffectManager.getActiveEffects();
   }
 
+  updateRemainingMovement(previousMovement: number) {
+    if(previousMovement !== this.movement) {
+      this.stateManager.setRemainingMovement(this.stateManager.getState().remainingMovement + (this.movement - previousMovement));
+    }
+  }
+
   // --- Health Management ---
-  heal(amount: number): void {
+  heal(amount: number, removeStatusEffects: boolean = false): void {
     const newVitality = Math.min(this.remainingVitality + amount, this.vitality);
     this.stateManager.setRemainingVitality(newVitality);
     this.updateWoundedStatus();
+    if(removeStatusEffects) {
+      this.removeStatusEffect("diseased");
+      this.removeStatusEffect("poisoned");
+      this.removeStatusEffect("stunned");
+      this.removeStatusEffect("afraid");
+      this.removeStatusEffect("stationary");
+    }
   }
 
   restoreMana(amount: number): void {
@@ -661,6 +669,14 @@ export abstract class Creature implements ICreature {
   protected abstract createInstance(params: CreatureConstructorParams): Creature;
 
   /**
+   * Invalidate equipment cache when equipment changes
+   * This should be called whenever equipment is modified
+   */
+  invalidateEquipmentCache(): void {
+    (this.combatManager as any).invalidateEquipmentCache?.();
+  }
+
+  /**
    * Generic method to get effective value with status effect modifiers
    */
   private getEffectiveValue(
@@ -695,13 +711,14 @@ export abstract class Creature implements ICreature {
   }
 
   /**
-   * Get the effective value of an attribute considering skill modifiers and status effects
+   * Get the effective value of an attribute considering skill modifiers, equipment modifiers, and status effects
    */
   private getEffectiveAttribute(attributeName: keyof Attributes): number {
-    return SkillProcessor.getEffectiveAttribute(
+    return SkillProcessor.getEffectiveAttributeWithEquipment(
       this.attributes[attributeName] ?? 0,
       attributeName,
       this.skills,
+      this.equipment,
       this.getActiveStatusEffects()
     );
   }

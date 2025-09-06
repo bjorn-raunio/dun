@@ -3,7 +3,7 @@ import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
 import { CombatResult } from './types';
-import { applyStatusEffect, STATUS_EFFECT_PRESETS } from '../../statusEffects';
+import { STATUS_EFFECT_PRESETS } from '../../statusEffects';
 import {
   executeToHitRollMelee,
   executeToHitRollRanged,
@@ -13,10 +13,11 @@ import {
 import { getDirectionFromTo } from '../geometry';
 import { isAreaStandable } from '../pathfinding/helpers';
 import { QuestMap } from '../../maps/types';
-import { RangedWeapon, Weapon } from '../../items/types';
+import { BaseWeapon, RangedWeapon, Weapon, WeaponAttack } from '../../items';
 import { CombatTriggers } from './combatTriggers';
 import { diagonalMovementBlocked } from '../movement';
 import { addCombatMessage } from '../messageSystem';
+import { calculateDistanceBetween } from '../pathfinding';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building
@@ -38,17 +39,8 @@ export function executeCombat(
   }
 
   // Determine the weapon being used for the attack
-  const equipment = new EquipmentSystem(attacker.equipment);
+  const equipment = attacker.getEquipmentSystem();
   const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
-
-  if (!weapon) {
-    addCombatMessage(`${attacker.name} has no weapon equipped.`);
-    return {
-      success: false,
-      damage: 0,
-      targetDefeated: false
-    };
-  }
 
   // Use consolidated validation
   const validation = validateCombat(attacker, target, weapon, allCreatures, mapDefinition);
@@ -84,8 +76,8 @@ export type CombatEventName = typeof COMBAT_EVENTS[keyof typeof COMBAT_EVENTS];
 export interface CombatEventData {
   attacker: Creature;
   target: Creature;
-  weapon: Weapon | RangedWeapon;
-  isRanged: boolean;
+  weapon: BaseWeapon;
+  attack: WeaponAttack;
   mapDefinition?: QuestMap;
 }
 
@@ -95,26 +87,43 @@ export interface CombatEventData {
 function executeCombatPhase(
   attacker: Creature,
   target: Creature,
-  weapon: Weapon | RangedWeapon,
+  weapon: BaseWeapon,
   allCreatures: Creature[],
   mapDefinition: QuestMap
 ): CombatResult {
-  // Determine if this is a ranged attack from the weapon
-  const isRanged = weapon instanceof RangedWeapon;
-  
+  if(!attacker.x || !attacker.y || !target.x || !target.y) {
+    return {
+      success: false,
+      damage: 0,
+      targetDefeated: false
+    };
+  }
+
+  let attack: WeaponAttack | undefined;
+  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
+  weapon.attacks.forEach(a => {
+    if(distance >= a.minRange && distance <= a.range) {
+      attack = a;
+    }
+  });
+
+  if(!attack) {
+    weapon = attacker.getUnarmedWeapon();
+    attack = weapon.attacks[0];
+  }
+
   const combatEventData: CombatEventData = {
     attacker,
     target,
     weapon,
-    isRanged,
+    attack,
     mapDefinition
   };
 
   // === PART 1: TO-HIT ROLL ===
-  const toHitResult = isRanged
+  const toHitResult = attack.isRanged
     ? executeToHitRollRanged(combatEventData)
     : executeToHitRollMelee(combatEventData, mapDefinition);
-  addCombatMessage(toHitResult.toHitMessage);
 
   // Consume action (regardless of hit or miss)
   attacker.setRemainingActions(attacker.remainingActions - 1);
@@ -140,13 +149,13 @@ function executeCombatPhase(
     // Universal rule: Double critical hits apply knocked down status unless target has greater size
     if (target.size <= attacker.size) {
       const knockedDownEffect = STATUS_EFFECT_PRESETS.knockedDown.createEffect();
-      applyStatusEffect(target, knockedDownEffect);
+      target.addStatusEffect(knockedDownEffect);
     }
   }
 
   let pushbackResult = null;
   let bonusDamage = 0;
-  if (!isRanged) {
+  if (!attack.isRanged) {
     pushbackResult = pushback(attacker, target, allCreatures, mapDefinition);
     bonusDamage += pushbackResult.bonusDamage;
   }
@@ -168,10 +177,9 @@ function executeCombatPhase(
   const damageResult = executeDamageRoll(
     attacker,
     target,
-    weapon,
+    attack,
     toHitResult.attackerDoubleCritical,
     toHitResult.criticalHit,
-    isRanged,
     bonusDamage
   );
   addCombatMessage(damageResult.damageMessage);

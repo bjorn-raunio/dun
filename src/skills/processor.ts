@@ -1,26 +1,50 @@
 import { Skill } from './types';
 import { Attributes, StatusEffect } from '../statusEffects';
+import { EquipmentSlots } from '../items/equipment';
 
 // --- Skill Processor ---
 // This class handles calculating effective attributes based on creature skills
 
 export class SkillProcessor {
+
   /**
-   * Calculate the effective value of an attribute considering skill modifiers and status effects
+   * Calculate the effective value of an attribute considering skill modifiers, equipment modifiers, and status effects
    */
-  static getEffectiveAttribute(
+  static getEffectiveAttributeWithEquipment(
     baseValue: number,
     attributeName: keyof Attributes,
     skills: Skill[],
+    equipment: EquipmentSlots,
     statusEffects: StatusEffect[] = []
   ): number {
     let effectiveValue = baseValue;
 
     // Apply skill modifiers (all are flat)
-    const modifiers = this.getAttributeModifiers(attributeName, skills);
-
-    for (const modifier of modifiers) {
+    const skillModifiers = this.getAttributeModifiers(attributeName, skills);
+    for (const modifier of skillModifiers) {
       effectiveValue += modifier.value;
+    }
+
+    // Apply equipment modifiers
+    if (equipment.mainHand && equipment.mainHand.attributeModifiers) {
+      const modifier = equipment.mainHand.attributeModifiers[attributeName];
+      if (modifier) {
+        effectiveValue += modifier;
+      }
+    }
+
+    if (equipment.offHand && equipment.offHand.attributeModifiers) {
+      const modifier = equipment.offHand.attributeModifiers[attributeName];
+      if (modifier) {
+        effectiveValue += modifier;
+      }
+    }
+
+    if (equipment.armor && equipment.armor.attributeModifiers) {
+      const modifier = equipment.armor.attributeModifiers[attributeName];
+      if (modifier) {
+        effectiveValue += modifier;
+      }
     }
 
     // Apply status effect modifiers

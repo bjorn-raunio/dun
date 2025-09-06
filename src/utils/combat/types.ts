@@ -14,7 +14,6 @@ export interface CombatValidationResult extends BaseValidationResult { }
 
 export interface ToHitResult {
   hit: boolean;
-  toHitMessage: string;
   attackerRoll: number;
   defenderRoll: number;
   attackerDoubleCritical: boolean;
@@ -26,7 +25,6 @@ export interface ToHitResult {
 
 export interface RangedToHitResult {
   hit: boolean;
-  toHitMessage: string;
   attackerDoubleCritical: boolean;
   criticalHit: boolean;
   attackerDice: number[];  // Individual dice results for attacker

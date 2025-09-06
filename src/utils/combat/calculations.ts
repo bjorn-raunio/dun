@@ -1,6 +1,6 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
-import { Weapon } from '../../items/types';
+import { Weapon, WeaponAttack } from '../../items';
 import { rollD6 } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
 
@@ -18,8 +18,7 @@ export function calculateTargetsInRange(
   attacker: ICreature,
   allCreatures: ICreature[]
 ): Set<string> {
-  const equipment = new EquipmentSystem(attacker.equipment);
-  const rangeTiles = equipment.getAttackRange();
+  const rangeTiles = attacker.getMainWeapon().getValidRange().max;
   const inRange = new Set<string>();
 
   // Skip if attacker is not on the map (undefined position)
@@ -107,27 +106,12 @@ export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; 
 /**
  * Calculate effective armor value for target
  */
-export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attackerEquipment: EquipmentSystem, modifier: number = 0): number {
+export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attack: WeaponAttack, modifier: number = 0): number {
   const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
-  const weaponArmorModifier = attackerEquipment.getWeaponArmorModifier();
-  let armor = baseArmorValue + weaponArmorModifier + modifier;
+  let armor = baseArmorValue + attack.armorModifier + modifier;
   if(armor < 2) armor = 2;
   if(armor > 6) armor = 6;
   return armor;
-}
-
-/**
- * Generate weapon modifier text for display
- */
-export function generateWeaponModifierText(weapon: Weapon | null, isUnarmed: boolean = false): string {
-  if (isUnarmed) return "weapon -1";
-  if (!weapon) return "";
-  
-  const modifier = weapon instanceof Weapon ? (weapon.combatModifier ?? 0) : 0;
-  if (modifier === 0) return "";
-  
-  const modifierText = modifier > 0 ? `+${modifier}` : `${modifier}`;
-  return `weapon ${modifierText}`;
 }
 
 /**

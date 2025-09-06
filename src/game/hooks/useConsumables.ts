@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { ICreature } from '../../creatures/index';
-import { Consumable } from '../../items/types';
+import { Consumable } from '../../items';
 import { STATUS_EFFECT_PRESETS } from '../../statusEffects/presets';
 
 export function useConsumables(creature: ICreature, onUpdate?: (creature: ICreature) => void) {
@@ -103,7 +103,7 @@ function applySelfEffect(creature: ICreature, consumable: Consumable): boolean {
   
   // Restore vitality if specified
   if (consumable.restoreVitality && consumable.restoreVitality > 0) {
-    creature.heal(consumable.restoreVitality);
+    creature.heal(consumable.restoreVitality, consumable.healStatusEffects || false);
     hasEffect = true;
   }
 

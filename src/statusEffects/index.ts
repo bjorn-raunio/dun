@@ -6,6 +6,3 @@ export { CreatureStatusEffectManager, createStatusEffect } from './manager';
 
 // Export presets and common effects
 export * from './presets';
-
-// Export utility functions
-export * from './utils';

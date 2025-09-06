@@ -1,6 +1,6 @@
 import React from 'react';
 import { Creature, ICreature } from '../../../creatures/index';
-import { Item, Weapon, RangedWeapon, Armor, Shield, Consumable } from '../../../items/types';
+import { Item, Weapon, RangedWeapon, Armor, Shield, Consumable } from '../../../items';
 import { EquipmentSlot } from '../../../items/equipment';
 import { COLORS, COMMON_STYLES, LAYOUT_PATTERNS, createButtonStyle } from '../../styles';
 import { EquipmentValidator } from '../../../items/equipment';
@@ -111,18 +111,23 @@ export function InventoryItem({
   const isConsumable = item instanceof Consumable;
   const canUse = isConsumable ? canUseConsumable(item as Consumable) : false;
 
+  // Check if weapon is broken
+  const isWeapon = item.isWeapon();
+  const isBroken = isWeapon && item.isBroken();
+
   return (
     <div style={{
       ...LAYOUT_PATTERNS.flexRowCenter,
       justifyContent: 'space-between',
       padding: 6,
       ...LAYOUT_PATTERNS.card,
-      marginBottom: 2
+      marginBottom: 2,
+      ...(isBroken && { backgroundColor: '#8B0000', borderColor: '#DC143C' })
     }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 12 }}>{item.name}</div>
+        <div style={{ fontWeight: 600, fontSize: 12, color: isBroken ? '#FFFFFF' : 'inherit' }}>{item.name}{isBroken && ' (Broken)'}</div>
         {isConsumable && (
-          <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>
+          <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2, color: isBroken ? '#FFFFFF' : 'inherit' }}>
             {(item as Consumable).effect}
           </div>
         )}

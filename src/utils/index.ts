@@ -9,6 +9,7 @@ export * from './idGeneration';
 export * from './logging';
 export * from './loggingConfig';
 export * from './movement';
+export * from './itemDropping';
 export * from '../statusEffects';
 
 // Export pathfinding functions with explicit naming to avoid conflicts

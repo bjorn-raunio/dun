@@ -22,7 +22,7 @@ export function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
           onClick={() => onViewChange('quest')}
           style={{
             ...COMMON_STYLES.button,
-            backgroundColor: currentView === 'quest' ? COLORS.primary : COLORS.backgroundLight,
+            background: currentView === 'quest' ? COLORS.primary : COLORS.backgroundLight,
             color: currentView === 'quest' ? COLORS.text : COLORS.textMuted,
             border: `2px solid ${currentView === 'quest' ? COLORS.primary : COLORS.border}`,
             fontWeight: currentView === 'quest' ? 700 : 500,
@@ -34,7 +34,7 @@ export function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
           onClick={() => onViewChange('world')}
           style={{
             ...COMMON_STYLES.button,
-            backgroundColor: currentView === 'world' ? COLORS.primary : COLORS.backgroundLight,
+            background: currentView === 'world' ? COLORS.primary : COLORS.backgroundLight,
             color: currentView === 'world' ? COLORS.text : COLORS.textMuted,
             border: `2px solid ${currentView === 'world' ? COLORS.primary : COLORS.border}`,
             fontWeight: currentView === 'world' ? 700 : 500,

@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
 import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentManager, EquipmentValidator } from '../../items/equipment';
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items/types';
+import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items';
 import { EquipmentSlot } from '../../items/equipment';
 import { QuestMap } from '../../maps/types';
+import { dropItem } from '../../utils/itemDropping';
 
 export function useEquipment(
-  creature: ICreature, 
-  mapDefinition: QuestMap | null, 
+  creature: ICreature,
+  mapDefinition: QuestMap | null,
   onUpdate?: (creature: ICreature) => void
 ) {
 
@@ -33,9 +34,7 @@ export function useEquipment(
     }
 
     // If equipping a two-handed weapon to main hand, unequip both hands
-    if (slot === 'mainHand' &&
-      ((item instanceof Weapon && item.hands === 2) ||
-        (item instanceof RangedWeapon && item.hands === 2))) {
+    if (slot === 'mainHand' && item.isWeapon() && item.hands === 2) {
       // Unequip off-hand item if it exists
       const offHandItem = creature.equipment.offHand;
       if (offHandItem) {
@@ -47,9 +46,7 @@ export function useEquipment(
     // If equipping any item to off-hand, check if there's a two-handed weapon in main hand that needs to be unequipped
     if (slot === 'offHand') {
       const mainHandItem = creature.equipment.mainHand;
-      if (mainHandItem &&
-        ((mainHandItem instanceof Weapon && mainHandItem.hands === 2) ||
-          (mainHandItem instanceof RangedWeapon && mainHandItem.hands === 2))) {
+      if (mainHandItem && mainHandItem.isWeapon() && mainHandItem.hands === 2) {
         // Unequip the two-handed weapon from main-hand
         equipmentManager.unequip(creature, 'mainHand');
         creature.inventory.push(mainHandItem);
@@ -139,14 +136,9 @@ export function useEquipment(
     return EquipmentValidator.canPerformUnequipAction(slot, creature);
   }, [creature]);
 
-  const handleDropItem = useCallback((item: Item) => {
+  const handleDropItem = useCallback((item: Item, force: boolean = false, slot?: EquipmentSlot) => {
     // Prevent dropping items for AI-controlled creatures
     if (creature.isAIControlled()) {
-      return;
-    }
-
-    // Check if creature has position
-    if (creature.x === undefined || creature.y === undefined) {
       return;
     }
 
@@ -155,14 +147,10 @@ export function useEquipment(
       return;
     }
 
-    // Remove item from inventory
-    const itemIndex = creature.inventory.findIndex(invItem => invItem.id === item.id);
-    if (itemIndex !== -1) {
-      creature.inventory.splice(itemIndex, 1);
-      
-      // Add item to the tile the creature is standing on
-      mapDefinition.addItemToTile(creature.x, creature.y, item);
-      
+    // Use the utility function to drop the item
+    const success = dropItem(creature, mapDefinition, item, force, slot);
+    
+    if (success) {
       onUpdate?.(creature);
     }
   }, [creature, mapDefinition, onUpdate]);

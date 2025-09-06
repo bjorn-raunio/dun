@@ -2,9 +2,12 @@ import { Creature } from '../creatures/index';
 
 // --- Status Effect Types ---
 export type StatusEffectType = 
-  | "poison" 
+  | "diseased" 
+  | "poisoned" 
   | "wounded" 
   | "stunned"
+  | "afraid"
+  | "stationary"
   | "knockedDown"
   | "darkness"
   | "totalDarkness"
@@ -44,6 +47,7 @@ export interface StatusEffect {
   
   // Internal properties
   isAutomatic?: boolean; // Marks effects that are automatically generated (e.g., wounded status)
+  showMessage?: boolean; // Whether to show a message when this effect is applied (default: true)
 }
 
 export interface StatusEffectManager {

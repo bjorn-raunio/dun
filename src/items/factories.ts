@@ -1,7 +1,3 @@
-import { Weapon, RangedWeapon, Armor, Shield, Consumable } from './types';
-import { weaponPresets, rangedPresets, armorPresets, shieldPresets, consumablePresets } from './presets';
-import { Item } from './types';
-
 /**
  * Generic item factory function that eliminates code duplication
  * @param ItemClass The constructor class to instantiate
@@ -10,7 +6,7 @@ import { Item } from './types';
  * @param overrides Optional overrides to apply to the preset
  * @returns A new instance of the specified item class
  */
-function createItem<T extends { new (config: any): any }>(
+export function createItem<T extends { new (config: any): any }>(
   ItemClass: T,
   presetId: string,
   presetMap: Record<string, ConstructorParameters<T>[0]>,
@@ -25,39 +21,4 @@ function createItem<T extends { new (config: any): any }>(
     ...preset,
     ...overrides
   });
-}
-
-/**
- * Create a weapon using the generic factory
- */
-export function createWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof Weapon>[0]> & { id?: string }): Weapon {
-  return createItem(Weapon, presetId, weaponPresets, overrides);
-}
-
-/**
- * Create a ranged weapon using the generic factory
- */
-export function createRangedWeapon(presetId: string, overrides?: Partial<ConstructorParameters<typeof RangedWeapon>[0]> & { id?: string }): RangedWeapon {
-  return createItem(RangedWeapon, presetId, rangedPresets, overrides);
-}
-
-/**
- * Create armor using the generic factory
- */
-export function createArmor(presetId: string, overrides?: Partial<ConstructorParameters<typeof Armor>[0]> & { id?: string }): Armor {
-  return createItem(Armor, presetId, armorPresets, overrides);
-}
-
-/**
- * Create a shield using the generic factory
- */
-export function createShield(presetId: string, overrides?: Partial<ConstructorParameters<typeof Shield>[0]> & { id?: string }): Shield {
-  return createItem(Shield, presetId, shieldPresets, overrides);
-}
-
-/**
- * Create a consumable using the generic factory
- */
-export function createConsumable(presetId: string, overrides?: Partial<ConstructorParameters<typeof Consumable>[0]> & { id?: string }): Consumable {
-  return createItem(Consumable, presetId, consumablePresets, overrides);
 }

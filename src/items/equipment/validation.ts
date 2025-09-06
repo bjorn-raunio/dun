@@ -1,13 +1,17 @@
 import { ICreature } from '../../creatures/index';
-import { Weapon, RangedWeapon, Armor, Shield, Item } from '../types';
+import { BaseWeapon, Item } from '../base';
+import { Weapon } from '../meleeWeapons';
+import { RangedWeapon } from '../rangedWeapons';
+import { Armor } from '../armor';
+import { Shield } from '../shields';
 
 // --- Equipment Slot Types ---
 
 export type EquipmentSlot = 'mainHand' | 'offHand' | 'armor';
 
 export interface EquipmentSlots {
-  mainHand: Weapon | RangedWeapon | undefined;
-  offHand: Weapon | RangedWeapon | Shield | undefined;
+  mainHand: BaseWeapon | undefined;
+  offHand: BaseWeapon | Shield | undefined;
   armor: Armor | undefined;
 }
 
@@ -63,7 +67,7 @@ export class EquipmentValidator {
       };
     }
 
-    if (offHand && (offHand instanceof Weapon || offHand instanceof RangedWeapon) && offHand.hands === 2 && mainHand) {
+    if (offHand && offHand.isWeapon() && offHand.hands === 2 && mainHand) {
       return {
         isValid: false,
         reason: 'Cannot equip main-hand item with two-handed weapon',
@@ -85,7 +89,7 @@ export class EquipmentValidator {
   ): EquipmentActionValidation {
     // Check if this is a weapon/shield action
     const isWeaponOrShieldAction = (slot === 'mainHand' || slot === 'offHand') &&
-      (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield);
+      (item.isWeapon() || item instanceof Shield);
 
     // Check if this is an armor action
     const isArmorAction = slot === 'armor' && item instanceof Armor;
@@ -126,7 +130,7 @@ export class EquipmentValidator {
     // For armor actions, check if we have regular actions available and haven't moved yet
     if (isArmorAction) {
       const hasAction = creature.remainingActions > 0;
-      const hasFullMovement = creature.remainingMovement === creature.movement;
+      const hasFullMovement = creature.remainingMovement >= creature.movement;
 
       if (!hasAction) {
         return {
@@ -268,17 +272,17 @@ export class EquipmentValidator {
   private static validateSlotCompatibility(item: Item, slot: EquipmentSlot): EquipmentValidation {
     switch (slot) {
       case 'mainHand':
-        if (!(item instanceof Weapon || item instanceof RangedWeapon)) {
+        if (!item.isWeapon()) {
           return { isValid: false, reason: 'Main hand can only equip weapons', slot };
         }
         break;
 
       case 'offHand':
-        if (!(item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield)) {
+        if (!(item.isWeapon() || item instanceof Shield)) {
           return { isValid: false, reason: 'Off hand can only equip weapons or shields', slot };
         }
         // Two-handed weapons can only be equipped to main hand
-        if ((item instanceof Weapon || item instanceof RangedWeapon) && item.hands === 2) {
+        if (item.isWeapon() && item.hands === 2) {
           return { isValid: false, reason: 'Two-handed weapons can only be equipped to main hand', slot };
         }
         break;
@@ -299,18 +303,17 @@ export class EquipmentValidator {
   // --- Static Utility Methods ---
 
   static isItemEquippable(item: Item): boolean {
-    return item instanceof Weapon ||
-      item instanceof RangedWeapon ||
+    return item.isWeapon() ||
       item instanceof Armor ||
       item instanceof Shield;
   }
 
   static isValidWeapon(item: Item): boolean {
-    return item instanceof Weapon || item instanceof RangedWeapon;
+    return item.isWeapon();
   }
 
   static isValidOffHand(item: Item): boolean {
-    return item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield;
+    return item.isWeapon() || item instanceof Shield;
   }
 
   static isValidArmor(item: Item): boolean {

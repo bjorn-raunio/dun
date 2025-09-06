@@ -12,7 +12,6 @@ export {
   isBackAttack,
   checkShieldBlock,
   calculateEffectiveArmor,
-  generateWeaponModifierText,
   calculateElevationBonus
 } from './calculations';
 

@@ -8,7 +8,7 @@ export interface StatusEffectPreset {
   createEffect: (name?: string, duration?: number, value?: number) => StatusEffect;
 }
 
-const standardAttributeModifiers = {
+export const standardAttributeModifiers = {
   movement: -1,
   combat: -1,
   ranged: -1,
@@ -21,11 +21,23 @@ const standardAttributeModifiers = {
 }
 
 export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset> = {
-  poison: {
+  diseased: {
+    icon: "/icons/diseased.png",
+    createEffect: (): StatusEffect => {
+      return createStatusEffect('diseased', 'diseased', null, {
+        name: "Diseased",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        }
+      });
+    }
+  },
+
+  poisoned: {
     icon: "/icons/poisoned.png",
     createEffect: (): StatusEffect => {
-      return createStatusEffect('poison', 'poison', null, {
-        name: "Poison",
+      return createStatusEffect('poisoned', 'poisoned', null, {
+        name: "Poisoned",
         attributeModifiers: {
           ...standardAttributeModifiers
         }
@@ -66,6 +78,30 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     }
   },
 
+  afraid: {
+    icon: "/icons/afraid.png",
+    createEffect: (): StatusEffect => {
+      return createStatusEffect('afraid', 'afraid', null, {
+        name: "Afraid",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        }
+      });
+    }
+  },
+
+  stationary: {
+    icon: "/icons/stationary.png",
+    createEffect: (): StatusEffect => {
+      return createStatusEffect('stationary', 'stationary', null, {
+        name: "Stationary",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        }
+      });
+    }
+  },
+
   knockedDown: {
     icon: "/icons/knockedDown.png",
     createEffect: (): StatusEffect => {
@@ -97,7 +133,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         name: "Darkness",
         attributeModifiers: {
           ...standardAttributeModifiers
-        }
+        },
+        showMessage: false
       });
     }
   },
@@ -117,7 +154,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
           intelligence: -2,
           perception: -2,
           dexterity: -2
-        }
+        },
+        showMessage: false
       });
     }
   },
@@ -130,7 +168,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         description: `+${value} strength`,
         attributeModifiers: {
           strength: value
-        }
+        },
+        showMessage: false
       });
     }
   },
@@ -144,7 +183,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
         attributeModifiers: {
           movement: value,
           agility: value
-        }
+        },
+        showMessage: false
       });
     }
   },
@@ -155,7 +195,8 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
       return createStatusEffect('heroism', 'heroism', duration, {
         name: name ?? "Heroism",
         description: `+${value} action`,
-        actionModifier: value
+        actionModifier: value,
+        showMessage: false
       });
     }
   },

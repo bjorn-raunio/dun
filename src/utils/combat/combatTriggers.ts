@@ -11,7 +11,7 @@ export class CombatTriggers {
     for (const skill of data.attacker.skills) {
       if (skill.combatTriggers) {
         for (const trigger of skill.combatTriggers) {
-          if (trigger.event === triggerType && (!trigger.type || (data.isRanged && trigger.type === "ranged" || !data.isRanged && trigger.type === "melee"))) {
+          if (trigger.event === triggerType && (!trigger.type || ((data.attack.isRanged && trigger.type === "ranged") || (!data.attack.isRanged && trigger.type === "melee")))) {
             addCombatMessage(
               `${data.attacker.name}'s ${skill.name} activates`
             );

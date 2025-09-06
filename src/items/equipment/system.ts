@@ -1,5 +1,10 @@
-import { Weapon, RangedWeapon, Armor, Shield, Item } from '../types';
-import { createWeapon } from '../factories';
+import { Item } from '../base';
+import { Weapon } from '../meleeWeapons';
+import { RangedWeapon } from '../rangedWeapons';
+import { Armor } from '../armor';
+import { Shield } from '../shields';
+import { BaseWeapon } from '../base';
+import { createWeapon } from '../meleeWeapons';
 import { EquipmentSlot, EquipmentSlots, EquipmentValidation, EquipmentValidator } from './validation';
 import { CombatCalculator } from './combat';
 import { ICreature } from '../../creatures/index';
@@ -8,14 +13,20 @@ import { ICreature } from '../../creatures/index';
 
 export class EquipmentSystem {
   private slots: EquipmentSlots = { mainHand: undefined, offHand: undefined, armor: undefined };
-  private unarmedWeapon: Weapon;
+  private static sharedUnarmedWeapon: Weapon | null = null;
 
   constructor(initialEquipment?: Partial<EquipmentSlots>) {
     if (initialEquipment) {
       this.slots = { ...initialEquipment, mainHand: initialEquipment.mainHand ?? undefined, offHand: initialEquipment.offHand ?? undefined, armor: initialEquipment.armor ?? undefined };
     }
-    // Every creature gets a default unarmed weapon
-    this.unarmedWeapon = createWeapon('unarmed');
+    // Use shared unarmed weapon to prevent creating new instances
+    if (!EquipmentSystem.sharedUnarmedWeapon) {
+      EquipmentSystem.sharedUnarmedWeapon = createWeapon('unarmed');
+    }
+  }
+
+  private get unarmedWeapon(): Weapon {
+    return EquipmentSystem.sharedUnarmedWeapon!;
   }
 
   // --- Equipment Management ---
@@ -30,9 +41,9 @@ export class EquipmentSystem {
     }
     
     // Type assertion to ensure the item is compatible with the slot
-    if (slot === 'mainHand' && (item instanceof Weapon || item instanceof RangedWeapon)) {
+    if (slot === 'mainHand' && item.isWeapon()) {
       this.slots[slot] = item;
-    } else if (slot === 'offHand' && (item instanceof Weapon || item instanceof RangedWeapon || item instanceof Shield)) {
+    } else if (slot === 'offHand' && (item.isWeapon() || item instanceof Shield)) {
       this.slots[slot] = item;
     } else if (slot === 'armor' && item instanceof Armor) {
       this.slots[slot] = item;
@@ -87,8 +98,8 @@ export class EquipmentSystem {
    * Check if creature has a ranged weapon equipped
    */
   hasRangedWeapon(): boolean {
-    return this.slots.mainHand instanceof RangedWeapon || 
-           this.slots.offHand instanceof RangedWeapon;
+    return (this.slots.mainHand?.isWeapon() && this.slots.mainHand.isRangedWeapon()) || 
+           (this.slots.offHand?.isWeapon() && this.slots.offHand.isRangedWeapon()) || false;
   }
 
   /**
@@ -113,62 +124,106 @@ export class EquipmentSystem {
    * Check if creature has a melee weapon equipped
    */
   hasMeleeWeapon(): boolean {
-    return this.slots.mainHand instanceof Weapon || 
-           this.slots.offHand instanceof Weapon ||
+    return (this.slots.mainHand?.isWeapon() && this.slots.mainHand.isMeleeWeapon()) || 
+           (this.slots.offHand?.isWeapon() && this.slots.offHand.isMeleeWeapon()) ||
            this.isUnarmed(); // Unarmed creatures count as having a melee weapon
   }
 
   /**
-   * Check if creature is unarmed (no weapons equipped)
-   * A creature is considered unarmed if they have no weapons, even if they have a shield
+   * Check if creature is unarmed (no weapons equipped or all weapons are broken)
+   * A creature is considered unarmed if they have no weapons or all weapons are broken, even if they have a shield
    */
   isUnarmed(): boolean {
-    const hasMainHandWeapon = this.slots.mainHand instanceof Weapon || this.slots.mainHand instanceof RangedWeapon;
-    const hasOffHandWeapon = this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon;
+    const mainHandWeapon = this.getWeaponFromSlot(this.slots.mainHand);
+    const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
     
-    return !hasMainHandWeapon && !hasOffHandWeapon;
+    const hasMainHandWeapon = mainHandWeapon !== null;
+    const hasOffHandWeapon = offHandWeapon !== null;
+    
+    // If no weapons at all, creature is unarmed
+    if (!hasMainHandWeapon && !hasOffHandWeapon) {
+      return true;
+    }
+    
+    // If main hand weapon is broken and no off hand weapon, creature is unarmed
+    if (hasMainHandWeapon && mainHandWeapon.isBroken() && !hasOffHandWeapon) {
+      return true;
+    }
+    
+    // If both weapons are broken, creature is unarmed
+    if (hasMainHandWeapon && hasOffHandWeapon && mainHandWeapon.isBroken() && offHandWeapon.isBroken()) {
+      return true;
+    }
+    
+    // Creature has at least one functional weapon
+    return false;
+  }
+
+  /**
+   * Helper method to safely extract weapon from slot
+   */
+  private getWeaponFromSlot(item: Item | undefined): BaseWeapon | null {
+    if (item?.isWeapon()) {
+      return item;
+    }
+    return null;
   }
 
   /**
    * Get the main weapon (prioritizes main hand, then off hand)
-   * Returns unarmed weapon if no weapon is equipped
+   * Returns unarmed weapon if no weapon is equipped or all weapons are broken
    */
-  getMainWeapon(): Weapon | RangedWeapon {
-    if (this.slots.mainHand instanceof Weapon || this.slots.mainHand instanceof RangedWeapon) {
-      return this.slots.mainHand;
+  getMainWeapon(): BaseWeapon {
+    const mainHandWeapon = this.getWeaponFromSlot(this.slots.mainHand);
+    const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
+    
+    // Try main hand first
+    if (mainHandWeapon && !mainHandWeapon.isBroken()) {
+      return mainHandWeapon;
     }
-    if (this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon) {
-      return this.slots.offHand;
+    
+    // Try off hand if main hand is broken or empty
+    if (offHandWeapon && !offHandWeapon.isBroken()) {
+      return offHandWeapon;
     }
-    // Return unarmed weapon if no weapon is equipped
+    
+    // Return unarmed weapon if no functional weapons
     return this.unarmedWeapon;
   }
 
   /**
    * Get the offhand weapon
-   * Returns unarmed weapon if no offhand weapon is equipped
+   * Returns unarmed weapon if no offhand weapon is equipped or offhand weapon is broken
    */
-  getOffHandWeapon(): Weapon | RangedWeapon {
-    if (this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon) {
-      return this.slots.offHand;
+  getOffHandWeapon(): BaseWeapon {
+    const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
+    
+    if (offHandWeapon && !offHandWeapon.isBroken()) {
+      return offHandWeapon;
     }
-    // Return unarmed weapon if no offhand weapon is equipped
+    
+    // Return unarmed weapon if no functional offhand weapon
+    return this.unarmedWeapon;
+  }
+
+  getUnarmedWeapon(): BaseWeapon {
     return this.unarmedWeapon;
   }
 
   /**
    * Get the weapon with the highest combat bonus
    * Compares main hand, offhand, and unarmed weapons
+   * Broken weapons are treated as unarmed
    */
-  getHighestCombatBonusWeapon(): Weapon | RangedWeapon {
-    const mainWeapon = this.slots.mainHand instanceof Weapon || this.slots.mainHand instanceof RangedWeapon ? this.slots.mainHand : null;
-    const offHandWeapon = this.slots.offHand instanceof Weapon || this.slots.offHand instanceof RangedWeapon ? this.slots.offHand : null;
+  getHighestCombatBonusWeapon(): BaseWeapon {
+    const mainWeapon = this.getWeaponFromSlot(this.slots.mainHand);
+    const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
     
-    // Calculate combat bonuses for each weapon
-    const mainBonus = mainWeapon ? CombatCalculator.getAttackBonus(mainWeapon, 0, 0) : -Infinity;
-    const offHandBonus = offHandWeapon ? CombatCalculator.getAttackBonus(offHandWeapon, 0, 0) : -Infinity;
-    const unarmedBonus = CombatCalculator.getAttackBonus(this.unarmedWeapon, 0, 0);
-    
+    // Calculate combat bonuses for each weapon (broken weapons use unarmed bonus)
+    const mainBonus = mainWeapon && !mainWeapon.isBroken() ? mainWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -Infinity : -Infinity;
+    const offHandBonus = offHandWeapon && !offHandWeapon.isBroken() ? offHandWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -Infinity : -Infinity;
+    const unarmedBonus = this.unarmedWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -1;
+
     // Find the weapon with the highest bonus
     if (mainBonus >= offHandBonus && mainBonus >= unarmedBonus) {
       return mainWeapon!;
@@ -200,48 +255,6 @@ export class EquipmentSystem {
    */
   getEffectiveArmor(naturalArmor: number): number {
     return CombatCalculator.getEffectiveArmor(naturalArmor, this.slots.armor);
-  }
-
-  /**
-   * Get weapon damage value
-   */
-  getWeaponDamage(): number {
-    return CombatCalculator.getWeaponDamage(this.getMainWeapon());
-  }
-
-  /**
-   * Get weapon range information
-   */
-  getWeaponRange(rangeType: 'normal' | 'long' | 'info' = 'normal'): number | { rangeTiles: number; isRanged: boolean } {
-    return CombatCalculator.getWeaponRange(this.slots.mainHand, this.slots.offHand, rangeType);
-  }
-
-  /**
-   * Get attack range (normal range)
-   */
-  getAttackRange(): number {
-    return this.getWeaponRange('normal') as number;
-  }
-
-  /**
-   * Get maximum attack range (long range for ranged weapons, normal range for melee)
-   */
-  getMaxAttackRange(): number {
-    return this.getWeaponRange('long') as number;
-  }
-
-  /**
-   * Get attack bonus based on weapon type and modifiers
-   */
-  getAttackBonus(combatBonus: number, rangedBonus: number): number {
-    return CombatCalculator.getAttackBonus(this.getMainWeapon(), combatBonus, rangedBonus);
-  }
-
-  /**
-   * Get armor modifier from weapon
-   */
-  getWeaponArmorModifier(): number {
-    return CombatCalculator.getWeaponArmorModifier(this.getMainWeapon());
   }
 
   /**

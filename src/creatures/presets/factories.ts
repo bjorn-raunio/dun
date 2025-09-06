@@ -1,12 +1,12 @@
 import { Monster, Mercenary, CreatureGroup, CreaturePositionOrUndefined } from '../index';
-import { createWeapon, createRangedWeapon, createArmor, createShield } from '../../items';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../../items';
 import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
 import { monsterPresets } from './monsters';
 import { mercenaryPresets } from './mercenaries';
 import { MonsterPreset, MercenaryPreset } from './types';
 import { getWeaponLoadoutById, getArmorLoadoutById, getRandomWeaponLoadout, getRandomArmorLoadout } from './loadouts';
 import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
-import { Item } from '../../items/types';
+import { Item } from '../../items';
 
 // --- Factory Functions ---
 
@@ -29,6 +29,9 @@ function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): Ite
           break;
         case "shield":
           inventory.push(createShield(itemDef.preset));
+          break;
+        case "consumable":
+          inventory.push(createConsumable(itemDef.preset));
           break;
       }
     }

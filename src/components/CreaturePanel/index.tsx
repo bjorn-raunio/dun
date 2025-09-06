@@ -6,7 +6,9 @@ import { EquipmentSection } from './EquipmentSection';
 import { HeroSelector } from './HeroSelector';
 import { ActionPanel } from './ActionPanel';
 import { CharacterPopup } from './CharacterPopup';
+import { TileContentsList } from './TileContentsList';
 import { useActions } from '../../game/hooks/useActions';
+import { useGameContext } from '../../game/GameContext';
 
 import { COMMON_STYLES } from '../styles';
 
@@ -31,6 +33,10 @@ export function CreaturePanel({
 }: CreaturePanelProps) {
   // Use the useActions hook for run, search, and disengage actions
   const { handleAction } = useActions(creatures, onCreatureUpdate);
+  
+  // Get mapDefinition from game context
+  const { state } = useGameContext();
+  const { mapDefinition } = state;
   
   // State for character popup
   const [popupCreature, setPopupCreature] = useState<ICreature | null>(null);
@@ -69,6 +75,11 @@ export function CreaturePanel({
           creature={selectedCreature}
           allCreatures={creatures}
           onAction={handleAction}
+        />
+        <TileContentsList 
+          creature={selectedCreature}
+          mapDefinition={mapDefinition}
+          onUpdate={onCreatureUpdate}
         />
       </div>
       

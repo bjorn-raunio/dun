@@ -41,13 +41,21 @@ export const questMapPresetsByCategory: Record<string, QuestMapPresetCategory> =
           }
         ],
         creatures: [
-          {
+          /*{
             type: "monster",
             variant: "human_bandit",
             position: { x: 12, y: 7, facing: 1 },
             options: {
               weaponLoadout: "broadsword",
               armorLoadout: "shield"
+            }
+          },*/
+          {
+            type: "monster",
+            variant: "shooter",
+            position: { x: 12, y: 7, facing: 1 },
+            options: {
+              weaponLoadout: "shortbow"
             }
           },
           {

@@ -6,20 +6,6 @@ import { createAIDecision, updateAIStateWithAction } from './helpers';
 import { logAI } from '../utils/logging';
 import { QuestMap } from '../maps/types';
 
-// --- AI Movement Logic ---
-
-/**
- * Check if a creature would be in attack range from a specific position
- */
-function canAttackFromPosition(x: number, y: number, creature: ICreature, target: ICreature): boolean {
-  if (target.x === undefined || target.y === undefined) {
-    return false;
-  }
-  const distance = Math.max(Math.abs(target.x - x), Math.abs(target.y - y));
-  const attackRange = creature.getAttackRange();
-  return distance <= attackRange;
-}
-
 /**
  * Evaluate a movement option based solely on the movement cost to reach the target
  */
@@ -51,78 +37,6 @@ export function evaluateMovementOption(
   };
 
   let score = 0;
-
-  // Only consider the movement cost to reach the target
-  if (target && creature.x !== undefined && creature.y !== undefined && mapDefinition) {
-          const currentPathDistance = calculateDistanceToAttackablePosition(creature.x, creature.y, target, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition);
-      const newPathDistance = calculateDistanceToAttackablePosition(x, y, target, creature, allCreatures, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition);
-    const attackRange = creature.getAttackRange();
-    
-    const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
-    const isRangedBehavior = ai.behavior === AIBehaviorType.RANGED;
-
-    // Check if this position puts us in attack range of the target
-    const wouldBeInAttackRange = canAttackFromPosition(x, y, creature, target);
-    if (wouldBeInAttackRange) {
-      benefits.inAttackRange = true;
-      score += 200; // Very high priority for getting into attack range
-    } else if (newPathDistance < currentPathDistance) {
-      // Only consider getting closer if we're not already in attack range
-      benefits.closerToTarget = true;
-      const distanceImprovement = currentPathDistance - newPathDistance;
-      score += distanceImprovement * 100; // Much higher weight for getting closer to target
-    }
-
-    // Check line of sight for ranged creatures
-    if ((hasRangedWeapon || isRangedBehavior) && mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
-      // Check if this position has line of sight to the target
-      const hasLOS = isCreatureVisible(x, y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures);
-
-      if (hasLOS) {
-        benefits.hasLineOfSight = true;
-        // High priority for ranged creatures to have line of sight
-        score += 150;
-
-        // Additional bonus if we're also in attack range
-        if (benefits.inAttackRange) {
-          score += 50;
-        }
-
-        // Movement efficiency bonus: prefer positions that require minimal movement
-        // This encourages ranged creatures to find the closest position with line of sight
-        const movementEfficiencyBonus = Math.max(0, 200 - cost * 10); // Higher bonus for lower movement cost
-        score += movementEfficiencyBonus;
-
-        // Extra bonus for positions that are very close to current position (within 1-2 tiles)
-        if (cost <= 2) {
-          score += 100; // Significant bonus for minimal movement
-        }
-      } else {
-        // Penalty for ranged creatures without line of sight
-        score -= 75;
-      }
-
-              // Check current position line of sight for comparison
-        const currentHasLOS = creature.x !== undefined && creature.y !== undefined ? 
-          isCreatureVisible(creature.x, creature.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures) : false;
-
-      // Bonus for improving line of sight situation
-      if (!currentHasLOS && hasLOS) {
-        score += 100; // Extra bonus for gaining line of sight
-      }
-    }
-
-    // High penalty for ranged creatures entering enemy engagement zones
-    if ((hasRangedWeapon || isRangedBehavior)) {
-      const engagingCreatures = getEngagingCreaturesAtPosition(creature, allCreatures, x, y);
-      if (engagingCreatures.length > 0) {
-        // Very high penalty for ranged creatures entering enemy engagement zones
-        score -= 10000;
-        risks.exposedToAttack = true;
-      }
-    }
-
-  }
 
   return {
     x,
@@ -297,104 +211,6 @@ export function shouldMove(
   // If no target, movement is less important
   if (!target) {
     return false;
-  }
-
-  // Check if we can attack immediately from current position
-  const canAttackNow = canAttackImmediately(creature, target);
-
-  // If we can't attack now, we should try to move to get into attack range
-  if (!canAttackNow) {
-    return true;
-  }
-
-  // If we can attack now, check if we should still move for better positioning
-  const hasRangedWeapon = creature.equipment.mainHand?.kind === 'ranged_weapon' || creature.equipment.offHand?.kind === 'ranged_weapon';
-  const isRangedBehavior = ai.behavior === AIBehaviorType.RANGED;
-
-  if (hasRangedWeapon || isRangedBehavior) {
-    // Check if we have line of sight to the target
-         if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0 && 
-         creature.x !== undefined && creature.y !== undefined) {
-       const currentHasLOS = isCreatureVisible(creature.x, creature.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures);
-       // If we don't have line of sight, we should definitely move
-       if (!currentHasLOS) {
-         // Check if there's a position with line of sight available
-         const hasPositionWithLOS = reachableTiles.some(tile =>
-           isCreatureVisible(tile.x, tile.y, target, mapDefinition.tiles[0].length, mapDefinition.tiles.length, mapDefinition, {}, creature, allCreatures)
-         );
-
-        if (hasPositionWithLOS) {
-          return true;
-        }
-      } else {
-        // We already have line of sight - only move if there's a significantly better position
-        // Check if there's a position that's both closer to optimal range AND requires minimal movement
-        if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
-          return false;
-        }
-        const currentDistance = Math.max(
-          Math.abs(target.x - creature.x),
-          Math.abs(target.y - creature.y)
-        );
-        const attackRange = creature.getAttackRange();
-
-        // Only consider moving if we're significantly suboptimal (too close or too far)
-        const isSignificantlySuboptimal = currentDistance < attackRange * 0.6 || currentDistance > attackRange * 1.2;
-
-        if (isSignificantlySuboptimal) {
-          // Look for positions that are better AND require minimal movement (cost <= 2)
-          const betterPositionAvailable = reachableTiles.some(tile => {
-            if (target.x === undefined || target.y === undefined) return false;
-            const newDistance = Math.max(
-              Math.abs(target.x - tile.x),
-              Math.abs(target.y - tile.y)
-            );
-            const tileCost = costMap.get(`${tile.x},${tile.y}`) ?? Infinity;
-
-            // Prefer positions that are closer to optimal range AND require minimal movement
-            const isBetterRange = newDistance >= attackRange * 0.8 && newDistance <= attackRange * 1.1;
-            const isMinimalMovement = tileCost <= 2;
-
-            return isBetterRange && isMinimalMovement;
-          });
-
-          if (betterPositionAvailable) {
-            return true;
-          }
-        }
-
-        // If we're already well-positioned with line of sight, don't move
-        return false;
-      }
-    }
-
-    // For ranged weapons, check if we're at optimal range
-    if (target.x === undefined || target.y === undefined || creature.x === undefined || creature.y === undefined) {
-      return false;
-    }
-    const currentDistance = Math.max(
-      Math.abs(target.x - creature.x),
-      Math.abs(target.y - creature.y)
-    );
-    const attackRange = creature.getAttackRange();
-
-    // If we're too close (within 80% of max range), consider moving to a better position
-    if (currentDistance < attackRange * 0.8) {
-      // Check if there's a better position available
-      const betterPositionAvailable = reachableTiles.some(tile => {
-        if (target.x === undefined || target.y === undefined) return false;
-        const newDistance = Math.max(
-          Math.abs(target.x - tile.x),
-          Math.abs(target.y - tile.y)
-        );
-        // Prefer positions that are closer to optimal range
-        return newDistance >= attackRange * 0.8 && newDistance <= attackRange;
-      });
-
-      if (betterPositionAvailable) {
-        return true;
-      }
-    }
   }
 
   // If we can attack now and we're well-positioned, don't move

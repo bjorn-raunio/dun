@@ -1,17 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import './App.css';
 import { mapDefinition } from './maps';
 import { QuestMap } from './maps/types';
 import { endTurn } from './game';
 import { GameProvider, useGameContext } from './game/GameContext';
-import { MapView, WorldMapView, ViewToggle, GameUI } from './components';
+import { MapView, WorldMapView, GameUI, HeroSelection } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
-import { CREATURE_GROUPS, Hero, ICreature } from './creatures/index';
+import { Hero, ICreature } from './creatures/index';
 import { addMessage } from './utils/messageSystem';
-import { createArmor, createConsumable, createShield, createWeapon } from "./items";
-import { SKILL_PRESETS } from "./skills";
 
 // Map and game state are now imported from extracted modules
 
@@ -19,7 +17,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   // Game state management using context
   const { state: gameState, actions: gameActions, refs: gameRefs } = useGameContext();
   const { groups, creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode, viewMode } = gameState;
-  const { setCreatures, setSelectedCreatureId, setMessages, setAITurnState, setTurnState, setTargetingMode, setViewMode } = gameActions;
+  const { setSelectedCreatureId, setTargetingMode } = gameActions;
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
 
   // Custom hooks for game logic
@@ -177,45 +175,25 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
   );
 }
 
-const hero = new Hero({
-  name: 'Herbod',
-  image: 'creatures/human.png',
-  attributes: {
-    movement: 5,
-    combat: 5,
-    ranged: 3,
-    strength: 3,
-    agility: 4,
-    courage: 5,
-    intelligence: 4,
-  },
-  actions: 1,
-  size: 2,
-  equipment: {
-    mainHand: createWeapon('mace'),
-    offHand: createShield('shield'),
-    armor: createArmor('chainMail'),
-  },
-  inventory: [
-    createConsumable('healingPotion'),
-    createConsumable('strengthPotion'),
-    createConsumable('strengthPotion'),
-    createConsumable('strengthPotion'),
-  ],
-  vitality: 4,
-  mana: 4,
-  fortune: 6,
-  group: CREATURE_GROUPS.PLAYER,
-  skills: [
-    SKILL_PRESETS.lostInTheDark,
-    SKILL_PRESETS.ironWill,
-  ]
-});
-
 function App() {
+  const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
+  const [gameStarted, setGameStarted] = useState(false);
+
+  const handleHeroSelected = (hero: Hero) => {
+    setSelectedHero(hero);
+    setGameStarted(true);
+  };
+
+  // Show hero selection screen if no hero is selected yet
+  if (!gameStarted) {
+    return <HeroSelection onHeroSelected={handleHeroSelected} />;
+  }
+
+  // Show game with selected hero
+  const initialCreatures = mapDefinition?.initialCreatures.concat(selectedHero!) ?? [selectedHero!];
 
   return (
-    <GameProvider initialCreatures={mapDefinition?.initialCreatures.concat(hero) ?? [hero]} mapDefinition={mapDefinition}>
+    <GameProvider initialCreatures={initialCreatures} mapDefinition={mapDefinition}>
       <div className="App">
         {mapDefinition ?
           <TileMapView mapDefinition={mapDefinition} />

@@ -7,7 +7,7 @@ import { calculateDistanceBetween } from '../utils/pathfinding';
 import { LineOfSightSystem } from '../utils/pathfinding/lineOfSight';
 import { QuestMap } from '../maps/types';
 import { isEngaged } from '../utils/zoneOfControl';
-import { Weapon, RangedWeapon } from '../items/types';
+import { Weapon, RangedWeapon, BaseWeapon } from '../items';
 
 /**
  * Comprehensive combat validation - validates all aspects of an attack in one function
@@ -15,7 +15,7 @@ import { Weapon, RangedWeapon } from '../items/types';
 export function validateCombat(
   attacker: ICreature,
   target: ICreature,
-  weapon: Weapon | RangedWeapon,
+  weapon: BaseWeapon,
   allCreatures: ICreature[],
   mapDefinition: QuestMap
 ): ValidationResult {
@@ -49,32 +49,24 @@ export function validateCombat(
     };
   }
 
-  // Range check
-  const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
-  
   // Skip range check if either creature is not on the map (undefined position)
   if (attacker.x === undefined || attacker.y === undefined || 
       target.x === undefined || target.y === undefined) {
     return {
       isValid: false,
-      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, Infinity, attackRange)
-    };
-  }
-  
-  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-  
-  if (distance > attackRange) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, distance, attackRange)
+      reason: ''
     };
   }
 
-  // Check if ranged attack is being performed while engaged
-  if (weapon instanceof RangedWeapon && isEngaged(attacker, allCreatures)) {
+  // Range check
+  const attackRange = weapon.getValidRange();
+  
+  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
+  
+  if ((distance > attackRange.max || distance < attackRange.min) && distance > 1) {
     return {
       isValid: false,
-      reason: VALIDATION_MESSAGES.RANGED_ATTACK_WHILE_ENGAGED(attacker.name)
+      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, distance, attackRange.max)
     };
   }
 
@@ -91,7 +83,7 @@ export function validateCombat(
       cols, 
       rows, 
       mapDefinition,
-      { maxRange: attackRange },
+      { maxRange: attackRange.max },
       attacker,
       target,
       allCreatures
@@ -104,7 +96,7 @@ export function validateCombat(
   }
 
   // Elevation check for melee attacks
-  if (weapon instanceof Weapon && mapDefinition) {
+  if (weapon.isMeleeWeapon() && mapDefinition) {
     // Skip elevation check if either creature is not on the map (undefined position)
     if (attacker.x === undefined || attacker.y === undefined || 
         target.x === undefined || target.y === undefined) {
@@ -123,33 +115,6 @@ export function validateCombat(
     }
   }
 
-  return { isValid: true };
-}
-
-/**
- * Validate that a target is in range
- */
-export function validateTargetInRange(attacker: ICreature, target: ICreature, weapon: Weapon | RangedWeapon): ValidationResult {
-  const attackRange = weapon instanceof RangedWeapon ? weapon.range : attacker.getAttackRange();
-  
-  // Skip range check if either creature is not on the map (undefined position)
-  if (attacker.x === undefined || attacker.y === undefined || 
-      target.x === undefined || target.y === undefined) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, Infinity, attackRange)
-    };
-  }
-  
-  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-  
-  if (distance > attackRange) {
-    return {
-      isValid: false,
-      reason: VALIDATION_MESSAGES.OUT_OF_RANGE(target.name, distance, attackRange)
-    };
-  }
-  
   return { isValid: true };
 }
 

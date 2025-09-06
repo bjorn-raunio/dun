@@ -109,7 +109,7 @@ export class DistanceSystem {
     });
 
     // Check if target is within attack range
-    const attackRange = attacker.getAttackRange();
+    const attackRange = attacker.getMaxAttackRange();
     return distance <= attackRange;
   }
 
@@ -127,7 +127,7 @@ export class DistanceSystem {
     }
     
     const distance = this.calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-    const attackRange = attacker.getAttackRange();
+    const attackRange = attacker.getMaxAttackRange();
     return distance <= attackRange;
   }
 

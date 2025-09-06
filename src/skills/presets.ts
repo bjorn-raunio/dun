@@ -1,4 +1,4 @@
-import { applyStatusEffect, STATUS_EFFECT_PRESETS } from '../statusEffects';
+import { STATUS_EFFECT_PRESETS } from '../statusEffects';
 import { CombatEventData } from '../utils/combat/execution';
 import { Skill, SkillType } from './types';
 
@@ -20,7 +20,7 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
         type: "melee",
         effect: (data: CombatEventData) => {
           if (data.target.size < 4) {
-            applyStatusEffect(data.target, STATUS_EFFECT_PRESETS.stunned.createEffect());
+            data.target.addStatusEffect(STATUS_EFFECT_PRESETS.stunned.createEffect());
           }
         }
       }

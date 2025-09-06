@@ -1,32 +1,45 @@
 import { Attributes } from '../statusEffects';
 import { EquipmentSystem } from '../items/equipment';
-import { Weapon, RangedWeapon, Armor, Shield } from '../items/types';
+import { Weapon, RangedWeapon, Armor, Shield, BaseWeapon } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
 import { Skill } from '../skills';
+import { ICreatureCombatManager } from './interfaces';
 
 // --- Creature Combat Management ---
 
-export class CreatureCombatManager {
+export class CreatureCombatManager implements ICreatureCombatManager {
+  private equipmentSystem: EquipmentSystem | null = null;
+
   constructor(
     private getAttributes: () => Attributes,
     private getEquipment: () => {
-      mainHand?: Weapon | RangedWeapon;
-      offHand?: Weapon | RangedWeapon | Shield;
+      mainHand?: BaseWeapon;
+      offHand?: BaseWeapon | Shield;
       armor?: Armor;
     },
     private getNaturalArmor: () => number,
     private getSize: () => number,
     private getSkills: () => Skill[]
-  ) {}
+  ) { }
 
   // --- Equipment Access Consolidation ---
-  
+
   /**
-   * Get EquipmentSystem instance - consolidated to eliminate repeated instantiation
+   * Get EquipmentSystem instance - cached to prevent creating new unarmed weapons
    */
-  private getEquipmentSystem(): EquipmentSystem {
-    return new EquipmentSystem(this.getEquipment());
+  public getEquipmentSystem(): EquipmentSystem {
+    if (!this.equipmentSystem) {
+      this.equipmentSystem = new EquipmentSystem(this.getEquipment());
+    }
+    return this.equipmentSystem;
+  }
+
+  /**
+   * Invalidate the cached EquipmentSystem - call this when equipment changes
+   */
+  invalidateEquipmentCache(): void {
+    this.equipmentSystem = null;
   }
 
   // --- Equipment-based Combat Methods ---
@@ -35,8 +48,22 @@ export class CreatureCombatManager {
     return this.getEquipmentSystem().getEffectiveArmor(this.getNaturalArmor());
   }
 
-  getMainWeapon(): Weapon | RangedWeapon {
+  getMainWeapon(): BaseWeapon {
     return this.getEquipmentSystem().getMainWeapon();
+  }
+
+  getOffHandWeapon(): BaseWeapon {
+    return this.getEquipmentSystem().getOffHandWeapon();
+  }
+
+  getUnarmedWeapon(): BaseWeapon {
+    return this.getEquipmentSystem().getUnarmedWeapon();
+  }
+
+  getMaxAttackRange(): number {
+    let max = this.getMainWeapon().getValidRange().max;
+    max = Math.max(max, this.getOffHandWeapon().getValidRange().max);
+    return max;
   }
 
   hasRangedWeapon(): boolean {
@@ -45,23 +72,6 @@ export class CreatureCombatManager {
 
   hasShield(): boolean {
     return this.getEquipmentSystem().hasShield();
-  }
-
-  getAttackBonus(): number {
-    const attributes = this.getAttributes();
-    return this.getEquipmentSystem().getAttackBonus(attributes.combat, attributes.ranged);
-  }
-
-  getWeaponDamage(): number {
-    return this.getEquipmentSystem().getWeaponDamage();
-  }
-
-  getAttackRange(): number {
-    return this.getEquipmentSystem().getAttackRange();
-  }
-
-  getMaxAttackRange(): number {
-    return this.getEquipmentSystem().getMaxAttackRange();
   }
 
   // --- Zone of Control ---
@@ -78,10 +88,10 @@ export class CreatureCombatManager {
   // --- Back Arc Detection ---
 
   wasBehindTargetAtTurnStart(
-    targetX: number, 
-    targetY: number, 
-    targetTurnStartFacing: number, 
-    attackerTurnStartX: number, 
+    targetX: number,
+    targetY: number,
+    targetTurnStartFacing: number,
+    attackerTurnStartX: number,
     attackerTurnStartY: number
   ): boolean {
     return isInBackArc(targetX, targetY, targetTurnStartFacing, attackerTurnStartX, attackerTurnStartY);
