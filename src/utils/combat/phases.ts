@@ -58,7 +58,6 @@ export function executeToHitRollMelee(
 
   // Roll for combat
   const attackerRollResult = calculateAttributeRoll(0);
-  attackerRollResult.fumble = true;
 
   if (!attackerRollResult.fumble && isDoubles(attackerRollResult.dice)) {
     CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, combatEventData);
@@ -66,7 +65,7 @@ export function executeToHitRollMelee(
 
   const defenderRollResult = calculateAttributeRoll(0);
 
-  if (!defenderRollResult.fumble && isDoubles(defenderRollResult.dice) || true) {
+  if (!defenderRollResult.fumble && isDoubles(defenderRollResult.dice)) {
     CombatTriggers.processCombatTriggers(COMBAT_EVENTS.DOUBLE_RESULT, { ...combatEventData, target: combatEventData.attacker, attacker: combatEventData.target });
   }
 
