@@ -61,13 +61,14 @@ export class CreatureCombatManager implements ICreatureCombatManager {
   }
 
   getMaxAttackRange(): number {
-    let max = this.getMainWeapon().getValidRange().max;
-    max = Math.max(max, this.getOffHandWeapon().getValidRange().max);
+    let max = 1;
+    if(!this.getMainWeapon().isBroken()) {
+      max = this.getMainWeapon().getValidRange().max;
+    }
+    if(!this.getOffHandWeapon().isBroken()) {
+      max = Math.max(max, this.getOffHandWeapon().getValidRange().max);
+    }
     return max;
-  }
-
-  hasRangedWeapon(): boolean {
-    return this.getEquipmentSystem().hasRangedWeapon();
   }
 
   hasShield(): boolean {

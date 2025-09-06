@@ -95,14 +95,6 @@ export class EquipmentSystem {
   // --- Equipment Queries ---
 
   /**
-   * Check if creature has a ranged weapon equipped
-   */
-  hasRangedWeapon(): boolean {
-    return (this.slots.mainHand?.isWeapon() && this.slots.mainHand.isRangedWeapon()) || 
-           (this.slots.offHand?.isWeapon() && this.slots.offHand.isRangedWeapon()) || false;
-  }
-
-  /**
    * Check if creature has a shield equipped
    */
   hasShield(isBackAttack: boolean = false): boolean {

@@ -24,7 +24,7 @@ export class Weapon extends BaseWeapon {
         damageModifier: params.attack.damageModifier ?? 0,
         range: params.attack.range ?? 1,
         minRange: 0,
-        addStrength: params.attack.addStrength ?? false,
+        addStrength: true,
         isRanged: false
       }]
     });

@@ -17,13 +17,9 @@ export const mercenaryPresets: Record<string, MercenaryPreset> = {
       intelligence: 4,
     },
     size: 2,
-    inventory: [
-      { type: "consumable", preset: "healingPotion" },
-    ],
-    equipment: {
-      mainHand: { type: "ranged_weapon", preset: "shortbow" },
-    },
-    vitality: 4,
+    inventory: [],
+    equipment: {},
+    vitality: 400,
     hireCost: 75,
     skills: [
       SKILL_PRESETS.lostInTheDark,

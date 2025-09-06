@@ -41,8 +41,8 @@ export const WEAPON_LOADOUTS: Record<string, WeaponLoadout> = {
 // --- Armor Loadouts ---
 export const ARMOR_LOADOUTS: Record<string, ArmorLoadout> = {
 
-  leather: {
-    armor: { type: "armor", preset: "leather" },
+  leatherArmor: {
+    armor: { type: "armor", preset: "leatherArmor" },
   },
 
   shield: {
@@ -93,34 +93,4 @@ export function getAllWeaponLoadoutIds(): string[] {
  */
 export function getAllArmorLoadoutIds(): string[] {
   return Object.keys(ARMOR_LOADOUTS);
-}
-
-/**
- * Get weapon loadouts by category
- */
-export function getWeaponLoadoutsByCategory(category: 'melee' | 'ranged' | 'defensive' | 'agile' | 'testing'): string[] {
-  const categoryMap: Record<string, string[]> = {
-    melee: ['dagger', 'broadsword', 'greatsword'],
-    ranged: ['ranged_archer'],
-    defensive: ['sword_shield'],
-    agile: ['dual_dagger'],
-    testing: ['invalid_greatsword_shield']
-  };
-  
-  return categoryMap[category] || [];
-}
-
-/**
- * Get armor loadouts by category
- */
-export function getArmorLoadoutsByCategory(category: 'light' | 'medium' | 'heavy' | 'shield_only' | 'combined'): string[] {
-  const categoryMap: Record<string, string[]> = {
-    light: ['leather', 'buckler', 'leather_buckler'],
-    medium: ['chain_mail', 'round_shield', 'chain_round_shield'],
-    heavy: ['plate_mail', 'tower_shield', 'plate_tower_shield'],
-    shield_only: ['buckler', 'round_shield', 'tower_shield'],
-    combined: ['leather_buckler', 'chain_round_shield', 'plate_tower_shield']
-  };
-  
-  return categoryMap[category] || [];
 }

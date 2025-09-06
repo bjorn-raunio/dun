@@ -58,12 +58,6 @@ export const DIRECTION_ARROWS = {
   [DIRECTIONS.NORTHWEST]: '↖',
 } as const;
 
-export const AI_BEHAVIORS = {
-  MELEE: AIBehaviorType.MELEE,
-  RANGED: AIBehaviorType.RANGED,
-  ANIMAL: AIBehaviorType.ANIMAL,
-} as const;
-
 export const COMBAT_CONSTANTS = {
   BACK_ATTACK_BONUS: 1,
   FLANKING_BONUS: 0.2,

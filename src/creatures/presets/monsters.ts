@@ -1,6 +1,7 @@
 import { AIBehaviorType } from '../../ai/types';
 import { MonsterPreset } from './types';
 import { SKILL_PRESETS } from '../../skills';
+import { AI_BEHAVIORS } from '../../ai';
 
 // --- Monster Presets Organized by Faction ---
 
@@ -21,8 +22,8 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
       vitality: 4,
       size: 2,
       weaponLoadouts: ["broadsword", "axe", "mace"],
-      armorLoadouts: ["shield", "leather"],
-      aiBehavior: AIBehaviorType.MELEE,
+      armorLoadouts: ["shield", "leatherArmor"],
+      aiBehavior: AI_BEHAVIORS.MELEE,
       skills: [
         SKILL_PRESETS.lostInTheDark,
         SKILL_PRESETS.dirtyFighter,
@@ -48,7 +49,7 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
       ],
       weaponLoadouts: ["shortbow"],
       armorLoadouts: [],
-      aiBehavior: AIBehaviorType.RANGED,
+      aiBehavior: AI_BEHAVIORS.RANGED,
       skills: [
         SKILL_PRESETS.lostInTheDark,
         SKILL_PRESETS.dirtyFighter,

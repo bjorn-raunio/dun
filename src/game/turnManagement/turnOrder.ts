@@ -1,6 +1,6 @@
 import { Creature, ICreature } from '../../creatures/index';
 import { AIBehaviorType } from '../../ai/types';
-import { TurnOrderConfig } from './types';
+import { AI_BEHAVIORS } from '../../ai';
 
 /**
  * Turn Order Rules:
@@ -20,8 +20,8 @@ export function getAIBehaviorType(creature: ICreature): AIBehaviorType | null {
   }
   
   // Get AI state from the creature (assuming it's a Monster)
-  const aiState = (creature as any).getAIState?.();
-  return aiState?.behavior || AIBehaviorType.MELEE;
+  const aiState = creature.getAIState();
+  return aiState?.behavior || AI_BEHAVIORS.MELEE;
 }
 
 /**
@@ -31,9 +31,13 @@ export function compareAICreaturesByBehavior(a: ICreature, b: ICreature): number
   const aBehavior = getAIBehaviorType(a);
   const bBehavior = getAIBehaviorType(b);
   
-  // Ranged creatures act before melee creatures
-  if (aBehavior === AIBehaviorType.RANGED && bBehavior !== AIBehaviorType.RANGED) return -1;
-  if (aBehavior !== AIBehaviorType.RANGED && bBehavior === AIBehaviorType.RANGED) return 1;
+  if (!aBehavior || !bBehavior) {
+    return 0;
+  }
+  
+  // Use the behavior's priority system for comparison
+  if (aBehavior.shouldActBefore(bBehavior)) return -1;
+  if (bBehavior.shouldActBefore(aBehavior)) return 1;
   
   // Same behavior type - use agility as tiebreaker
   return b.agility - a.agility;

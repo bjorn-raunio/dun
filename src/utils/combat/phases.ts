@@ -341,7 +341,7 @@ export function executeDamageRoll(
   }
 
   let totalDamage = weaponDamage + bonusDamage;
-  if (!attack.addStrength) {
+  if (attack.addStrength) {
     totalDamage += attacker.strength;
   }
 

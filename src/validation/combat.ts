@@ -17,8 +17,26 @@ export function validateCombat(
   target: ICreature,
   weapon: BaseWeapon,
   allCreatures: ICreature[],
-  mapDefinition: QuestMap
+  mapDefinition: QuestMap,
+  attackerPosition?: { x: number, y: number },
+  ignoreActions?: boolean
 ): ValidationResult {
+
+  const attackerX_undefined = attackerPosition?.x || attacker.x;
+  const attackerY_undefined = attackerPosition?.y || attacker.y;
+
+  // Skip range check if either creature is not on the map (undefined position)
+  if (attackerX_undefined === undefined || attackerY_undefined === undefined ||
+    target.x === undefined || target.y === undefined) {
+    return {
+      isValid: false,
+      reason: ''
+    };
+  }
+
+  const attackerX = attackerX_undefined;
+  const attackerY = attackerY_undefined;
+
   // Basic creature state checks
   if (!attacker.isAlive()) {
     return {
@@ -27,7 +45,7 @@ export function validateCombat(
     };
   }
 
-  if (!attacker.hasActionsRemaining()) {
+  if (!ignoreActions && !attacker.hasActionsRemaining()) {
     return {
       isValid: false,
       reason: VALIDATION_MESSAGES.NO_ACTIONS_REMAINING(attacker.name)
@@ -49,20 +67,12 @@ export function validateCombat(
     };
   }
 
-  // Skip range check if either creature is not on the map (undefined position)
-  if (attacker.x === undefined || attacker.y === undefined || 
-      target.x === undefined || target.y === undefined) {
-    return {
-      isValid: false,
-      reason: ''
-    };
-  }
 
   // Range check
   const attackRange = weapon.getValidRange();
-  
-  const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
-  
+
+  const distance = calculateDistanceBetween(attackerX, attackerY, target.x, target.y);
+
   if ((distance > attackRange.max || distance < attackRange.min) && distance > 1) {
     return {
       isValid: false,
@@ -74,14 +84,14 @@ export function validateCombat(
   if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
     const cols = mapDefinition.tiles[0].length;
     const rows = mapDefinition.tiles.length;
-    
+
     if (!LineOfSightSystem.hasLineOfSight(
-      attacker.x, 
-      attacker.y, 
-      target.x, 
-      target.y, 
-      cols, 
-      rows, 
+      attackerX,
+      attackerY,
+      target.x,
+      target.y,
+      cols,
+      rows,
       mapDefinition,
       { maxRange: attackRange.max },
       attacker,
@@ -97,21 +107,15 @@ export function validateCombat(
 
   // Elevation check for melee attacks
   if (weapon.isMeleeWeapon() && mapDefinition) {
-    // Skip elevation check if either creature is not on the map (undefined position)
-    if (attacker.x === undefined || attacker.y === undefined || 
-        target.x === undefined || target.y === undefined) {
-      // Continue with other validations
-    } else {
-          const attackerHeight = mapDefinition.terrainHeightAt(attacker.x, attacker.y);
+    const attackerHeight = mapDefinition.terrainHeightAt(attackerX, attackerY);
     const targetHeight = mapDefinition.terrainHeightAt(target.x, target.y);
-      const heightDifference = Math.abs(attackerHeight - targetHeight);
-      
-      if (heightDifference > 1) {
-        return {
-          isValid: false,
-          reason: VALIDATION_MESSAGES.ELEVATION_DIFFERENCE_TOO_HIGH(attacker.name, target.name, heightDifference)
-        };
-      }
+    const heightDifference = Math.abs(attackerHeight - targetHeight);
+
+    if (heightDifference > 1) {
+      return {
+        isValid: false,
+        reason: VALIDATION_MESSAGES.ELEVATION_DIFFERENCE_TOO_HIGH(attacker.name, target.name, heightDifference)
+      };
     }
   }
 
@@ -128,7 +132,7 @@ export function validateTargetAlive(target: Creature): ValidationResult {
       reason: VALIDATION_MESSAGES.TARGET_DEAD(target.name)
     };
   }
-  
+
   return { isValid: true };
 }
 
@@ -142,6 +146,6 @@ export function validateNotFriendlyFire(attacker: Creature, target: Creature): V
       reason: VALIDATION_MESSAGES.FRIENDLY_FIRE(attacker.name)
     };
   }
-  
+
   return { isValid: true };
 }

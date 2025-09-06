@@ -11,6 +11,7 @@ import { QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
 import { Skill } from '../skills';
+import { AIState } from '../ai/types';
 
 // --- Core Creature Interfaces ---
 
@@ -78,9 +79,9 @@ export interface ICreature {
   // Combat
   getArmorValue(): number;
   getMainWeapon(): BaseWeapon;
+  getOffHandWeapon(): BaseWeapon;
   getMaxAttackRange(): number;
   getUnarmedWeapon(): BaseWeapon;
-  hasRangedWeapon(): boolean;
   hasShield(): boolean;
   getZoneOfControlRange(): number;
   getCombatState(): boolean;
@@ -92,6 +93,11 @@ export interface ICreature {
   isAIControlled(): boolean;
   isHostileTo(other: ICreature): boolean;
   isFriendlyTo(other: ICreature): boolean;
+  
+  // AI
+  getAIState(): AIState | null;
+  updateAIState(newState: AIState): void;
+  setAIState(aiState: AIState): void;
   
   // Movement
   getReachableTiles(allCreatures: ICreature[], mapDefinition: QuestMap, cols: number, rows: number): PathfindingResult;
@@ -218,9 +224,9 @@ export interface ICreaturePositionManager {
 export interface ICreatureCombatManager {
   getArmorValue(): number;
   getMainWeapon(): BaseWeapon;
+  getOffHandWeapon(): BaseWeapon;
   getUnarmedWeapon(): BaseWeapon;
   getMaxAttackRange(): number;
-  hasRangedWeapon(): boolean;
   hasShield(): boolean;
   getZoneOfControlRange(): number;
   getEquipmentSystem(): EquipmentSystem;

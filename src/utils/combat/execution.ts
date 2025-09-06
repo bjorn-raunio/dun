@@ -91,7 +91,7 @@ function executeCombatPhase(
   allCreatures: Creature[],
   mapDefinition: QuestMap
 ): CombatResult {
-  if(!attacker.x || !attacker.y || !target.x || !target.y) {
+  if(attacker.x === undefined || attacker.y === undefined || target.x === undefined || target.y === undefined) {
     return {
       success: false,
       damage: 0,

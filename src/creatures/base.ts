@@ -31,6 +31,8 @@ import { PathfindingResult } from '../utils/pathfinding/types';
 import { calculateAttributeRoll, displayDiceRoll } from '../utils';
 import { validateAction } from '../validation';
 import { addGameMessage, addTurnMessage } from '../utils/messageSystem';
+import { AIState } from '../ai/types';
+// createAIStateForCreature not used in base class
 
 // --- Refactored Base Creature Class ---
 export abstract class Creature implements ICreature {
@@ -53,6 +55,9 @@ export abstract class Creature implements ICreature {
   group: CreatureGroup;
   skills: Skill[];
   running: boolean;
+
+  // AI State
+  aiState: AIState | null;
 
   // Manager instances - now using interfaces
   private stateManager: ICreatureStateManager;
@@ -80,6 +85,9 @@ export abstract class Creature implements ICreature {
     this.group = params.group;
     this.running = false;
     this.skills = params.skills ?? [];
+
+    // Initialize AI state (null by default, can be set by subclasses)
+    this.aiState = null;
 
     // Initialize managers
     const initialPosition: CreaturePosition | undefined = params.position;
@@ -261,9 +269,9 @@ export abstract class Creature implements ICreature {
   // --- Combat Methods ---
   getArmorValue(): number { return this.combatManager.getArmorValue(); }
   getMainWeapon(): BaseWeapon { return this.combatManager.getMainWeapon(); }
+  getOffHandWeapon(): BaseWeapon { return this.combatManager.getOffHandWeapon(); }
   getUnarmedWeapon(): BaseWeapon { return this.combatManager.getUnarmedWeapon(); }
   getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
-  hasRangedWeapon(): boolean { return this.combatManager.hasRangedWeapon(); }
   hasShield(): boolean { return this.combatManager.hasShield(); }
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
   getEquipmentSystem(): EquipmentSystem { return this.combatManager.getEquipmentSystem(); }
@@ -344,6 +352,19 @@ export abstract class Creature implements ICreature {
   isAIControlled(): boolean { return this.relationshipsManager.isAIControlled(); }
   isHostileTo(other: ICreature): boolean { return this.relationshipsManager.isHostileTo(other.group); }
   isFriendlyTo(other: ICreature): boolean { return this.relationshipsManager.isFriendlyTo(other.group); }
+
+  // --- AI Methods ---
+  getAIState(): AIState | null {
+    return this.aiState;
+  }
+
+  updateAIState(newState: AIState): void {
+    this.aiState = newState;
+  }
+
+  setAIState(aiState: AIState): void {
+    this.aiState = aiState;
+  }
 
   // --- State Modifiers ---
   takeDamage(damage: number): boolean {
@@ -536,7 +557,9 @@ export abstract class Creature implements ICreature {
       return { success: false, damage: 0, targetDefeated: false };
     }
     const result = creatureServices.getCombatExecutor().executeCombat(this, target, allCreatures, mapDefinition, offhand);
-
+    if(this.hasMoved()) {
+      this.setRemainingMovement(0);
+    }
     return {
       success: result.success,
       damage: result.damage,

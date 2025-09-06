@@ -1,6 +1,6 @@
 import { Creature } from './base';
 import { CREATURE_GROUPS } from './CreatureGroup';
-import { AIState } from '../ai/types';
+// AIState not used directly in Monster class
 import { createAIStateForCreature } from '../ai/decisionMaking';
 import { CreatureConstructorParams } from './types';
 import { MonsterPreset, MercenaryPreset } from './presets/types';
@@ -56,7 +56,6 @@ export const MONSTER_FACTIONS_KEYS = {
 
 // --- Monster Class ---
 export class Monster extends Creature {
-  public aiState: AIState;
   public faction: MonsterFaction;
 
   get kind(): "monster" {
@@ -74,32 +73,11 @@ export class Monster extends Creature {
     this.faction = params.faction || MONSTER_FACTIONS.bandits.id;
 
     // Initialize AI state for the monster
-    this.aiState = createAIStateForCreature(this, params.preset);
+    this.setAIState(createAIStateForCreature(this, params.preset));
   }
 
   // --- Abstract Method Implementation ---
   protected createInstance(params: CreatureConstructorParams & { faction?: MonsterFaction; preset?: MonsterPreset | MercenaryPreset }): Creature {
     return new Monster(params);
-  }
-
-  /**
-   * Get the current AI state
-   */
-  getAIState(): AIState {
-    return this.aiState;
-  }
-
-  /**
-   * Update the AI state (used after AI decisions are executed)
-   */
-  updateAIState(newState: AIState): void {
-    this.aiState = newState;
-  }
-
-  /**
-   * Check if this monster is AI controlled
-   */
-  isAIControlled(): boolean {
-    return true; // All monsters are AI controlled
   }
 }

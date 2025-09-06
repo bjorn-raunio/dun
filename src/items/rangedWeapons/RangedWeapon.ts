@@ -24,7 +24,7 @@ export class RangedWeapon extends BaseWeapon {
         damageModifier: params.attack.damageModifier ?? 0,
         range: params.attack.range ?? 0,
         minRange: 2,
-        addStrength: params.attack.addStrength ?? false,
+        addStrength: false,
         isRanged: true
       }]
     });

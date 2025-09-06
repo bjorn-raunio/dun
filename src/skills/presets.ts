@@ -28,8 +28,18 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
   },
 
   // Stealth Skills
+  "scout": {
+    name: "Scout",
+    type: "stealth",
+    description: "",
+  },
 
   // Academic Skills
+  "battleWizard": {
+    name: "Battle Wizard",
+    type: "academic",
+    description: "",
+  },
   "ironWill": {
     name: "Iron Will",
     type: "academic",
@@ -38,8 +48,21 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
       { attribute: "courage", value: 1 }
     ]
   },
+  "tamingAnimals": {
+    name: "Taming Animals",
+    type: "academic",
+    description: "",
+  },
 
   // Natural Skills
+  "sharpSenses": {
+    name: "Sharp Senses",
+    type: "natural",
+    description: "+1 perception",
+    attributeModifiers: [
+      { attribute: "perception", value: 1 }
+    ]
+  },
   "lostInTheDark": {
     name: "Lost In The Dark",
     type: "natural",

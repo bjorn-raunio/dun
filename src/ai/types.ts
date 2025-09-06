@@ -1,78 +1,42 @@
-import { Creature, ICreature } from '../creatures/index';
-import { QuestMap } from '../maps/types';
+// AI Types - no imports needed to avoid circular dependencies
 
 // --- AI Types ---
 
-export enum AIBehaviorType {
-  MELEE = 'melee',   // Close combat focused, aggressive melee attacks
-  RANGED = 'ranged', // Prefer ranged attacks, maintain distance
-  ANIMAL = 'animal'  // Instinctive behavior, pack tactics, territorial
-}
+export class AIBehaviorType {
+  public readonly name: string;
+  public readonly priority: number; // Lower numbers = higher priority in turn order
+  public pushInMelee: boolean;
+  public followInMelee: boolean;
+  public keepDistance: boolean;
 
-export interface AIDecision {
-  type: 'move' | 'attack' | 'wait' | 'flee' | 'special';
-  target?: ICreature;
-  destination?: { x: number; y: number };
-  priority: number; // Higher number = higher priority
-  reason: string;
-}
+  constructor(
+    name: string,
+    priority: number,
+    pushInMelee: boolean,
+    followInMelee: boolean,
+    keepDistance: boolean
+  ) {
+    this.name = name;
+    this.priority = priority;
+    this.pushInMelee = pushInMelee;
+    this.followInMelee = followInMelee;
+    this.keepDistance = keepDistance;
+  }
 
-export interface AITarget {
-  creature: ICreature;
-  distance: number;
-  priority: number; // Overall priority for this target
-}
+  // Helper methods
+  shouldActBefore(other: AIBehaviorType): boolean {
+    return this.priority < other.priority;
+  }
 
-export interface AIMovementOption {
-  x: number;
-  y: number;
-  cost: number;
-  benefits: {
-    closerToTarget?: boolean;
-    betterPosition?: boolean;
-    saferPosition?: boolean;
-    tacticalAdvantage?: boolean;
-    inAttackRange?: boolean;
-    combatBonus?: boolean;
-    hasLineOfSight?: boolean;
-  };
-  risks: {
-    exposedToAttack?: boolean;
-    trapped?: boolean;
-    isolated?: boolean;
-  };
-  score: number;
+  toString(): string {
+    return this.name;
+  }
+
+  equals(other: AIBehaviorType): boolean {
+    return this.name === other.name;
+  }
 }
 
 export interface AIState {
   behavior: AIBehaviorType;
-  currentTarget: ICreature | null;
-  lastKnownPlayerPositions: Map<string, { x: number; y: number; turn: number }>;
-  threatAssessment: Map<string, number>;
-  tacticalMemory: {
-    lastMove: { x: number; y: number } | null;
-    lastAttack: { targetId: string; success: boolean } | null;
-    preferredPositions: Array<{ x: number; y: number; reason: string }>;
-  };
-}
-
-export interface AIActionResult {
-  success: boolean;
-  action: AIDecision;
-  message: string;
-  newState: AIState;
-}
-
-export interface AIContext {
-  ai: AIState;
-  creature: ICreature;
-  allCreatures: ICreature[];
-  currentTurn: number;
-  reachableTiles: {
-    tiles: Array<{ x: number; y: number }>;
-    costMap: Map<string, number>;
-    pathMap: Map<string, Array<{ x: number; y: number }>>;
-  };
-  targetsInRange: ICreature[];
-  mapDefinition: QuestMap;
 }

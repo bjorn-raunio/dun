@@ -1,12 +1,10 @@
-import { Creature, CreatureGroup, ICreature } from '../../creatures/index';
-import { makeAIDecision, executeAIDecision, shouldAITakeTurn, shouldContinueTurnAfterKill } from '../../ai/decisionMaking';
-import { calculateTargetsInRange } from '../../utils/combat';
-import { addMessage } from '../../utils/messageSystem';
+import { ICreature } from '../../creatures/index';
 import { getVisibleCreatures } from '../../utils/pathfinding';
 import { logTurn, logAI } from '../../utils/logging';
-import creatureServices from '../../creatures/services';
 import { TurnExecutionContext } from './types';
 import { AIState } from '../../ai/types';
+import { makeAIDecision, AIDecision } from '../../ai/decisionMaking';
+// calculateDistanceBetween not used in this file
 
 /**
  * Execute AI turn for a single creature
@@ -17,12 +15,15 @@ export function executeAITurnForCreature(
 ): boolean {
   const { groups, mapDefinition } = context;
   
-  // Get AI state from the creature (assuming it's a Monster)
-  const aiState = (creature as any).getAIState?.() || null;
+  logAI(`Starting AI turn for ${creature.name} - Actions: ${creature.remainingActions}, Movement: ${creature.remainingMovement}`);
+  
+  // Get AI state from the creature
+  const aiState = creature.getAIState();
   if (!aiState) {
-    console.warn(`Creature ${creature.name} has no AI state`);
     return false;
   }
+  
+  logAI(`${creature.name} has AI behavior: ${aiState.behavior.name}`);
 
   // Calculate line of sight at the start of AI turn
   if (mapDefinition && mapDefinition.tiles && mapDefinition.tiles.length > 0) {
@@ -57,6 +58,7 @@ function executeAITurnLoop(
   aiState: AIState,
   context: TurnExecutionContext
 ): boolean {
+  const { groups, mapDefinition } = context;
   let success = false;
   let previousActions = creature.remainingActions;
   let previousMovement = creature.remainingMovement;
@@ -69,24 +71,20 @@ function executeAITurnLoop(
   // Continue taking actions until no progress is made
   while (iterationCount < maxIterations) {
     iterationCount++;
-    
-    const actionResult = executeSingleAIAction(creature, aiState, context);
-    
-    if (!actionResult.success) {
-      break;
-    }
-    
-    success = true;
-    
-    // Check if we should continue after an attack
-    if (actionResult.actionType === 'attack' && actionResult.targetDefeated) {
-      if (!shouldContinueTurnAfterKill(creature, context.groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined))) {
-        break;
-      }
-      logTurn(`${creature.name} killed its target but has remaining movement. Continuing turn to find new target.`);
-    }
 
-    // Check if any progress was made
+    // Get all creatures for AI decision making
+    const allCreatures = groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined);
+    
+    // Make AI decision
+    const decision = makeAIDecision(creature, aiState, allCreatures, mapDefinition);
+    
+    // Execute the decision
+    const actionSuccess = executeAIDecision(creature, decision, allCreatures, mapDefinition);
+    if (actionSuccess) {
+      success = true;
+    }
+    
+    // Check if any progress was made in this iteration
     if (!hasProgressBeenMade(creature, previousActions, previousMovement, previousQuickActions)) {
       break;
     }
@@ -106,64 +104,43 @@ function executeAITurnLoop(
 }
 
 /**
- * Execute a single AI action
+ * Execute an AI decision
  */
-function executeSingleAIAction(
+function executeAIDecision(
   creature: ICreature,
-  aiState: AIState,
-  context: TurnExecutionContext
-): { success: boolean; actionType?: string; targetDefeated?: boolean } {
-  const { groups, mapDefinition } = context;
-  
-  // Get updated reachable tiles and targets in range
-  const { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap } = 
-          creatureServices.getMovementService().getReachableTiles(
-        creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined), mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length
-      );
-  
-  const targetsInRangeIds = calculateTargetsInRange(creature, groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined));
-  const targetsInRange = groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined).filter(c => targetsInRangeIds.has(c.id));
-
-  // Create AI context
-  const aiContext = {
-    ai: aiState,
-    creature,
-    allCreatures: groups.flatMap(group => group.getLivingCreatures()),
-    mapDefinition,
-    currentTurn: 1, // TODO: Get actual turn number
-    reachableTiles: { tiles: reachableTiles, costMap: reachableTilesCostMap, pathMap: reachableTilesPathMap },
-    targetsInRange
-  };
-
-  // Make AI decision
-  const decisionResult = makeAIDecision(aiContext);
-  
-  if (!decisionResult.success) {
-    return { success: false };
+  decision: AIDecision,
+  allCreatures: ICreature[],
+  mapDefinition: any
+): boolean {
+  switch (decision.type) {
+    case 'attack':
+      if (decision.target && creature.remainingActions > 0) {
+        logAI(`${creature.name} attacking ${decision.target.name}`);
+        const result = creature.attack(decision.target, allCreatures, mapDefinition);
+        return result.success;
+      }
+      break;
+      
+    case 'move':
+      if (decision.position && creature.remainingMovement > 0) {
+        logAI(`${creature.name} moving to (${decision.position.x}, ${decision.position.y}) - ${decision.reason}`);
+        
+        // Find path to the target position
+        const reachableResult = creature.getReachableTiles(allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
+        const path = reachableResult.pathMap.get(`${decision.position.x},${decision.position.y}`);
+        if (path && path.length > 0) {
+          const result = creature.moveTo(path, allCreatures, mapDefinition);
+          return result.status === 'success' || result.status === 'partial';
+        }
+      }
+      break;
+      
+    case 'wait':
+      logAI(`${creature.name} waiting`);
+      return false; // No action taken
   }
   
-  // Execute the decision
-  const executionResult = executeAIDecision(decisionResult.action, aiContext);
-  
-  // Update creature's AI state
-  if ((creature as any).updateAIState) {
-    (creature as any).updateAIState(executionResult.newState);
-  }
-  
-  if (decisionResult.action.type === 'move' || decisionResult.action.type === 'wait') {
-    executionResult.messages.forEach(message => {
-      logAI(message);
-    }); 
-  } else {
-    // Messages are now handled by the centralized message system
-    // The executeAIDecision function already calls addMessage for each message
-  }
-  
-  return {
-    success: true,
-    actionType: decisionResult.action.type,
-    targetDefeated: executionResult.targetDefeated
-  };
+  return false;
 }
 
 /**
