@@ -3,7 +3,7 @@ import { AIBehaviorType } from '../ai/types';
 // --- Game Constants ---
 
 export const GAME_SETTINGS = {
-  TILE_SIZE: 50,
+  TILE_SIZE: 100,
   DRAG_THRESHOLD: 3,
 } as const;
 

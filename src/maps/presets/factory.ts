@@ -1,18 +1,15 @@
-import { QuestMap, Room, Light } from '../types';
+import { QuestMap, Room } from '../types';
 import { QuestMapPreset, QuestMapPresetCategory } from './types';
 import { questMapPresets, questMapPresetsByCategory } from './questMapPresets';
 import { createSection } from '../section/presets';
-import { createWeapon, createArmor, createShield, createConsumable } from '../../items';
-import { Hero, createMonster, createMercenary, CREATURE_GROUPS } from '../../creatures/index';
-import { SKILL_PRESETS } from '../../skills';
-import { Attributes } from '../../statusEffects/types';
+import { createMonster, createMercenary, CREATURE_GROUPS, Creature } from '../../creatures/index';
 
 // --- QuestMap Factory Functions ---
 
 /**
  * Create a QuestMap instance from a preset
  */
-export function createQuestMapFromPreset(presetId: string): QuestMap | null {
+export function createQuestMapFromPreset(presetId: string, numberOfHeroes: number): QuestMap | null {
   const preset = questMapPresets[presetId];
   if (!preset) {
     return null;
@@ -35,26 +32,30 @@ export function createQuestMapFromPreset(presetId: string): QuestMap | null {
     });
 
     // Create creatures from preset
-    const creatures = preset.creatures.map(creaturePreset => {
+    const creatures: Creature[] = [];
+    preset.creatures.forEach(creaturePreset => {
+      if(creaturePreset.options?.minHeroes && creaturePreset.options.minHeroes > numberOfHeroes) {
+        return;
+      }
       const { type, variant, position, options } = creaturePreset;
       const creatureOptions = options || {};
 
       switch (type) {
         case 'monster':
-          return createMonster(variant, 'bandits', {
+          creatures.push(createMonster(variant, 'bandits', {
             position,
             weaponLoadout: creatureOptions.weaponLoadout,
             armorLoadout: creatureOptions.armorLoadout
-          });
-
+          }));
+          break;
         case 'mercenary':
-          return createMercenary(variant, {
+          creatures.push(createMercenary(variant, {
             position,
             group: creatureOptions.group === 'player' ? CREATURE_GROUPS.PLAYER : CREATURE_GROUPS.NEUTRAL
-          });
-
+          }));
+          break;
         default:
-          return createMercenary('civilian', { position, group: CREATURE_GROUPS.NEUTRAL });
+          break;
       }
     });
 

@@ -45,8 +45,8 @@ export function ReachableOverlay({
             width: TILE_SIZE,
             height: TILE_SIZE,
             background: COLORS.reachable,
-            boxShadow: `inset 0 0 0 2px ${COLORS.reachableBorder}`,
-            borderRadius: 6,
+            boxShadow: `inset 0 0 0 4px ${COLORS.reachableBorder}`,
+            borderRadius: 12,
             pointerEvents: "none",
           }}
         />

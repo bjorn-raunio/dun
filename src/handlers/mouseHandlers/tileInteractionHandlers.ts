@@ -37,7 +37,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
 
     // If in targeting mode and clicking on empty space, cancel targeting mode
     if (targetingMode?.isActive && mapDefinition) {
-      const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
+      const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length, GAME_SETTINGS.TILE_SIZE);
       if (pos) {
         // Check if there's a living creature at this position
         const creatureAtPosition = creatures.find(c => c.x === pos.tileX && c.y === pos.tileY && c.isAlive());
@@ -51,7 +51,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
 
     if (!mapDefinition) return { action: 'none' };
     
-    const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
+    const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length, GAME_SETTINGS.TILE_SIZE);
     
     // If clicked outside map area or on empty tile, deselect creature
     if (!pos) {

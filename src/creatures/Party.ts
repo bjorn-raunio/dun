@@ -1,6 +1,5 @@
 import { QuestMap } from '../maps/types';
 import { Region } from '../worldmap/Region';
-import { createQuestMapFromPreset } from '../maps/presets';
 
 export class Party {
   private _currentRegionId: string;
@@ -34,22 +33,13 @@ export class Party {
     this._currentRegionId = regionId;
   }
 
-  // Enter a region and create quest map from first preset
+  // Enter a region without automatically loading a quest map
   enterRegion(region: Region): void {
     this._currentRegionId = region.id;
-    
-    // Get the first quest map preset for this region
-    const firstPresetId = region.getFirstQuestMapPreset();
-    
-    if (firstPresetId) {
-      // Create quest map from preset
-      const questMap = createQuestMapFromPreset(firstPresetId);
-      this._currentQuestMap = questMap || undefined;
-    } else {
-      // No quest map presets available, clear current quest map
-      this._currentQuestMap = undefined;
-    }
+    // Don't automatically load a quest map - let the player choose
+    this._currentQuestMap = undefined;
   }
+
 
   // Clone method for creating copies
   clone(): Party {

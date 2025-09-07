@@ -8,6 +8,7 @@ import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
 import { Hero, ICreature } from './creatures/index';
 import { addMessage } from './utils/messageSystem';
+import { createQuestMapFromPreset } from './maps/presets';
 
 // Map and game state are now imported from extracted modules
 
@@ -77,27 +78,33 @@ function TileMapView() {
     // Store the current quest map to get the preset creatures
     const currentQuestMap = party.currentQuestMap;
 
+    // Remove preset creatures that were added when entering the map
+    if (currentQuestMap?.initialCreatures && currentQuestMap.initialCreatures.length > 0) {
+      const presetCreatureIds = currentQuestMap.initialCreatures.map(creature => creature.id);
+      
+      // Get current creatures from state and filter them
+      const currentCreatures = creatures; // Use the creatures from the current state
+      
+      // First, call leaveMap on creatures that are NOT being removed (player's heroes)
+      const creaturesToKeep = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
+      creaturesToKeep.forEach(creature => creature.leaveMap());
+      
+      // Remove preset creatures from their groups
+      const creaturesToRemove = currentCreatures.filter(creature => presetCreatureIds.includes(creature.id));
+      creaturesToRemove.forEach(creature => creature.group.removeCreature(creature));
+      
+      // Then filter out the preset creatures
+      const filteredCreatures = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
+      
+      // Dispatch the filtered creatures directly
+      gameActions.dispatch({ type: 'SET_CREATURES', payload: filteredCreatures });
+    }
+
     gameActions.setParty(prevParty => {
       const newParty = prevParty.clone();
       newParty.currentQuestMap = undefined;
       return newParty;
     });
-
-    // Remove preset creatures that were added when entering the map
-    if (currentQuestMap?.initialCreatures) {
-      const presetCreatureIds = currentQuestMap.initialCreatures.map(creature => creature.id);
-      
-      gameActions.setCreatures(prevCreatures => {
-        // First, call leaveMap on creatures that will be removed to clean up their state
-        //const creaturesToRemove = prevCreatures.filter(creature => presetCreatureIds.includes(creature.id));
-        //creaturesToRemove.forEach(creature => creature.leaveMap());
-        
-        // Then filter out the preset creatures
-        const newState = prevCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
-        newState.forEach(creature => creature.leaveMap());
-        return newState;
-      });
-    }
 
     // Also clear the map definition in the game state
     gameActions.dispatch({ type: 'SET_MAP_DEFINITION', payload: null });
@@ -157,35 +164,49 @@ function TileMapView() {
             regions={Array.from(gameState.worldMap.regions.values())}
             currentRegionId={gameState.party.currentRegionId}
             onCenterOnParty={gameActions.centerWorldmapOnParty}
+            heroes={creatures.filter(c => c.isPlayerControlled())}
+            onHeroSelect={(hero) => {
+            }}
             onRegionClick={(region) => {
-              // Handle region click - enter region and create quest map
-              let newQuestMap = null;
+              // Handle region click - enter region without automatically loading a quest map
               gameActions.setParty(prevParty => {
                 const newParty = prevParty.clone();
                 newParty.enterRegion(region);
-                newQuestMap = newParty.currentQuestMap || null;
-
-                // Add the preset creatures from the quest map to the game creatures
-                if (newParty.currentQuestMap?.initialCreatures) {
-                  gameActions.setCreatures(prevCreatures => [
-                    ...prevCreatures,
-                    ...newParty.currentQuestMap!.initialCreatures
-                  ]);
-                }
-
                 return newParty;
               });
 
-              // Also update the map definition in the game state
-              gameActions.setMapDefinition(newQuestMap);
-              
-              // Center the questmap when the party enters the region
-              if (newQuestMap) {
-                gameActions.centerQuestmapOnStartingTile();
-              }
+              // Clear the map definition since we're not loading a quest map automatically
+              gameActions.setMapDefinition(null);
             }}
             onRegionHover={(region) => {
               // Handle region hover - could show tooltip or highlight
+            }}
+            onQuestMapSelect={(questMapId) => {
+              // Handle quest map selection - set the selected quest map as current
+              // First, create the quest map from the preset
+              const numberOfHeroes = creatures.filter(creature => creature.isPlayerControlled()).length;
+              const newQuestMap = createQuestMapFromPreset(questMapId, numberOfHeroes);
+              
+              if (newQuestMap) {
+                // Set the quest map in the party
+                gameActions.setParty(prevParty => {
+                  const newParty = prevParty.clone();
+                  newParty.currentQuestMap = newQuestMap;
+                  return newParty;
+                });
+
+                // Update the map definition in the game state
+                gameActions.setMapDefinition(newQuestMap);
+
+                // Add the preset creatures from the quest map to the game creatures
+                if (newQuestMap.initialCreatures) {
+                  const newCreatures = [...creatures, ...newQuestMap.initialCreatures];
+                  gameActions.dispatch({ type: 'SET_CREATURES', payload: newCreatures });
+                }
+
+                // Center the questmap when the party enters the quest map
+                gameActions.centerQuestmapOnStartingTile();
+              }
             }}
           />
           <WorldMapBottomBar messages={messages} />

@@ -44,7 +44,7 @@ export function StartingTilesOverlay({ mapDefinition }: StartingTilesOverlayProp
                 display: "block",
                 pointerEvents: "none",
                 opacity: 0.9,
-                borderRadius: "4px",
+                borderRadius: "8px",
               }}
               onError={(e) => {
                 // Hide image if it fails to load

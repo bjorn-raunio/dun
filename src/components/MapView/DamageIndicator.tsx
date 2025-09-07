@@ -29,8 +29,8 @@ export function DamageIndicator({ creature }: DamageIndicatorProps) {
   }
 
   // Use fixed indicator size
-  const indicatorSize = 20;
-  const fontSize = 12;
+  const indicatorSize = 40;
+  const fontSize = 24;
 
   if (isWounded) {
     // Render wounded icon directly
@@ -69,10 +69,10 @@ export function DamageIndicator({ creature }: DamageIndicatorProps) {
         justifyContent: 'center',
         fontSize: fontSize,
         fontWeight: 'bold',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.5)',
         zIndex: 10,
         pointerEvents: 'none',
-        textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
       }}
       title={`${damageTaken} damage taken`}
     >

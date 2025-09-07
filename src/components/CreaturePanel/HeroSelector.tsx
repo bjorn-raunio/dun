@@ -10,10 +10,7 @@ interface HeroSelectorProps {
 export function HeroSelector({ heroes, onSelect }: HeroSelectorProps) {
   return (
     <div>
-      <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Heroes ({heroes.length})</div>
-      {heroes.length === 0 ? (
-        <div style={{ opacity: 0.8 }}>No heroes available</div>
-      ) : (
+      {heroes.length > 0 && (
         <div style={{ ...LAYOUT_PATTERNS.flexColumn, gap: 8, maxHeight: "calc(100vh - 300px)", overflow: "auto" }}>
           {heroes.map((hero) => (
             <div

@@ -1,7 +1,7 @@
 import { ICreature } from '../../creatures/index';
 import { GameActions, GameRefs } from '../../game/types';
 import { QuestMap } from '../../maps/types';
-import { tileFromPointer } from '../../utils';
+import { tileFromPointer, GAME_SETTINGS } from '../../utils';
 import { findCreatureById, getVisibleCreatures } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
 import { addMessage } from '../../utils/messageSystem';
@@ -49,7 +49,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
     if (tileAction.action === 'deselect' && selectedCreatureId) {
       setSelectedCreatureId(null);
     } else if (tileAction.action === 'movement' && selectedCreatureId && mapDefinition) {
-              const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
+              const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length, GAME_SETTINGS.TILE_SIZE);
 
       if (pos) {
         movementHandlers.handleMovement({

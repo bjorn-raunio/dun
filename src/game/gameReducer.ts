@@ -114,11 +114,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const currentRegion = state.worldMap.getRegion(state.party.currentRegionId);
       if (currentRegion) {
         const regionCenter = currentRegion.getCenterPosition();
-        // Center the region in the viewport
+        // Center the region in the viewport and reset zoom to 1.0
         const centerX = (state.viewport.width / 2) - regionCenter.x;
         const centerY = (state.viewport.height / 2) - regionCenter.y;
         return {
           ...state,
+          viewport: { ...state.viewport, zoom: 1.0 },
           pan: { x: centerX, y: centerY }
         };
       }
@@ -131,12 +132,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         const bottomBarHeight = 130; // Account for UI elements
         const availableHeight = state.viewport.height - bottomBarHeight;
         
-        // Center the starting tile in the viewport
+        // Center the starting tile in the viewport and reset zoom to 1.0
         const centerX = (state.viewport.width / 2) - (startingTile.x * TILE_SIZE) - (TILE_SIZE / 2);
         const centerY = (availableHeight / 2) - (startingTile.y * TILE_SIZE) - (TILE_SIZE / 2);
         
         return {
           ...state,
+          viewport: { ...state.viewport, zoom: 1.0 },
           pan: { x: centerX, y: centerY }
         };
       }

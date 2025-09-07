@@ -39,8 +39,8 @@ export function PathOverlay({
             width: TILE_SIZE,
             height: TILE_SIZE,
             background: COLORS.pathHighlight,
-            boxShadow: `inset 0 0 0 2px ${COLORS.pathHighlightBorder}`,
-            borderRadius: 6,
+            boxShadow: `inset 0 0 0 4px ${COLORS.pathHighlightBorder}`,
+            borderRadius: 12,
             pointerEvents: "none",
           }}
         />

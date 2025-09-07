@@ -1,4 +1,4 @@
-import { DIRECTIONS } from './constants';
+import { DIRECTIONS, GAME_SETTINGS } from './constants';
 import { QuestMap } from '../maps/types';
 
 // --- Geometry Utilities ---
@@ -52,7 +52,7 @@ export function tileFromPointer(
   livePan: { x: number; y: number; zoom: number },
   mapWidth: number,
   mapHeight: number,
-  tileSize: number = 50
+  tileSize: number = GAME_SETTINGS.TILE_SIZE
 ) {
   const rect = viewportRef.current?.getBoundingClientRect();
   if (!rect) return null;

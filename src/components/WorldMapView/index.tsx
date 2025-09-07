@@ -3,7 +3,9 @@ import { COLORS } from '../styles';
 import { RegionOverlay } from './RegionOverlay';
 import { ConnectionOverlay } from './ConnectionOverlay';
 import { PartyIconOverlay } from './PartyIconOverlay';
+import { WorldMapCharacterBar } from './WorldMapCharacterBar';
 import { RegionClass } from '../../worldmap';
+import { ICreature } from '../../creatures/index';
 
 interface WorldMapViewProps {
   onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -18,6 +20,9 @@ interface WorldMapViewProps {
   onRegionClick?: (region: RegionClass) => void;
   onRegionHover?: (region: RegionClass | null) => void;
   onCenterOnParty?: () => void;
+  heroes?: ICreature[];
+  onHeroSelect?: (hero: ICreature) => void;
+  onQuestMapSelect?: (questMapId: string) => void;
 }
 
 export function WorldMapView({
@@ -33,6 +38,9 @@ export function WorldMapView({
   onRegionClick,
   onRegionHover,
   onCenterOnParty,
+  heroes = [],
+  onHeroSelect,
+  onQuestMapSelect,
 }: WorldMapViewProps) {
   // Center the worldmap on the party when the component mounts or when the current region changes
   React.useEffect(() => {
@@ -126,6 +134,14 @@ export function WorldMapView({
           </>
         )}
       </div>
+      
+      {/* Character Bar */}
+      <WorldMapCharacterBar 
+        heroes={heroes} 
+        onSelect={onHeroSelect}
+        currentRegion={regions.find(r => r.id === currentRegionId)}
+        onQuestMapSelect={onQuestMapSelect}
+      />
     </div>
   );
 }

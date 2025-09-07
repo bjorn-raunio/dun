@@ -1,5 +1,5 @@
 import React from 'react';
-import { tileFromPointer } from '../../utils';
+import { tileFromPointer, GAME_SETTINGS } from '../../utils';
 import { QuestMap } from '../../maps/types';
 import { PathfindingResult } from '../../utils/pathfinding/types';
 
@@ -41,7 +41,8 @@ export function usePathHighlight(
       viewportRef, 
       livePan,
       cols, 
-      rows
+      rows,
+      GAME_SETTINGS.TILE_SIZE
     );
 
     if (!pos) {
