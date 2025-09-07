@@ -19,6 +19,10 @@ function validateCanRun(creature: ICreature, allCreatures: ICreature[]): boolean
         !creature.running && 
         !creature.hasMoved() &&
         getEngagingCreatures(creature, allCreatures).length === 0 &&
+        !creature.hasStatusEffect("knockedDown") &&
+        !creature.hasStatusEffect("diseased") &&
+        !creature.hasStatusEffect("poisoned") &&
+        !creature.hasStatusEffect("stationary") &&
         !creature.hasStatusEffect("wounded") &&
         !creature.hasStatusEffect("stunned");
 }

@@ -4,6 +4,7 @@ export * from './MapView';
 export * from './WorldMapView/index';
 export * from './ViewToggle';
 export * from './GameUI';
+export * from './WorldMapBottomBar';
 export * from './CreaturePanel';
 export * from './TurnTracker';
 export * from './DayNightIndicator';

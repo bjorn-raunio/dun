@@ -102,6 +102,10 @@ export class EquipmentSystem {
     if (isBackAttack) {
       return false;
     }
+    // Broken shields don't count
+    if (this.slots.offHand instanceof Shield && this.slots.offHand.isBroken()) {
+      return false;
+    }
     return this.slots.offHand instanceof Shield;
   }
 
@@ -212,9 +216,9 @@ export class EquipmentSystem {
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
     
     // Calculate combat bonuses for each weapon (broken weapons use unarmed bonus)
-    const mainBonus = mainWeapon && !mainWeapon.isBroken() ? mainWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -Infinity : -Infinity;
-    const offHandBonus = offHandWeapon && !offHandWeapon.isBroken() ? offHandWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -Infinity : -Infinity;
-    const unarmedBonus = this.unarmedWeapon.attacks.find(attack => attack.isRanged === false)?.toHitModifier ?? -1;
+    const mainBonus = mainWeapon && !mainWeapon.isBroken() ? mainWeapon.attacks.find(attack => attack.type === "melee")?.toHitModifier ?? -Infinity : -Infinity;
+    const offHandBonus = offHandWeapon && !offHandWeapon.isBroken() ? offHandWeapon.attacks.find(attack => attack.type === "melee")?.toHitModifier ?? -Infinity : -Infinity;
+    const unarmedBonus = this.unarmedWeapon.attacks.find(attack => attack.type === "melee")?.toHitModifier ?? -1;
 
     // Find the weapon with the highest bonus
     if (mainBonus >= offHandBonus && mainBonus >= unarmedBonus) {
@@ -237,7 +241,10 @@ export class EquipmentSystem {
    * Get the equipped shield
    */
   getShield(): Shield | undefined {
-    return this.slots.offHand instanceof Shield ? this.slots.offHand : undefined;
+    if (this.slots.offHand instanceof Shield && !this.slots.offHand.isBroken()) {
+      return this.slots.offHand;
+    }
+    return undefined;
   }
 
   // --- Combat Calculations (Delegated to CombatCalculator) ---

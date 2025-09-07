@@ -11,7 +11,7 @@ export interface TileInteractionHandlers {
     selectedCreatureId: string | null,
     creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
-    mapDefinition: QuestMap,
+    mapDefinition: QuestMap | null,
     targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
   ) => { action: 'none' | 'deselect' | 'movement' | 'targeting_cancelled' };
 }
@@ -25,7 +25,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
     selectedCreatureId: string | null,
     creatures: ICreature[],
     reachable: { tiles: Array<{ x: number; y: number }>; costMap: Map<string, number>; pathMap: Map<string, Array<{ x: number; y: number }>> },
-    mapDefinition: QuestMap,
+    mapDefinition: QuestMap | null,
     targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
   ): { action: 'none' | 'deselect' | 'movement' | 'targeting_cancelled' } {
     const wasDrag = Math.hypot(dragMoved.current.dx, dragMoved.current.dy) > GAME_SETTINGS.DRAG_THRESHOLD;
@@ -36,7 +36,7 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
     if (wasDrag) return { action: 'none' }; // Don't handle clicks if we were dragging
 
     // If in targeting mode and clicking on empty space, cancel targeting mode
-    if (targetingMode?.isActive) {
+    if (targetingMode?.isActive && mapDefinition) {
       const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
       if (pos) {
         // Check if there's a living creature at this position
@@ -49,6 +49,8 @@ export function createTileInteractionHandlers(gameActions: GameActions, gameRefs
       }
     }
 
+    if (!mapDefinition) return { action: 'none' };
+    
     const pos = tileFromPointer(e.clientX, e.clientY, viewportRef, livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
     
     // If clicked outside map area or on empty tile, deselect creature

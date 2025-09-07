@@ -11,6 +11,7 @@ import { QuestMap } from '../maps/types';
 interface GameUIProps {
   messages: string[];
   onEndTurn: () => void;
+  onLeaveMap: () => void;
   isAITurnActive?: boolean;
   turnState: TurnState;
   creatures: ICreature[];
@@ -22,6 +23,7 @@ interface GameUIProps {
 export function GameUI({
   messages,
   onEndTurn,
+  onLeaveMap,
   isAITurnActive = false,
   turnState,
   creatures,
@@ -61,7 +63,7 @@ export function GameUI({
         maxHeight: "none"
       }}>
         {messages.length === 0 ? (
-          <div style={{ opacity: 0.8 }}>No messages</div>
+          <div></div>
         ) : (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {messages.map((m, i) => (
@@ -84,6 +86,22 @@ export function GameUI({
       </div>
 
       <DayNightIndicator isNight={mapDefinition.night} />
+
+      <button
+        onClick={onLeaveMap}
+        style={{
+          minWidth: 120,
+          height: "fit-content",
+          maxHeight: "60px",
+          ...COMMON_STYLES.button,
+          fontWeight: 800,
+          background: COLORS.backgroundLight,
+          color: COLORS.text,
+          border: `2px solid ${COLORS.border}`,
+        }}
+      >
+        Leave Map
+      </button>
 
       <button
         onClick={onEndTurn}

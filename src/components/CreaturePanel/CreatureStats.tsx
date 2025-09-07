@@ -48,7 +48,7 @@ export function CreatureStats({ creature }: CreatureStatsProps) {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>Vitality:</span>
-            {creature.vitality}
+          <strong>{creature.vitality}</strong>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>Perception:</span>

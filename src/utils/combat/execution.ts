@@ -1,4 +1,4 @@
-import { Creature } from '../../creatures/index';
+import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
@@ -18,6 +18,7 @@ import { CombatTriggers } from './combatTriggers';
 import { diagonalMovementBlocked } from '../movement';
 import { addCombatMessage } from '../messageSystem';
 import { calculateDistanceBetween } from '../pathfinding';
+import { getRandomElement, isCriticalHit } from '../dice';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building
@@ -40,7 +41,7 @@ export function executeCombat(
 
   // Determine the weapon being used for the attack
   const equipment = attacker.getEquipmentSystem();
-  const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
+  let weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
 
   // Use consolidated validation
   const validation = validateCombat(attacker, target, weapon, allCreatures, mapDefinition);
@@ -54,44 +55,7 @@ export function executeCombat(
     };
   }
 
-  // Execute unified combat
-  const result = executeCombatPhase(attacker, target, weapon, allCreatures, mapDefinition);
-
-  // Update combat states for all creatures after combat
-  updateCombatStates(allCreatures);
-
-  return result;
-}
-
-// --- Combat Event Names ---
-export const COMBAT_EVENTS = {
-  ATTACK_HIT: 'onAttackHit',
-  ATTACK_MISS: 'onAttackMiss',
-  DOUBLE_RESULT: 'onDoubleResult'
-} as const;
-
-export type CombatEventName = typeof COMBAT_EVENTS[keyof typeof COMBAT_EVENTS];
-
-// --- Combat Event Types ---
-export interface CombatEventData {
-  attacker: Creature;
-  target: Creature;
-  weapon: BaseWeapon;
-  attack: WeaponAttack;
-  mapDefinition?: QuestMap;
-}
-
-/**
- * Unified combat execution for both melee and ranged combat
- */
-function executeCombatPhase(
-  attacker: Creature,
-  target: Creature,
-  weapon: BaseWeapon,
-  allCreatures: Creature[],
-  mapDefinition: QuestMap
-): CombatResult {
-  if(attacker.x === undefined || attacker.y === undefined || target.x === undefined || target.y === undefined) {
+  if (attacker.x === undefined || attacker.y === undefined || target.x === undefined || target.y === undefined) {
     return {
       success: false,
       damage: 0,
@@ -102,12 +66,12 @@ function executeCombatPhase(
   let attack: WeaponAttack | undefined;
   const distance = calculateDistanceBetween(attacker.x, attacker.y, target.x, target.y);
   weapon.attacks.forEach(a => {
-    if(distance >= a.minRange && distance <= a.range) {
+    if (distance >= a.minRange && distance <= a.range) {
       attack = a;
     }
   });
 
-  if(!attack) {
+  if (!attack) {
     weapon = attacker.getUnarmedWeapon();
     attack = weapon.attacks[0];
   }
@@ -120,14 +84,62 @@ function executeCombatPhase(
     mapDefinition
   };
 
+  // Execute unified combat
+  const result = executeCombatPhase(combatEventData, allCreatures);
+
+  // Update combat states for all creatures after combat
+  updateCombatStates(allCreatures);
+
+  return result;
+}
+
+// --- Combat Event Names ---
+export const COMBAT_EVENTS = {
+  HIT_ROLL: 'onHitRoll',
+  DEFEND_ROLL: 'onDefendRoll',
+  ATTACK_HIT: 'onAttackHit',
+  ATTACK_MISS: 'onAttackMiss',
+} as const;
+
+export type CombatEventName = typeof COMBAT_EVENTS[keyof typeof COMBAT_EVENTS];
+
+// --- Combat Event Types ---
+export interface CombatEventData {
+  attacker: ICreature;
+  target: ICreature;
+  weapon: BaseWeapon;
+  attack: WeaponAttack;
+  mapDefinition?: QuestMap;
+}
+
+/**
+ * Unified combat execution for both melee and ranged combat
+ */
+function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Creature[]): CombatResult {
+  /*if (attacker.x === undefined || attacker.y === undefined || target.x === undefined || target.y === undefined) {
+    return {
+      success: false,
+      damage: 0,
+      targetDefeated: false
+    };
+  }*/
+
   // === PART 1: TO-HIT ROLL ===
-  const toHitResult = attack.isRanged
-    ? executeToHitRollRanged(combatEventData)
-    : executeToHitRollMelee(combatEventData, mapDefinition);
+  const toHitResult = combatEventData.attack.type === "melee" ? executeToHitRollMelee(combatEventData, combatEventData.mapDefinition) : executeToHitRollRanged(combatEventData);
 
   // Consume action (regardless of hit or miss)
-  attacker.setRemainingActions(attacker.remainingActions - 1);
+  combatEventData.attacker.setRemainingActions(combatEventData.attacker.remainingActions - 1);
 
+  if (!toHitResult.hit && combatEventData.attack.type !== "melee" && toHitResult.attackerRoll.dice.includes(1)) {
+    const adjacent = combatEventData.target.getAdjacentEnemies(allCreatures).filter(c => c.size >= combatEventData.target.size);
+
+    const newTarget = getRandomElement(adjacent);
+    if (newTarget) {
+      combatEventData.target = newTarget;
+      toHitResult.hit = true;
+      addCombatMessage(`${combatEventData.attacker.name} hits ${newTarget.name} instead!`);
+    }
+  }
   if (!toHitResult.hit) {
     // Process miss triggers
     const missResult = {
@@ -137,74 +149,69 @@ function executeCombatPhase(
     };
 
     // Emit attack miss event
-    CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_MISS, combatEventData);
+    CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_MISS, combatEventData, toHitResult.attackerRoll);
     return missResult;
   }
 
   // Emit attack hit event
-  CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_HIT, combatEventData);
+  CombatTriggers.processCombatTriggers(COMBAT_EVENTS.ATTACK_HIT, combatEventData, toHitResult.attackerRoll);
 
   // Process double critical triggers
-  if (toHitResult.attackerDoubleCritical) {
+  if (toHitResult.attackerRoll.criticalSuccess) {
     // Universal rule: Double critical hits apply knocked down status unless target has greater size
-    if (target.size <= attacker.size) {
+    if (combatEventData.target.size <= combatEventData.attacker.size) {
       const knockedDownEffect = STATUS_EFFECT_PRESETS.knockedDown.createEffect();
-      target.addStatusEffect(knockedDownEffect);
+      combatEventData.target.addStatusEffect(knockedDownEffect);
     }
   }
 
   let pushbackResult = null;
   let bonusDamage = 0;
-  if (!attack.isRanged) {
-    pushbackResult = pushback(attacker, target, allCreatures, mapDefinition);
+  if (combatEventData.attack.type === "melee" && combatEventData.mapDefinition) {
+    pushbackResult = pushback(combatEventData.attacker, combatEventData.target, allCreatures, combatEventData.mapDefinition);
     bonusDamage += pushbackResult.bonusDamage;
   }
 
   // === PART 2: BLOCK ROLL ===
-  const blockResult = executeBlockRoll(attacker, target, toHitResult.attackerDoubleCritical, toHitResult.criticalHit);
+  const blockResult = executeBlockRoll(combatEventData.attacker, combatEventData.target, toHitResult.attackerRoll.criticalSuccess, isCriticalHit(toHitResult.attackerRoll.dice));
   addCombatMessage(blockResult.blockMessage);
 
-  if (blockResult.blockSuccess) {
-    // Shield blocked the attack - no damage
-    return {
-      success: true,
-      damage: 0,
-      targetDefeated: false
-    };
+  // === PART 3: DAMAGE ROLL ===
+  let damage = 0;
+  if (!blockResult.blockSuccess) {
+    const damageResult = executeDamageRoll(
+      combatEventData.attacker,
+      combatEventData.target,
+      combatEventData.attack,
+      toHitResult.attackerRoll.criticalSuccess,
+      isCriticalHit(toHitResult.attackerRoll.dice),
+      bonusDamage
+    );
+    addCombatMessage(damageResult.damageMessage);
+
+    // Apply damage using the proper method
+    combatEventData.target.takeDamage(damageResult.damage);
+    damage = damageResult.damage;
   }
 
-  // === PART 3: DAMAGE ROLL ===
-  const damageResult = executeDamageRoll(
-    attacker,
-    target,
-    attack,
-    toHitResult.attackerDoubleCritical,
-    toHitResult.criticalHit,
-    bonusDamage
-  );
-  addCombatMessage(damageResult.damageMessage);
-
-  // Apply damage using the proper method
-  const damageApplied = target.takeDamage(damageResult.damage);
-
-  if (pushbackResult && pushbackResult.position) {
-    applyPushback(attacker, target, pushbackResult.position, mapDefinition, true);
+  if (pushbackResult && pushbackResult.position && combatEventData.mapDefinition) {
+    applyPushback(combatEventData.attacker, combatEventData.target, pushbackResult.position, combatEventData.mapDefinition, true);
   }
 
   // Check if target is defeated
-  const targetDefeated = target.isDead();
+  const targetDefeated = combatEventData.target.isDead();
 
   // Create final result
   const finalResult = {
     success: true,
-    damage: damageResult.damage,
+    damage: damage,
     targetDefeated
   };
 
   return finalResult;
 }
 
-function pushback(attacker: Creature, target: Creature, allCreatures: Creature[], mapDefinition: QuestMap): { bonusDamage: number, position?: { x: number, y: number } } {
+function pushback(attacker: ICreature, target: ICreature, allCreatures: Creature[], mapDefinition: QuestMap): { bonusDamage: number, position?: { x: number, y: number } } {
   if (attacker.size < target.size || !attacker.canPushCreature(target.id)) {
     return { bonusDamage: 0 };
   }
@@ -266,7 +273,7 @@ function pushback(attacker: Creature, target: Creature, allCreatures: Creature[]
   return { bonusDamage: 0 };
 }
 
-function applyPushback(attacker: Creature, target: Creature, position: { x: number, y: number }, mapDefinition: QuestMap, takePosition: boolean) {
+function applyPushback(attacker: ICreature, target: ICreature, position: { x: number, y: number }, mapDefinition: QuestMap, takePosition: boolean) {
   if (target.y === undefined || target.x === undefined) {
     return;
   }

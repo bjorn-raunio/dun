@@ -53,6 +53,7 @@ export interface CreaturePreset {
     skills?: string[];
     inventory?: string[];
     equipment?: Record<string, string>;
+    minHeroes?: number;
   };
 }
 

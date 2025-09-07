@@ -75,6 +75,11 @@ export class CreatureCombatManager implements ICreatureCombatManager {
     return this.getEquipmentSystem().hasShield();
   }
 
+  getShield(): Shield | undefined {
+    return this.getEquipmentSystem().getShield();
+  }
+
+
   // --- Zone of Control ---
 
   getZoneOfControlRange(): number {

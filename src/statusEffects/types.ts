@@ -12,6 +12,7 @@ export type StatusEffectType =
   | "darkness"
   | "totalDarkness"
   | "strength"
+  | "dexterity"
   | "speed"
   | "heroism";
 

@@ -16,14 +16,14 @@ export function usePathHighlight(
   reachable: PathfindingResult,
   viewportRef: React.MutableRefObject<HTMLDivElement | null>,
   livePan: { x: number; y: number; zoom: number },
-  mapDefinition: QuestMap,
+  mapDefinition: QuestMap | null,
   reachableKey: number
 ): PathHighlightResult {
   const [hoveredTile, setHoveredTile] = React.useState<{ x: number; y: number } | null>(null);
   const [highlightedPath, setHighlightedPath] = React.useState<Array<{ x: number; y: number }>>([]);
 
-  const cols = mapDefinition.tiles[0].length;
-  const rows = mapDefinition.tiles.length;
+  const cols = mapDefinition?.tiles[0]?.length || 0;
+  const rows = mapDefinition?.tiles?.length || 0;
 
   // Clear highlights when reachable data changes (e.g., after movement)
   React.useEffect(() => {
@@ -33,7 +33,7 @@ export function usePathHighlight(
 
   // Mouse move handler to track hovered tile
   const onMouseMove = React.useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!viewportRef.current) return;
+    if (!viewportRef.current || !mapDefinition) return;
 
     const pos = tileFromPointer(
       e.clientX, 

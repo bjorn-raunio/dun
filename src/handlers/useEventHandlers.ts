@@ -26,7 +26,7 @@ export function useEventHandlers(
     pathMap: Map<string, Array<{ x: number; y: number }>>;
   },
   targetsInRangeIds: Set<string>,
-  mapDefinition: QuestMap,
+  mapDefinition: QuestMap | null,
   setSelectedCreatureId: (id: string | null) => void,
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
 ): EventHandlers {

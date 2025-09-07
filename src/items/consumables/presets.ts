@@ -32,8 +32,7 @@ export const consumablePresets: Record<string, ConsumablePreset> = {
     properties: ["magical"], 
     weight: 1, 
     value: 4 
-  },
-  
+  },  
   manaPotion: { 
     name: "Mana Potion", 
     effect: "Restores 4 mana", 
@@ -69,13 +68,13 @@ export const consumablePresets: Record<string, ConsumablePreset> = {
     weight: 0.5, 
     value: 60 
   },
-  speedPotion: { 
-    name: "Speed Potion", 
-    effect: "+2 move/agility for 3 turns", 
+  dexterityPotion: { 
+    name: "Dexterity Potion", 
+    effect: "+1 combat/ranged/agility, +2 dexterity for 3 turns", 
     targetType: "self", 
     properties: ["magical"], 
     statusEffect: {
-      type: "speed",
+      type: "dexterity",
       duration: 3,
       value: 2
     },
@@ -95,60 +94,58 @@ export const consumablePresets: Record<string, ConsumablePreset> = {
     weight: 0.5, 
     value: 60 
   },
-  
-  // Utility items
-  torch: { 
-    name: "Torch", 
-    effect: "Provides light in dark areas", 
-    charges: 1, 
+  speedPotion: { 
+    name: "Speed Potion", 
+    effect: "+2 move/agility for 3 turns", 
     targetType: "self", 
-    properties: ["light"], 
-    weight: 1, 
-    value: 1 
+    properties: ["magical"], 
+    statusEffect: {
+      type: "speed",
+      duration: 3,
+      value: 2
+    },
+    weight: 0.5, 
+    value: 60 
   },
-  rope: { 
-    name: "Rope", 
-    effect: "50 feet of sturdy rope", 
-    charges: 1, 
+
+  // Throwing weapons
+  greekFire: { 
+    name: "Greek fire", 
+    effect: "", 
     targetType: "self", 
-    weight: 10, 
-    value: 1 
+    weight: 0.5, 
+    value: 2 
   },
-  lockpick: { 
-    name: "Lockpick", 
-    effect: "Attempt to pick a lock", 
-    charges: 1, 
-    targetType: "self", 
-    weight: 0.1, 
-    value: 10 
-  },
-  
-  acidVial: { 
-    name: "Acid Vial", 
-    effect: "Deals 3 acid damage and may damage armor", 
-    targetType: "enemy", 
-    range: 2, 
-    properties: ["thrown", "corrosive"], 
-    weight: 1, 
-    value: 25 
-  },
-  
+
   // Food and sustenance
-  bread: { 
-    name: "Bread", 
-    effect: "Restores 1 HP and removes hunger", 
+  provisions: { 
+    name: "Pack of provisions", 
+    effect: "Restores 1 vitality", 
     restoreVitality: 1,
     targetType: "self", 
     weight: 0.5, 
     value: 2 
   },
-  ale: { 
-    name: "Ale", 
-    effect: "Restores 1 HP, may cause intoxication", 
+  mead: { 
+    name: "Vigorous mead", 
+    effect: "Restores 1 HP, gives +1 strength for 4 turns", 
     restoreVitality: 1,
     targetType: "self", 
-    properties: ["intoxicating"], 
+    statusEffect: {
+      type: "strength",
+      duration: 4,
+      value: 1
+    },
     weight: 1, 
     value: 2 
-  }
+  },
+
+  // Magic
+  components: {
+    name: "Components for magic", 
+    effect: "+2 to casting roll",
+    targetType: "self", 
+    weight: 2,
+    value: 5
+  },
 };

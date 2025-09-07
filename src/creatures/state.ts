@@ -122,22 +122,22 @@ export class CreatureStateManager {
     return true;
   }
 
-  useMovement(points: number): void {
+  useMovement(points: number): boolean {
     // Dead creatures cannot use movement
-    if (this.isDead()) {
-      return;
+    if (this.isDead() || this.state.remainingMovement === 0) {
+      return false;
     }
     this.state.remainingMovement = Math.max(0, this.state.remainingMovement - points);
+    return true;
   }
 
-  useAction(): void {
+  useAction(): boolean {
     // Dead creatures cannot use actions
-    if (this.isDead()) {
-      return;
+    if (this.isDead() || this.state.remainingActions <= 0) {
+      return false;
     }
-    if (this.state.remainingActions > 0) {
-      this.state.remainingActions--;
-    }
+    this.state.remainingActions--;    
+    return true;
   }
 
   canUseQuickAction(): boolean {
@@ -147,15 +147,15 @@ export class CreatureStateManager {
     return this.state.remainingQuickActions > 0 || this.state.remainingActions > 0;
   }
 
-  useQuickAction(): void {
+  useQuickAction(): boolean {
     if (!this.canUseQuickAction()) {
-      return;
+      return false;
     }
     if (this.state.remainingQuickActions > 0) {
       this.state.remainingQuickActions--;
-    } else {
-      this.useAction();
+      return true;
     }
+    return this.useAction();
   }
 
   useMana(amount: number): boolean {

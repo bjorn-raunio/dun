@@ -16,9 +16,12 @@ import { QuestMap } from '../../maps/types';
  */
 export function calculateTargetsInRange(
   attacker: ICreature,
-  allCreatures: ICreature[]
+  allCreatures: ICreature[],
+  offhand: boolean = false
 ): Set<string> {
-  const rangeTiles = attacker.getMainWeapon().getValidRange().max;
+  const equipment = attacker.getEquipmentSystem();
+  const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
+  const rangeTiles = weapon.getValidRange().max;
   const inRange = new Set<string>();
 
   // Skip if attacker is not on the map (undefined position)
@@ -118,8 +121,8 @@ export function calculateEffectiveArmor(target: ICreature, targetEquipment: Equi
  * Calculate elevation bonus for melee combat
  */
 export function calculateElevationBonus(
-  attacker: Creature,
-  target: Creature,
+  attacker: ICreature,
+  target: ICreature,
   mapDefinition?: QuestMap
 ): { attackerBonus: number; defenderBonus: number } {
   if (!mapDefinition) return { attackerBonus: 0, defenderBonus: 0 };

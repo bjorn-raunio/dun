@@ -23,7 +23,7 @@ export interface MouseHandlerDependencies {
   };
   targetsInRangeIds: Set<string>;
   setSelectedCreatureId: (id: string | null) => void;
-  mapDefinition: QuestMap;
+  mapDefinition: QuestMap | null;
   targetingMode?: { 
     isActive: boolean; 
     attackerId: string | null; 

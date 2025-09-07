@@ -48,7 +48,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
     // Handle tile action results
     if (tileAction.action === 'deselect' && selectedCreatureId) {
       setSelectedCreatureId(null);
-    } else if (tileAction.action === 'movement' && selectedCreatureId) {
+    } else if (tileAction.action === 'movement' && selectedCreatureId && mapDefinition) {
               const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
 
       if (pos) {
@@ -91,7 +91,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   function handleCreatureSelection(creature: ICreature) {
     setSelectedCreatureId(creature.id);
     
-    if (creature.isPlayerControlled() && mapDefinition?.tiles?.length > 0) {
+    if (creature.isPlayerControlled() && mapDefinition?.tiles && mapDefinition.tiles.length > 0) {
       const cols = mapDefinition.tiles[0].length;
       const rows = mapDefinition.tiles.length;
       

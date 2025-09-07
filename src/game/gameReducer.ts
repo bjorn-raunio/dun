@@ -5,6 +5,7 @@ import { QuestMap } from '../maps/types';
 import { WeatherState, createWeatherEffect } from './weather';
 import { WorldMap } from '../worldmap/WorldMap';
 import { createSampleWorldMap } from '../worldmap/presets';
+import { TILE_SIZE } from '../components/styles';
 
 
 // --- Game Action Types ---
@@ -29,7 +30,9 @@ export type GameAction =
   | { type: 'SET_WORLDMAP'; payload: WorldMap }
   | { type: 'SET_MAP_DEFINITION'; payload: QuestMap | null }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
-  | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } };
+  | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } }
+  | { type: 'CENTER_WORLDMAP_ON_PARTY' }
+  | { type: 'CENTER_QUESTMAP_ON_STARTING_TILE' };
 
 // --- Game Reducer ---
 
@@ -106,6 +109,39 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         viewport: { ...state.viewport, ...action.payload }
       };
+    
+    case 'CENTER_WORLDMAP_ON_PARTY':
+      const currentRegion = state.worldMap.getRegion(state.party.currentRegionId);
+      if (currentRegion) {
+        const regionCenter = currentRegion.getCenterPosition();
+        // Center the region in the viewport
+        const centerX = (state.viewport.width / 2) - regionCenter.x;
+        const centerY = (state.viewport.height / 2) - regionCenter.y;
+        return {
+          ...state,
+          pan: { x: centerX, y: centerY }
+        };
+      }
+      console.log('Could not center worldmap: region not found for', state.party.currentRegionId);
+      return state;
+    
+    case 'CENTER_QUESTMAP_ON_STARTING_TILE':
+      if (state.mapDefinition && state.mapDefinition.startingTiles && state.mapDefinition.startingTiles.length > 0) {
+        const startingTile = state.mapDefinition.startingTiles[0];
+        const bottomBarHeight = 130; // Account for UI elements
+        const availableHeight = state.viewport.height - bottomBarHeight;
+        
+        // Center the starting tile in the viewport
+        const centerX = (state.viewport.width / 2) - (startingTile.x * TILE_SIZE) - (TILE_SIZE / 2);
+        const centerY = (availableHeight / 2) - (startingTile.y * TILE_SIZE) - (TILE_SIZE / 2);
+        
+        return {
+          ...state,
+          pan: { x: centerX, y: centerY }
+        };
+      }
+      console.log('Could not center quest map: no map definition or starting tiles');
+      return state;
     
     case 'BATCH_UPDATE':
       return action.payload.reduce(gameReducer, state);
@@ -184,9 +220,8 @@ export function getInitialGameState(
     worldMap: cachedWorldMap,
     mapDefinition: mapDefinition,
     party: (() => {
-      const playerCreatures = initialCreatures.filter(c => c.group === CreatureGroup.PLAYER);
       const startingRegionId = 't26'; // Default starting region
-      return new Party(startingRegionId, playerCreatures);
+      return new Party(startingRegionId);
     })()
   };
 }

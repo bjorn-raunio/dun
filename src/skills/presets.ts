@@ -1,4 +1,5 @@
 import { STATUS_EFFECT_PRESETS } from '../statusEffects';
+import { DiceRoll, isDoubles } from '../utils';
 import { CombatEventData } from '../utils/combat/execution';
 import { Skill, SkillType } from './types';
 
@@ -16,12 +17,15 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
     description: "stun on doubles during an attack",
     combatTriggers: [
       {
-        event: "onDoubleResult",
+        events: ["onHitRoll", "onDefendRoll"],
         type: "melee",
         effect: (data: CombatEventData) => {
           if (data.target.size < 4) {
             data.target.addStatusEffect(STATUS_EFFECT_PRESETS.stunned.createEffect());
           }
+        },
+        validator: (roll: DiceRoll) => {
+          return isDoubles(roll.dice);
         }
       }
     ]
@@ -30,6 +34,16 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
   // Stealth Skills
   "scout": {
     name: "Scout",
+    type: "stealth",
+    description: "",
+  },
+  "skulk": {
+    name: "Skulk",
+    type: "stealth",
+    description: "",
+  },
+  "stealth": {
+    name: "Stealth",
     type: "stealth",
     description: "",
   },
@@ -48,6 +62,16 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
       { attribute: "courage", value: 1 }
     ]
   },
+  "mislead": {
+    name: "Mislead",
+    type: "academic",
+    description: ""
+  },
+  "secretsOfMagic": {
+    name: "Secrets of Magic",
+    type: "academic",
+    description: ""
+  },
   "tamingAnimals": {
     name: "Taming Animals",
     type: "academic",
@@ -55,6 +79,17 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
   },
 
   // Natural Skills
+  "crystalBody": {
+    name: "Crystal Body",
+    type: "natural",
+    description: "",
+  },
+  "lostInTheDark": {
+    name: "Lost In The Dark",
+    type: "natural",
+    description: "-1 to all attributes in darkness",
+    darkVision: -1
+  },
   "sharpSenses": {
     name: "Sharp Senses",
     type: "natural",
@@ -63,11 +98,10 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
       { attribute: "perception", value: 1 }
     ]
   },
-  "lostInTheDark": {
-    name: "Lost In The Dark",
+  "small": {
+    name: "Small",
     type: "natural",
-    description: "-1 to all attributes in darkness",
-    darkVision: -1
+    description: ""
   },
   "undead": {
     name: "Undead",

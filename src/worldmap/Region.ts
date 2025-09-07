@@ -11,6 +11,7 @@ export class Region implements RegionType {
   public requirements?: string[];
   public encounters?: string[];
   public resources?: string[];
+  public questMapPresets?: string[];
 
   constructor(data: RegionType) {
     this.id = data.id;
@@ -23,6 +24,7 @@ export class Region implements RegionType {
     this.requirements = data.requirements;
     this.encounters = data.encounters;
     this.resources = data.resources;
+    this.questMapPresets = data.questMapPresets;
   }
 
   /**
@@ -209,6 +211,13 @@ export class Region implements RegionType {
   }
 
   /**
+   * Get the first quest map preset ID for this region
+   */
+  getFirstQuestMapPreset(): string | null {
+    return this.questMapPresets && this.questMapPresets.length > 0 ? this.questMapPresets[0] : null;
+  }
+
+  /**
    * Clone the region
    */
   clone(): Region {
@@ -218,6 +227,7 @@ export class Region implements RegionType {
       requirements: this.requirements ? [...this.requirements] : undefined,
       encounters: this.encounters ? [...this.encounters] : undefined,
       resources: this.resources ? [...this.resources] : undefined,
+      questMapPresets: this.questMapPresets ? [...this.questMapPresets] : undefined,
     });
   }
 }

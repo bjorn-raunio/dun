@@ -1,6 +1,6 @@
 import { Hero } from './hero';
 import { CreatureGroup, CreaturePositionOrUndefined } from '../index';
-import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../../items';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous } from '../../items';
 import { heroPresets } from './presets';
 import { HeroPreset } from '../presets/types';
 import { Item } from '../../items';
@@ -30,6 +30,12 @@ function createInventoryFromPreset(preset: HeroPreset): Item[] {
           break;
         case "consumable":
           inventory.push(createConsumable(itemDef.preset));
+          break;
+        case "miscellaneous":
+          const miscItem = createMiscellaneous(itemDef.preset);
+          if (miscItem) {
+            inventory.push(miscItem);
+          }
           break;
       }
     }

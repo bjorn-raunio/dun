@@ -4,6 +4,7 @@ import { addGameMessage } from '../utils/messageSystem';
 import { ICreature } from '../creatures';
 import { createStatusEffect, standardAttributeModifiers } from '../statusEffects';
 import { rollD6 } from '../utils/dice';
+import { CombatTrigger } from '../skills/types';
 
 // --- Base Item Classes ---
 export class Item {
@@ -30,6 +31,8 @@ export class Item {
 export class EquippableItem extends Item {
   slot: string; // equipment slot this item occupies
   isEquipped: boolean = false;
+  broken: boolean = false; // whether the weapon is broken
+  breakRoll: number; // roll equal or lower on 1d6 to break
 
   constructor(params: {
     id?: string;
@@ -37,11 +40,56 @@ export class EquippableItem extends Item {
     slot: string;
     weight?: number;
     value?: number;
+    breakRoll?: number;
   }) {
     super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
     this.slot = params.slot;
+    this.breakRoll = params.breakRoll ?? 0;
+  }
+
+  /**
+   * Break the item
+   */
+  break(creature: ICreature): void {
+    if (!this.checkForBreaking()) {
+      return;
+    }
+    if (this.name === 'Unarmed') {
+      creature.addStatusEffect(createStatusEffect('stunned', 'stunned', null, {
+        name: "Injured",
+        attributeModifiers: {
+          ...standardAttributeModifiers
+        },
+        priority: 1
+      }));
+      return;
+    }
+    this.broken = true;
+    addGameMessage(`${creature.name}s ${this.name.toLowerCase()} breaks!`);
+  }
+
+  /**
+   * Check if the item is broken
+   */
+  isBroken(): boolean {
+    return this.broken;
+  }
+
+  /**
+   * Check if the item should break on a 1d6 roll
+   * @returns true if the item breaks
+   */
+  checkForBreaking(): boolean {
+    if (this.broken || this.breakRoll <= 0) {
+      return false;
+    }
+
+    const roll = rollD6();
+    return roll <= this.breakRoll;
   }
 }
+
+export type WeaponAttackType = "melee" | "ranged" | "throwing";
 
 export type WeaponAttack = {
   toHitModifier: number;
@@ -50,7 +98,7 @@ export type WeaponAttack = {
   range: number;
   minRange: number;
   addStrength: boolean;
-  isRanged: boolean;
+  type: WeaponAttackType;
 }
 
 export class BaseWeapon extends EquippableItem {
@@ -59,8 +107,7 @@ export class BaseWeapon extends EquippableItem {
   hands: 1 | 2;
   properties?: string[];
   attributeModifiers?: Partial<Attributes>; // stat bonuses from equipment
-  broken: boolean = false; // whether the weapon is broken
-  breakRoll: number; // roll equal or lower on 1d6 to break
+  combatTriggers?: CombatTrigger[]; // combat triggers for weapon effects
 
   constructor(params: {
     id?: string;
@@ -70,7 +117,7 @@ export class BaseWeapon extends EquippableItem {
     hands: 1 | 2;
     properties?: string[];
     attributeModifiers?: Partial<Attributes>;
-    broken?: boolean;
+    combatTriggers?: CombatTrigger[];
     breakRoll?: number;
     weight?: number;
     value?: number;
@@ -81,15 +128,15 @@ export class BaseWeapon extends EquippableItem {
       name: params.name,
       slot: params.slot ?? "weapon",
       weight: params.weight,
-      value: params.value
+      value: params.value,
+      breakRoll: params.breakRoll
     });
     this.kind = params.kind;
     this.attacks = params.attacks;
     this.hands = params.hands;
     this.properties = params.properties;
     this.attributeModifiers = params.attributeModifiers;
-    this.broken = params.broken ?? false;
-    this.breakRoll = params.breakRoll ?? 1;
+    this.combatTriggers = params.combatTriggers;
   }
 
   getValidRange(): { min: number, max: number } {
@@ -108,44 +155,6 @@ export class BaseWeapon extends EquippableItem {
   isValidRange(range: number): boolean {
     const validRange = this.getValidRange();
     return range >= validRange.min && range <= validRange.max;
-  }
-
-  /**
-   * Break the weapon
-   */
-  break(creature: ICreature): void {
-    if (this.name === 'Unarmed') {
-      creature.addStatusEffect(createStatusEffect('stunned', 'stunned', null, {
-        name: "Injured",
-        attributeModifiers: {
-          ...standardAttributeModifiers
-        },
-        priority: 1
-      }));
-      return;
-    }
-    this.broken = true;
-    addGameMessage(`${creature.name}s ${this.name.toLowerCase()} breaks!`);
-  }
-
-  /**
-   * Check if the weapon is broken
-   */
-  isBroken(): boolean {
-    return this.broken;
-  }
-
-  /**
-   * Check if the weapon should break on a 1d6 roll
-   * @returns true if the weapon breaks
-   */
-  checkForBreaking(): boolean {
-    if (this.broken || this.breakRoll <= 0) {
-      return false;
-    }
-
-    const roll = rollD6();
-    return roll <= this.breakRoll;
   }
 
   /**

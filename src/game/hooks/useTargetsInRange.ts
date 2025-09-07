@@ -11,7 +11,8 @@ export function useTargetsInRange(
   creatures: ICreature[],
   selectedCreatureId: string | null,
   targetsInRangeKey: number,
-  mapDefinition: QuestMap
+  mapDefinition: QuestMap | null,
+  targetingMode?: { isActive: boolean; attackerId: string | null; message: string; offhand?: boolean }
 ) {
   const [targetsInRangeIds, setTargetsInRangeIds] = React.useState<Set<string>>(new Set());
 
@@ -32,8 +33,14 @@ export function useTargetsInRange(
 
     logGame(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
     
+    // Determine which weapon to use for range calculation
+    let offhand = false;
+    if (targetingMode?.isActive && targetingMode.attackerId === sel.id) {
+      offhand = targetingMode.offhand || false;
+    }
+    
     // Get basic targets in range
-    const basicTargetsInRange = calculateTargetsInRange(sel, creatures);
+    const basicTargetsInRange = calculateTargetsInRange(sel, creatures, offhand);
     
     // Filter by line of sight if map data is available
     let finalTargetsInRange = basicTargetsInRange;
@@ -68,7 +75,7 @@ export function useTargetsInRange(
     
     logGame(`Final targets in range: ${Array.from(finalTargetsInRange).join(', ')}`);
     setTargetsInRangeIds(finalTargetsInRange);
-  }, [selectedCreatureId, creatures, targetsInRangeKey, mapDefinition]);
+  }, [selectedCreatureId, creatures, targetsInRangeKey, mapDefinition, targetingMode]);
 
   return {
     targetsInRangeIds,

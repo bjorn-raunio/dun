@@ -15,7 +15,14 @@ export const WORLD_REGIONS: RegionType[] = [
       { x: 2754, y: 1694 },
       { x: 2670, y: 1791 },
     ],
-    connections: [],
+    connections: [
+      {
+        targetRegionId: 't25',
+        connectionType: 'path',
+        distance: 2,
+        isBlocked: false
+      }
+    ],
     type: 'village',
     isExplored: true,
     isAccessible: true,
@@ -36,29 +43,25 @@ export const WORLD_REGIONS: RegionType[] = [
       { x: 2674, y: 1464 },
       { x: 2454, y: 1496 },
     ],
-    connections: [],
+    connections: [
+      {
+        targetRegionId: 't26',
+        connectionType: 'path',
+        distance: 2,
+        isBlocked: false
+      }
+    ],
     type: 'forest',
     isExplored: false,
     isAccessible: true,
     encounters: ['wolf', 'bandit', 'mysterious_traveler'],
-    resources: ['wood', 'herbs', 'mushrooms']
+    resources: ['wood', 'herbs', 'mushrooms'],
+    questMapPresets: ['freeTheMerchants']
   },
 ];
 
 // --- Sample Connections ---
-
-export const REGION_CONNECTIONS: Array<{ from: string; to: string; connection: RegionConnection }> = [
-  {
-    from: 't26',
-    to: 't25',
-    connection: {
-      targetRegionId: 't25',
-      connectionType: 'path',
-      distance: 2,
-      isBlocked: false
-    }
-  }
-];
+// Note: Connections are now defined directly in the region data above
 
 // --- Sample World Map ---
 
@@ -68,8 +71,8 @@ export const SAMPLE_WORLD_MAP: WorldMapType = {
   description: 'A diverse world filled with mystery, danger, and opportunity. From peaceful villages to ancient ruins, adventure awaits around every corner.',
   backgroundImage: '/worldmap.jpg',
   regions: new Map(),
-  startingRegionId: 'starting_village',
-  discoveredRegions: new Set(['starting_village']),
+  startingRegionId: 't26',
+  discoveredRegions: new Set(['t26']),
   globalEvents: ['The Great Festival approaches', 'Rumors of ancient treasure spread'],
   weather: {
     current: 'clear',
@@ -96,18 +99,10 @@ export function createSampleWorldMap(): WorldMap {
   // Create the world map
   const worldMap = new WorldMap(SAMPLE_WORLD_MAP);
   
-  // Add all regions
+  // Add all regions (connections are already defined in the region data)
   WORLD_REGIONS.forEach(regionData => {
     const region = new Region(regionData);
     worldMap.addRegion(region);
-  });
-  
-  // Add all connections
-  REGION_CONNECTIONS.forEach(({ from, to, connection }) => {
-    const fromRegion = worldMap.getRegion(from);
-    if (fromRegion) {
-      fromRegion.addConnection(connection);
-    }
   });
   
   return worldMap;

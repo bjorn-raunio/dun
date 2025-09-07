@@ -1,4 +1,6 @@
+import { WeaponAttackType } from '../items';
 import { Attributes } from '../statusEffects';
+import { DiceRoll } from '../utils';
 import { CombatEventData, CombatEventName } from '../utils/combat/execution';
 
 // --- Skill Types ---
@@ -19,7 +21,8 @@ export interface Skill {
 }
 
 export interface CombatTrigger {
-  event: CombatEventName;
-  type?: "melee" | "ranged";
+  events: CombatEventName[];
+  type?: WeaponAttackType;
   effect: (data: CombatEventData) => void;
+  validator?: (roll: DiceRoll) => boolean;
 }

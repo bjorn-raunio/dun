@@ -1,5 +1,5 @@
 import { Monster, Mercenary, CreatureGroup, CreaturePositionOrUndefined } from '../index';
-import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable } from '../../items';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous } from '../../items';
 import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
 import { monsterPresets } from './monsters';
 import { mercenaryPresets } from './mercenaries';
@@ -32,6 +32,12 @@ function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): Ite
           break;
         case "consumable":
           inventory.push(createConsumable(itemDef.preset));
+          break;
+        case "miscellaneous":
+          const miscItem = createMiscellaneous(itemDef.preset);
+          if (miscItem) {
+            inventory.push(miscItem);
+          }
           break;
       }
     }

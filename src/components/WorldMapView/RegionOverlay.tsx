@@ -27,6 +27,12 @@ export function RegionOverlay({
         zIndex: 10,
       }}
     >
+      {/* SVG filter definitions */}
+      <defs>
+        <filter id="regionBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2"/>
+        </filter>
+      </defs>
       {regions.map(region => {
         const isCurrentRegion = region.id === currentRegionId;
         const isExplored = region.isExplored;
@@ -51,19 +57,15 @@ export function RegionOverlay({
               fill={fillColor}
               stroke={borderColor}
               strokeWidth={strokeWidth}
+              className="region-polygon"
+              filter="url(#regionBlur)"
               style={{
                 cursor: 'pointer',
                 pointerEvents: 'all',
               }}
               onClick={() => onRegionClick?.(region)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.fill = 'rgba(0, 229, 255, 0.5)';
-                onRegionHover?.(region);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.fill = 'transparent';
-                onRegionHover?.(null);
-              }}
+              onMouseEnter={() => onRegionHover?.(region)}
+              onMouseLeave={() => onRegionHover?.(null)}
             />
             
           </g>

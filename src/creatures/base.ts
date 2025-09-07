@@ -273,6 +273,7 @@ export abstract class Creature implements ICreature {
   getUnarmedWeapon(): BaseWeapon { return this.combatManager.getUnarmedWeapon(); }
   getMaxAttackRange(): number { return this.combatManager.getMaxAttackRange(); }
   hasShield(): boolean { return this.combatManager.hasShield(); }
+  getShield(): Shield | undefined { return this.combatManager.getShield(); }
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
   getEquipmentSystem(): EquipmentSystem { return this.combatManager.getEquipmentSystem(); }
 
@@ -338,6 +339,23 @@ export abstract class Creature implements ICreature {
     });
   }
 
+  // Get all enemies in adjacent tiles (distance 1)
+  getAdjacentEnemies(allCreatures: ICreature[], tile?: { x: number, y: number }): ICreature[] {
+    const hostileCreatures = this.getHostileCreatures(allCreatures);
+    const x = tile?.x ?? this.x;
+    const y = tile?.y ?? this.y;
+    return hostileCreatures.filter(enemy => {
+      if (x === undefined || y === undefined || enemy.x === undefined || enemy.y === undefined) {
+        return false;
+      }
+      if(enemy.isDead()) {
+        return false;
+      }
+      const distance = calculateDistanceBetween(x, y, enemy.x, enemy.y);
+      return distance <= 1;
+    });
+  }
+
   // --- Position Methods ---
   getFacingDegrees(): number | undefined { return this.positionManager.getFacingDegrees(); }
   getFacingArrow(): string | undefined { return this.positionManager.getFacingArrow(); }
@@ -346,6 +364,12 @@ export abstract class Creature implements ICreature {
   faceDirection(direction: number): void { this.positionManager.faceDirection(direction); }
   faceTowards(targetX: number, targetY: number): void { this.positionManager.faceTowards(targetX, targetY); }
   getDimensions(): { w: number; h: number } { return this.positionManager.getDimensions(this.size); }
+  getHeight(): number { 
+    if(this.hasStatusEffect("knockedDown")) {
+      return 0;
+    }
+    return this.size; 
+  }
 
   // --- Relationship Methods ---
   isPlayerControlled(): boolean { return this.relationshipsManager.isPlayerControlled(); }
@@ -376,7 +400,15 @@ export abstract class Creature implements ICreature {
     }
     return takenDamage;
   }
-  useMovement(points: number): void { this.stateManager.useMovement(points); }
+  useMovement(points: number): void { 
+    if(this.stateManager.useMovement(points)) {
+      this.group.getLivingCreatures().forEach(c => {
+        if(c.id !== this.id && this.canAct()) {
+          
+        }
+      });
+    }
+  }
   useAction(): void { this.stateManager.useAction(); }
   canUseQuickAction(): boolean { return this.stateManager.canUseQuickAction(); }
   useQuickAction(): void { this.stateManager.useQuickAction(); }
@@ -565,6 +597,16 @@ export abstract class Creature implements ICreature {
       damage: result.damage,
       targetDefeated: result.targetDefeated
     };
+  }
+
+  leaveMap(): void {
+    this.x = undefined;
+    this.y = undefined;
+    this.facing = undefined;
+    this.endTurn();
+    this.startTurn();
+    // Remove creature from its group
+    this.group.removeCreature(this);
   }
 
   // --- Skills ---

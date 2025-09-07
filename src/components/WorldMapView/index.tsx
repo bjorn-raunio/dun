@@ -17,6 +17,7 @@ interface WorldMapViewProps {
   currentRegionId?: string;
   onRegionClick?: (region: RegionClass) => void;
   onRegionHover?: (region: RegionClass | null) => void;
+  onCenterOnParty?: () => void;
 }
 
 export function WorldMapView({
@@ -31,7 +32,15 @@ export function WorldMapView({
   currentRegionId = '',
   onRegionClick,
   onRegionHover,
+  onCenterOnParty,
 }: WorldMapViewProps) {
+  // Center the worldmap on the party when the component mounts or when the current region changes
+  React.useEffect(() => {
+    if (onCenterOnParty) {
+      onCenterOnParty();
+    }
+  }, [onCenterOnParty]);
+
   // Manually add wheel event listener to avoid passive listener issues
   React.useEffect(() => {
     const viewportElement = viewportRef.current;

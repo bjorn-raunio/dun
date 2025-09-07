@@ -1,3 +1,4 @@
+import { DiceRoll } from '../dice';
 import { BaseValidationResult } from '../types';
 
 // --- Combat Result Types ---
@@ -14,20 +15,13 @@ export interface CombatValidationResult extends BaseValidationResult { }
 
 export interface ToHitResult {
   hit: boolean;
-  attackerRoll: number;
-  defenderRoll: number;
-  attackerDoubleCritical: boolean;
-  defenderDoubleCritical: boolean;
-  criticalHit: boolean;
-  attackerDice: number[];  // Individual dice results for attacker
-  defenderDice: number[];  // Individual dice results for defender
+  attackerRoll: DiceRoll;
+  defenderRoll: DiceRoll;
 }
 
 export interface RangedToHitResult {
   hit: boolean;
-  attackerDoubleCritical: boolean;
-  criticalHit: boolean;
-  attackerDice: number[];  // Individual dice results for attacker
+  attackerRoll: DiceRoll;
 }
 
 export interface BlockResult {

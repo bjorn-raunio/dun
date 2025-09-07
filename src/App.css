@@ -39,7 +39,16 @@
 
 /* Smooth zooming for map view */
 .map-pan-container {
-  transition: transform 0.1s ease-out;
   will-change: transform;
+}
+
+/* Region hover animation */
+.region-polygon {
+  transition: fill 0.3s ease-in-out;
+  fill: transparent;
+}
+
+.region-polygon:hover {
+  fill: rgba(0, 229, 255, 0.5);
 }
 

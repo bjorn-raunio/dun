@@ -32,7 +32,7 @@ class Logger {
 
   private constructor() {
     this.config = {
-      level: LogLevel.INFO,
+      level: LogLevel.DEBUG,
       enableConsole: true,
       enableTimestamp: true,
       enablePrefix: true,

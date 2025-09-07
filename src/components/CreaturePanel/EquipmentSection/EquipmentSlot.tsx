@@ -96,7 +96,7 @@ export function EquipmentSlot({
 
   // Check if this is a weapon that can be used for attack
   const isWeapon = displayItem.isWeapon();
-  const isBroken = isWeapon && (displayItem as Weapon | RangedWeapon).isBroken();
+  const isBroken = displayItem.isBroken();
   const canAttackWithWeapon = Boolean(onAttack && canAttack && isWeapon && !isAIControlled && canAttack(creature));
   const shouldShowAttackButton = Boolean(onAttack && canAttack && isWeapon && !isAIControlled);
 

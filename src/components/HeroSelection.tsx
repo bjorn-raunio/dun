@@ -6,27 +6,29 @@ import { Hero } from '../creatures/heroes/hero';
 import { COLORS, COMMON_STYLES, BUTTON_VARIANTS } from './styles';
 
 interface HeroSelectionProps {
-  onHeroSelected: (hero: Hero) => void;
+  onHeroesSelected: (heroes: Hero[]) => void;
 }
 
 interface HeroCardProps {
   preset: HeroPreset;
   presetId: string;
   isSelected: boolean;
+  isDisabled?: boolean;
   onSelect: () => void;
 }
 
-function HeroCard({ preset, presetId, isSelected, onSelect }: HeroCardProps) {
+function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }: HeroCardProps) {
   return (
     <div 
       style={{
         ...COMMON_STYLES.section,
         width: 300,
-        cursor: 'pointer',
+        cursor: isDisabled ? 'not-allowed' : 'pointer',
         border: isSelected ? `2px solid ${COLORS.hero}` : `2px solid ${COLORS.border}`,
         background: isSelected ? 'rgba(76, 175, 80, 0.1)' : COLORS.backgroundLight,
+        opacity: isDisabled ? 0.5 : 1,
       }}
-      onClick={onSelect}
+      onClick={isDisabled ? undefined : onSelect}
     >
       <div style={{ textAlign: 'center', marginBottom: 12 }}>
         <img 
@@ -151,13 +153,27 @@ function HeroCard({ preset, presetId, isSelected, onSelect }: HeroCardProps) {
   );
 }
 
-export function HeroSelection({ onHeroSelected }: HeroSelectionProps) {
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+export function HeroSelection({ onHeroesSelected }: HeroSelectionProps) {
+  const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
+
+  const handleHeroToggle = (presetId: string) => {
+    setSelectedPresetIds(prev => {
+      if (prev.includes(presetId)) {
+        // Remove if already selected
+        return prev.filter(id => id !== presetId);
+      } else if (prev.length < 4) {
+        // Add if not at max (4 heroes)
+        return [...prev, presetId];
+      }
+      // Don't add if at max
+      return prev;
+    });
+  };
 
   const handleStartGame = () => {
-    if (selectedPresetId) {
-      const hero = createHero(selectedPresetId);
-      onHeroSelected(hero);
+    if (selectedPresetIds.length > 0) {
+      const heroes = selectedPresetIds.map(presetId => createHero(presetId));
+      onHeroesSelected(heroes);
     }
   };
 
@@ -181,7 +197,7 @@ export function HeroSelection({ onHeroSelected }: HeroSelectionProps) {
           color: COLORS.primary,
           fontWeight: 'bold',
         }}>
-          Choose character
+          Choose heroes ({selectedPresetIds.length}/4)
         </h1>
       </div>
       
@@ -197,8 +213,9 @@ export function HeroSelection({ onHeroSelected }: HeroSelectionProps) {
             key={presetId}
             preset={preset}
             presetId={presetId}
-            isSelected={selectedPresetId === presetId}
-            onSelect={() => setSelectedPresetId(presetId)}
+            isSelected={selectedPresetIds.includes(presetId)}
+            isDisabled={!selectedPresetIds.includes(presetId) && selectedPresetIds.length >= 4}
+            onSelect={() => handleHeroToggle(presetId)}
           />
         ))}
       </div>
@@ -209,13 +226,13 @@ export function HeroSelection({ onHeroSelected }: HeroSelectionProps) {
             ...BUTTON_VARIANTS.action,
             padding: '12px 32px',
             fontSize: '16px',
-            opacity: selectedPresetId ? 1 : 0.5,
-            cursor: selectedPresetId ? 'pointer' : 'not-allowed',
-            backgroundColor: selectedPresetId ? COLORS.hero : COLORS.border,
-            border: `1px solid ${selectedPresetId ? COLORS.hero : COLORS.border}`,
+            opacity: selectedPresetIds.length > 0 ? 1 : 0.5,
+            cursor: selectedPresetIds.length > 0 ? 'pointer' : 'not-allowed',
+            backgroundColor: selectedPresetIds.length > 0 ? COLORS.hero : COLORS.border,
+            border: `1px solid ${selectedPresetIds.length > 0 ? COLORS.hero : COLORS.border}`,
           }}
           onClick={handleStartGame}
-          disabled={!selectedPresetId}
+          disabled={selectedPresetIds.length === 0}
         >
           Confirm
         </button>

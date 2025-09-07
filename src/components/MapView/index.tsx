@@ -27,12 +27,20 @@ export function MapView({
   viewportRef,
   panRef,
   targetingMode,
+  onCenterOnStartingTile,
 }: MapViewProps) {
   const rows = mapDefinition?.tiles.length ?? 0;
   const cols = mapDefinition?.tiles[0].length ?? 0;
 
   // Determine cursor style based on cursor style
   const cursorStyle = targetingMode?.isActive ? 'crosshair' : 'grab';
+
+  // Center the quest map on the starting tile when the component mounts or when the centering function changes
+  React.useEffect(() => {
+    if (onCenterOnStartingTile) {
+      onCenterOnStartingTile();
+    }
+  }, [onCenterOnStartingTile]);
 
   // Manually add wheel event listener to avoid passive listener issues
   React.useEffect(() => {

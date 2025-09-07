@@ -47,7 +47,8 @@ export function CreatureOverlay({
             // Use validateCombat to check if the target is valid
             if (isEnemy) {
               const equipment = attacker.getEquipmentSystem();
-              const weapon = equipment.getMainWeapon();
+              const offhand = targetingMode.offhand || false;
+              const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
               const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition) : { isValid: false };
               isValidTarget = validation.isValid;
             }

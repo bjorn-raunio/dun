@@ -130,8 +130,8 @@ export class LineOfSightSystem {
     // Get elevation and size information if creatures are provided
     const fromElevation = fromCreature && mapDefinition ? mapDefinition.terrainHeightAt(fromX, fromY) : undefined;
     const toElevation = toCreature && mapDefinition ? mapDefinition.terrainHeightAt(toX, toY) : undefined;
-    const fromSize = fromCreature?.size;
-    const toSize = toCreature?.size;
+    const fromSize = fromCreature?.getHeight();
+    const toSize = toCreature?.getHeight();
 
     if (usePixelCalculations) {
       // Use pixel-based line of sight calculation
@@ -356,7 +356,7 @@ export class LineOfSightSystem {
         // Check if this creature is at the current tile position
         if (creature.x === tileX && creature.y === tileY && !creature.isDead()) {
           const creatureElevation = mapDefinition ? mapDefinition.terrainHeightAt(creature.x, creature.y) : 0;
-          const creatureEffectiveHeight = creatureElevation + creature.size;
+          const creatureEffectiveHeight = creatureElevation + creature.getHeight();
 
           const totalDistance = Math.sqrt((toPixelX - fromPixelX) ** 2 + (toPixelY - fromPixelY) ** 2);
           if (totalDistance > 0) {
@@ -512,7 +512,7 @@ export class LineOfSightSystem {
         if (isPositionInCreatureBounds(x, y, creature.x, creature.y, creature.size)) {
           // Get the creature's elevation and calculate its effective height
           const creatureElevation = mapDefinition ? mapDefinition.terrainHeightAt(creature.x, creature.y) : 0;
-          const creatureEffectiveHeight = creatureElevation + creature.size;
+          const creatureEffectiveHeight = creatureElevation + creature.getHeight();
 
           // Calculate the line of sight height at this point
           const totalDistance = Math.max(Math.abs(toX - fromX), Math.abs(toY - fromY));

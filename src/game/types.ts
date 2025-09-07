@@ -75,5 +75,7 @@ export type GameActions = {
   setParty: (updater: (prev: Party) => Party) => void;
   setWorldMap: (updater: (prev: WorldMap) => WorldMap) => void;
   setMapDefinition: (mapDefinition: QuestMap | null) => void;
+  centerWorldmapOnParty: () => void;
+  centerQuestmapOnStartingTile: () => void;
   dispatch: React.Dispatch<any>;
 };

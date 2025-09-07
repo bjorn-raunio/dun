@@ -6,15 +6,15 @@ import { addMessage, addCombatMessage } from '../../utils/messageSystem';
 import { VALIDATION_MESSAGES } from '../../validation/messages';
 
 export interface CombatHandlers {
-  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, offhand?: boolean) => void;
-  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, offhand?: boolean) => void;
+  handleAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap | null, offhand?: boolean) => void;
+  handleTargetingModeAttack: (attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap | null, offhand?: boolean) => void;
 }
 
 export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
   const { setCreatures, setTargetingMode, setTargetsInRangeKey, dispatch } = gameActions;
 
-  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, offhand: boolean = false) {
-    if (!attacker.isAlive() || !target.isAlive()) {
+  function handleAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap | null, offhand: boolean = false) {
+    if (!attacker.isAlive() || !target.isAlive() || !mapDefinition) {
       return;
     }
 
@@ -40,7 +40,7 @@ export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
     setTargetsInRangeKey(prev => prev + 1);
   }
 
-  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap, offhand: boolean = false) {
+  function handleTargetingModeAttack(attacker: ICreature, target: ICreature, creatures: ICreature[], mapDefinition: QuestMap | null, offhand: boolean = false) {
     if (!attacker.isAlive() || !target.isAlive()) {
       return;
     }

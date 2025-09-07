@@ -29,11 +29,11 @@ const GameContext = createContext<GameContextValue | null>(null);
 export function GameProvider({ 
   children, 
   initialCreatures, 
-  mapDefinition 
+  mapDefinition = null 
 }: {
   children: React.ReactNode;
   initialCreatures: ICreature[];
-  mapDefinition: QuestMap | null;
+  mapDefinition?: QuestMap | null;
 }) {
   const [state, dispatch] = useReducer(
     gameReducer, 
@@ -88,8 +88,13 @@ export function GameProvider({
   useEffect(() => {
     if (mapDefinition && !state.mapDefinition) {
       dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
+      // Also set the party's currentQuestMap
+      dispatch({ 
+        type: 'SET_PARTY', 
+        payload: new Party(state.party.currentRegionId, mapDefinition) 
+      });
     }
-  }, [mapDefinition, state.mapDefinition, dispatch]);
+  }, [mapDefinition, state.mapDefinition, state.party.currentRegionId, dispatch]);
 
   // --- ACTIONS ---
   const setCreatures = useCallback((updater: (prev: ICreature[]) => ICreature[]) => {
@@ -176,6 +181,14 @@ export function GameProvider({
     dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
   }, [dispatch]);
 
+  const centerWorldmapOnParty = useCallback(() => {
+    dispatch({ type: 'CENTER_WORLDMAP_ON_PARTY' });
+  }, [dispatch]);
+
+  const centerQuestmapOnStartingTile = useCallback(() => {
+    dispatch({ type: 'CENTER_QUESTMAP_ON_STARTING_TILE' });
+  }, [dispatch]);
+
 
 
   const actions = useMemo((): GameActions => ({
@@ -196,8 +209,10 @@ export function GameProvider({
     setParty,
     setWorldMap,
     setMapDefinition,
+    centerWorldmapOnParty,
+    centerQuestmapOnStartingTile,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {

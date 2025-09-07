@@ -1,5 +1,6 @@
 import { BaseWeapon, WeaponAttack } from '../base';
 import { Attributes } from '../../statusEffects/types';
+import { CombatTrigger } from '../../skills/types';
 
 export class RangedWeapon extends BaseWeapon {
 
@@ -10,6 +11,7 @@ export class RangedWeapon extends BaseWeapon {
     hands: 1 | 2;
     properties?: string[];
     attributeModifiers?: Partial<Attributes>;
+    combatTriggers?: CombatTrigger[];
     breakRoll?: number;
     weight?: number;
     value?: number;
@@ -25,7 +27,7 @@ export class RangedWeapon extends BaseWeapon {
         range: params.attack.range ?? 0,
         minRange: 2,
         addStrength: false,
-        isRanged: true
+        type: "ranged"
       }]
     });
   }

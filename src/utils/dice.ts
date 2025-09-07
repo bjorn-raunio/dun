@@ -41,7 +41,9 @@ export function roll2d6(bonus: number = 0): number {
   return rollXd6Sum(2, bonus);
 }
 
-export function calculateAttributeRoll(bonus: number): { total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
+export type DiceRoll = { total: number; dice: number[], fumble: boolean, criticalSuccess: boolean };
+
+export function calculateAttributeRoll(bonus: number): DiceRoll {
   const dice = rollXd6(2);
   const total = dice.reduce((sum, roll) => sum + roll, 0) + bonus;
   const fumble = dice.filter(roll => roll === 1).length >= 2;

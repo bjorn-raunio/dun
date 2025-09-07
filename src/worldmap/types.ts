@@ -19,6 +19,7 @@ export interface Region {
   requirements?: string[]; // Requirements to access this region
   encounters?: string[]; // Possible encounters in this region
   resources?: string[]; // Resources available in this region
+  questMapPresets?: string[]; // Array of quest map preset IDs available in this region
 }
 
 export interface WorldMap {

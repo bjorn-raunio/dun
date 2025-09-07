@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import './App.css';
-import { mapDefinition } from './maps';
-import { QuestMap } from './maps/types';
 import { endTurn } from './game';
 import { GameProvider, useGameContext } from './game/GameContext';
-import { MapView, WorldMapView, GameUI, HeroSelection } from './components';
+import { MapView, WorldMapView, GameUI, WorldMapBottomBar, HeroSelection } from './components';
 import { CreaturePanel } from './components/CreaturePanel';
 import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
@@ -13,16 +11,16 @@ import { addMessage } from './utils/messageSystem';
 
 // Map and game state are now imported from extracted modules
 
-function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
+function TileMapView() {
   // Game state management using context
   const { state: gameState, actions: gameActions, refs: gameRefs } = useGameContext();
-  const { groups, creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode, viewMode } = gameState;
+  const { groups, creatures, selectedCreatureId, messages, reachableKey, targetsInRangeKey, aiTurnState, turnState, targetingMode, party } = gameState;
   const { setSelectedCreatureId, setTargetingMode } = gameActions;
   const { panRef, viewportRef, lastMovement, livePan } = gameRefs;
 
   // Custom hooks for game logic
-  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, mapDefinition);
-  const reachable = useReachableTiles(creatures, selectedCreatureId, mapDefinition, reachableKey);
+  const { targetsInRangeIds } = useTargetsInRange(creatures, selectedCreatureId, targetsInRangeKey, party.currentQuestMap ?? null, targetingMode);
+  const reachable = useReachableTiles(creatures, selectedCreatureId, party.currentQuestMap ?? null, reachableKey);
   const selectedCreature = useSelectedCreature(creatures, selectedCreatureId);
 
   // Path highlight hook
@@ -30,7 +28,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
     reachable,
     viewportRef,
     livePan.current,
-    mapDefinition,
+    party.currentQuestMap ?? null,
     reachableKey
   );
 
@@ -74,6 +72,38 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
       creature.getHostileCreatures(creatures).length > 0;
   }, [creatures]);
 
+  // Handle leaving the current map
+  const handleLeaveMap = React.useCallback(() => {
+    // Store the current quest map to get the preset creatures
+    const currentQuestMap = party.currentQuestMap;
+
+    gameActions.setParty(prevParty => {
+      const newParty = prevParty.clone();
+      newParty.currentQuestMap = undefined;
+      return newParty;
+    });
+
+    // Remove preset creatures that were added when entering the map
+    if (currentQuestMap?.initialCreatures) {
+      const presetCreatureIds = currentQuestMap.initialCreatures.map(creature => creature.id);
+      
+      gameActions.setCreatures(prevCreatures => {
+        // First, call leaveMap on creatures that will be removed to clean up their state
+        //const creaturesToRemove = prevCreatures.filter(creature => presetCreatureIds.includes(creature.id));
+        //creaturesToRemove.forEach(creature => creature.leaveMap());
+        
+        // Then filter out the preset creatures
+        const newState = prevCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
+        newState.forEach(creature => creature.leaveMap());
+        return newState;
+      });
+    }
+
+    // Also clear the map definition in the game state
+    gameActions.dispatch({ type: 'SET_MAP_DEFINITION', payload: null });
+  }, [gameActions, party.currentQuestMap]);
+
+
   // Event handlers (extracted)
   const { mouseHandlers } = useEventHandlers(
     gameActions,
@@ -82,7 +112,7 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
     selectedCreatureId,
     reachable,
     targetsInRangeIds,
-    mapDefinition,
+    party.currentQuestMap ?? null,
     setSelectedCreatureId,
     targetingMode
   );
@@ -92,14 +122,9 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
 
   return (
     <div className="App">
-      {/*<ViewToggle
-        currentView={viewMode}
-        onViewChange={setViewMode}
-      />*/}
-      
-      {viewMode === 'quest' ? (
+      {party.currentQuestMap ? (
         <MapView
-          mapDefinition={mapDefinition}
+          mapDefinition={party.currentQuestMap}
           creatures={creatures}
           selectedCreatureId={selectedCreatureId}
           reachable={reachable}
@@ -117,45 +142,70 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
           viewportRef={viewportRef}
           panRef={panRef}
           targetingMode={targetingMode}
+          onCenterOnStartingTile={gameActions.centerQuestmapOnStartingTile}
         />
       ) : (
-        <WorldMapView
-          onMouseDown={mouseHandlers.onMouseDown}
-          onMouseMove={mouseHandlers.onMouseMove}
-          onMouseUp={mouseHandlers.onMouseUp}
-          onMouseLeave={() => {}} // No special handling needed for world map
-          onWheel={onWheel}
-          viewportRef={viewportRef}
-          panRef={panRef}
-          regions={Array.from(gameState.worldMap.regions.values())}
-          currentRegionId={gameState.party.currentRegionId}
-          onRegionClick={(region) => {
-            // Handle region click - implement travel logic here
-            gameActions.setParty(prevParty => {
-              const newParty = prevParty.clone();
-              newParty.travelToRegion(region.id);
-              return newParty;
-            });
-          }}
-          onRegionHover={(region) => {
-            // Handle region hover - could show tooltip or highlight
-          }}
-        />
+        <>
+          <WorldMapView
+            onMouseDown={mouseHandlers.onMouseDown}
+            onMouseMove={mouseHandlers.onMouseMove}
+            onMouseUp={mouseHandlers.onMouseUp}
+            onMouseLeave={() => { }} // No special handling needed for world map
+            onWheel={onWheel}
+            viewportRef={viewportRef}
+            panRef={panRef}
+            regions={Array.from(gameState.worldMap.regions.values())}
+            currentRegionId={gameState.party.currentRegionId}
+            onCenterOnParty={gameActions.centerWorldmapOnParty}
+            onRegionClick={(region) => {
+              // Handle region click - enter region and create quest map
+              let newQuestMap = null;
+              gameActions.setParty(prevParty => {
+                const newParty = prevParty.clone();
+                newParty.enterRegion(region);
+                newQuestMap = newParty.currentQuestMap || null;
+
+                // Add the preset creatures from the quest map to the game creatures
+                if (newParty.currentQuestMap?.initialCreatures) {
+                  gameActions.setCreatures(prevCreatures => [
+                    ...prevCreatures,
+                    ...newParty.currentQuestMap!.initialCreatures
+                  ]);
+                }
+
+                return newParty;
+              });
+
+              // Also update the map definition in the game state
+              gameActions.setMapDefinition(newQuestMap);
+              
+              // Center the questmap when the party enters the region
+              if (newQuestMap) {
+                gameActions.centerQuestmapOnStartingTile();
+              }
+            }}
+            onRegionHover={(region) => {
+              // Handle region hover - could show tooltip or highlight
+            }}
+          />
+          <WorldMapBottomBar messages={messages} />
+        </>
       )}
-      
-      {viewMode === 'quest' && (
+
+      {party.currentQuestMap && (
         <>
           <GameUI
             messages={messages}
             onEndTurn={() => {
-              endTurn(groups, mapDefinition, gameActions.dispatch, lastMovement, turnState);
+              endTurn(groups, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState);
             }}
+            onLeaveMap={handleLeaveMap}
             isAITurnActive={aiTurnState.isAITurnActive}
             turnState={turnState}
             creatures={creatures}
             onCreatureClick={(creature) => setSelectedCreatureId(creature.id)}
             targetingMode={targetingMode}
-            mapDefinition={mapDefinition}
+            mapDefinition={party.currentQuestMap}
           />
           <CreaturePanel
             selectedCreature={selectedCreature}
@@ -176,28 +226,23 @@ function TileMapView({ mapDefinition }: { mapDefinition: QuestMap }) {
 }
 
 function App() {
-  const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
+  const [selectedHeroes, setSelectedHeroes] = useState<Hero[]>([]);
   const [gameStarted, setGameStarted] = useState(false);
 
-  const handleHeroSelected = (hero: Hero) => {
-    setSelectedHero(hero);
+  const handleHeroesSelected = (heroes: Hero[]) => {
+    setSelectedHeroes(heroes);
     setGameStarted(true);
   };
 
-  // Show hero selection screen if no hero is selected yet
+  // Show hero selection screen if no heroes are selected yet
   if (!gameStarted) {
-    return <HeroSelection onHeroSelected={handleHeroSelected} />;
+    return <HeroSelection onHeroesSelected={handleHeroesSelected} />;
   }
 
-  // Show game with selected hero
-  const initialCreatures = mapDefinition?.initialCreatures.concat(selectedHero!) ?? [selectedHero!];
-
   return (
-    <GameProvider initialCreatures={initialCreatures} mapDefinition={mapDefinition}>
+    <GameProvider initialCreatures={selectedHeroes}>
       <div className="App">
-        {mapDefinition ?
-          <TileMapView mapDefinition={mapDefinition} />
-          : null}
+        <TileMapView />
       </div>
     </GameProvider>
   );

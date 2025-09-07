@@ -22,4 +22,5 @@ export interface MapViewProps {
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
   panRef: React.MutableRefObject<HTMLDivElement | null>;
   targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  onCenterOnStartingTile?: () => void;
 }

@@ -83,9 +83,11 @@ export interface ICreature {
   getMaxAttackRange(): number;
   getUnarmedWeapon(): BaseWeapon;
   hasShield(): boolean;
+  getShield(): Shield | undefined;
   getZoneOfControlRange(): number;
   getCombatState(): boolean;
   getEnemiesInCombatRange(allCreatures: ICreature[]): ICreature[];
+  getAdjacentEnemies(allCreatures: ICreature[], tile?: { x: number, y: number }): ICreature[];
   getEquipmentSystem(): EquipmentSystem; // Returns cached EquipmentSystem instance
   
   // Relationships
@@ -104,6 +106,7 @@ export interface ICreature {
   moveTo(path: Array<{x: number; y: number}>, allCreatures?: ICreature[], mapDefinition?: QuestMap): MovementResult;
   enterTile(x: number, y: number, mapDefinition: QuestMap): void;
   getVision(x: number, y: number, mapDefinition: QuestMap): number;
+  leaveMap(): void;
   
   // Combat
   attack(target: ICreature, allCreatures?: ICreature[], mapDefinition?: QuestMap, offhand?: boolean): CombatResult;
@@ -139,6 +142,7 @@ export interface ICreature {
   
   // Cloning
   clone(overrides?: Partial<ICreature>): ICreature;
+  get kind(): "hero" | "monster" | "mercenary";
   
   // Status Effects
   getStatusEffectManager(): StatusEffectManager;
@@ -156,10 +160,38 @@ export interface ICreature {
   // Utility methods
   getDimensions(): { w: number; h: number };
   setRemainingMovement(value: number): void;
+  setRemainingActions(value: number): void;
+  setRemainingQuickActions(value: number): void;
+  setRemainingFortune(value: number): void;
   recordTurnEndPosition(): void;
   getFacingShortName(): string | undefined;
+  getFacingDegrees(): number | undefined;
+  getFacingArrow(): string | undefined;
+  getFacingName(): string | undefined;
+  faceTowards(targetX: number, targetY: number): void;
   getAllSkills(): Array<{ name: string; type: string; description?: string }>;
   invalidateEquipmentCache?(): void;
+  getHeight(): number;
+  
+  // Skill methods
+  getSkills(): Skill[];
+  hasSkill(skillName: string): boolean;
+  getSkillsByType(type: string): Skill[];
+  getSkillEffectsSummary(): string[];
+  getSkill(skillName: string): Skill | undefined;
+  
+  // Combat methods
+  wasBehindTargetAtTurnStart(target: ICreature): boolean;
+  
+  // State methods
+  canPushCreature(targetId: string): boolean;
+  recordPushedCreature(targetId: string): void;
+  
+  // Attribute test method
+  performAttributeTest(attributeName: keyof Attributes, modifier?: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean };
+  
+  // Effective movement getter
+  get effectiveMovement(): number;
 }
 
 // --- Manager Interfaces ---
@@ -175,10 +207,10 @@ export interface ICreatureStateManager {
   hasFortune(amount: number): boolean;
   hasTakenActionsThisTurn(): boolean;
   takeDamage(damage: number): boolean;
-  useMovement(points: number): void;
-  useAction(): void;
+  useMovement(points: number): boolean;
+  useAction(): boolean;
   canUseQuickAction(): boolean;
-  useQuickAction(): void;
+  useQuickAction(): boolean;
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
   startTurn(): void;
@@ -228,6 +260,7 @@ export interface ICreatureCombatManager {
   getUnarmedWeapon(): BaseWeapon;
   getMaxAttackRange(): number;
   hasShield(): boolean;
+  getShield(): Shield | undefined;
   getZoneOfControlRange(): number;
   getEquipmentSystem(): EquipmentSystem;
   isInZoneOfControl(x: number, y: number, creatureX: number, creatureY: number): boolean;

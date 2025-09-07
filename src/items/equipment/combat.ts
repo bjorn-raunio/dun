@@ -14,8 +14,8 @@ export class CombatCalculator {
    * Get shield block value
    */
   static getShieldBlockValue(shield?: Shield, isBackAttack: boolean = false): number {
-    // Shields don't have block value during back attacks
-    if (isBackAttack || !shield) {
+    // Shields don't have block value during back attacks or if broken
+    if (isBackAttack || !shield || shield.isBroken()) {
       return 0;
     }
     return shield.block;

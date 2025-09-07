@@ -142,6 +142,9 @@ function calculateScore(creature: ICreature, target: ICreature, allCreatures: IC
   if (canAttack) {
     score += 1000;
   }
+  if(keepDistance && creature.getAdjacentEnemies(allCreatures, tile ).length > 0) {
+    score -= 2000;
+  }
   return score;
 }
 

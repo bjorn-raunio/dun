@@ -10,6 +10,7 @@ export * from './rangedWeapons';
 export * from './armor';
 export * from './shields';
 export * from './consumables';
+export * from './miscellaneous';
 
 // Export unified equipment system
 export * from './equipment';

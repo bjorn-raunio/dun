@@ -12,5 +12,5 @@ export type ShieldPreset = {
 
 export const shieldPresets: Record<string, ShieldPreset> = {
   buckler: { name: "Buckler", block: 6, breakRoll: 1, weight: 2, value: 5 },
-  shield: { name: "Shield", block: 5, breakRoll: 1, weight: 6, value: 10 },
+  shield: { name: "Shield", block: 5, breakRoll: 2, weight: 6, value: 10 },
 };

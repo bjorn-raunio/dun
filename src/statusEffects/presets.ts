@@ -174,6 +174,23 @@ export const STATUS_EFFECT_PRESETS: Record<StatusEffectType, StatusEffectPreset>
     }
   },
 
+  dexterity: {
+    icon: "/icons/dexterity.png",
+    createEffect: (name?: string, duration: number | null = null): StatusEffect => {
+      return createStatusEffect('dexterity', 'dexterity', duration, {
+        name: name ?? "Dexterity",
+        description: `+1 combat/ranged/agility,+2 dexterity`,
+        attributeModifiers: {
+          dexterity: 2,
+          combat: 1,
+          ranged: 1,
+          agility: 1
+        },
+        showMessage: false
+      });
+    }
+  },
+
   speed: {
     icon: "/icons/dexterity.png",
     createEffect: (name?: string, duration: number | null = null, value: number = 1): StatusEffect => {
