@@ -2,6 +2,7 @@ import React from 'react';
 import { COLORS, COMMON_STYLES } from './styles';
 import { TurnTracker } from './TurnTracker';
 import { DayNightIndicator } from './DayNightIndicator';
+import { WeatherIndicator } from './WeatherIndicator';
 import { TurnState } from '../game/turnManagement';
 import { ICreature } from '../creatures/index';
 import { QuestMap } from '../maps/types';
@@ -74,18 +75,20 @@ export function GameUI({
       </div>
 
       <div style={{
-        flex: "0 0 7.5%",
-        ...COMMON_STYLES.messageBox,
-        height: "fit-content",
-        maxHeight: "120px",
-        overflow: "auto"
+        flex: "0 0 100px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        alignItems: "stretch"
       }}>
         <TurnTracker
           turnState={turnState}
         />
-      </div>
 
-      <DayNightIndicator isNight={mapDefinition.night} />
+        <DayNightIndicator isNight={mapDefinition.night} />
+
+        <WeatherIndicator />
+      </div>
 
       <button
         onClick={onLeaveMap}

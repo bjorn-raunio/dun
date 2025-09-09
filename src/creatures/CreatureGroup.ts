@@ -8,28 +8,32 @@ export class CreatureGroup {
   static NEUTRAL: CreatureGroup;
 
   name: string;
-  private creatures: ICreature[];
+  private creatureIds: string[];
   private _isInCombat: boolean = false;
 
   constructor(name: string) {
     this.name = name;
-    this.creatures = [];
+    this.creatureIds = [];
   }
 
-  getCreatures(): ICreature[] {
-    return this.creatures;
+  getCreatures(allCreatures: ICreature[]): ICreature[] {
+    return allCreatures.filter(creature => this.creatureIds.includes(creature.id));
   }
 
-  getLivingCreatures(): ICreature[] {
-    return this.creatures.filter(c => c.isAlive());
+  getLivingCreatures(allCreatures: ICreature[]): ICreature[] {
+    return allCreatures.filter(creature => 
+      this.creatureIds.includes(creature.id) && creature.isAlive()
+    );
   }
 
   addCreature(creature: ICreature) {
-    this.creatures.push(creature);
+    if (!this.creatureIds.includes(creature.id)) {
+      this.creatureIds.push(creature.id);
+    }
   }
 
   removeCreature(creature: ICreature) {
-    this.creatures = this.creatures.filter(c => c.id !== creature.id);
+    this.creatureIds = this.creatureIds.filter(id => id !== creature.id);
   }
 
   static initializeGroups() {
@@ -66,17 +70,14 @@ export class CreatureGroup {
     return allCreatures.filter((c: ICreature) => this.isFriendlyTo(c.group));
   }
 
-  startTurn(): string[] {
-    const messages: string[] = [];
-    this.creatures.forEach(creature => {
-      const creatureMessages = creature.startTurn();
-      messages.push(...creatureMessages);
+  startTurn(allCreatures: ICreature[]): void {
+    this.getCreatures(allCreatures).forEach(creature => {
+      creature.startTurn();
     });
-    return messages;
   }
 
-  endTurn() {
-    this.creatures.forEach(creature => {
+  endTurn(allCreatures: ICreature[]) {
+    this.getCreatures(allCreatures).forEach(creature => {
       creature.endTurn();
     });
   }
@@ -87,7 +88,7 @@ export class CreatureGroup {
    * Check if any member of this group is within 12 tiles of an enemy
    */
   checkCombatState(allCreatures: ICreature[]): boolean {
-    const livingCreatures = this.getLivingCreatures();
+    const livingCreatures = this.getLivingCreatures(allCreatures);
     
     for (const creature of livingCreatures) {
       const hostileCreatures = creature.getHostileCreatures(allCreatures);

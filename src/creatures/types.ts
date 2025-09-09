@@ -1,4 +1,4 @@
-import { Item, EquipmentSlots } from '../items';
+import { Item, EquipmentSlots, NaturalWeapon } from '../items';
 import { CombatResult } from '../utils/combat/types';
 import { Attributes } from '../statusEffects';
 import { CreatureGroup } from './CreatureGroup';
@@ -52,6 +52,7 @@ export interface CreatureConstructorParams {
   naturalArmor?: number;
   group: CreatureGroup; // CHANGED from CreatureGroupType
   skills?: Skill[];
+  naturalWeapons?: NaturalWeapon[];
 }
 
 export type CreatureAction = 'run' | 'disengage' | 'search';

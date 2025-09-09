@@ -1,19 +1,18 @@
 import { QuestMap, Room } from '../types';
 import { QuestMapPreset, QuestMapPresetCategory } from './types';
-import { questMapPresets, questMapPresetsByCategory } from './questMapPresets';
+import { questMapPresets } from './questMapPresets';
 import { createSection } from '../section/presets';
+import { createConnection } from '../connection/presets';
 import { createMonster, createMercenary, CREATURE_GROUPS, Creature } from '../../creatures/index';
+import { logError } from '../../utils';
+import { generateRandomWeather, WeatherEffect } from '../../game/weather';
 
 // --- QuestMap Factory Functions ---
 
 /**
- * Create a QuestMap instance from a preset
+ * Create a QuestMap instance from a preset with random weather
  */
-export function createQuestMapFromPreset(presetId: string, numberOfHeroes: number): QuestMap | null {
-  const preset = questMapPresets[presetId];
-  if (!preset) {
-    return null;
-  }
+export function createQuestMapFromPreset(preset: QuestMapPreset, numberOfHeroes: number): QuestMap | null {
 
   try {
     // Create rooms from preset
@@ -21,7 +20,7 @@ export function createQuestMapFromPreset(presetId: string, numberOfHeroes: numbe
       const sections = roomPreset.sections.map(sectionPreset => {
         const options = sectionPreset.options || {};
         return createSection(sectionPreset.type, sectionPreset.x, sectionPreset.y, {
-          rotation: options.rotation || 0,
+          rotation: sectionPreset.rotation || 0,
           terrain: options.terrain || []
         });
       });
@@ -59,14 +58,26 @@ export function createQuestMapFromPreset(presetId: string, numberOfHeroes: numbe
       }
     });
 
+    // Create connections from preset
+    const connections = preset.connections.map(connectionPreset => {
+      return createConnection(
+        connectionPreset.presetId,
+        connectionPreset.x,
+        connectionPreset.y,
+        connectionPreset.rotation,
+        connectionPreset.overrides
+      );
+    });
+
     // Create the QuestMap
     const questMap = new QuestMap(
       preset.name,
-      preset.width,
-      preset.height,
+      100,
+      100,
       rooms,
       creatures,
-      preset.startingTiles
+      preset.startingTiles,
+      connections
     );
     questMap.updateLighting(creatures);
 
@@ -79,22 +90,28 @@ export function createQuestMapFromPreset(presetId: string, numberOfHeroes: numbe
     return questMap;
 
   } catch (error) {
+    logError(`Map generation`, `Unable to create map from preset ${preset.name}`, error);
     return null;
   }
 }
+
+/**
+ * Create a QuestMap instance from a preset with random weather
+ * @returns Object containing the quest map and random weather effect
+ */
+export function createQuestMapFromPresetWithWeather(preset: QuestMapPreset, numberOfHeroes: number): { questMap: QuestMap | null; weather: WeatherEffect } {
+  const questMap = createQuestMapFromPreset(preset, numberOfHeroes);
+  const weather = generateRandomWeather();
+  
+  return { questMap, weather };
+}
+
 
 /**
  * Get all available QuestMap presets
  */
 export function getAvailableQuestMapPresets(): Record<string, QuestMapPreset> {
   return questMapPresets;
-}
-
-/**
- * Get QuestMap presets by category
- */
-export function getQuestMapPresetsByCategory(): Record<string, QuestMapPresetCategory> {
-  return questMapPresetsByCategory;
 }
 
 /**
@@ -109,20 +126,4 @@ export function getQuestMapPreset(presetId: string): QuestMapPreset | null {
  */
 export function getQuestMapPresetIds(): string[] {
   return Object.keys(questMapPresets);
-}
-
-/**
- * Get QuestMap presets by difficulty
- */
-export function getQuestMapPresetsByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): QuestMapPreset[] {
-  return Object.values(questMapPresets).filter(preset => preset.difficulty === difficulty);
-}
-
-/**
- * Get QuestMap presets suitable for a given level
- */
-export function getQuestMapPresetsByLevel(level: number): QuestMapPreset[] {
-  return Object.values(questMapPresets).filter(preset =>
-    !preset.recommendedLevel || preset.recommendedLevel <= level
-  );
 }

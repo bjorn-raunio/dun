@@ -2,7 +2,7 @@ import React from 'react';
 import { ICreature } from '../../creatures/index';
 import { QuestMap } from '../../maps/types';
 import { Item } from '../../items';
-import { Terrain } from '../../maps/terrain';
+import { Door } from '../../maps/connection/Door';
 import { COMMON_STYLES, COLORS, LAYOUT_PATTERNS, createButtonStyle } from '../styles';
 
 interface TileContentsListProps {
@@ -17,16 +17,12 @@ export function TileContentsList({ creature, mapDefinition, onUpdate }: TileCont
         return null;
     }
 
-    // Get items and terrain from the creature's current tile
+    // Get items, terrain, and connections from the creature's current tile
     const items = mapDefinition.getItemsOnTile(creature.x, creature.y);
     const terrain = mapDefinition.getTerrain().filter(t =>
         t.isTileWithinTerrain(creature.x!, creature.y!)
     );
-
-    // Don't render if there are no items or terrain
-    if (items.length === 0 && terrain.length === 0) {
-        return null;
-    }
+    const connections = mapDefinition.getConnectionsAt(creature.x, creature.y);
 
     // Pickup functionality
     const handlePickupItem = (item: Item) => {
@@ -59,8 +55,47 @@ export function TileContentsList({ creature, mapDefinition, onUpdate }: TileCont
     // Check if creature can pick up items
     const canPickup = !creature.isAIControlled() && creature.isAlive();
 
+    // Door interaction functionality
+    const handleDoorInteraction = (door: Door) => {
+        // Prevent interaction for AI-controlled creatures
+        if (creature.isAIControlled()) {
+            return;
+        }
+
+        // Check if creature has position
+        if (creature.x === undefined || creature.y === undefined) {
+            return;
+        }
+
+        // Check if mapDefinition is available
+        if (!mapDefinition) {
+            return;
+        }
+
+        // Toggle door state
+        if (door.isOpen) {
+            door.close();
+        } else {
+            door.open();
+            // When opening a door, explore the connected rooms
+            mapDefinition.explore(door);
+        }
+        
+        // Update creature to trigger re-render
+        onUpdate?.(creature);
+    };
+
+    // Check if creature can interact with doors
+    const canInteract = !creature.isAIControlled() && creature.isAlive();
+
     return (
-        <div style={COMMON_STYLES.section}>
+        <div style={{
+            ...COMMON_STYLES.section,
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto'
+        }}>
             {items.length > 0 && (
                 <div style={{ marginBottom: 8 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -127,6 +162,53 @@ export function TileContentsList({ creature, mapDefinition, onUpdate }: TileCont
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+            {connections.length > 0 && (
+                <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {connections.map((connection, index) => {
+                            const isDoor = connection instanceof Door;
+                            const door = isDoor ? connection as Door : null;
+                            
+                            return (
+                                <div key={index} style={{
+                                    ...LAYOUT_PATTERNS.flexRowCenter,
+                                    justifyContent: 'space-between',
+                                    padding: 6,
+                                    ...LAYOUT_PATTERNS.card,
+                                }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ 
+                                            fontWeight: 600, 
+                                            fontSize: 12, 
+                                            color: COLORS.text 
+                                        }}>
+                                            {connection.getDescription()}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 2 }}>
+                                        {isDoor && door && canInteract && !door.isBroken && (
+                                            <button
+                                                onClick={() => handleDoorInteraction(door)}
+                                                style={createButtonStyle('medium', 'enabled')}
+                                                title={door.isOpen ? "Close door" : "Open door"}
+                                            >
+                                                <img 
+                                                    src="/icons/mainHand.png" 
+                                                    alt={door.isOpen ? "Close" : "Open"} 
+                                                    style={{ 
+                                                        width: '20px', 
+                                                        height: '20px'
+                                                    }} 
+                                                />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}

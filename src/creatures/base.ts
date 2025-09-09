@@ -20,7 +20,7 @@ import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
 import { SkillProcessor } from '../skills';
 import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
-import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem, NaturalWeapon } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
 import creatureServices from './services';
@@ -108,7 +108,9 @@ export abstract class Creature implements ICreature {
       () => this.equipment,
       () => this.naturalArmor,
       () => this.size,
-      () => this.skills
+      () => this.skills,
+      (type: StatusEffectType) => this.hasStatusEffect(type),
+      params.naturalWeapons
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
 
@@ -277,6 +279,11 @@ export abstract class Creature implements ICreature {
   getZoneOfControlRange(): number { return this.combatManager.getZoneOfControlRange(); }
   getEquipmentSystem(): EquipmentSystem { return this.combatManager.getEquipmentSystem(); }
 
+  // --- Natural Weapon Methods ---
+  getNaturalWeapons(): NaturalWeapon[] { return this.combatManager.getEquipmentSystem().getNaturalWeapons(); }
+  hasNaturalWeapons(): boolean { return this.combatManager.getEquipmentSystem().hasNaturalWeapons(); }
+  canUseNaturalWeapons(): boolean { return this.combatManager.getEquipmentSystem().canUseNaturalWeapons(); }
+
   // --- Skill Management ---
 
   /**
@@ -402,11 +409,13 @@ export abstract class Creature implements ICreature {
   }
   useMovement(points: number): void { 
     if(this.stateManager.useMovement(points)) {
-      this.group.getLivingCreatures().forEach(c => {
-        if(c.id !== this.id && this.canAct()) {
-          
-        }
-      });
+      // TODO: This needs to be redesigned to work with the new ID-based group system
+      // The creature needs access to all creatures to get living creatures from its group
+      // this.group.getLivingCreatures().forEach(c => {
+      //   if(c.id !== this.id && this.canAct()) {
+      //     
+      //   }
+      // });
     }
   }
   useAction(): void { this.stateManager.useAction(); }
@@ -477,7 +486,7 @@ export abstract class Creature implements ICreature {
     return true;
   }
 
-  performAttributeTest(attributeName: keyof Attributes, modifier: number = 0): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean } {
+  performAttributeTest(attributeName: keyof Attributes, modifier: number = 0): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean } {
     const attributeValue = this.getEffectiveAttribute(attributeName);
     const totalModifier = attributeValue + modifier;
     const testResult = calculateAttributeRoll(totalModifier);
@@ -490,8 +499,7 @@ export abstract class Creature implements ICreature {
     return { success: false, modifier: totalModifier, ...testResult };
   }
 
-  startTurn(): string[] {
-    const messages: string[] = [];
+  startTurn(): void {
 
     this.running = false;
 
@@ -506,11 +514,8 @@ export abstract class Creature implements ICreature {
       if (effect.onTurnStart) {
         const effectMessages = effect.onTurnStart(this);
         effectMessages.forEach(msg => addTurnMessage(msg));
-        messages.push(...effectMessages);
       }
     });
-
-    return messages;
   }
 
   endTurn(): void {

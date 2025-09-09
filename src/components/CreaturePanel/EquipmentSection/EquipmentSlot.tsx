@@ -82,13 +82,12 @@ export function EquipmentSlot({
   let isUnarmedWeapon = false;
   
   if (slot === 'mainHand' && !item) {
-    const equipmentSystem = new EquipmentSystem(creature.equipment);
+    const equipmentSystem = new EquipmentSystem(creature.equipment, creature.getNaturalWeapons());
     if (equipmentSystem.isUnarmed()) {
       displayItem = equipmentSystem.getMainWeapon();
       isUnarmedWeapon = true;
     }
   }
-
   // Don't render anything if there's no item to display (including unarmed)
   if (!displayItem) {
     return null;

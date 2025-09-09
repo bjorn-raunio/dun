@@ -37,7 +37,7 @@ export function executeAITurnForCreature(
       getVisibleCreatures(
         creature.x,
         creature.y,
-        groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined),
+        context.creatures.filter(c => c.x !== undefined && c.y !== undefined),
         cols,
         rows,
         mapDefinition
@@ -73,7 +73,7 @@ function executeAITurnLoop(
     iterationCount++;
 
     // Get all creatures for AI decision making
-    const allCreatures = groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined);
+    const allCreatures = context.creatures.filter(c => c.x !== undefined && c.y !== undefined);
     
     // Make AI decision
     const decision = makeAIDecision(creature, aiState, allCreatures, mapDefinition);

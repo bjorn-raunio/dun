@@ -1,19 +1,21 @@
-import { Region as RegionType, RegionConnection } from './types';
+import { IRegion, RegionConnection } from './types';
+import { WorldLocation } from './locations';
+import { QuestMapPreset } from '../maps';
 
-export class Region implements RegionType {
+export class Region implements IRegion {
   public id: string;
   public name: string;
   public vertices: Array<{ x: number; y: number }>;
   public connections: RegionConnection[];
-  public type: RegionType['type'];
+  public type: IRegion['type'];
   public isExplored: boolean;
   public isAccessible: boolean;
   public requirements?: string[];
   public encounters?: string[];
   public resources?: string[];
-  public questMapPresets?: string[];
+  public locations: WorldLocation[];
 
-  constructor(data: RegionType) {
+  constructor(data: IRegion) {
     this.id = data.id;
     this.name = data.name;
     this.vertices = data.vertices;
@@ -24,7 +26,11 @@ export class Region implements RegionType {
     this.requirements = data.requirements;
     this.encounters = data.encounters;
     this.resources = data.resources;
-    this.questMapPresets = data.questMapPresets;
+    this.locations = data.locations || [];
+  }
+
+  addQuestMap(questMap: QuestMapPreset): void {
+    this.locations.push(new WorldLocation({ questMap }));
   }
 
   /**
@@ -211,13 +217,6 @@ export class Region implements RegionType {
   }
 
   /**
-   * Get the first quest map preset ID for this region
-   */
-  getFirstQuestMapPreset(): string | null {
-    return this.questMapPresets && this.questMapPresets.length > 0 ? this.questMapPresets[0] : null;
-  }
-
-  /**
    * Clone the region
    */
   clone(): Region {
@@ -227,7 +226,7 @@ export class Region implements RegionType {
       requirements: this.requirements ? [...this.requirements] : undefined,
       encounters: this.encounters ? [...this.encounters] : undefined,
       resources: this.resources ? [...this.resources] : undefined,
-      questMapPresets: this.questMapPresets ? [...this.questMapPresets] : undefined,
+      locations: this.locations ? [...this.locations] : [],
     });
   }
 }

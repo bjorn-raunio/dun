@@ -16,7 +16,7 @@ export function DayNightIndicator({ isNight }: DayNightIndicatorProps) {
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        minWidth: 80,
+        width: "100px",
         padding: "8px 12px",
       }}
     >

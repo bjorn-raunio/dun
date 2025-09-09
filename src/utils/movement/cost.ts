@@ -76,6 +76,11 @@ export function calculateMovementCost(
 
   const isMultiTile = areaDimensions.w > 1 || areaDimensions.h > 1;
 
+  // Check that tiles are adjacent (including diagonal movement)
+  if (!mapDefinition.isAdjacent(fromX, fromY, toX, toY)) {
+    return returnInfinityForBlocked ? Infinity : 0;
+  }
+
   // Use validatePositionStandable for basic position validation (bounds, creatures, terrain, sections)
   // Note: We'll use a custom elevation check later since validatePositionStandable uses a fixed limit of 1
   const basicValidation = validatePositionStandable(
@@ -291,13 +296,6 @@ export function getTileCost(
 
   // Default terrain cost
   return 1;
-}
-
-/**
- * Calculate the cost difference between two positions (for step-by-step movement)
- */
-export function calculateCostDifference(currentCost: number, destCost: number): number {
-  return Math.max(0, destCost - currentCost);
 }
 
 /**

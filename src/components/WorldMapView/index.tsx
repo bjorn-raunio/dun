@@ -4,7 +4,7 @@ import { RegionOverlay } from './RegionOverlay';
 import { ConnectionOverlay } from './ConnectionOverlay';
 import { PartyIconOverlay } from './PartyIconOverlay';
 import { WorldMapCharacterBar } from './WorldMapCharacterBar';
-import { RegionClass } from '../../worldmap';
+import { RegionClass, WorldLocation } from '../../worldmap';
 import { ICreature } from '../../creatures/index';
 
 interface WorldMapViewProps {
@@ -22,7 +22,7 @@ interface WorldMapViewProps {
   onCenterOnParty?: () => void;
   heroes?: ICreature[];
   onHeroSelect?: (hero: ICreature) => void;
-  onQuestMapSelect?: (questMapId: string) => void;
+  onQuestMapSelect?: (location: WorldLocation) => void;
 }
 
 export function WorldMapView({

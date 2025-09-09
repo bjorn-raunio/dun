@@ -1,4 +1,4 @@
-import { Creature, CreatureGroup } from '../../creatures/index';
+import { CreatureGroup, ICreature } from '../../creatures/index';
 import { QuestMap } from '../../maps/types';
 
 export interface TurnState {
@@ -24,6 +24,7 @@ export interface TurnOrderConfig {
 
 export interface TurnExecutionContext {
   groups: CreatureGroup[];
+  creatures: ICreature[];
   dispatch: React.Dispatch<any>;
   mapDefinition: QuestMap;
 }

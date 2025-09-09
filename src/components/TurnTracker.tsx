@@ -1,6 +1,6 @@
 import React from 'react';
 import { TurnState } from '../game/turnManagement';
-import { COLORS } from './styles';
+import { COLORS, COMMON_STYLES } from './styles';
 
 // --- Turn Tracker Component ---
 
@@ -12,15 +12,14 @@ export function TurnTracker({ turnState }: TurnTrackerProps) {
   return (
     <div
       style={{
-        background: COLORS.backgroundLight,
-        border: `2px solid ${COLORS.borderDark}`,
-        borderRadius: 8,
-        padding: 8,
-        height: "100%",
+        ...COMMON_STYLES.messageBox,
+        height: "fit-content",
+        maxHeight: "60px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         boxSizing: "border-box",
+        width: "100px",
       }}
     >
       <div style={{

@@ -11,6 +11,7 @@ export * from './armor';
 export * from './shields';
 export * from './consumables';
 export * from './miscellaneous';
+export * from './naturalWeapons';
 
 // Export unified equipment system
 export * from './equipment';

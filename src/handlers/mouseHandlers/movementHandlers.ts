@@ -3,7 +3,6 @@ import { GameActions, GameRefs } from '../../game/types';
 import { QuestMap } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
 import { executeMovement } from '../../utils/movement';
-import { calculateCostDifference } from '../../utils/movement';
 import { logMovement, logGame } from '../../utils/logging';
 
 // Simplified interfaces for better readability
@@ -85,7 +84,7 @@ export function createMovementHandlers(
   ): number {
     const currentCost = reachable.costMap.get(`${creature.x},${creature.y}`) ?? 0;
     const destCost = reachable.costMap.get(`${targetX},${targetY}`) ?? 0;
-    return calculateCostDifference(currentCost, destCost);
+    return Math.max(0, destCost - currentCost);
   }
 
   // Helper function to check for duplicate movement

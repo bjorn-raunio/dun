@@ -2,7 +2,6 @@ import { Attributes } from '../../statusEffects/types';
 import { WeaponAttack } from '../base';
 import { CombatTrigger } from '../../skills/types';
 import { STATUS_EFFECT_PRESETS } from '../../statusEffects';
-import { isCriticalHit, isDoubles } from '../../utils/dice';
 import { CombatEventData } from '../../utils/combat/execution';
 
 export type WeaponPreset = {
@@ -13,8 +12,9 @@ export type WeaponPreset = {
   attributeModifiers?: Partial<Attributes>;
   combatTriggers?: CombatTrigger[];
   breakRoll?: number;
+  naturalWeapon?: boolean;
   weight?: number;
-  value?: number
+  value?: number;
 };
 
 export const weaponPresets: Record<string, WeaponPreset> = {
@@ -81,7 +81,7 @@ export const weaponPresets: Record<string, WeaponPreset> = {
             data.target.addStatusEffect(STATUS_EFFECT_PRESETS.stunned.createEffect());
           }
         },
-        validator: (roll) => isCriticalHit(roll.dice)
+        validator: (roll) => roll.criticalHit
       }
     ]
   },

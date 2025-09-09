@@ -1,6 +1,6 @@
-import { Attributes } from '../statusEffects';
+import { Attributes, StatusEffect, StatusEffectType } from '../statusEffects';
 import { EquipmentSystem } from '../items/equipment';
-import { Weapon, RangedWeapon, Armor, Shield, BaseWeapon } from '../items';
+import { Weapon, RangedWeapon, Armor, Shield, BaseWeapon, NaturalWeapon } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { isInBackArc } from '../utils/geometry';
 import { Skill } from '../skills';
@@ -20,7 +20,9 @@ export class CreatureCombatManager implements ICreatureCombatManager {
     },
     private getNaturalArmor: () => number,
     private getSize: () => number,
-    private getSkills: () => Skill[]
+    private getSkills: () => Skill[],
+    private hasStatusEffect: (type: StatusEffectType) => boolean,
+    private naturalWeapons?: NaturalWeapon[]
   ) { }
 
   // --- Equipment Access Consolidation ---
@@ -30,7 +32,7 @@ export class CreatureCombatManager implements ICreatureCombatManager {
    */
   public getEquipmentSystem(): EquipmentSystem {
     if (!this.equipmentSystem) {
-      this.equipmentSystem = new EquipmentSystem(this.getEquipment());
+      this.equipmentSystem = new EquipmentSystem(this.getEquipment(), this.naturalWeapons);
     }
     return this.equipmentSystem;
   }
@@ -83,6 +85,10 @@ export class CreatureCombatManager implements ICreatureCombatManager {
   // --- Zone of Control ---
 
   getZoneOfControlRange(): number {
+    // Characters with knocked down status effect have engagement zone of 0
+    if (this.hasStatusEffect('knockedDown')) {
+      return 0;
+    }
     return 1; // Can be overridden by subclasses for different creature types
   }
 

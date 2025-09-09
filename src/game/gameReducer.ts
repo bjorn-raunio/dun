@@ -5,6 +5,7 @@ import { QuestMap } from '../maps/types';
 import { WeatherState, createWeatherEffect } from './weather';
 import { WorldMap } from '../worldmap/WorldMap';
 import { createSampleWorldMap } from '../worldmap/presets';
+import { Scenario } from '../scenarios/Scenario';
 import { TILE_SIZE } from '../components/styles';
 
 
@@ -29,6 +30,7 @@ export type GameAction =
   | { type: 'SET_PARTY'; payload: Party }
   | { type: 'SET_WORLDMAP'; payload: WorldMap }
   | { type: 'SET_MAP_DEFINITION'; payload: QuestMap | null }
+  | { type: 'SET_SCENARIO'; payload: Scenario | null }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
   | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } }
   | { type: 'CENTER_WORLDMAP_ON_PARTY' }
@@ -102,7 +104,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SET_MAP_DEFINITION':
       return { ...state, mapDefinition: action.payload };
     
-
+    case 'SET_SCENARIO':
+      return { ...state, scenario: action.payload };
     
     case 'RESET_VIEWPORT_CENTER':
       return {
@@ -158,9 +161,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 // Cache the world map to prevent recreation on re-renders
 let cachedWorldMap: WorldMap = createSampleWorldMap();
 
+// Track which scenarios have been initialized to prevent multiple calls
+const initializedScenarios = new Set<Scenario>();
+
 export function getInitialGameState(
   initialCreatures: ICreature[], 
-  mapDefinition: QuestMap | null
+  mapDefinition: QuestMap | null,
+  scenario: Scenario | null = null
 ): GameState {
   // Calculate initial pan position to center over a starting tile
   const mapWidth = mapDefinition?.width ?? 40;
@@ -176,6 +183,12 @@ export function getInitialGameState(
   // Center the starting tile in the viewport
   const initialPanX = (window.innerWidth / 2) - (startingTile.x * 32) - 16;
   const initialPanY = (availableHeight / 2) - (startingTile.y * 32) - 16;
+  
+  // Initialize scenario if provided and not already initialized
+  if (scenario && !initializedScenarios.has(scenario)) {
+    scenario.startScenario(cachedWorldMap);
+    initializedScenarios.add(scenario);
+  }
   
   return {
     creatures: initialCreatures,
@@ -221,6 +234,7 @@ export function getInitialGameState(
     viewMode: 'quest',
     worldMap: cachedWorldMap,
     mapDefinition: mapDefinition,
+    scenario: scenario,
     party: (() => {
       const startingRegionId = 't26'; // Default starting region
       return new Party(startingRegionId);

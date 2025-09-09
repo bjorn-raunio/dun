@@ -1,4 +1,4 @@
-import { WorldMap as WorldMapType, Region as RegionType, RegionConnection, WorldMapState } from './types';
+import { IWorldMap as WorldMapType, IRegion as RegionType, RegionConnection, WorldMapState } from './types';
 import { Region } from './Region';
 
 export class WorldMap implements WorldMapType {

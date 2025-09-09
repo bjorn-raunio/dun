@@ -41,23 +41,15 @@ export function roll2d6(bonus: number = 0): number {
   return rollXd6Sum(2, bonus);
 }
 
-export type DiceRoll = { total: number; dice: number[], fumble: boolean, criticalSuccess: boolean };
+export type DiceRoll = { total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean };
 
 export function calculateAttributeRoll(bonus: number): DiceRoll {
   const dice = rollXd6(2);
   const total = dice.reduce((sum, roll) => sum + roll, 0) + bonus;
   const fumble = dice.filter(roll => roll === 1).length >= 2;
+  const criticalHit = dice.some(roll => roll === 6);
   const criticalSuccess = dice.filter(roll => roll === 6).length >= 2;
-  return { total, dice, fumble, criticalSuccess };
-}
-
-/**
- * Check if a combat roll contains a critical hit (any die rolled a 6)
- * @param diceResults Array of individual dice results from a combat roll
- * @returns True if any die rolled a 6 (critical hit)
- */
-export function isCriticalHit(diceResults: number[]): boolean {
-  return diceResults.some(roll => roll === 6);
+  return { total, dice, fumble, criticalHit, criticalSuccess };
 }
 
 /**

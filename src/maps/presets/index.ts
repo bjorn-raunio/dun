@@ -11,15 +11,12 @@ export type {
 
 export { 
   questMapPresets, 
-  questMapPresetsByCategory 
 } from './questMapPresets';
 
 export { 
   createQuestMapFromPreset,
+  createQuestMapFromPresetWithWeather,
   getAvailableQuestMapPresets,
-  getQuestMapPresetsByCategory,
   getQuestMapPreset,
   getQuestMapPresetIds,
-  getQuestMapPresetsByDifficulty,
-  getQuestMapPresetsByLevel
 } from './factory';

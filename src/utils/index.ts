@@ -29,6 +29,5 @@ export {
   debugLineOfSight,
   getVisibleCreatures,
   getReachableTiles,
-  findPathToTarget,
-  calculateStepCost
+  findPathToTarget
 } from './pathfinding';

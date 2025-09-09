@@ -27,6 +27,7 @@ export type BasePreset = {
   naturalArmor?: number;
   group?: CreatureGroup;
   skills?: Skill[];
+  naturalWeapons?: string[];
 };
 
 export type MonsterPreset = BasePreset & {

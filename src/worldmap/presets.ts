@@ -1,8 +1,8 @@
-import { WorldMap as WorldMapType, Region as RegionType, RegionConnection } from './types';
+import { IWorldMap, IRegion } from './types';
 import { WorldMap } from './WorldMap';
 import { Region } from './Region';
 
-export const WORLD_REGIONS: RegionType[] = [
+export const WORLD_REGIONS: IRegion[] = [
   {
     id: 't26',
     name: 'Verneck',
@@ -55,8 +55,7 @@ export const WORLD_REGIONS: RegionType[] = [
     isExplored: false,
     isAccessible: true,
     encounters: ['wolf', 'bandit', 'mysterious_traveler'],
-    resources: ['wood', 'herbs', 'mushrooms'],
-    questMapPresets: ['freeTheMerchants']
+    resources: ['wood', 'herbs', 'mushrooms']
   },
 ];
 
@@ -65,7 +64,7 @@ export const WORLD_REGIONS: RegionType[] = [
 
 // --- Sample World Map ---
 
-export const SAMPLE_WORLD_MAP: WorldMapType = {
+export const SAMPLE_WORLD_MAP: IWorldMap = {
   id: 'sample_world',
   name: 'The Land of Adventure',
   description: 'A diverse world filled with mystery, danger, and opportunity. From peaceful villages to ancient ruins, adventure awaits around every corner.',
@@ -114,10 +113,10 @@ export function createSampleWorldMap(): WorldMap {
 export function createCustomWorldMap(
   name: string,
   description: string,
-  regions: RegionType[],
+  regions: IRegion[],
   startingRegionId: string
 ): WorldMap {
-  const worldMapData: WorldMapType = {
+  const worldMapData: IWorldMap = {
     id: `custom_${Date.now()}`,
     name,
     description,

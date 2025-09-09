@@ -26,43 +26,36 @@ function createParticle(viewport: ViewportState, speed: number, weather: Weather
   const distance = Math.random(); // Random distance from 0 (close) to 1 (far)
   const particle: WeatherParticle = {
     x: Math.random() * viewport.width,
-    y: -Math.random() * 500 - 1000,
+    y: -Math.random() * viewport.height,
     vx: (Math.random() - 0.5) * speed * 0.5,
     vy: Math.random() * speed + 0.5,
-    size: (Math.random() * 1 + 0.5) * viewport.zoom, // Scale particle size with zoom
+    size: Math.random() * 1 + 0.5, // Base size without zoom scaling
     opacity: 1,
     distance: distance
   };
 
   // Adjust particle behavior based on weather type and distance
   switch (weather.type) {
-    case 'rain':
+    case 'storm':
       // Higher distance = slower fall speed, smaller size, more transparent
-      particle.vy = (speed * 2 + 2) * (1 - distance * 0.6); // Distance reduces speed by up to 60%
-      particle.vx = (speed * 0.2 + 0.2) * (1 - distance * 0.6); // Consistent rightward drift for rain
+      particle.vy = (speed * 4 + 4) * (1 - distance * 0.6); // Distance reduces speed by up to 60%
+      particle.vx = (speed * 0.4 + 0.4) * (1 - distance * 0.6); // Consistent rightward drift for rain
       particle.size = (1 - distance * 0.5); // Distance reduces size by up to 50%
       particle.opacity = 1 - distance * 0.5; // Distance reduces opacity by up to 70%
       break;
     case 'snow':
       // Higher distance = slower fall speed, smaller size, more transparent
-      particle.vy = (Math.random() * speed + 0.3) * (1 - distance * 0.7); // Distance reduces speed by up to 70%
-      particle.vx = Math.sin(particle.y * 0.01) * 0.5;
-      particle.size = ((Math.random() * 0.7 + 0.8) * viewport.zoom) * (1 - distance * 0.6); // Distance reduces size by up to 60%
-      particle.opacity = 1 - distance * 0.8; // Distance reduces opacity by up to 80%
+      particle.vy = (Math.random() * speed + 0.3) * (1 - distance * 0.6); // Distance reduces speed by up to 70%
+      particle.vx = Math.sin(particle.y * 0.01) * (1 - distance * 0.6);
+      particle.size = (Math.random() * 3 + 3) * (1 - distance * 0.6); // Distance reduces size by up to 60%
+      particle.opacity = 1 - distance * 0.5; // Distance reduces opacity by up to 80%
       break;
-    case 'fog':
-      // Higher distance = slower movement, smaller size, more transparent
-      particle.vy = (Math.random() * speed * 0.1) * (1 - distance * 0.8); // Distance reduces speed by up to 80%
-      particle.vx = (Math.random() * speed * 0.1) * (1 - distance * 0.8);
-      particle.size = ((Math.random() * 5 + 3) * viewport.zoom) * (1 - distance * 0.4); // Distance reduces size by up to 40%
-      particle.opacity = (Math.random() * 0.3 + 0.1) * (1 - distance * 0.9); // Distance reduces opacity by up to 90%
-      break;
-    case 'storm':
-      // Higher distance = slower fall speed, smaller size, more transparent
-      particle.vy = (Math.random() * speed * 3 + 3) * (1 - distance * 0.5); // Distance reduces speed by up to 50%
-      particle.vx = (Math.random() - 0.5) * speed * 1.5;
-      particle.size = ((Math.random() * 0.8 + 0.4) * viewport.zoom) * (1 - distance * 0.6); // Distance reduces size by up to 60%
-      particle.opacity = (Math.random() * 0.7 + 0.3) * (1 - distance * 0.6); // Distance reduces opacity by up to 60%
+    case 'wind':
+      // Wind particles move horizontally with some vertical variation
+      particle.vy = (Math.random() - 0.5) * speed * 0.3 * (1 - distance * 0.5); // Small vertical movement
+      particle.vx = (Math.random() * speed * 2 + speed) * (1 - distance * 0.3); // Strong horizontal movement
+      particle.size = (Math.random() * 2 + 1) * (1 - distance * 0.4); // Small, varying size
+      particle.opacity = (Math.random() * 0.4 + 0.3) * (1 - distance * 0.6); // Semi-transparent
       break;
   }
   return particle;
@@ -76,7 +69,7 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
   const lastTimeRef = useRef<number>(0);
 
   const createParticles = useCallback((weather: WeatherEffect) => {
-    if (weather.type === 'clear') {
+    if (weather.type === 'clear' || weather.type === 'fog' || weather.type === 'heat') {
       particlesRef.current = [];
       return;
     }
@@ -91,45 +84,55 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
     }
 
     particlesRef.current = newParticles;
-  }, [viewport.width, viewport.height, viewport.zoom]);
+  }, []);
 
   const updateParticles = useCallback((deltaTime: number, weather: WeatherEffect) => {
-    if (weather.type === 'clear') return;
+    if (weather.type === 'clear' || weather.type === 'fog' || weather.type === 'heat') return;
 
     particlesRef.current.forEach(particle => {
       // Update position
       particle.x += particle.vx * deltaTime * 0.016; // 60 FPS approximation
       particle.y += particle.vy * deltaTime * 0.016;
 
-      // Check if particle has fallen off the bottom of the screen
-      if (particle.y > viewport.height + 20) {
-        //particle = createParticle(viewport, 20, weather);
-        // Respawn particle at the top with random x position
-        particle.x = Math.random() * viewport.width;
-        particle.y = -20; // Start slightly above the top edge
-      }
+      // Handle particle respawning based on weather type
+      if (weather.type === 'wind') {
+        // Wind particles wrap horizontally and respawn vertically
+        if (particle.x < -20) particle.x = viewport.width + 20;
+        if (particle.x > viewport.width + 20) particle.x = -20;
+        if (particle.y < -20 || particle.y > viewport.height + 20) {
+          particle.x = Math.random() * viewport.width;
+          particle.y = Math.random() * viewport.height;
+        }
+      } else {
+        // For rain and snow, check if particle has fallen off the bottom of the screen
+        if (particle.y > viewport.height + 20) {
+          // Respawn particle at the top with random x position
+          particle.x = Math.random() * viewport.width;
+          particle.y = -Math.random() * viewport.height;
+        }
 
-      // Handle horizontal wrapping for some weather types
-      if (particle.x < -20) particle.x = viewport.width + 20;
-      if (particle.x > viewport.width + 20) particle.x = -20;
+        // Handle horizontal wrapping for some weather types
+        if (particle.x < -20) particle.x = viewport.width + 20;
+        if (particle.x > viewport.width + 20) particle.x = -20;
+      }
     });
-  }, [viewport.width, viewport.height, viewport.zoom]);
+  }, []);
 
   const renderParticles = useCallback((ctx: CanvasRenderingContext2D, weather: WeatherEffect) => {
-    if (weather.type === 'clear') return;
+    if (weather.type === 'clear' || weather.type === 'fog' || weather.type === 'heat') return;
 
     ctx.save();
 
     // Set global alpha based on weather intensity (reduced since we now use individual particle opacity)
-    ctx.globalAlpha = weather.intensity * 0.4 + 0.1;
+    ctx.globalAlpha = 0.5;
 
     particlesRef.current.forEach(particle => {
       // Use individual particle opacity (already set based on distance)
       ctx.globalAlpha = particle.opacity;
 
       switch (weather.type) {
-        case 'rain':
-          ctx.strokeStyle = '#6496ff';
+        case 'storm':
+          ctx.strokeStyle = '#B4C3FF';
           ctx.lineWidth = 1;
           ctx.beginPath();
           // Use consistent angle for all raindrops - they should all fall at the same angle
@@ -150,32 +153,22 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
           ctx.fill();
           break;
 
-        case 'fog':
-          ctx.fillStyle = '#c8c8c8';
-          // Fog opacity is already set per particle, no need to multiply by 0.5
+        case 'wind':
+          // Draw wind streaks as small lines moving horizontally
+          ctx.strokeStyle = '#E8F4FD';
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-          ctx.fill();
-          break;
-
-        case 'storm':
-          ctx.strokeStyle = '#323264';
-          ctx.lineWidth = particle.size;
-          ctx.beginPath();
-          // Use consistent angle for storm raindrops as well
-          const stormRainAngle = Math.PI / 2 + 0.2; // Slightly more angled than regular rain
-          const stormRainLength = 12; // Longer raindrops for storm
-          const stormEndX = particle.x - Math.cos(stormRainAngle) * stormRainLength;
-          const stormEndY = particle.y - Math.sin(stormRainAngle) * stormRainLength;
+          const windLength = particle.size * 8;
           ctx.moveTo(particle.x, particle.y);
-          ctx.lineTo(stormEndX, stormEndY);
+          ctx.lineTo(particle.x + windLength, particle.y);
           ctx.stroke();
           break;
+
       }
     });
 
     ctx.restore();
-  }, [viewport.zoom]);
+  }, []);
 
   const animate = useCallback((currentTime: number) => {
     if (!canvasRef.current) return;
@@ -189,22 +182,23 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
     // Clear canvas
     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-    // Update and render particles
+    // Update and render particles for weather types that need animation
     updateParticles(deltaTime, weather.current);
     renderParticles(ctx, weather.current);
 
     // Continue animation
     animationRef.current = requestAnimationFrame(animate);
-  }, [weather.current, updateParticles, renderParticles, viewport.zoom]);
+  }, [weather.current, updateParticles, renderParticles]);
 
   // Initialize particles when weather changes
   useEffect(() => {
     createParticles(weather.current);
-  }, [weather.current, createParticles, viewport.zoom]);
+  }, [weather.current, createParticles]);
 
   // Start/stop animation
   useEffect(() => {
-    if (weather.current.type !== 'clear') {
+    if (weather.current.type !== 'clear' && weather.current.type !== 'fog' && weather.current.type !== 'heat') {
+      // Start continuous animation for particle-based weather
       animationRef.current = requestAnimationFrame(animate);
     } else {
       if (animationRef.current) {
@@ -217,7 +211,7 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [weather.current.type, animate, viewport.zoom]);
+  }, [weather.current.type, animate]);
 
   // Handle canvas resize
   useEffect(() => {
@@ -237,19 +231,68 @@ export function WeatherOverlay({ cols, rows }: WeatherOverlayProps) {
   }
 
   return (
-    <canvas
-      ref={canvasRef}
-      height={viewport.height}
-      width={viewport.width}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: `${viewport.width}px`,
-        height: `${viewport.height}px`,
-        pointerEvents: 'none',
-        zIndex: 10,
-      }}
-    />
+    <>
+      {/* Canvas for particle-based weather effects */}
+      {(weather.current.type === 'snow' || weather.current.type === 'storm' || weather.current.type === 'wind') && (
+        <canvas
+          ref={canvasRef}
+          height={viewport.height}
+          width={viewport.width}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${viewport.width}px`,
+            height: `${viewport.height}px`,
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        />
+      )}
+      
+      {/* CSS-based fog effect */}
+      {weather.current.type === 'fog' && (
+        <div className="fogwrapper">
+          <div id="foglayer_01">
+            <div className="image01"></div>
+            <div className="image02"></div>
+          </div>
+          <div id="foglayer_02">
+            <div className="image01"></div>
+            <div className="image02"></div>
+          </div>
+          <div id="foglayer_03">
+            <div className="image01"></div>
+            <div className="image02"></div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS-based heat effect */}
+      {weather.current.type === 'heat' && (
+        <>
+          <div className="heatwrapper">
+            <div id="heatlayer_01">
+              <div className="image01"></div>
+              <div className="image02"></div>
+            </div>
+            <div id="heatlayer_02">
+              <div className="image01"></div>
+              <div className="image02"></div>
+            </div>
+            <div id="heatlayer_03">
+              <div className="image01"></div>
+              <div className="image02"></div>
+            </div>
+          </div>
+          {/* Additional heat distortion overlay */}
+          <div className="heatdistortion">
+            <div className="heatwave"></div>
+            <div className="heatwave"></div>
+            <div className="heatwave"></div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

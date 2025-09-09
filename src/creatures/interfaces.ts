@@ -2,7 +2,7 @@
 // This file contains interfaces that can be imported by other modules
 // without creating circular dependencies
 
-import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem } from '../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem, NaturalWeapon } from '../items';
 import { MovementResult } from '../utils/movement';
 import { CreatureState, CreaturePosition, CreaturePositionOrUndefined } from './types';
 import { CreatureGroup } from './CreatureGroup';
@@ -90,6 +90,11 @@ export interface ICreature {
   getAdjacentEnemies(allCreatures: ICreature[], tile?: { x: number, y: number }): ICreature[];
   getEquipmentSystem(): EquipmentSystem; // Returns cached EquipmentSystem instance
   
+  // Natural Weapons
+  getNaturalWeapons(): NaturalWeapon[];
+  hasNaturalWeapons(): boolean;
+  canUseNaturalWeapons(): boolean;
+  
   // Relationships
   isPlayerControlled(): boolean;
   isAIControlled(): boolean;
@@ -124,7 +129,7 @@ export interface ICreature {
   useMana(amount: number): boolean;
   setMovedWhileEngaged(value: boolean): void;
   restoreMana(amount: number): void;
-  startTurn(): string[];
+  startTurn():void;
   endTurn(): void;
   resetRemainingActions(): void;
   
@@ -188,7 +193,7 @@ export interface ICreature {
   recordPushedCreature(targetId: string): void;
   
   // Attribute test method
-  performAttributeTest(attributeName: keyof Attributes, modifier?: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalSuccess: boolean };
+  performAttributeTest(attributeName: keyof Attributes, modifier?: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean };
   
   // Effective movement getter
   get effectiveMovement(): number;

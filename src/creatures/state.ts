@@ -205,7 +205,6 @@ export class CreatureStateManager {
   // --- Turn Management ---
 
   startTurn() {
-
     if (!this.isDead()) {
       this.state.remainingMovement = this.getMaxMovement();
       this.state.remainingActions = this.getMaxActions();

@@ -63,24 +63,28 @@ export function CreaturePanel({
   return (
     <>
       <div style={PANEL_STYLES}>
-        <CreatureHeader creature={selectedCreature} onExamine={handleExamine} />
-        <EquipmentSection 
-          creature={selectedCreature} 
-          onUpdate={onCreatureUpdate}
-          onAttack={onAttack}
-          canAttack={canAttack}
-        />
-        <SimpleCreatureStats creature={selectedCreature} />
-        <ActionPanel 
-          creature={selectedCreature}
-          allCreatures={creatures}
-          onAction={handleAction}
-        />
-        <TileContentsList 
-          creature={selectedCreature}
-          mapDefinition={mapDefinition}
-          onUpdate={onCreatureUpdate}
-        />
+        <div style={TOP_SECTION_STYLES}>
+          <CreatureHeader creature={selectedCreature} onExamine={handleExamine} />
+          <EquipmentSection 
+            creature={selectedCreature} 
+            onUpdate={onCreatureUpdate}
+            onAttack={onAttack}
+            canAttack={canAttack}
+          />
+          <SimpleCreatureStats creature={selectedCreature} />
+          <ActionPanel 
+            creature={selectedCreature}
+            allCreatures={creatures}
+            onAction={handleAction}
+          />
+        </div>
+        <div style={BOTTOM_SECTION_STYLES}>
+          <TileContentsList 
+            creature={selectedCreature}
+            mapDefinition={mapDefinition}
+            onUpdate={onCreatureUpdate}
+          />
+        </div>
       </div>
       
       {/* Character popup */}
@@ -110,4 +114,19 @@ const PANEL_STYLES = {
   display: "flex",
   flexDirection: "column" as const,
   gap: 12,
+};
+
+const TOP_SECTION_STYLES = {
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: 12,
+  flex: 1,
+  minHeight: 0, // Allow shrinking
+};
+
+const BOTTOM_SECTION_STYLES = {
+  display: "flex",
+  flexDirection: "column" as const,
+  height: "300px",
+  overflow: "auto" as const, // Allow scrolling if content overflows
 };

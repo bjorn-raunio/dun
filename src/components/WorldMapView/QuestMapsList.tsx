@@ -1,15 +1,15 @@
 import React from 'react';
 import { COLORS, LAYOUT_PATTERNS, COMMON_STYLES } from '../styles';
 import { RegionClass } from '../../worldmap';
-import { questMapPresets } from '../../maps/presets/questMapPresets';
+import { WorldLocation } from '../../worldmap';
 
 interface QuestMapsListProps {
   currentRegion: RegionClass | null;
-  onQuestMapSelect?: (questMapId: string) => void;
+  onQuestMapSelect?: (location: WorldLocation) => void;
 }
 
 export function QuestMapsList({ currentRegion, onQuestMapSelect }: QuestMapsListProps) {
-  if (!currentRegion || !currentRegion.questMapPresets || currentRegion.questMapPresets.length === 0) {
+  if (!currentRegion) {
     return (
       <div style={{
         ...LAYOUT_PATTERNS.flexColumn,
@@ -38,10 +38,6 @@ export function QuestMapsList({ currentRegion, onQuestMapSelect }: QuestMapsList
     );
   }
 
-  const availableQuestMaps = currentRegion.questMapPresets
-    .map(presetId => questMapPresets[presetId])
-    .filter(Boolean);
-
   return (
     <div style={{
       ...LAYOUT_PATTERNS.flexColumn,
@@ -67,10 +63,10 @@ export function QuestMapsList({ currentRegion, onQuestMapSelect }: QuestMapsList
         maxHeight: 200,
         overflowY: 'auto',
       }}>
-        {availableQuestMaps.map((questMap) => (
+        {currentRegion.locations.map((location) => (
           <div
-            key={questMap.name}
-            onClick={() => onQuestMapSelect?.(currentRegion.questMapPresets!.find(id => questMapPresets[id] === questMap)!)}
+            key={location.name}
+            onClick={() => onQuestMapSelect?.(location)}
             style={{
               ...LAYOUT_PATTERNS.flexColumn,
               gap: 4,
@@ -103,7 +99,7 @@ export function QuestMapsList({ currentRegion, onQuestMapSelect }: QuestMapsList
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }}>
-              {questMap.name}
+              {location.name}
             </div>                    
           </div>
         ))}

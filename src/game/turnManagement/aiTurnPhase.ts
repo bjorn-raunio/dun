@@ -31,9 +31,9 @@ export function executeAITurnsForGroup(
   group: CreatureGroup,
   context: TurnExecutionContext
 ): void {
-  const allCreatures = context.groups.flatMap(group => group.getLivingCreatures()).filter(c => c.x !== undefined && c.y !== undefined);
+  const allCreatures = context.creatures.filter(c => c.x !== undefined && c.y !== undefined);
   // Sort by behavior (ranged before melee) then by agility for turn order within group
-  const sortedGroup = [...group.getLivingCreatures()].filter(c => c.x !== undefined && c.y !== undefined).sort((a, b) => compareAICreaturesByBehavior(a, b));
+  const sortedGroup = [...group.getLivingCreatures(context.creatures)].filter(c => c.x !== undefined && c.y !== undefined).sort((a, b) => compareAICreaturesByBehavior(a, b));
   
   // Execute turns for each creature in the group
   sortedGroup.forEach(creature => {

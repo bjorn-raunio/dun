@@ -3,7 +3,7 @@ import { getCreatureDimensions } from '../dimensions';
 import { calculateMovementCost } from '../movement';
 import { PathfindingResult, PathfindingOptions, PathfindingNode } from './types';
 import { MOVEMENT_DIRECTIONS, MAX_PATHFINDING_ITERATIONS, DEFAULT_MOVEMENT_OPTIONS } from './constants';
-import { getAreaStats, isAreaStandable, calculateHeuristic, reconstructPath } from './helpers';
+import { isAreaStandable, calculateHeuristic, reconstructPath } from './helpers';
 import { QuestMap } from '../../maps/types';
 
 /**
@@ -61,14 +61,7 @@ export class PathfindingSystem {
         const nx = current.x + dx;
         const ny = current.y + dy;
 
-        // Corner rule for diagonal movement
-        if (Math.abs(dx) === 1 && Math.abs(dy) === 1) {
-          if (!this.canMoveDiagonally(current.x, current.y, nx, ny, selectedDims, mapDefinition, cols, rows)) {
-            continue;
-          }
-        }
-
-        // Cost and passability
+        // Cost and passability (includes diagonal corner rule check)
         const stepCost = calculateMovementCost(
           current.x, 
           current.y, 
@@ -175,10 +168,7 @@ export class PathfindingSystem {
         }
 
         // Calculate movement cost to this neighbor
-        const stepCost = this.calculateStepCost(
-          currentX, currentY, neighborX, neighborY,
-          allCreatures, cols, rows, mapDefinition, creature
-        );
+        const stepCost = calculateMovementCost(currentX, currentY, neighborX, neighborY, allCreatures, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
 
         if (stepCost === Infinity) {
           continue; // Cannot move to this neighbor
@@ -203,55 +193,4 @@ export class PathfindingSystem {
     return null;
   }
 
-  /**
-   * Calculate movement cost for a single step
-   */
-  static calculateStepCost(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    allCreatures: ICreature[],
-    cols: number,
-    rows: number,
-    mapDefinition: QuestMap,
-    creature?: ICreature
-  ): number {
-    return calculateMovementCost(fromX, fromY, toX, toY, allCreatures, mapDefinition, DEFAULT_MOVEMENT_OPTIONS, creature);
-  }
-
-  /**
-   * Check if diagonal movement is allowed (corner rule)
-   */
-  private static canMoveDiagonally(
-    currentX: number,
-    currentY: number,
-    nx: number,
-    ny: number,
-    selectedDims: { w: number; h: number },
-    mapDefinition: QuestMap,
-    cols: number,
-    rows: number
-  ): boolean {
-    const sideA = getAreaStats(currentX + (nx - currentX), currentY, selectedDims, cols, rows, mapDefinition);
-    const sideB = getAreaStats(currentX, currentY + (ny - currentY), selectedDims, cols, rows, mapDefinition);
-    const destStats = getAreaStats(nx, ny, selectedDims, cols, rows, mapDefinition);
-    const currentStats = getAreaStats(currentX, currentY, selectedDims, cols, rows, mapDefinition);
-
-    // Check if the sides block diagonal movement
-    const sideABlocks = sideA.maxH >= 1;
-    const sideBBlocks = sideB.maxH >= 1;
-
-    // Allow diagonal movement if:
-    // 1. Neither side blocks, OR
-    // 2. Creature is standing on terrain equal to or higher than the blocking sides, OR  
-    // 3. Creature is moving into terrain (climbing up)
-    if ((sideABlocks || sideBBlocks) &&
-      currentStats.maxH < Math.max(sideA.maxH, sideB.maxH) &&
-      destStats.maxH <= currentStats.maxH) {
-      return false; // Block diagonal movement
-    }
-
-    return true;
-  }
 }

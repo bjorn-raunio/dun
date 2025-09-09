@@ -30,6 +30,28 @@ export const terrainPresetsByCategory: Record<string, TerrainPresetCategory> = {
       },
     }
   },
+  furniture: {
+    presets: {
+      boxes: {
+        image: "boxes.jpg",
+        mapWidth: 2,
+        mapHeight: 2,
+        height: 2,
+      },
+      weaponRack: {
+        image: "weaponRack.jpg",
+        mapWidth: 1,
+        mapHeight: 2,
+        height: 1,
+      },
+      tableA: {
+        image: "tableA.jpg",
+        mapWidth: 2,
+        mapHeight: 2,
+        height: 1,
+      },
+    }
+  }
 };
 
 // Flattened terrain presets for easy access

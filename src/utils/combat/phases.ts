@@ -3,7 +3,7 @@ import { EquipmentSystem } from '../../items/equipment';
 import { CombatCalculator } from '../../items/equipment/combat';
 import { Weapon, RangedWeapon, Shield, BaseWeapon, WeaponAttack } from '../../items';
 import { Light } from '../../maps/types';
-import { calculateAttributeRoll, displayDiceRoll, displayDiceSum, displayDieRoll, isCriticalHit, isDoubles, rollXd6 } from '../dice';
+import { calculateAttributeRoll, displayDiceRoll, displayDiceSum, displayDieRoll, rollXd6 } from '../dice';
 import { calculateDistanceBetween } from '../pathfinding';
 import { logCombat } from '../logging';
 import {
@@ -81,9 +81,6 @@ export function executeToHitRollMelee(
   attackerRollResult.total += attackerBonus;
   defenderRollResult.total += defenderBonus;
 
-  // Check for double criticals and critical hits
-  const criticalHit = isCriticalHit(attackerRollResult.dice);
-
   // Check if attack hits
   const isBackAttackForHit = isBackAttack(combatEventData.attacker, combatEventData.target);
   const attackerHasShield = attackerEquipment.hasShield();
@@ -120,7 +117,7 @@ export function executeToHitRollMelee(
 
   addCombatMessage(`${combatEventData.attacker.name} attacks ${combatEventData.target.name}: 
     ${displayDiceSum(attackerRollResult, attackerBonus)} vs ${displayDiceSum(defenderRollResult, defenderBonus)} 
-    ${displayHitMessage(hit, criticalHit, attackerRollResult.criticalSuccess, attackerRollResult.fumble)}`);
+    ${displayHitMessage(hit, attackerRollResult.criticalHit, attackerRollResult.criticalSuccess, attackerRollResult.fumble)}`);
 
   if (attackerRollResult.fumble) {
     handleFumble(combatEventData.attacker, combatEventData.weapon, mapDefinition);
@@ -167,7 +164,7 @@ export function executeToHitRollRanged(
     combatEventData.target.x === undefined || combatEventData.target.y === undefined) {
     return {
       hit: false,
-      attackerRoll: { total: 0, dice: [], fumble: false, criticalSuccess: false },
+      attackerRoll: { total: 0, dice: [], fumble: false, criticalHit: false, criticalSuccess: false },
     };
   }
 
@@ -216,20 +213,18 @@ export function executeToHitRollRanged(
   const totalModifier = combatEventData.attack.toHitModifier + backAttackBonus + agilityPenalty + movementPenalty + rangePenalty + lightingPenalty;
   const toHitRollResult = combatEventData.attacker.performAttributeTest('ranged', totalModifier);
 
-  let criticalHit = isCriticalHit(toHitRollResult.dice);
-
   // Check if target is more than half the weapon's range away
   const halfRange = Math.ceil(combatEventData.attack.range / 2);
 
   // If target is more than half range away, critical hits and double criticals are not possible
   if (distance > halfRange) {
     toHitRollResult.criticalSuccess = false;
-    criticalHit = false;
+    toHitRollResult.criticalHit = false;
   }
 
   addCombatMessage(`${combatEventData.attacker.name} makes a ranged attack at ${combatEventData.target.name}: 
     ${displayDiceSum(toHitRollResult, toHitRollResult.modifier)} 
-    ${displayHitMessage(toHitRollResult.success, criticalHit, toHitRollResult.criticalSuccess, toHitRollResult.fumble)}`);
+    ${displayHitMessage(toHitRollResult.success, toHitRollResult.criticalHit, toHitRollResult.criticalSuccess, toHitRollResult.fumble)}`);
 
   if (toHitRollResult.fumble) {
     handleFumble(combatEventData.attacker, combatEventData.weapon, combatEventData.mapDefinition);

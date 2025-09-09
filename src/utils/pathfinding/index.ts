@@ -74,6 +74,3 @@ export const getReachableTiles = (creature: ICreature, allCreatures: ICreature[]
 
 export const findPathToTarget = (startX: number, startY: number, targetX: number, targetY: number, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, creature?: ICreature) => 
   PathfindingSystem.findPathToTarget(startX, startY, targetX, targetY, allCreatures, cols, rows, mapDefinition, creature);
-
-export const calculateStepCost = (fromX: number, fromY: number, toX: number, toY: number, allCreatures: ICreature[], cols: number, rows: number, mapDefinition: QuestMap, creature?: ICreature) => 
-  PathfindingSystem.calculateStepCost(fromX, fromY, toX, toY, allCreatures, cols, rows, mapDefinition, creature);

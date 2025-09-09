@@ -2,6 +2,7 @@
 import { Creature, ICreature } from '../creatures/index';
 import { createRangedWeapon, Item } from '../items';
 import { rollD6 } from '../utils';
+import { Connection } from './connection/connection';
 import { Section } from './section';
 import { Terrain } from './terrain';
 
@@ -58,6 +59,7 @@ export class Tile {
 
 export class Room {
   public sections: Section[];
+  public explored: boolean = false;
   private _light: Light;
 
   constructor(
@@ -98,7 +100,8 @@ export class QuestMap {
   public name: string;
   public width: number;
   public height: number;
-  public rooms: Room[];
+  public _rooms: Room[];
+  public connections: Connection[] = [];
   public startingTiles: Array<{ x: number; y: number; image?: string; }>;
   public tiles: Tile[][] = [];
   public initialCreatures: ICreature[] = [];
@@ -111,22 +114,36 @@ export class QuestMap {
     rooms: Room[] = [],
     creatures: Creature[] = [],
     startingTiles: Array<{ x: number; y: number; image?: string; }> = [],
+    connections: Connection[] = [],
   ) {
     this.name = name;
     this.width = width;
     this.height = height;
-    this.rooms = rooms;
+    this._rooms = rooms;
+    this.connections = connections;
     this.startingTiles = startingTiles;
     this.initialCreatures = creatures;
     this.generateMapTiles(creatures);   
     this.night = rollD6() === 1; 
     if(this.night) {
-      this.rooms.forEach(room => {
+      this._rooms.forEach(room => {
         if(room.sections.some(section => section.outdoors)) {
           room.setLight(Light.darkness, creatures);
         }
       });
     }
+    
+    // Explore rooms that contain starting tiles
+    this.startingTiles.forEach(startingTile => {
+      const roomsAtStartingTile = this.getRoomAt(startingTile.x, startingTile.y);
+      roomsAtStartingTile.forEach(room => {
+        room.explored = true;
+      });
+    });
+  }
+
+  get rooms(): Room[] {
+    return this._rooms.filter(room => room.explored);
   }
 
   /**
@@ -148,26 +165,95 @@ export class QuestMap {
   }
 
   /**
-   * Get terrain at a specific position
+   * Check if two tiles are adjacent (including diagonal movement)
+   * Tiles are only adjacent if they are in the same room or connected through a passable connection
    */
-  getTerrainAt(x: number, y: number): Terrain[] {
-    return this.rooms.flatMap(room => room.getTerrain()).filter(t =>
-      t.isTileWithinTerrain(x, y)
+  isAdjacent(x1: number, y1: number, x2: number, y2: number): boolean {
+    // First check if tiles are geometrically adjacent
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const isGeometricallyAdjacent = (dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1) || (dx === 0 && dy === 0);
+    
+    if (!isGeometricallyAdjacent) {
+      return false;
+    }
+
+    // If tiles are the same position, they are adjacent
+    if (dx === 0 && dy === 0) {
+      return true;
+    }
+
+    // Get rooms for both tiles
+    const rooms1 = this.getRoomAt(x1, y1);
+    const rooms2 = this.getRoomAt(x2, y2);
+
+    // If both tiles are in the same room, they are adjacent
+    const sharedRooms = rooms1.filter(room1 => rooms2.some(room2 => room1 === room2));
+    if (sharedRooms.length > 0) {
+      return true;
+    }
+
+    // Check if there's a passable connection between the tiles
+    const connections1 = this.getConnectionsAt(x1, y1);
+    const connections2 = this.getConnectionsAt(x2, y2);
+    
+    // If either tile has a connection, check if it's passable
+    const allConnections = [...connections1, ...connections2];
+    for (const connection of allConnections) {
+      // Check if this connection spans both tiles
+      if (connection.isTileWithinBounds(x1, y1) && connection.isTileWithinBounds(x2, y2) && connection.isPassable) {
+        return true;
+      }
+    }
+
+    // If tiles are in different rooms and no connection exists, they are not adjacent
+    return false;
+  }
+
+  /**
+   * Explore rooms connected by a connection
+   * This method explores all rooms that are connected through the given connection
+   */
+  explore(connection: Connection): void {
+    // Find all rooms that intersect with this connection
+    const connectedRooms = this._rooms.filter(room => 
+      room.sections.some(section => {
+        // Check if any section of the room intersects with the connection
+        return this.sectionsIntersect(
+          section.x, section.y, section.rotatedWidth, section.rotatedHeight,
+          connection.x, connection.y, connection.rotatedWidth, connection.rotatedHeight
+        );
+      })
     );
+
+    // Mark all connected rooms as explored
+    connectedRooms.forEach(room => {
+      room.explored = true;
+    });
+  }
+
+  /**
+   * Check if two rectangular areas intersect
+   */
+  private sectionsIntersect(
+    x1: number, y1: number, w1: number, h1: number,
+    x2: number, y2: number, w2: number, h2: number
+  ): boolean {
+    return !(x1 + w1 <= x2 || x2 + w2 <= x1 || y1 + h1 <= y2 || y2 + h2 <= y1);
   }
 
   /**
    * Get sections at a specific position
    */
   getSectionsAt(x: number, y: number): Section[] {
-    return this.rooms.flatMap(room => room.getSectionsAt(x, y));
+    return this._rooms.flatMap(room => room.getSectionsAt(x, y));
   }
 
   /**
    * Get rooms at a specific position
    */
   getRoomAt(x: number, y: number): Room[] {
-    return this.rooms.filter(room => 
+    return this._rooms.filter(room => 
       room.sections.some(section =>
         x >= section.x && x < section.x + section.rotatedWidth &&
         y >= section.y && y < section.y + section.rotatedHeight
@@ -213,7 +299,7 @@ export class QuestMap {
    */
   terrainHeightAt(tx: number, ty: number): number {
     let h = 0;
-    for (const t of this.rooms.flatMap(room => room.getTerrain())) {
+    for (const t of this._rooms.flatMap(room => room.getTerrain())) {
       h = Math.max(h, t.getHeightAt(tx, ty));
     }
     return h;
@@ -224,7 +310,7 @@ export class QuestMap {
    */
   terrainMovementCostAt(tx: number, ty: number): number {
     let cost = 1; // Default movement cost
-    for (const t of this.rooms.flatMap(room => room.getTerrain())) {
+    for (const t of this._rooms.flatMap(room => room.getTerrain())) {
       if (t.isTileWithinTerrain(tx, ty)) {
         cost = Math.max(cost, t.getMovementCostAt(tx, ty));
       }
@@ -317,8 +403,8 @@ export class QuestMap {
   }
 
   updateLighting(allCreatures: ICreature[]): void {
-    for (let y = 0; y < this.rooms.length; y++) {
-      const room = this.rooms[y];
+    for (let y = 0; y < this._rooms.length; y++) {
+      const room = this._rooms[y];
       const tiles = this.getTilesInRoom(room);
       for (const tile of tiles) {
         tile.tile.setLight(room.light);
@@ -336,7 +422,7 @@ export class QuestMap {
     }
 
     // Fill in section tiles from all rooms
-    for (const room of this.rooms) {
+    for (const room of this._rooms) {
       for (const section of room.sections) {
         // Use pre-calculated rotated dimensions
         const w = section.rotatedWidth;
@@ -351,5 +437,48 @@ export class QuestMap {
         }
       }
     }    
+  }
+
+  /**
+   * Get all connections at a specific position (only in explored rooms)
+   */
+  getConnectionsAt(x: number, y: number): Connection[] {
+    return this.connections.filter(connection => 
+      connection.isTileWithinBounds(x, y) && this.isConnectionInExploredRoom(connection)
+    );
+  }
+
+  /**
+   * Get all connections in this map (only in explored rooms)
+   */
+  getConnections(): Connection[] {
+    return this.connections.filter(connection => 
+      this.isConnectionInExploredRoom(connection)
+    );
+  }
+
+  /**
+   * Check if a connection is in an explored room
+   */
+  private isConnectionInExploredRoom(connection: Connection): boolean {
+    // Find all rooms that intersect with this connection
+    const connectedRooms = this._rooms.filter(room => 
+      room.sections.some(section => {
+        return this.sectionsIntersect(
+          section.x, section.y, section.rotatedWidth, section.rotatedHeight,
+          connection.x, connection.y, connection.rotatedWidth, connection.rotatedHeight
+        );
+      })
+    );
+
+    // Return true if at least one connected room is explored
+    return connectedRooms.some(room => room.explored);
+  }
+
+  /**
+   * Check if there are any connections at a specific position
+   */
+  hasConnectionAt(x: number, y: number): boolean {
+    return this.getConnectionsAt(x, y).length > 0;
   }
 }

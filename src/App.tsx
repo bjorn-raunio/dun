@@ -8,9 +8,15 @@ import { useEventHandlers } from './handlers';
 import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardHandlers, useTurnAdvancement, usePathHighlight, useZoom } from './game/hooks';
 import { Hero, ICreature } from './creatures/index';
 import { addMessage } from './utils/messageSystem';
-import { createQuestMapFromPreset } from './maps/presets';
+import { createQuestMapFromPresetWithWeather } from './maps/presets';
+import { returnOfRazbaal } from "./scenarios";
 
 // Map and game state are now imported from extracted modules
+
+// Example of how to use scenarios:
+// import { getScenarioByName } from './scenarios';
+// const scenario = getScenarioByName('Return of Razbaal');
+// Then pass it to GameProvider: <GameProvider initialCreatures={selectedHeroes} scenario={scenario}>
 
 function TileMapView() {
   // Game state management using context
@@ -77,28 +83,27 @@ function TileMapView() {
   const handleLeaveMap = React.useCallback(() => {
     // Store the current quest map to get the preset creatures
     const currentQuestMap = party.currentQuestMap;
+    const initialCreatures = currentQuestMap?.initialCreatures ?? [];
 
     // Remove preset creatures that were added when entering the map
-    if (currentQuestMap?.initialCreatures && currentQuestMap.initialCreatures.length > 0) {
-      const presetCreatureIds = currentQuestMap.initialCreatures.map(creature => creature.id);
-      
-      // Get current creatures from state and filter them
-      const currentCreatures = creatures; // Use the creatures from the current state
-      
-      // First, call leaveMap on creatures that are NOT being removed (player's heroes)
-      const creaturesToKeep = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
-      creaturesToKeep.forEach(creature => creature.leaveMap());
-      
-      // Remove preset creatures from their groups
-      const creaturesToRemove = currentCreatures.filter(creature => presetCreatureIds.includes(creature.id));
-      creaturesToRemove.forEach(creature => creature.group.removeCreature(creature));
-      
-      // Then filter out the preset creatures
-      const filteredCreatures = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
-      
-      // Dispatch the filtered creatures directly
-      gameActions.dispatch({ type: 'SET_CREATURES', payload: filteredCreatures });
-    }
+    const presetCreatureIds = initialCreatures.map(creature => creature.id);
+
+    // Get current creatures from state and filter them
+    const currentCreatures = creatures; // Use the creatures from the current state
+
+    // First, call leaveMap on creatures that are NOT being removed (player's heroes)
+    const creaturesToKeep = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
+    creaturesToKeep.forEach(creature => creature.leaveMap());
+
+    // Remove preset creatures from their groups
+    const creaturesToRemove = currentCreatures.filter(creature => presetCreatureIds.includes(creature.id));
+    creaturesToRemove.forEach(creature => creature.group.removeCreature(creature));
+
+    // Then filter out the preset creatures
+    const filteredCreatures = currentCreatures.filter(creature => !presetCreatureIds.includes(creature.id));
+
+    // Dispatch the filtered creatures directly
+    gameActions.dispatch({ type: 'SET_CREATURES', payload: filteredCreatures });
 
     gameActions.setParty(prevParty => {
       const newParty = prevParty.clone();
@@ -106,9 +111,13 @@ function TileMapView() {
       return newParty;
     });
 
-    // Also clear the map definition in the game state
+    // Reset last movement tracking when leaving the map
+    lastMovement.current = null;
+
+    // Also clear the map definition in the game state and switch back to world mode
     gameActions.dispatch({ type: 'SET_MAP_DEFINITION', payload: null });
-  }, [gameActions, party.currentQuestMap]);
+    gameActions.dispatch({ type: 'SET_VIEW_MODE', payload: 'world' });
+  }, [gameActions, party.currentQuestMap, lastMovement]);
 
 
   // Event handlers (extracted)
@@ -181,12 +190,15 @@ function TileMapView() {
             onRegionHover={(region) => {
               // Handle region hover - could show tooltip or highlight
             }}
-            onQuestMapSelect={(questMapId) => {
+            onQuestMapSelect={(location) => {
+              if(!location.questMap) {
+                return;
+              }
               // Handle quest map selection - set the selected quest map as current
-              // First, create the quest map from the preset
+              // First, create the quest map from the preset with random weather
               const numberOfHeroes = creatures.filter(creature => creature.isPlayerControlled()).length;
-              const newQuestMap = createQuestMapFromPreset(questMapId, numberOfHeroes);
-              
+              const { questMap: newQuestMap, weather } = createQuestMapFromPresetWithWeather(location.questMap, numberOfHeroes);
+
               if (newQuestMap) {
                 // Set the quest map in the party
                 gameActions.setParty(prevParty => {
@@ -195,8 +207,12 @@ function TileMapView() {
                   return newParty;
                 });
 
-                // Update the map definition in the game state
+                // Update the map definition and weather in the game state
                 gameActions.setMapDefinition(newQuestMap);
+                gameActions.dispatch({ type: 'SET_WEATHER', payload: { current: weather, transitionTime: 0, isTransitioning: false } });
+
+                // Switch to quest view mode to show the quest map and weather
+                gameActions.dispatch({ type: 'SET_VIEW_MODE', payload: 'quest' });
 
                 // Add the preset creatures from the quest map to the game creatures
                 if (newQuestMap.initialCreatures) {
@@ -218,7 +234,7 @@ function TileMapView() {
           <GameUI
             messages={messages}
             onEndTurn={() => {
-              endTurn(groups, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState);
+              endTurn(groups, creatures, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState);
             }}
             onLeaveMap={handleLeaveMap}
             isAITurnActive={aiTurnState.isAITurnActive}
@@ -261,7 +277,7 @@ function App() {
   }
 
   return (
-    <GameProvider initialCreatures={selectedHeroes}>
+    <GameProvider initialCreatures={selectedHeroes} scenario={returnOfRazbaal}>
       <div className="App">
         <TileMapView />
       </div>

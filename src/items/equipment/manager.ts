@@ -13,7 +13,7 @@ export class EquipmentManager {
   private equipment: EquipmentSystem;
 
   constructor(creature: ICreature) {
-    this.equipment = new EquipmentSystem(creature.equipment);
+    this.equipment = new EquipmentSystem(creature.equipment, creature.getNaturalWeapons());
   }
 
   /**
@@ -64,6 +64,6 @@ export class EquipmentManager {
    * Update equipment from creature's current equipment
    */
   updateFromCreature(creature: ICreature): void {
-    this.equipment = new EquipmentSystem(creature.equipment);
+    this.equipment = new EquipmentSystem(creature.equipment, creature.getNaturalWeapons());
   }
 }

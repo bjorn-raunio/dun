@@ -10,6 +10,8 @@ import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
 import { Party } from '../creatures/index';
 import { WorldMap } from '../worldmap/WorldMap';
+import { Scenario } from '../scenarios/Scenario';
+import { createQuestMapFromPresetWithWeather } from '../maps/presets';
 import { messageManager } from '../utils/messageSystem';
 
 
@@ -26,25 +28,27 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 // --- Game Provider Component ---
 
-export function GameProvider({ 
-  children, 
-  initialCreatures, 
-  mapDefinition = null 
+export function GameProvider({
+  children,
+  initialCreatures,
+  mapDefinition = null,
+  scenario = null
 }: {
   children: React.ReactNode;
   initialCreatures: ICreature[];
   mapDefinition?: QuestMap | null;
+  scenario?: Scenario | null;
 }) {
   const [state, dispatch] = useReducer(
-    gameReducer, 
-    getInitialGameState(initialCreatures, mapDefinition)
+    gameReducer,
+    getInitialGameState(initialCreatures, mapDefinition, scenario)
   );
-  
+
   // Initialize message system with dispatch function
   useEffect(() => {
     messageManager.setDispatchFunction(dispatch);
   }, [dispatch]);
-  
+
   // --- REFS ---
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const panStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -52,21 +56,21 @@ export function GameProvider({
   const livePan = useRef<{ x: number; y: number; zoom: number }>({ x: 0, y: 0, zoom: 1.0 });
   const rafId = useRef<number | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const dragMoved = useRef<{dx: number; dy: number}>({dx: 0, dy: 0});
-  const lastMovement = useRef<{creatureId: string; x: number; y: number} | null>(null);
+  const dragMoved = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  const lastMovement = useRef<{ creatureId: string; x: number; y: number } | null>(null);
 
   // --- VIEWPORT RESIZE HANDLING ---
   useEffect(() => {
     function handleResize() {
-      dispatch({ 
-        type: 'RESET_VIEWPORT_CENTER', 
-        payload: { 
-          width: window.innerWidth, 
-          height: window.innerHeight 
-        } 
+      dispatch({
+        type: 'RESET_VIEWPORT_CENTER',
+        payload: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
       });
     }
-    
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -89,72 +93,75 @@ export function GameProvider({
     if (mapDefinition && !state.mapDefinition) {
       dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
       // Also set the party's currentQuestMap
-      dispatch({ 
-        type: 'SET_PARTY', 
-        payload: new Party(state.party.currentRegionId, mapDefinition) 
+      dispatch({
+        type: 'SET_PARTY',
+        payload: new Party(state.party.currentRegionId, mapDefinition)
       });
     }
   }, [mapDefinition, state.mapDefinition, state.party.currentRegionId, dispatch]);
+
+  // --- SCENARIO INITIALIZATION ---
+  // Scenario initialization is now handled in getInitialGameState
 
   // --- ACTIONS ---
   const setCreatures = useCallback((updater: (prev: ICreature[]) => ICreature[]) => {
     const newCreatures = updater(state.creatures);
     dispatch({ type: 'SET_CREATURES', payload: newCreatures });
   }, [state.creatures, dispatch]);
-  
+
   const setSelectedCreatureId = useCallback((id: string | null) => {
     dispatch({ type: 'SET_SELECTED_CREATURE', payload: id });
   }, [dispatch]);
-  
+
   const setMessages = useCallback((updater: (prev: string[]) => string[]) => {
     const newMessages = updater(state.messages);
     dispatch({ type: 'SET_MESSAGES', payload: newMessages });
   }, [state.messages, dispatch]);
-  
+
   const setViewport = useCallback((viewport: GameState['viewport']) => {
     dispatch({ type: 'SET_VIEWPORT', payload: viewport });
   }, [dispatch]);
-  
+
   const setPan = useCallback((pan: GameState['pan']) => {
     dispatch({ type: 'SET_PAN', payload: pan });
   }, [dispatch]);
-  
+
   const setDragging = useCallback((dragging: boolean) => {
     dispatch({ type: 'SET_DRAGGING', payload: dragging });
   }, [dispatch]);
-  
+
   const setReachableKey = useCallback((updater: (prev: number) => number) => {
     const newKey = updater(state.reachableKey);
     if (newKey !== state.reachableKey) {
       dispatch({ type: 'INCREMENT_REACHABLE_KEY' });
     }
   }, [state.reachableKey, dispatch]);
-  
+
   const setTargetsInRangeKey = useCallback((updater: (prev: number) => number) => {
     const newKey = updater(state.targetsInRangeKey);
     if (newKey !== state.targetsInRangeKey) {
       dispatch({ type: 'INCREMENT_TARGETS_KEY' });
     }
   }, [state.targetsInRangeKey, dispatch]);
-  
+
   const setAITurnState = useCallback((updater: (prev: AITurnState) => AITurnState) => {
     const newState = updater(state.aiTurnState);
     dispatch({ type: 'SET_AI_TURN_STATE', payload: newState });
   }, [state.aiTurnState, dispatch]);
-  
+
   const setTurnState = useCallback((updater: (prev: TurnState) => TurnState) => {
     const newState = updater(state.turnState);
     dispatch({ type: 'SET_TURN_STATE', payload: newState });
   }, [state.turnState, dispatch]);
-  
+
   const setZoom = useCallback((zoom: number) => {
     const newZoom = Math.max(0.25, Math.min(3.0, zoom));
-    dispatch({ 
-      type: 'SET_VIEWPORT', 
-      payload: { ...state.viewport, zoom: newZoom } 
+    dispatch({
+      type: 'SET_VIEWPORT',
+      payload: { ...state.viewport, zoom: newZoom }
     });
   }, [state.viewport, dispatch]);
-  
+
   const setTargetingMode = useCallback((targetingMode: TargetingMode) => {
     dispatch({ type: 'SET_TARGETING_MODE', payload: targetingMode });
   }, [dispatch]);
@@ -179,6 +186,10 @@ export function GameProvider({
 
   const setMapDefinition = useCallback((mapDefinition: QuestMap | null) => {
     dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
+  }, [dispatch]);
+
+  const setScenario = useCallback((scenario: Scenario | null) => {
+    dispatch({ type: 'SET_SCENARIO', payload: scenario });
   }, [dispatch]);
 
   const centerWorldmapOnParty = useCallback(() => {
@@ -209,10 +220,11 @@ export function GameProvider({
     setParty,
     setWorldMap,
     setMapDefinition,
+    setScenario,
     centerWorldmapOnParty,
     centerQuestmapOnStartingTile,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, setScenario, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {

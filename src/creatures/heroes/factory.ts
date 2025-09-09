@@ -1,12 +1,29 @@
 import { Hero } from './hero';
 import { CreatureGroup, CreaturePositionOrUndefined } from '../index';
-import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous } from '../../items';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous, createNaturalWeapon } from '../../items';
 import { heroPresets } from './presets';
 import { HeroPreset } from '../presets/types';
 import { Item } from '../../items';
 import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
 
 // --- Factory Functions ---
+
+/**
+ * Create natural weapons from preset definitions
+ */
+function createNaturalWeaponsFromPreset(preset: HeroPreset): import('../../items').NaturalWeapon[] {
+  const naturalWeapons: import('../../items').NaturalWeapon[] = [];
+  if (preset.naturalWeapons) {
+    for (const weaponId of preset.naturalWeapons) {
+      try {
+        naturalWeapons.push(createNaturalWeapon(weaponId));
+      } catch (error) {
+        console.warn(`Failed to create natural weapon "${weaponId}":`, error);
+      }
+    }
+  }
+  return naturalWeapons;
+}
 
 /**
  * Create inventory items from hero preset definitions
@@ -86,9 +103,10 @@ export function createHero(
 
   const inventory = createInventoryFromPreset(p);
   const equipment = createEquipmentFromPreset(p);
+  const naturalWeapons = createNaturalWeaponsFromPreset(p);
 
   // Validate equipment compatibility using the existing EquipmentSystem
-  const equipmentSystem = new EquipmentSystem(equipment);
+  const equipmentSystem = new EquipmentSystem(equipment, naturalWeapons);
   const equipmentValidation = equipmentSystem.validateEquipment();
   if (!equipmentValidation.isValid) {
     console.warn(`Equipment validation failed for hero ${presetId}: ${equipmentValidation.reason}`);

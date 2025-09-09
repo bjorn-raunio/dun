@@ -1,8 +1,8 @@
-import { Creature, CreatureGroup } from '../creatures/index';
+import { Creature, CreatureGroup, ICreature } from '../creatures/index';
 import { GameActions } from './types';
 import { TurnState, TurnExecutionContext } from './turnManagement';
-import { 
-  startAITurnPhase, 
+import {
+  startAITurnPhase,
   continueAITurnPhase,
   newTurn,
   getNextCreature,
@@ -19,46 +19,47 @@ import { addTurnMessage } from '../utils/messageSystem';
  */
 export function endTurn(
   groups: CreatureGroup[],
+  creatures: ICreature[],
   mapDefinition: QuestMap | undefined,
   dispatch: React.Dispatch<any>,
-  lastMovement: React.MutableRefObject<{creatureId: string; x: number; y: number} | null>,
+  lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>,
   currentTurnState: TurnState
 ) {
-  if(!mapDefinition) {
+  if (!mapDefinition) {
     return;
   }
   let playerControlledGroup = groups.find(group => group.isPlayerControlled());
 
-  if(playerControlledGroup) {
-    playerControlledGroup.endTurn();
+  if (playerControlledGroup) {
+    playerControlledGroup.endTurn(creatures);
   }
 
   // Create context for AI turn phase
   const context: TurnExecutionContext = {
     groups,
+    creatures,
     dispatch,
     mapDefinition
   };
-  
+
   // Start AI turn phase
   const newAITurnState = startAITurnPhase(context);
   dispatch({ type: 'SET_AI_TURN_STATE', payload: newAITurnState });
-  
+
   // If there are AI creatures, execute their first group's turns
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
     executeNextAIGroup(newAITurnState, context, dispatch);
   }
 
   // Advance to next turn (this will reset all turns internally)
-  const newTurnState = newTurn(currentTurnState, groups, dispatch, lastMovement);
+  const newTurnState = newTurn(currentTurnState, groups, creatures, dispatch, lastMovement);
+  console.log(newTurnState);
   dispatch({ type: 'SET_TURN_STATE', payload: newTurnState });
 
-  if(playerControlledGroup) {
-    const messages = playerControlledGroup.startTurn();
-    // Messages are now handled by the centralized message system
-    // The startTurn method already calls addTurnMessage for each message
+  if (playerControlledGroup) {
+    playerControlledGroup.startTurn(creatures);
   }
-  
+
 }
 
 /**
@@ -70,23 +71,20 @@ export function executeNextAIGroup(
   dispatch: React.Dispatch<any>
 ) {
   const group = aiTurnState.currentGroup;
-  if(group) {
-    const messages = group.startTurn();
-    messages.forEach(message => {
-      dispatch({ type: 'ADD_MESSAGE', payload: message });
-    });
+  if (group) {
+    group.startTurn(context.creatures);
   }
 
   // Continue AI turn phase
   const newAITurnState = continueAITurnPhase(aiTurnState, context);
   dispatch({ type: 'SET_AI_TURN_STATE', payload: newAITurnState });
 
-  
+
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
     executeNextAIGroup(newAITurnState, context, dispatch);
   }
 
-  if(group) {
-    group.endTurn();
+  if (group) {
+    group.endTurn(context.creatures);
   }
 }

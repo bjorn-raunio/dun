@@ -98,6 +98,7 @@ export function CreatureOverlay({
                   boxSizing: "border-box",
                   pointerEvents: "none",
                   opacity: opacity,
+                  background: "black"
                 }}
               />
             ) : (

@@ -1,5 +1,5 @@
 import { Monster, Mercenary, CreatureGroup, CreaturePositionOrUndefined } from '../index';
-import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous } from '../../items';
+import { createWeapon, createRangedWeapon, createArmor, createShield, createConsumable, createMiscellaneous, createNaturalWeapon } from '../../items';
 import { MONSTER_FACTIONS, type MonsterFaction } from '../monster';
 import { monsterPresets } from './monsters';
 import { mercenaryPresets } from './mercenaries';
@@ -43,6 +43,23 @@ function createInventoryFromPreset(preset: MonsterPreset | MercenaryPreset): Ite
     }
   }
   return inventory;
+}
+
+/**
+ * Create natural weapons from preset definitions
+ */
+function createNaturalWeaponsFromPreset(preset: MonsterPreset | MercenaryPreset): import('../../items').NaturalWeapon[] {
+  const naturalWeapons: import('../../items').NaturalWeapon[] = [];
+  if (preset.naturalWeapons) {
+    for (const weaponId of preset.naturalWeapons) {
+      try {
+        naturalWeapons.push(createNaturalWeapon(weaponId));
+      } catch (error) {
+        console.warn(`Failed to create natural weapon "${weaponId}":`, error);
+      }
+    }
+  }
+  return naturalWeapons;
 }
 
 /**
@@ -146,9 +163,10 @@ export function createMonster(
 
   const inventory = createInventoryFromPreset(effectivePreset);
   const equipment = createEquipmentFromPreset(effectivePreset);
+  const naturalWeapons = createNaturalWeaponsFromPreset(effectivePreset);
 
   // Validate equipment compatibility using the existing EquipmentSystem
-  const equipmentSystem = new EquipmentSystem(equipment);
+  const equipmentSystem = new EquipmentSystem(equipment, naturalWeapons);
   const equipmentValidation = equipmentSystem.validateEquipment();
   if (!equipmentValidation.isValid) {
     console.warn(`Equipment validation failed for monster ${presetId}: ${equipmentValidation.reason}`);
@@ -200,6 +218,7 @@ export function createMonster(
     group: overrides?.group ?? CreatureGroup.ENEMY,
     faction: faction,
     skills: overrides?.skills ?? p.skills,
+    naturalWeapons: (overrides as any)?.naturalWeapons ?? naturalWeapons,
     preset: effectivePreset,
   });
 }
@@ -218,6 +237,7 @@ export function createMercenary(
 
   const inventory = createInventoryFromPreset(p);
   const equipment = createEquipmentFromPreset(p);
+  const naturalWeapons = createNaturalWeaponsFromPreset(p);
 
   const attributes = {
     movement: overrides?.movement ?? p.attributes.movement,
@@ -246,6 +266,7 @@ export function createMercenary(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
     group: overrides?.group ?? CreatureGroup.PLAYER,
     skills: overrides?.skills ?? p.skills,
+    naturalWeapons: (overrides as any)?.naturalWeapons ?? naturalWeapons,
     // Mercenary-specific properties
     hireCost: overrides?.hireCost ?? p.hireCost,
   });

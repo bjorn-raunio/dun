@@ -1,5 +1,8 @@
 // --- World Map Types ---
 
+import { QuestMapPreset } from '../maps';
+import { WorldLocation } from './locations';
+
 export interface RegionConnection {
   targetRegionId: string;
   connectionType: 'road' | 'path' | 'river' | 'mountain_pass' | 'sea';
@@ -8,7 +11,7 @@ export interface RegionConnection {
   blockReason?: string; // Why the connection is blocked
 }
 
-export interface Region {
+export interface IRegion {
   id: string;
   name: string;
   vertices: Array<{ x: number; y: number }>; // Vertices defining the region's shape (absolute world coordinates)
@@ -19,15 +22,15 @@ export interface Region {
   requirements?: string[]; // Requirements to access this region
   encounters?: string[]; // Possible encounters in this region
   resources?: string[]; // Resources available in this region
-  questMapPresets?: string[]; // Array of quest map preset IDs available in this region
+  locations?: WorldLocation[]; // Locations within this region
 }
 
-export interface WorldMap {
+export interface IWorldMap {
   id: string;
   name: string;
   description: string;
   backgroundImage: string; // The main worldmap.jpg image
-  regions: Map<string, Region>; // All regions in the world
+  regions: Map<string, IRegion>; // All regions in the world
   startingRegionId: string; // The region where the player starts
   discoveredRegions: Set<string>; // Regions the player has discovered
   globalEvents: string[]; // World-wide events affecting multiple regions
@@ -40,8 +43,8 @@ export interface WorldMap {
 }
 
 export interface WorldMapState {
-  worldMap: WorldMap;
-  currentRegion: Region | null;
+  worldMap: IWorldMap;
+  currentRegion: IRegion | null;
   availableConnections: RegionConnection[];
   travelHistory: Array<{
     fromRegionId: string;

@@ -55,6 +55,26 @@ export const monsterPresetsByFaction: Record<string, Record<string, MonsterPrese
         SKILL_PRESETS.dirtyFighter,
         SKILL_PRESETS.ambush,
       ]
+    },    
+    warhound: {
+      name: "Warhound",
+      image: "creatures/warhound.png",
+      attributes: {
+        movement: 7,
+        combat: 4,
+        ranged: 0,
+        strength: 3,
+        agility: 4,
+        courage: 5,
+        intelligence: 1,
+      },
+      size: 2,
+      vitality: 4,
+      aiBehavior: AI_BEHAVIORS.ANIMAL,
+      skills: [
+        SKILL_PRESETS.sharpSenses,
+      ],
+      naturalWeapons: ["fangs"]
     },
   },
 };

@@ -1,12 +1,6 @@
-export class Terrain {
-  x: number;
-  y: number;
-  mapWidth: number;
-  mapHeight: number;
-  rotation: 0 | 90 | 180 | 270; // Rotation property
-  rotatedWidth: number; // Width after rotation is applied
-  rotatedHeight: number; // Height after rotation is applied
-  image: string;
+import { MapObject } from '../MapObject';
+
+export class Terrain extends MapObject {
   height: number;
   movementCost: number; // Movement cost multiplier for this terrain type
 
@@ -20,26 +14,16 @@ export class Terrain {
     rotation: 0 | 90 | 180 | 270 = 0,
     movementCost: number = 1, // Default movement cost multiplier
   ) {
-    this.x = x;
-    this.y = y;
-    this.mapWidth = mapWidth;
-    this.mapHeight = mapHeight;
-    this.image = image;
+    super(x, y, mapWidth, mapHeight, image, rotation);
     this.height = height;
-    this.rotation = rotation;
     this.movementCost = movementCost;
-    // Automatically apply rotation to width and height
-    const isRotated = rotation === 90 || rotation === 270;
-    this.rotatedWidth = isRotated ? mapHeight : mapWidth;
-    this.rotatedHeight = isRotated ? mapWidth : mapHeight;
   }
 
   /**
    * Check if a tile is within this terrain
    */
   isTileWithinTerrain(x: number, y: number): boolean {
-    return x >= this.x && x < this.x + this.rotatedWidth && 
-           y >= this.y && y < this.y + this.rotatedHeight;
+    return this.isTileWithinBounds(x, y);
   }
 
   /**

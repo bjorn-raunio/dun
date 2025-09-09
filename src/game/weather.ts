@@ -1,9 +1,7 @@
-export type WeatherType = 'clear' | 'rain' | 'snow' | 'fog' | 'storm';
+export type WeatherType = 'clear' | 'snow' | 'fog' | 'storm' | 'wind' | 'heat';
 
 export interface WeatherEffect {
   type: WeatherType;
-  intensity: number; // 0.0 to 1.0
-  duration: number; // in turns
   movementModifier: number; // affects movement cost
   combatModifier: number; // affects combat accuracy
 }
@@ -20,11 +18,6 @@ export const WEATHER_PRESETS: Record<WeatherType, Omit<WeatherEffect, 'intensity
     movementModifier: 1.0,
     combatModifier: 1.0,
   },
-  rain: {
-    type: 'rain',
-    movementModifier: 1.2,
-    combatModifier: 0.9,
-  },
   snow: {
     type: 'snow',
     movementModifier: 1.5,
@@ -40,44 +33,58 @@ export const WEATHER_PRESETS: Record<WeatherType, Omit<WeatherEffect, 'intensity
     movementModifier: 1.8,
     combatModifier: 0.7,
   },
+  wind: {
+    type: 'wind',
+    movementModifier: 1.3,
+    combatModifier: 0.85,
+  },
+  heat: {
+    type: 'heat',
+    movementModifier: 1.4,
+    combatModifier: 0.9,
+  },
 };
 
 export function createWeatherEffect(
-  type: WeatherType, 
-  intensity: number = 0.5, 
-  duration: number = 5
+  type: WeatherType
 ): WeatherEffect {
   const preset = WEATHER_PRESETS[type];
   return {
-    ...preset,
-    intensity: Math.max(0, Math.min(1, intensity)),
-    duration,
+    ...preset
   };
 }
 
-export function getWeatherIntensityColor(weather: WeatherEffect): string {
-  const alpha = weather.intensity * 0.6 + 0.1; // 0.1 to 0.7 alpha
-  
-  switch (weather.type) {
-    case 'rain':
-      return `rgba(100, 150, 255, ${alpha})`;
-    case 'snow':
-      return `rgba(255, 255, 255, ${alpha})`;
-    case 'fog':
-      return `rgba(200, 200, 200, ${alpha})`;
-    case 'storm':
-      return `rgba(50, 50, 100, ${alpha})`;
-    default:
-      return 'transparent';
-  }
-}
-
 export function getWeatherParticleCount(weather: WeatherEffect): number {
-  const baseCount = 500; // Increased from 100 to 500 for more particles
-  return Math.floor(baseCount * weather.intensity);
+  return 1500;
 }
 
 export function getWeatherParticleSpeed(weather: WeatherEffect): number {
-  const baseSpeed = 20;
-  return baseSpeed;
+  return 20;
+}
+
+/**
+ * Generate a random weather effect for quest maps
+ * @param intensity Optional intensity override (0.0 to 1.0)
+ * @param duration Optional duration override (in turns)
+ * @returns A random weather effect
+ */
+export function generateRandomWeather(): WeatherEffect {
+  const weatherTypes: WeatherType[] = ['clear', 'snow', 'fog', 'storm', 'wind', 'heat'];
+  
+  // Weight the weather types - clear weather is more common
+  const weatherWeights = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+  const random = Math.random();
+  
+  let cumulativeWeight = 0;
+  let selectedType: WeatherType = 'clear';
+  
+  for (let i = 0; i < weatherTypes.length; i++) {
+    cumulativeWeight += weatherWeights[i];
+    if (random <= cumulativeWeight) {
+      selectedType = weatherTypes[i];
+      break;
+    }
+  }
+  
+  return createWeatherEffect(selectedType);
 }

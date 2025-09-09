@@ -1,14 +1,14 @@
 import React from 'react';
 import { ICreature } from '../../creatures/index';
 import { COLORS, LAYOUT_PATTERNS, COMMON_STYLES } from '../styles';
-import { RegionClass } from '../../worldmap';
+import { RegionClass, WorldLocation } from '../../worldmap';
 import { QuestMapsList } from './QuestMapsList';
 
 interface WorldMapCharacterBarProps {
     heroes: ICreature[];
     onSelect?: (creature: ICreature) => void;
     currentRegion?: RegionClass | null;
-    onQuestMapSelect?: (questMapId: string) => void;
+    onQuestMapSelect?: (location: WorldLocation) => void;
 }
 
 export function WorldMapCharacterBar({ heroes, onSelect, currentRegion, onQuestMapSelect }: WorldMapCharacterBarProps) {

@@ -13,12 +13,12 @@ import {
 import { getDirectionFromTo } from '../geometry';
 import { isAreaStandable } from '../pathfinding/helpers';
 import { QuestMap } from '../../maps/types';
-import { BaseWeapon, RangedWeapon, Weapon, WeaponAttack } from '../../items';
+import { BaseWeapon, WeaponAttack } from '../../items';
 import { CombatTriggers } from './combatTriggers';
 import { diagonalMovementBlocked } from '../movement';
 import { addCombatMessage } from '../messageSystem';
 import { calculateDistanceBetween } from '../pathfinding';
-import { getRandomElement, isCriticalHit } from '../dice';
+import { getRandomElement } from '../dice';
 
 // --- Combat Execution ---
 // Streamlined combat execution with optimized object creation and message building
@@ -173,7 +173,7 @@ function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Crea
   }
 
   // === PART 2: BLOCK ROLL ===
-  const blockResult = executeBlockRoll(combatEventData.attacker, combatEventData.target, toHitResult.attackerRoll.criticalSuccess, isCriticalHit(toHitResult.attackerRoll.dice));
+  const blockResult = executeBlockRoll(combatEventData.attacker, combatEventData.target, toHitResult.attackerRoll.criticalSuccess, toHitResult.attackerRoll.criticalHit);
   addCombatMessage(blockResult.blockMessage);
 
   // === PART 3: DAMAGE ROLL ===
@@ -184,7 +184,7 @@ function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Crea
       combatEventData.target,
       combatEventData.attack,
       toHitResult.attackerRoll.criticalSuccess,
-      isCriticalHit(toHitResult.attackerRoll.dice),
+      toHitResult.attackerRoll.criticalHit,
       bonusDamage
     );
     addCombatMessage(damageResult.damageMessage);

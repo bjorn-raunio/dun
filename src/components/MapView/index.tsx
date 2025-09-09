@@ -3,6 +3,7 @@ import { TILE_SIZE, COLORS } from '../styles';
 import { MapViewProps } from './types';
 import { MapRenderer } from './MapRenderer';
 import { TerrainOverlay } from './TerrainOverlay';
+import { ConnectionOverlay } from './ConnectionOverlay';
 import { LightingOverlay } from './LightingOverlay';
 import { StartingTilesOverlay } from './StartingTilesOverlay';
 import { ReachableOverlay } from './ReachableOverlay';
@@ -107,6 +108,9 @@ export function MapView({
 
           {/* Terrain overlay */}
           <TerrainOverlay mapDefinition={mapDefinition} />
+
+          {/* Connections overlay */}
+          <ConnectionOverlay mapDefinition={mapDefinition} />
 
           {/* Lighting overlay */}
           <LightingOverlay mapDefinition={mapDefinition} />

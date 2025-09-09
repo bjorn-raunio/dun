@@ -86,11 +86,7 @@ export class CreatureMovement implements ICreatureMovement {
       const nextTile = path[i];
 
       // Validate that tiles are adjacent (including diagonal)
-      const dx = Math.abs(nextTile.x - currentTile.x);
-      const dy = Math.abs(nextTile.y - currentTile.y);
-      if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 1) || (dx === 0 && dy === 0)) {
-        // Valid adjacent movement (orthogonal or diagonal)
-      } else {
+      if (!mapDefinition?.isAdjacent(currentTile.x, currentTile.y, nextTile.x, nextTile.y)) {
         return {
           status: 'failed',
           message: `Invalid path: tiles (${currentTile.x}, ${currentTile.y}) and (${nextTile.x}, ${nextTile.y}) are not adjacent`,

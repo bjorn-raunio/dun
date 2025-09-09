@@ -6,14 +6,12 @@ import { Attributes } from '../../statusEffects/types';
 
 export interface QuestMapPreset {
   name: string;
-  width: number;
-  height: number;
   rooms: RoomPreset[];
   creatures: CreaturePreset[];
+  connections: ConnectionPreset[];
   startingTiles: StartingTilePreset[];
   description?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  recommendedLevel?: number;
+  region?: string;
 }
 
 export interface RoomPreset {
@@ -25,8 +23,8 @@ export interface QuestMapSectionPreset {
   type: string;
   x: number;
   y: number;
-  options?: {
-    rotation?: 0 | 90 | 180 | 270;
+  rotation?: 0 | 90 | 180 | 270;
+  options?: {    
     terrain?: Array<{
       id: string;
       x: number;
@@ -61,6 +59,22 @@ export interface StartingTilePreset {
   x: number;
   y: number;
   image?: string;
+}
+
+export interface ConnectionPreset {
+  presetId: string;
+  x: number;
+  y: number;
+  rotation?: 0 | 90 | 180 | 270;
+  overrides?: {
+    mapWidth?: number;
+    mapHeight?: number;
+    image?: string;
+    isOpen?: boolean;
+    isLocked?: boolean;
+    isBroken?: boolean;
+    lockDifficulty?: number;
+  };
 }
 
 export interface QuestMapPresetCategory {

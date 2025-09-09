@@ -1,5 +1,11 @@
+html, 
+body{
+  overflow: hidden;
+}
+
 .App {
   text-align: center;
+  overflow: hidden;
 }
 
 .App-logo {
@@ -51,4 +57,291 @@
 .region-polygon:hover {
   fill: rgba(0, 229, 255, 0.5);
 }
+
+/* ---------- Fog ---------- */
+.fogwrapper {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 10;
+  -webkit-filter: blur(1px) grayscale(0.2) saturate(1.2) sepia(0.2);
+  filter: blur(1px) grayscale(0.2) saturate(1.2) sepia(0.2);
+}
+
+/* ---------- Heat Effect ---------- */
+.heatwrapper {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 10;
+  -webkit-filter: blur(3px) saturate(2.0) sepia(0.6) hue-rotate(45deg) brightness(1.4) contrast(1.3);
+  filter: blur(3px) saturate(2.0) sepia(0.6) hue-rotate(45deg) brightness(1.4) contrast(1.3);
+  background: radial-gradient(ellipse at center, rgba(255, 100, 0, 0.05) 0%, rgba(255, 50, 0, 0.025) 50%, transparent 100%);
+}
+
+/* Additional heat distortion overlay */
+.heatdistortion {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 11;
+  overflow: hidden;
+}
+
+.heatwave {
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 150, 0, 0.05) 20%, 
+    rgba(255, 100, 0, 0.1) 40%, 
+    rgba(255, 150, 0, 0.05) 60%, 
+    transparent 80%
+  );
+  animation: heatwave_movement 8s linear infinite;
+}
+
+.heatwave:nth-child(2) {
+  animation-delay: -1.3s;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 200, 50, 0.04) 15%, 
+    rgba(255, 120, 0, 0.08) 35%, 
+    rgba(255, 200, 50, 0.04) 55%, 
+    transparent 75%
+  );
+}
+
+.heatwave:nth-child(3) {
+  animation-delay: -2.6s;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 80, 0, 0.06) 25%, 
+    rgba(255, 180, 30, 0.09) 45%, 
+    rgba(255, 80, 0, 0.06) 65%, 
+    transparent 85%
+  );
+}
+#foglayer_01, #foglayer_02, #foglayer_03 {
+  height: 100%;
+  position: absolute;
+  width: 200%;
+}
+
+/* Heat effect layers */
+#heatlayer_01, #heatlayer_02, #heatlayer_03 {
+  height: 100%;
+  position: absolute;
+  width: 200%;
+  overflow: hidden;
+  opacity: 0.25;
+}
+#foglayer_01 .image01, #foglayer_01 .image02,
+#foglayer_02 .image01, #foglayer_02 .image02,
+#foglayer_03 .image01, #foglayer_03 .image02 {
+  float: left;
+  height: 100%;
+  width: 50%;
+}
+
+#heatlayer_01 .image01, #heatlayer_01 .image02,
+#heatlayer_02 .image01, #heatlayer_02 .image02,
+#heatlayer_03 .image01, #heatlayer_03 .image02 {
+  float: left;
+  height: 100%;
+  width: 50%;
+}
+#foglayer_01 {
+  -webkit-animation: foglayer_01_opacity 10s linear infinite, foglayer_moveme 45s linear infinite;
+  -moz-animation: foglayer_01_opacity 10s linear infinite, foglayer_moveme 45s linear infinite;
+  animation: foglayer_01_opacity 10s linear infinite, foglayer_moveme 45s linear infinite;
+}
+#foglayer_02, #foglayer_03 {
+  -webkit-animation: foglayer_02_opacity 21s linear infinite, foglayer_moveme 39s linear infinite;
+  -moz-animation: foglayer_02_opacity 21s linear infinite, foglayer_moveme 39s linear infinite;
+  animation: foglayer_02_opacity 21s linear infinite, foglayer_moveme 39s linear infinite;
+}
+
+/* Heat layer animations - smooth color transitions without blinking */
+#heatlayer_01 {
+  -webkit-animation: heatlayer_moveme 25s linear infinite, heatlayer_color_shift 8s ease-in-out infinite;
+  -moz-animation: heatlayer_moveme 25s linear infinite, heatlayer_color_shift 8s ease-in-out infinite;
+  animation: heatlayer_moveme 25s linear infinite, heatlayer_color_shift 8s ease-in-out infinite;
+}
+#heatlayer_02 {
+  -webkit-animation: heatlayer_moveme 30s linear infinite, heatlayer_color_shift 10s ease-in-out infinite reverse;
+  -moz-animation: heatlayer_moveme 30s linear infinite, heatlayer_color_shift 10s ease-in-out infinite reverse;
+  animation: heatlayer_moveme 30s linear infinite, heatlayer_color_shift 10s ease-in-out infinite reverse;
+}
+#heatlayer_03 {
+  -webkit-animation: heatlayer_moveme 35s linear infinite, heatlayer_color_shift 12s ease-in-out infinite;
+  -moz-animation: heatlayer_moveme 35s linear infinite, heatlayer_color_shift 12s ease-in-out infinite;
+  animation: heatlayer_moveme 35s linear infinite, heatlayer_color_shift 12s ease-in-out infinite;
+}
+
+/* ---------- Moving Fog ---------- */
+/*
+  'size: cover' || 'size: 100%'; results remain the same
+  'attachment: scroll' can be added or removed; results remain the same
+  'attachment: fixed' causing unexpected results in Chrome
+  'repeat-x' || 'no-repeat'; results remain the same
+*/ 
+#foglayer_01 .image01, #foglayer_01 .image02 {
+  background: url("./fog1.png") center center/cover no-repeat transparent;
+}
+#foglayer_02 .image01, #foglayer_02 .image02,
+#foglayer_03 .image01, #foglayer_03 .image02{
+  background: url("./fog2.png") center center/cover no-repeat transparent;
+}
+
+/* Heat effect backgrounds - using fog images with different styling */
+/*#heatlayer_01 .image01, #heatlayer_01 .image02 {
+  background: url("./fog1.png") center center/cover no-repeat transparent;
+}
+#heatlayer_02 .image01, #heatlayer_02 .image02,
+#heatlayer_03 .image01, #heatlayer_03 .image02{
+  background: url("./fog2.png") center center/cover no-repeat transparent;
+}*/
+
+/* ---------- Keyframe Layer 1 ---------- */
+@keyframes foglayer_01_opacity {
+  0% { opacity: .2; }
+  22% { opacity: .6; }
+  40% { opacity: .4; }
+  58% { opacity: .5; }
+  80% { opacity: .3; }
+  100% { opacity: .2; }
+}
+/* ---------- Keyframe Layer 2 ---------- */
+@keyframes foglayer_02_opacity {
+  0% { opacity: .6; }
+  25% { opacity: .3; }
+  50% { opacity: .2; }
+  80% { opacity: .4; }
+  100% { opacity: .6; }
+}
+/* ---------- Keyframe Layer 3 ---------- */
+@keyframes foglayer_03_opacity {
+  0% { opacity: .9; }
+  27% { opacity: .3; }
+  52% { opacity: .7; }
+  68% { opacity: .4; }
+  100% { opacity: .9; }
+}
+/* ---------- Keyframe moveMe ---------- */
+@-webkit-keyframes foglayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@-moz-keyframes foglayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@-o-keyframes foglayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@keyframes foglayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+
+/* ---------- Heat Effect Keyframes - Smooth Color Transitions ---------- */
+@keyframes heatlayer_color_shift {
+  0% { 
+    filter: hue-rotate(0deg) saturate(1.8) brightness(1.2);
+  }
+  25% { 
+    filter: hue-rotate(15deg) saturate(2.0) brightness(1.3);
+  }
+  50% { 
+    filter: hue-rotate(30deg) saturate(1.9) brightness(1.25);
+  }
+  75% { 
+    filter: hue-rotate(15deg) saturate(2.1) brightness(1.35);
+  }
+  100% { 
+    filter: hue-rotate(0deg) saturate(1.8) brightness(1.2);
+  }
+}
+
+/* Heat shimmer distortion effect - smooth and subtle */
+@keyframes heatlayer_shimmer {
+  0% { 
+    transform: scaleX(1) skewX(0deg);
+  }
+  25% { 
+    transform: scaleX(1.002) skewX(0.1deg);
+  }
+  50% { 
+    transform: scaleX(0.998) skewX(-0.1deg);
+  }
+  75% { 
+    transform: scaleX(1.001) skewX(0.05deg);
+  }
+  100% { 
+    transform: scaleX(1) skewX(0deg);
+  }
+}
+
+@-webkit-keyframes heatlayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@-moz-keyframes heatlayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@-o-keyframes heatlayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+@keyframes heatlayer_moveme {
+  0% { left: 0; }
+  100% { left: -100%; }
+}
+
+/* Heat wave movement animation */
+@keyframes heatwave_movement {
+  0% { 
+    left: -100%; 
+    transform: skewY(0deg);
+  }
+  25% { 
+    transform: skewY(0.5deg);
+  }
+  50% { 
+    transform: skewY(-0.5deg);
+  }
+  75% { 
+    transform: skewY(0.25deg);
+  }
+  100% { 
+    left: 100%; 
+    transform: skewY(0deg);
+  }
+}
+
+@media only screen
+  and (min-width: 280px)
+  and (max-width: 767px) {
+    #foglayer_01 .image01, #foglayer_01 .image02,
+    #foglayer_02 .image01, #foglayer_02 .image02,
+    #foglayer_03 .image01, #foglayer_03 .image02 {
+      width: 100%;
+    }
+    #heatlayer_01 .image01, #heatlayer_01 .image02,
+    #heatlayer_02 .image01, #heatlayer_02 .image02,
+    #heatlayer_03 .image01, #heatlayer_03 .image02 {
+      width: 100%;
+    }
+  }
 

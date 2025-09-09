@@ -47,29 +47,22 @@ export function getNextCreature(
 export function newTurn(
   turnState: TurnState,
   groups: CreatureGroup[],
+  creatures: ICreature[],
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>
 ): TurnState {
-  const updatedCreatures: ICreature[] = [];
-  groups.forEach(group => {
-    group.getCreatures().forEach(creature => {
-      updatedCreatures.push(creature);
-    });
-  });
-  
   // Batch update creatures and add message
   dispatch({
     type: 'BATCH_UPDATE', payload: [
-      { type: 'SET_CREATURES', payload: updatedCreatures },
+      { type: 'SET_CREATURES', payload: creatures },
       { type: 'ADD_MESSAGE', payload: 'New turn' }
     ]
   });
 
   // Reset last movement tracking
   lastMovement.current = null;
-
   // Recalculate turn order (in case creatures died)
-  const newTurnOrder = getTurnOrderIds(groups.flatMap(group => group.getLivingCreatures()));
+  const newTurnOrder = getTurnOrderIds(creatures.filter(creature => creature.isAlive()));
 
   return {
     currentTurn: turnState.currentTurn + 1,

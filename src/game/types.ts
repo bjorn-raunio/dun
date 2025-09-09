@@ -2,6 +2,7 @@ import { Creature, ICreature, CreatureGroup, Party } from '../creatures/index';
 import { TurnState, AITurnState } from './turnManagement';
 import { WeatherState } from './weather';
 import { WorldMap } from '../worldmap/WorldMap';
+import { Scenario } from '../scenarios/Scenario';
 
 import { QuestMap } from '../maps/types';
 
@@ -13,6 +14,7 @@ export type GameState = {
   party: Party;
   worldMap: WorldMap;
   mapDefinition: QuestMap | null;
+  scenario: Scenario | null;
   selectedCreatureId: string | null;
   messages: string[];
   viewport: ViewportState;
@@ -75,6 +77,7 @@ export type GameActions = {
   setParty: (updater: (prev: Party) => Party) => void;
   setWorldMap: (updater: (prev: WorldMap) => WorldMap) => void;
   setMapDefinition: (mapDefinition: QuestMap | null) => void;
+  setScenario: (scenario: Scenario | null) => void;
   centerWorldmapOnParty: () => void;
   centerQuestmapOnStartingTile: () => void;
   dispatch: React.Dispatch<any>;

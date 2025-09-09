@@ -1,5 +1,5 @@
 import React from 'react';
-import { Region as RegionType } from '../../worldmap/types';
+import { IRegion as RegionType } from '../../worldmap/types';
 import { Region as RegionClass } from '../../worldmap/Region';
 
 interface RegionOverlayProps {
