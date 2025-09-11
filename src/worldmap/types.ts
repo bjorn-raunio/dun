@@ -5,10 +5,6 @@ import { WorldLocation } from './locations';
 
 export interface RegionConnection {
   targetRegionId: string;
-  connectionType: 'road' | 'path' | 'river' | 'mountain_pass' | 'sea';
-  distance: number; // Travel time or distance between regions
-  isBlocked: boolean; // Whether the connection is currently blocked
-  blockReason?: string; // Why the connection is blocked
 }
 
 export interface IRegion {
@@ -16,7 +12,7 @@ export interface IRegion {
   name: string;
   vertices: Array<{ x: number; y: number }>; // Vertices defining the region's shape (absolute world coordinates)
   connections: RegionConnection[]; // Connections to other regions
-  type: 'forest' | 'mountain' | 'plains' | 'desert' | 'swamp' | 'city' | 'village' | 'dungeon' | 'wilderness';
+  type: 'forest' | 'mountain' | 'plains' | 'desert' | 'swamp' | 'volcano' | 'glacier' | 'ocean' | 'river';
   isExplored: boolean; // Whether the player has explored this region
   isAccessible: boolean; // Whether the region is currently accessible
   requirements?: string[]; // Requirements to access this region

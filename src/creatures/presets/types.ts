@@ -2,6 +2,8 @@ import { Attributes } from '../../statusEffects';
 import { AIBehaviorType } from '../../ai/types';
 import { CreatureGroup } from '../CreatureGroup';
 import { Skill } from '../../skills';
+import { Profession } from '../heroes/professions/profession';
+import { Race } from '../heroes/races/race';
 
 // --- Shared Preset Types ---
 
@@ -13,7 +15,6 @@ export type BasePreset = {
   quickActions?: number; // Optional - defaults to 1
   mapWidth?: number;
   mapHeight?: number;
-  size: number; // 1=small, 2=medium, 3=large, 4=huge
   facing?: number; // 0-7: 0=North, 1=NE, 2=East, 3=SE, 4=South, 5=SW, 6=West, 7=NW
   inventory?: Array<{ type: "weapon" | "ranged_weapon" | "armor" | "shield" | "consumable" | "miscellaneous"; preset: string; id?: string }>;
   equipment?: {
@@ -30,11 +31,17 @@ export type BasePreset = {
   naturalWeapons?: string[];
 };
 
-export type MonsterPreset = BasePreset & {
+export type MonsterRank = "grunt" | "elite" | "champion";
+
+export type MonsterPreset<T extends string> = BasePreset & {
+  type: T;
+  cost: number;
+  rank: MonsterRank;
   aiBehavior?: AIBehaviorType; // AI behavior type (melee, ranged, animal)
   // Loadout system for different variants
   weaponLoadouts?: string[]; // Array of weapon loadout IDs
   armorLoadouts?: string[];  // Array of armor loadout IDs
+  leader?: boolean;
 };
 
 export type MercenaryPreset = BasePreset & {
@@ -44,4 +51,6 @@ export type MercenaryPreset = BasePreset & {
 export type HeroPreset = BasePreset & {
   // Hero-specific properties can be added here
   // For example: starting level, experience, special abilities, etc.
+  race: Race;
+  profession: Profession;
 };

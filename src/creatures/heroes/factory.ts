@@ -140,6 +140,7 @@ export function createHero(
     intelligence: overrides?.intelligence ?? p.attributes.intelligence,
   };
 
+  console.log(overrides?.race ?? p.race);
   const hero = new Hero({
     name: overrides?.name ?? p.name,
     position: overrides?.position ?? undefined,
@@ -148,7 +149,6 @@ export function createHero(
     actions: overrides?.actions ?? p.actions ?? 1,
     mapWidth: overrides?.mapWidth ?? p.mapWidth ?? 1,
     mapHeight: overrides?.mapHeight ?? p.mapHeight ?? 1,
-    size: overrides?.size ?? p.size,
     inventory: overrides?.inventory ?? inventory,
     equipment: overrides?.equipment ?? equipment,
     vitality: overrides?.vitality ?? p.vitality,
@@ -157,6 +157,8 @@ export function createHero(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
     group: overrides?.group ?? CreatureGroup.PLAYER,
     skills: overrides?.skills ?? p.skills,
+    profession: overrides?.profession ?? p.profession,
+    race: overrides?.race ?? p.race,
   });
   hero.setRemainingMovement(hero.movement);
   hero.setRemainingActions(hero.actions);

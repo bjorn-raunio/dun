@@ -3,6 +3,8 @@ import { CombatResult } from '../utils/combat/types';
 import { Attributes } from '../statusEffects';
 import { CreatureGroup } from './CreatureGroup';
 import { Skill } from '../skills';
+import { Profession } from './heroes/professions/profession';
+import { Race } from './heroes/races/race';
 
 // --- Core Creature Types ---
 
@@ -43,7 +45,6 @@ export interface CreatureConstructorParams {
   quickActions?: number;
   mapWidth?: number;
   mapHeight?: number;
-  size: number;
   inventory?: Item[];
   equipment?: EquipmentSlots;
   vitality: number;
@@ -53,6 +54,7 @@ export interface CreatureConstructorParams {
   group: CreatureGroup; // CHANGED from CreatureGroupType
   skills?: Skill[];
   naturalWeapons?: NaturalWeapon[];
+  leader?: boolean;
 }
 
 export type CreatureAction = 'run' | 'disengage' | 'search';

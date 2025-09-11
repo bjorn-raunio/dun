@@ -9,14 +9,9 @@ import { useTargetsInRange, useReachableTiles, useSelectedCreature, useKeyboardH
 import { Hero, ICreature } from './creatures/index';
 import { addMessage } from './utils/messageSystem';
 import { createQuestMapFromPresetWithWeather } from './maps/presets';
-import { returnOfRazbaal } from "./scenarios";
+import { returnOfRazbaal } from "./campaigns";
 
 // Map and game state are now imported from extracted modules
-
-// Example of how to use scenarios:
-// import { getScenarioByName } from './scenarios';
-// const scenario = getScenarioByName('Return of Razbaal');
-// Then pass it to GameProvider: <GameProvider initialCreatures={selectedHeroes} scenario={scenario}>
 
 function TileMapView() {
   // Game state management using context
@@ -43,7 +38,7 @@ function TileMapView() {
   const { onWheel } = useZoom(gameActions, gameRefs, gameState.viewport);
 
   // Turn advancement hook
-  useTurnAdvancement(turnState, creatures, gameActions.setTurnState);
+  useTurnAdvancement(turnState, creatures, gameActions.setTurnState, gameActions.setReachableKey);
 
   // Attack function for equipment panel - enters targeting mode
   const handleAttack = React.useCallback((attackingCreature: ICreature, offhand: boolean = false) => {
@@ -178,14 +173,21 @@ function TileMapView() {
             }}
             onRegionClick={(region) => {
               // Handle region click - enter region without automatically loading a quest map
-              gameActions.setParty(prevParty => {
-                const newParty = prevParty.clone();
-                newParty.enterRegion(region);
-                return newParty;
-              });
+              // Only allow travel to adjacent regions
+              try {
+                gameActions.setParty(prevParty => {
+                  const newParty = prevParty.clone();
+                  newParty.enterRegion(region, gameState.worldMap);
+                  return newParty;
+                });
 
-              // Clear the map definition since we're not loading a quest map automatically
-              gameActions.setMapDefinition(null);
+                // Clear the map definition since we're not loading a quest map automatically
+                gameActions.setMapDefinition(null);
+              } catch (error) {
+                // Show error message to user (you might want to add a proper error display system)
+                console.error('Travel error:', error);
+                // You could add a toast notification or error message display here
+              }
             }}
             onRegionHover={(region) => {
               // Handle region hover - could show tooltip or highlight
@@ -234,7 +236,7 @@ function TileMapView() {
           <GameUI
             messages={messages}
             onEndTurn={() => {
-              endTurn(groups, creatures, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState);
+              endTurn(groups, creatures, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState, gameActions.setReachableKey);
             }}
             onLeaveMap={handleLeaveMap}
             isAITurnActive={aiTurnState.isAITurnActive}
@@ -277,7 +279,7 @@ function App() {
   }
 
   return (
-    <GameProvider initialCreatures={selectedHeroes} scenario={returnOfRazbaal}>
+    <GameProvider initialCreatures={selectedHeroes} campaign={returnOfRazbaal}>
       <div className="App">
         <TileMapView />
       </div>

@@ -2,7 +2,7 @@ import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentSystem } from '../../items/equipment';
 import { validateCombat } from '../../validation/combat';
 import { updateCombatStates } from '../combatStateUtils';
-import { CombatResult } from './types';
+import { CombatResult, ToHitResult } from './types';
 import { STATUS_EFFECT_PRESETS } from '../../statusEffects';
 import {
   executeToHitRollMelee,
@@ -13,7 +13,7 @@ import {
 import { getDirectionFromTo } from '../geometry';
 import { isAreaStandable } from '../pathfinding/helpers';
 import { QuestMap } from '../../maps/types';
-import { BaseWeapon, WeaponAttack } from '../../items';
+import { BaseWeapon, Shield, WeaponAttack } from '../../items';
 import { CombatTriggers } from './combatTriggers';
 import { diagonalMovementBlocked } from '../movement';
 import { addCombatMessage } from '../messageSystem';
@@ -173,18 +173,18 @@ function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Crea
   }
 
   // === PART 2: BLOCK ROLL ===
-  const blockResult = executeBlockRoll(combatEventData.attacker, combatEventData.target, toHitResult.attackerRoll.criticalSuccess, toHitResult.attackerRoll.criticalHit);
-  addCombatMessage(blockResult.blockMessage);
+  let blockResult = null;
+  if (!toHitResult.defenderRoll?.fumble) {
+    blockResult = executeBlockRoll(combatEventData, toHitResult);
+    addCombatMessage(blockResult.blockMessage);
+  }
 
   // === PART 3: DAMAGE ROLL ===
   let damage = 0;
-  if (!blockResult.blockSuccess) {
+  if (!blockResult?.blockSuccess) {
     const damageResult = executeDamageRoll(
-      combatEventData.attacker,
-      combatEventData.target,
-      combatEventData.attack,
-      toHitResult.attackerRoll.criticalSuccess,
-      toHitResult.attackerRoll.criticalHit,
+      combatEventData,
+      toHitResult,
       bonusDamage
     );
     addCombatMessage(damageResult.damageMessage);
@@ -192,6 +192,8 @@ function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Crea
     // Apply damage using the proper method
     combatEventData.target.takeDamage(damageResult.damage);
     damage = damageResult.damage;
+  } else if (blockResult?.shield) {
+    handleShieldBreak(combatEventData, toHitResult, blockResult.shield);
   }
 
   if (pushbackResult && pushbackResult.position && combatEventData.mapDefinition) {
@@ -286,4 +288,28 @@ function applyPushback(attacker: ICreature, target: ICreature, position: { x: nu
   }
   // Record that this attacker has pushed this target this turn
   attacker.recordPushedCreature(target.id);
+}
+
+function handleShieldBreak(combatEventData: CombatEventData, toHitResult: ToHitResult, shield: Shield) {
+  let breakShield = false;
+  let autoBreak = false;
+  if (combatEventData.attack.breaksShieldsOnCritical && toHitResult.attackerRoll.criticalHit) {
+    breakShield = true;
+    autoBreak = true;
+  } else if (combatEventData.attacker.size > 2 && combatEventData.attacker.size > combatEventData.target.size) {
+    breakShield = true;
+    if (combatEventData.attacker.size > 3 || combatEventData.attack.shieldBreaking) {
+      autoBreak = true;
+    }
+  } else if (combatEventData.attack.shieldBreaking) {
+    breakShield = true;
+  }
+  if(!breakShield) {
+    return false;
+  }
+  let broken = shield.break(combatEventData.target, autoBreak);
+  if (broken) {
+    combatEventData.target.takeDamage(1);
+  }
+  return broken
 }

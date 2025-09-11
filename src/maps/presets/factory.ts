@@ -6,6 +6,7 @@ import { createConnection } from '../connection/presets';
 import { createMonster, createMercenary, CREATURE_GROUPS, Creature } from '../../creatures/index';
 import { logError } from '../../utils';
 import { generateRandomWeather, WeatherEffect } from '../../game/weather';
+import { Connection } from '../connection/connection';
 
 // --- QuestMap Factory Functions ---
 
@@ -16,7 +17,7 @@ export function createQuestMapFromPreset(preset: QuestMapPreset, numberOfHeroes:
 
   try {
     // Create rooms from preset
-    const rooms = preset.rooms.map(roomPreset => {
+    const rooms: Room[] = preset.rooms.map(roomPreset => {
       const sections = roomPreset.sections.map(sectionPreset => {
         const options = sectionPreset.options || {};
         return createSection(sectionPreset.type, sectionPreset.x, sectionPreset.y, {
@@ -41,7 +42,7 @@ export function createQuestMapFromPreset(preset: QuestMapPreset, numberOfHeroes:
 
       switch (type) {
         case 'monster':
-          creatures.push(createMonster(variant, 'bandits', {
+          creatures.push(createMonster(variant, {
             position,
             weaponLoadout: creatureOptions.weaponLoadout,
             armorLoadout: creatureOptions.armorLoadout
@@ -59,7 +60,7 @@ export function createQuestMapFromPreset(preset: QuestMapPreset, numberOfHeroes:
     });
 
     // Create connections from preset
-    const connections = preset.connections.map(connectionPreset => {
+    const connections: Connection[] = preset.connections.map(connectionPreset => {
       return createConnection(
         connectionPreset.presetId,
         connectionPreset.x,

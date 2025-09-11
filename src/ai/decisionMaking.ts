@@ -24,7 +24,7 @@ export function createDefaultAIState(behavior: AIBehaviorType = AI_BEHAVIORS.MEL
 /**
  * Create AI state based on creature type and preset
  */
-export function createAIStateForCreature(creature: ICreature, preset?: MonsterPreset): AIState {
+export function createAIStateForCreature(creature: ICreature, preset?: MonsterPreset<any>): AIState {
   // Determine behavior based on creature type or preset
   let behavior: AIBehaviorType = AI_BEHAVIORS.MELEE;
 

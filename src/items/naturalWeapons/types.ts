@@ -13,7 +13,6 @@ export class NaturalWeapon extends BaseWeapon {
     name: string;
     attack: Partial<WeaponAttack>;
     hands: 1 | 2;
-    properties?: string[];
     attributeModifiers?: Partial<Attributes>;
     combatTriggers?: CombatTrigger[];
   }) {
@@ -31,7 +30,6 @@ export class NaturalWeapon extends BaseWeapon {
         type: "melee"
       }],
       hands: params.hands,
-      properties: params.properties,
       attributeModifiers: params.attributeModifiers,
       combatTriggers: params.combatTriggers,
       slot: "natural",
@@ -48,7 +46,6 @@ export interface NaturalWeaponPreset {
   name: string;
   attack: Partial<WeaponAttack>;
   hands: 1 | 2;
-  properties?: string[];
   attributeModifiers?: Partial<Attributes>;
   combatTriggers?: CombatTrigger[];
 }

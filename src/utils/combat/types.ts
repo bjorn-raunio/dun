@@ -1,3 +1,4 @@
+import { Shield } from '../../items';
 import { DiceRoll } from '../dice';
 import { BaseValidationResult } from '../types';
 
@@ -16,15 +17,12 @@ export interface CombatValidationResult extends BaseValidationResult { }
 export interface ToHitResult {
   hit: boolean;
   attackerRoll: DiceRoll;
-  defenderRoll: DiceRoll;
-}
-
-export interface RangedToHitResult {
-  hit: boolean;
-  attackerRoll: DiceRoll;
+  defenderRoll?: DiceRoll;
+  isBackAttack: boolean;
 }
 
 export interface BlockResult {
+  shield?: Shield;
   blockMessage: string;
   blockSuccess: boolean;
 }

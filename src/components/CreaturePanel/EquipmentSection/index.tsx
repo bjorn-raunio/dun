@@ -12,8 +12,8 @@ interface EquipmentSectionProps {
 }
 
 export function EquipmentSection({ creature, onUpdate, onAttack, canAttack }: EquipmentSectionProps) {
-  const { mapDefinition } = useGameState();
-  const { handleUnequip, canUnequipWeaponOrShield } = useEquipment(creature, mapDefinition, onUpdate);
+  const { mapDefinition, creatures } = useGameState();
+  const { handleUnequip, canUnequipWeaponOrShield } = useEquipment(creature, mapDefinition, creatures, onUpdate);
 
   return (
     <div style={{ 

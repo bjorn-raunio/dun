@@ -78,33 +78,7 @@ export class Region implements IRegion {
    * Get all accessible connections (not blocked)
    */
   getAccessibleConnections(): RegionConnection[] {
-    return this.connections.filter(conn => !conn.isBlocked);
-  }
-
-  /**
-   * Block a connection to another region
-   */
-  blockConnection(targetRegionId: string, reason: string): boolean {
-    const connection = this.connections.find(conn => conn.targetRegionId === targetRegionId);
-    if (connection) {
-      connection.isBlocked = true;
-      connection.blockReason = reason;
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Unblock a connection to another region
-   */
-  unblockConnection(targetRegionId: string): boolean {
-    const connection = this.connections.find(conn => conn.targetRegionId === targetRegionId);
-    if (connection) {
-      connection.isBlocked = false;
-      connection.blockReason = undefined;
-      return true;
-    }
-    return false;
+    return this.connections;
   }
 
   /**

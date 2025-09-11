@@ -1,7 +1,7 @@
 // Import types for type alias
 import { Hero } from './heroes';
-import { Monster } from './monster';
-import { Mercenary } from './mercenary';
+import { Monster } from './monsters';
+import { Mercenary } from './mercenaries';
 
 // Initialize the creature system
 import './init';
@@ -10,10 +10,12 @@ import './init';
 export { Creature } from './base';
 export { CREATURE_GROUPS, CreatureGroup } from './CreatureGroup';
 export { Hero } from './heroes';
-export { Monster, MONSTER_FACTIONS, MONSTER_FACTIONS_KEYS, type MonsterFaction, type MonsterFactionInfo } from './monster';
-export { Mercenary } from './mercenary';
+export { Monster, MONSTER_FACTIONS } from './monsters';
+export { Mercenary } from './mercenaries';
 export { CreatureMovement } from './movement';
-export { createMonster, monsterPresets, monsterPresetsByFaction, type MonsterPreset, createMercenary, mercenaryPresets, type MercenaryPreset } from './presets';
+export { createMonster, monsterPresets } from './monsters';
+export { createMercenary, mercenaryPresets } from './mercenaries';
+export { type MonsterPreset, type MercenaryPreset } from './presets';
 export { createHero, heroPresets, type HeroPreset } from './heroes';
 export { Party } from './Party';
 

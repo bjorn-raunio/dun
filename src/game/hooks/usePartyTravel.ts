@@ -9,10 +9,10 @@ export function usePartyTravel() {
     // Update the party's current region
     actions.setParty(prevParty => {
       const newParty = prevParty;
-      newParty.travelToRegion(regionId);
+      newParty.travelToRegion(regionId, state.worldMap);
       return newParty;
     });
-  }, [actions]);
+  }, [actions, state.worldMap]);
 
   const canTravelToRegion = useCallback((regionId: string, regions: RegionClass[]) => {
     const currentRegion = regions.find(r => r.id === state.party.currentRegionId);

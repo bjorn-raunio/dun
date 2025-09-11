@@ -7,28 +7,34 @@ export class Weapon extends BaseWeapon {
   constructor(params: {
     id?: string;
     name: string;
-    attack: Partial<WeaponAttack>;
+    attacks: Partial<WeaponAttack>[];
     hands: 1 | 2;
-    properties?: string[];
     attributeModifiers?: Partial<Attributes>;
     combatTriggers?: CombatTrigger[];
     breakRoll?: number;
+    fumble?: number;
+    noPenaltyForDrawing?: boolean;
     weight?: number;
     value?: number;
     slot?: string;
+    rarity?: number;
   }) {
     super({
       ...params,
       kind: "weapon",
-      attacks: [{
-        toHitModifier: params.attack.toHitModifier ?? 0,
-        armorModifier: params.attack.armorModifier ?? 0,
-        damageModifier: params.attack.damageModifier ?? 0,
-        range: params.attack.range ?? 1,
-        minRange: 0,
-        addStrength: true,
-        type: "melee"
-      }]
+      attacks: params.attacks.map(attack => {
+        return {
+          toHitModifier: attack.toHitModifier ?? 0,
+          armorModifier: attack.armorModifier ?? 0,
+          damageModifier: attack.damageModifier ?? 0,
+          range: attack.range ?? 1,
+          backStab: attack.backStab ?? false,
+          shieldBreaking: attack.shieldBreaking ?? false,
+          minRange: 0,
+          addStrength: true,
+          type: "melee"
+        }
+      })
     });
   }
 

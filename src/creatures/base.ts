@@ -28,7 +28,7 @@ import { MovementResult } from '../utils/movement';
 import { Light, QuestMap } from '../maps/types';
 import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
-import { calculateAttributeRoll, displayDiceRoll } from '../utils';
+import { calculateAttributeRoll, DiceRoll, displayDiceRoll } from '../utils';
 import { validateAction } from '../validation';
 import { addGameMessage, addTurnMessage } from '../utils/messageSystem';
 import { AIState } from '../ai/types';
@@ -45,7 +45,6 @@ export abstract class Creature implements ICreature {
   quickActions: number;
   mapWidth: number;
   mapHeight: number;
-  size: number;
   inventory: Item[];
   equipment: EquipmentSlots;
   vitality: number;
@@ -53,8 +52,9 @@ export abstract class Creature implements ICreature {
   fortune: number;
   naturalArmor: number;
   group: CreatureGroup;
-  skills: Skill[];
+  _skills: Skill[];
   running: boolean;
+  swappedWeapons: boolean = false;
 
   // AI State
   aiState: AIState | null;
@@ -75,7 +75,6 @@ export abstract class Creature implements ICreature {
     this.quickActions = params.quickActions ?? 1;
     this.mapWidth = params.mapWidth ?? 1;
     this.mapHeight = params.mapHeight ?? 1;
-    this.size = params.size;
     this.inventory = params.inventory ?? [];
     this.equipment = params.equipment ?? { mainHand: undefined, offHand: undefined, armor: undefined };
     this.vitality = params.vitality;
@@ -84,7 +83,7 @@ export abstract class Creature implements ICreature {
     this.naturalArmor = params.naturalArmor ?? 3;
     this.group = params.group;
     this.running = false;
-    this.skills = params.skills ?? [];
+    this._skills = params.skills ?? [];
 
     // Initialize AI state (null by default, can be set by subclasses)
     this.aiState = null;
@@ -147,6 +146,7 @@ export abstract class Creature implements ICreature {
   get x(): number | undefined { return this.positionManager.getX(); }
   get y(): number | undefined { return this.positionManager.getY(); }
   get facing(): number | undefined { return this.positionManager.getFacing(); }
+  get size(): number { return 2; }
 
   set x(value: number | undefined) {
     if (value !== undefined) {
@@ -245,7 +245,9 @@ export abstract class Creature implements ICreature {
   set courage(value: number) { this.attributes.courage = value; }
   set intelligence(value: number) { this.attributes.intelligence = value; }
   set perception(value: number) { this.attributes.perception = value; }
-  set dexterity(value: number) { this.attributes.dexterity = value; }
+  set dexterity(value: number) { this.attributes.dexterity = value; }  
+
+  get leader(): boolean { return false; }
 
   // --- State methods ---
   isAlive(): boolean { return this.stateManager.isAlive(); }
@@ -289,8 +291,8 @@ export abstract class Creature implements ICreature {
   /**
    * Get all skills the creature has
    */
-  getSkills(): Skill[] {
-    return this.skills;
+  get skills(): Skill[] {
+    return this._skills;
   }
 
   /**
@@ -486,22 +488,23 @@ export abstract class Creature implements ICreature {
     return true;
   }
 
-  performAttributeTest(attributeName: keyof Attributes, modifier: number = 0): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean } {
+  performAttributeTest(attributeName: keyof Attributes, modifier: number = 0, fumbleValue: number = 1): DiceRoll & { success: boolean } {
     const attributeValue = this.getEffectiveAttribute(attributeName);
     const totalModifier = attributeValue + modifier;
-    const testResult = calculateAttributeRoll(totalModifier);
-    if (testResult.fumble) {
-      return { success: false, modifier: totalModifier, ...testResult };
+    const result = calculateAttributeRoll(totalModifier, fumbleValue);
+    if (result.fumble) {
+      return { success: false, ...result };
     }
-    if (testResult.total >= 10) {
-      return { success: true, modifier: totalModifier, ...testResult };
+    if (result.total >= 10) {
+      return { success: true, ...result };
     }
-    return { success: false, modifier: totalModifier, ...testResult };
+    return { success: false, ...result };
   }
 
   startTurn(): void {
 
     this.running = false;
+    this.swappedWeapons = false;
 
     // Process status effects at turn start
     this.statusEffectManager.updateEffects();
@@ -559,6 +562,15 @@ export abstract class Creature implements ICreature {
   }
 
   moveTo(path: Array<{ x: number; y: number }>, allCreatures: ICreature[] = [], mapDefinition?: QuestMap): MovementResult {
+    if(path.length === 0) {
+      return {
+        status: 'failed',
+        message: 'No path provided',
+        cost: 0,
+        tilesMoved: 0,
+        totalPathLength: 0
+      };
+    }
     if (!this.positionManager) {
       return {
         status: 'failed',
@@ -570,6 +582,7 @@ export abstract class Creature implements ICreature {
     }
     if (this.positionManager.getX() === undefined || this.positionManager.getY() === undefined) {
       path = [path[0], ...path];
+      this.stateManager.recordTurnStartPosition({ x: path[0].x, y: path[0].y, facing: 0 });
     }
     return creatureServices.getMovementService().moveTo(this, path, allCreatures, mapDefinition);
   }
@@ -617,10 +630,6 @@ export abstract class Creature implements ICreature {
   // --- Skills ---
   getSkill(skillName: string): Skill | undefined {
     return this.skills.find(skill => skill.name === skillName);
-  }
-
-  getAllSkills(): Skill[] {
-    return this.skills;
   }
 
   // --- Status Effects ---
@@ -704,7 +713,7 @@ export abstract class Creature implements ICreature {
 
   // --- Cloning ---
   clone(overrides?: Partial<Creature>): Creature {
-    const params = {
+    const baseParams = {
       id: this.id,
       name: this.name,
       x: this.x,
@@ -726,13 +735,23 @@ export abstract class Creature implements ICreature {
       naturalArmor: this.naturalArmor,
       hasMovedWhileEngaged: this.hasMovedWhileEngaged,
       group: this.group,
-      skills: { ...this.skills },
+      skills: [...this._skills],
       running: this.running,
       ...overrides
     };
 
+    // Allow subclasses to add their specific properties
+    const params = this.extendCloneParams(baseParams, overrides);
+
     // Use abstract method to create the appropriate instance
     return this.createInstance(params);
+  }
+
+  /**
+   * Override this method in subclasses to add specific properties to clone params
+   */
+  protected extendCloneParams(baseParams: any, overrides?: Partial<Creature>): any {
+    return baseParams;
   }
 
   // --- Abstract Factory Method ---

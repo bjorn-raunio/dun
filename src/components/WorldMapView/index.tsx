@@ -123,10 +123,10 @@ export function WorldMapView({
               onRegionClick={onRegionClick}
               onRegionHover={onRegionHover}
             />
-            {/*<ConnectionOverlay
+            <ConnectionOverlay
               regions={regions}
               currentRegionId={currentRegionId}
-            />*/}
+            />
             <PartyIconOverlay
               regions={regions}
               currentRegionId={currentRegionId}

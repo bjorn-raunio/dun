@@ -9,7 +9,8 @@ import { findCreatureById } from '../../utils/pathfinding';
 export function useTurnAdvancement(
   turnState: TurnState,
   creatures: ICreature[],
-  setTurnState: GameActions['setTurnState']
+  setTurnState: GameActions['setTurnState'],
+  setReachableKey: GameActions['setReachableKey']
 ) {
   useEffect(() => {
     // Only check for turn advancement if there's an active creature
@@ -41,7 +42,9 @@ export function useTurnAdvancement(
         // Advance to next creature
         const newTurnState = advanceToNextCreature(turnState, creatures);
         setTurnState(() => newTurnState);
+        // Update reachable tiles overlay for the new active creature
+        setReachableKey(prev => prev + 1);
       }
     }
-  }, [turnState.activeCreatureId, creatures, turnState, setTurnState]);
+  }, [turnState.activeCreatureId, creatures, turnState, setTurnState, setReachableKey]);
 }

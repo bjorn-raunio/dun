@@ -4,6 +4,93 @@ import { Region } from './Region';
 
 export const WORLD_REGIONS: IRegion[] = [
   {
+    id: 't23',
+    name: 'Barrock',
+    vertices: [
+      { x: 2475, y: 1397 },
+      { x: 2538, y: 1405 },
+      { x: 2661, y: 1443 },
+      { x: 2764, y: 1432 },
+      { x: 2748, y: 1380 },
+      { x: 2798, y: 1350 },
+      { x: 2680, y: 1297 },
+      { x: 2674, y: 1264 },
+      { x: 2454, y: 1296 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't24',
+      },
+      {
+        targetRegionId: 't28',
+      }
+    ],
+    type: 'plains',
+    isExplored: false,
+    isAccessible: true,
+  },
+  {
+    id: 't24',
+    name: 'Aitania',
+    vertices: [
+      { x: 2475, y: 1497 },
+      { x: 2538, y: 1505 },
+      { x: 2661, y: 1543 },
+      { x: 2764, y: 1532 },
+      { x: 2748, y: 1480 },
+      { x: 2798, y: 1450 },
+      { x: 2680, y: 1397 },
+      { x: 2674, y: 1364 },
+      { x: 2454, y: 1396 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't23',
+      },
+      {
+        targetRegionId: 't25',
+      },
+      {
+        targetRegionId: 't28',
+      },
+      {
+        targetRegionId: 't27',
+      }
+    ],
+    type: 'plains',
+    isExplored: false,
+    isAccessible: true,
+  },
+  {
+    id: 't25',
+    name: 'Forest of Rohuan',
+    vertices: [
+      { x: 2475, y: 1597 },
+      { x: 2538, y: 1605 },
+      { x: 2661, y: 1643 },
+      { x: 2764, y: 1632 },
+      { x: 2748, y: 1580 },
+      { x: 2798, y: 1550 },
+      { x: 2680, y: 1497 },
+      { x: 2674, y: 1464 },
+      { x: 2454, y: 1496 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't24',
+      },
+      {
+        targetRegionId: 't26',
+      },
+      {
+        targetRegionId: 't27',
+      }
+    ],
+    type: 'forest',
+    isExplored: false,
+    isAccessible: true,
+  },
+  {
     id: 't26',
     name: 'Verneck',
     vertices: [
@@ -18,44 +105,177 @@ export const WORLD_REGIONS: IRegion[] = [
     connections: [
       {
         targetRegionId: 't25',
-        connectionType: 'path',
-        distance: 2,
-        isBlocked: false
       }
     ],
-    type: 'village',
+    type: 'plains',
     isExplored: true,
     isAccessible: true,
-    encounters: ['friendly_villager', 'merchant'],
-    resources: ['food', 'water', 'basic_supplies']
   },
   {
-    id: 't25',
-    name: 'Dark Forest',
+    id: 't27',
+    name: 'Carrick',
     vertices: [
-      { x: 2475, y: 1597 },
-      { x: 2538, y: 1605 },
-      { x: 2661, y: 1643 },
-      { x: 2764, y: 1632 },
-      { x: 2748, y: 1580 },
-      { x: 2798, y: 1550 },
-      { x: 2680, y: 1497 },
-      { x: 2674, y: 1464 },
-      { x: 2454, y: 1496 },
+      { x: 2675, y: 1497 },
+      { x: 2738, y: 1505 },
+      { x: 2861, y: 1543 },
+      { x: 2964, y: 1532 },
+      { x: 2948, y: 1480 },
+      { x: 2998, y: 1450 },
+      { x: 2880, y: 1397 },
+      { x: 2874, y: 1364 },
+      { x: 2654, y: 1396 },
     ],
     connections: [
       {
-        targetRegionId: 't26',
-        connectionType: 'path',
-        distance: 2,
-        isBlocked: false
+        targetRegionId: 't24',
+      },
+      {
+        targetRegionId: 't25',
+      },
+      {
+        targetRegionId: 't28',
       }
     ],
-    type: 'forest',
-    isExplored: false,
+    type: 'plains',
+    isExplored: true,
     isAccessible: true,
-    encounters: ['wolf', 'bandit', 'mysterious_traveler'],
-    resources: ['wood', 'herbs', 'mushrooms']
+  },
+  {
+    id: 't28',
+    name: 'Guardian hills',
+    vertices: [
+      { x: 2675, y: 1397 },
+      { x: 2738, y: 1405 },
+      { x: 2861, y: 1443 },
+      { x: 2964, y: 1432 },
+      { x: 2948, y: 1380 },
+      { x: 2998, y: 1350 },
+      { x: 2880, y: 1297 },
+      { x: 2874, y: 1264 },
+      { x: 2654, y: 1296 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't23',
+      },
+      {
+        targetRegionId: 't24',
+      },
+      {
+        targetRegionId: 't27',
+      },
+      {
+        targetRegionId: 't29',
+      }
+    ],
+    type: 'mountain',
+    isExplored: true,
+    isAccessible: true,
+  },  
+  {
+    id: 't29',
+    name: 'Sudfall',
+    vertices: [
+      { x: 2675, y: 1197 },
+      { x: 2738, y: 1205 },
+      { x: 2861, y: 1243 },
+      { x: 2964, y: 1232 },
+      { x: 2948, y: 1180 },
+      { x: 2998, y: 1150 },
+      { x: 2880, y: 1097 },
+      { x: 2874, y: 1064 },
+      { x: 2654, y: 1096 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't28',
+      },
+      {
+        targetRegionId: 't30',
+      }
+    ],
+    type: 'plains',
+    isExplored: true,
+    isAccessible: true,
+  },  
+  {
+    id: 't30',
+    name: 'Norkfall',
+    vertices: [
+      { x: 2675, y: 997 },
+      { x: 2738, y: 1005 },
+      { x: 2861, y: 1043 },
+      { x: 2964, y: 1032 },
+      { x: 2948, y: 980 },
+      { x: 2998, y: 950 },
+      { x: 2880, y: 897 },
+      { x: 2874, y: 864 },
+      { x: 2654, y: 896 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't29',
+      },
+
+      {
+        targetRegionId: 't41',
+      }
+    ],
+    type: 'plains',
+    isExplored: true,
+    isAccessible: true,
+  },
+ 
+  {
+    id: 't41',
+    name: 'The muddy hills',
+    vertices: [
+      { x: 2875, y: 997 },
+      { x: 2938, y: 1005 },
+      { x: 3061, y: 1043 },
+      { x: 3164, y: 1032 },
+      { x: 3148, y: 980 },
+      { x: 3198, y: 950 },
+      { x: 3080, y: 897 },
+      { x: 3074, y: 864 },
+      { x: 2854, y: 896 },
+    ],
+    connections: [
+
+      {
+        targetRegionId: 't2',
+      },
+      {
+        targetRegionId: 't30',
+      }
+
+    ],
+    type: 'swamp',
+    isExplored: true,
+    isAccessible: true,
+  },
+  {
+    id: 't2',
+    name: 'Blood Kingdom',
+    vertices: [
+      { x: 2875, y: 997 },
+      { x: 2938, y: 1005 },
+      { x: 3061, y: 1043 },
+      { x: 3164, y: 1032 },
+      { x: 3148, y: 980 },
+      { x: 3198, y: 950 },
+      { x: 3080, y: 897 },
+      { x: 3074, y: 864 },
+      { x: 2854, y: 896 },
+    ],
+    connections: [
+      {
+        targetRegionId: 't41',
+      }
+    ],
+    type: 'mountain',
+    isExplored: true,
+    isAccessible: true,
   },
 ];
 

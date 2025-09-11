@@ -23,7 +23,8 @@ export function endTurn(
   mapDefinition: QuestMap | undefined,
   dispatch: React.Dispatch<any>,
   lastMovement: React.MutableRefObject<{ creatureId: string; x: number; y: number } | null>,
-  currentTurnState: TurnState
+  currentTurnState: TurnState,
+  setReachableKey: (updater: (prev: number) => number) => void
 ) {
   if (!mapDefinition) {
     return;
@@ -53,12 +54,14 @@ export function endTurn(
 
   // Advance to next turn (this will reset all turns internally)
   const newTurnState = newTurn(currentTurnState, groups, creatures, dispatch, lastMovement);
-  console.log(newTurnState);
   dispatch({ type: 'SET_TURN_STATE', payload: newTurnState });
 
   if (playerControlledGroup) {
     playerControlledGroup.startTurn(creatures);
   }
+
+  // Update reachable tiles overlay for the new active creature
+  setReachableKey(prev => prev + 1);
 
 }
 

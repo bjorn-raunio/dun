@@ -1,14 +1,16 @@
 import { useCallback } from 'react';
 import { Creature, ICreature } from '../../creatures/index';
 import { EquipmentManager, EquipmentValidator } from '../../items/equipment';
-import { Item, Weapon, RangedWeapon, Armor, Shield } from '../../items';
+import { Item, Weapon, RangedWeapon, Armor, Shield, BaseWeapon } from '../../items';
 import { EquipmentSlot } from '../../items/equipment';
 import { QuestMap } from '../../maps/types';
 import { dropItem } from '../../utils/itemDropping';
+import { isEngaged } from '../../utils/zoneOfControl';
 
 export function useEquipment(
   creature: ICreature,
   mapDefinition: QuestMap | null,
+  allCreatures: ICreature[],
   onUpdate?: (creature: ICreature) => void
 ) {
 
@@ -25,6 +27,8 @@ export function useEquipment(
     }
 
     const equipmentManager = new EquipmentManager(creature);
+
+    const isEngagedWithEnemies = isEngaged(creature, allCreatures);
 
     // First, unequip any existing item in the slot and add it to inventory
     const existingItem = creature.equipment[slot];
@@ -62,6 +66,11 @@ export function useEquipment(
         creature.inventory.splice(itemIndex, 1);
       }
 
+      // Set swappedWeapons flag if weapon was swapped while engaged with enemies
+      if (isEngagedWithEnemies && item instanceof BaseWeapon && !item.noPenaltyForDrawing) {
+        creature.swappedWeapons = true;
+      }
+
       // Consume actions based on validation results
       if (actionValidation.requiresQuickAction) {
         creature.useQuickAction();
@@ -87,7 +96,7 @@ export function useEquipment(
       }
       alert(`Cannot equip ${item.name}: ${validation.reason}`);
     }
-  }, [creature, onUpdate]);
+  }, [creature, allCreatures, onUpdate]);
 
   const handleUnequip = useCallback((slot: EquipmentSlot) => {
     // Prevent equipment changes for AI-controlled creatures

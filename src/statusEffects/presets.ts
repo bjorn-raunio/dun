@@ -1,7 +1,7 @@
 import { StatusEffectType, StatusEffect } from './types';
 import { Creature } from '../creatures/index';
 import { createStatusEffect } from './manager';
-import { displayDieRoll, displayDiceSum } from '../utils/dice';
+import { displayDieRoll, displayDiceSum, calculateAttributeRoll } from '../utils/dice';
 
 export interface StatusEffectPreset {
   icon: string;

@@ -24,17 +24,35 @@ export const WEAPON_LOADOUTS: Record<string, WeaponLoadout> = {
   broadsword: {
     mainHand: { type: "weapon", preset: "broadsword" },
   },
-
   axe: {
     mainHand: { type: "weapon", preset: "axe" },
   },
-
   mace: {
     mainHand: { type: "weapon", preset: "mace" },
+  },
+  bastardsword: {
+    mainHand: { type: "weapon", preset: "bastardsword" },
   },
 
   shortbow: {
     mainHand: { type: "ranged_weapon", preset: "shortbow" },
+  },
+
+  broadswordShield: {
+    mainHand: { type: "weapon", preset: "broadsword" },
+    offHand: { type: "shield", preset: "shield" },
+  },
+  shortswordShield: {
+    mainHand: { type: "weapon", preset: "shortsword" },
+    offHand: { type: "shield", preset: "shield" },
+  },
+  scimitarShield: {
+    mainHand: { type: "weapon", preset: "scimitar" },
+    offHand: { type: "shield", preset: "shield" },
+  },
+  maceShield: {
+    mainHand: { type: "weapon", preset: "scimitar" },
+    offHand: { type: "shield", preset: "shield" },
   },
 };
 

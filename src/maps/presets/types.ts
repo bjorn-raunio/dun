@@ -1,17 +1,28 @@
-import { ICreature } from '../../creatures/index';
-import { Section } from '../section';
 import { Attributes } from '../../statusEffects/types';
+import { Faction } from '../../creatures/monsters/Faction';
 
 // --- QuestMap Preset Type Definitions ---
 
+export type QuestMapResolution = {
+  description: string;
+  reward?: () => { gold?: number, goldPerHero?: number, experience?: number, experienceTimeBonus?: number };
+  newQuests?: string[];
+}
+
 export interface QuestMapPreset {
+  id: string;
   name: string;
   rooms: RoomPreset[];
   creatures: CreaturePreset[];
   connections: ConnectionPreset[];
   startingTiles: StartingTilePreset[];
-  description?: string;
+  description: string;
+  goal: string;
+  success: QuestMapResolution;
+  failure: QuestMapResolution;
   region?: string;
+  faction: Faction<any>;
+  victoryCondition: () => boolean;
 }
 
 export interface RoomPreset {
@@ -24,7 +35,7 @@ export interface QuestMapSectionPreset {
   x: number;
   y: number;
   rotation?: 0 | 90 | 180 | 270;
-  options?: {    
+  options?: {
     terrain?: Array<{
       id: string;
       x: number;
@@ -52,6 +63,7 @@ export interface CreaturePreset {
     inventory?: string[];
     equipment?: Record<string, string>;
     minHeroes?: number;
+    leader?: boolean;
   };
 }
 

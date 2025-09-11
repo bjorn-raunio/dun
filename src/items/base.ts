@@ -33,6 +33,8 @@ export class EquippableItem extends Item {
   isEquipped: boolean = false;
   broken: boolean = false; // whether the weapon is broken
   breakRoll: number; // roll equal or lower on 1d6 to break
+  rarity: number;
+  magical: boolean;
 
   constructor(params: {
     id?: string;
@@ -41,18 +43,21 @@ export class EquippableItem extends Item {
     weight?: number;
     value?: number;
     breakRoll?: number;
+    rarity?: number;
   }) {
     super({ id: params.id, name: params.name, weight: params.weight, value: params.value });
     this.slot = params.slot;
     this.breakRoll = params.breakRoll ?? 0;
+    this.rarity = params.rarity ?? 0;
+    this.magical = false;
   }
 
   /**
    * Break the item
    */
-  break(creature: ICreature): void {
-    if (!this.checkForBreaking()) {
-      return;
+  break(creature: ICreature, autoBreak: boolean = false): boolean {
+    if (this.broken || (!autoBreak && !this.checkForBreaking())) {
+      return false;
     }
     if (this.name === 'Unarmed') {
       creature.addStatusEffect(createStatusEffect('stunned', 'stunned', null, {
@@ -62,10 +67,11 @@ export class EquippableItem extends Item {
         },
         priority: 1
       }));
-      return;
+      return false;
     }
     this.broken = true;
     addGameMessage(`${creature.name}s ${this.name.toLowerCase()} breaks!`);
+    return true;
   }
 
   /**
@@ -99,15 +105,19 @@ export type WeaponAttack = {
   minRange: number;
   addStrength: boolean;
   type: WeaponAttackType;
+  shieldBreaking?: boolean;
+  breaksShieldsOnCritical?: boolean;
+  backStab?: boolean;
 }
 
 export class BaseWeapon extends EquippableItem {
   kind: "weapon" | "ranged_weapon";
   readonly attacks: WeaponAttack[];
   hands: 1 | 2;
-  properties?: string[];
   attributeModifiers?: Partial<Attributes>; // stat bonuses from equipment
   combatTriggers?: CombatTrigger[]; // combat triggers for weapon effects
+  fumble: number;
+  noPenaltyForDrawing?: boolean;
 
   constructor(params: {
     id?: string;
@@ -115,10 +125,11 @@ export class BaseWeapon extends EquippableItem {
     kind: "weapon" | "ranged_weapon";
     attacks: WeaponAttack[];
     hands: 1 | 2;
-    properties?: string[];
     attributeModifiers?: Partial<Attributes>;
     combatTriggers?: CombatTrigger[];
     breakRoll?: number;
+    fumble?: number;
+    noPenaltyForDrawing?: boolean;
     weight?: number;
     value?: number;
     slot?: string;
@@ -134,9 +145,10 @@ export class BaseWeapon extends EquippableItem {
     this.kind = params.kind;
     this.attacks = params.attacks;
     this.hands = params.hands;
-    this.properties = params.properties;
     this.attributeModifiers = params.attributeModifiers;
     this.combatTriggers = params.combatTriggers;
+    this.fumble = params.fumble ?? 1;
+    this.noPenaltyForDrawing = params.noPenaltyForDrawing ?? false;
   }
 
   getValidRange(): { min: number, max: number } {

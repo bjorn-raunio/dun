@@ -86,7 +86,7 @@ export function isBackAttack(attacker: ICreature, target: ICreature): boolean {
     return false;
   }
 
-  const isBack = isInBackArc(target.x, target.y, target.facing, attacker.x, attacker.y);
+  const isBack = isInBackArc(target.x, target.y, target.facing, attacker.x, attacker.y) && attacker.wasBehindTargetAtTurnStart(target);
 
   logCombat(`Back attack check: ${attacker.name} at (${attacker.x},${attacker.y}) attacking ${target.name} at (${target.x},${target.y})`, {
     targetFacing: target.facing,

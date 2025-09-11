@@ -41,15 +41,21 @@ export function roll2d6(bonus: number = 0): number {
   return rollXd6Sum(2, bonus);
 }
 
-export type DiceRoll = { total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean };
+export type DiceRoll = { total: number, dice: number[], modifier: number, fumble: boolean, criticalHit: boolean, criticalSuccess: boolean };
 
-export function calculateAttributeRoll(bonus: number): DiceRoll {
+export function calculateAttributeRoll(modifier: number, fumbleValue: number = 1): DiceRoll {
   const dice = rollXd6(2);
-  const total = dice.reduce((sum, roll) => sum + roll, 0) + bonus;
-  const fumble = dice.filter(roll => roll === 1).length >= 2;
+  const total = dice.reduce((sum, roll) => sum + roll, 0) + modifier;
+  let fumble = false;
+  for(let i = 1; i <= fumbleValue; i++) {
+    if(dice.filter(roll => roll === i).length >= 2) {
+      fumble = true;
+      break;
+    }
+  }
   const criticalHit = dice.some(roll => roll === 6);
   const criticalSuccess = dice.filter(roll => roll === 6).length >= 2;
-  return { total, dice, fumble, criticalHit, criticalSuccess };
+  return { total, dice, modifier, fumble, criticalHit, criticalSuccess };
 }
 
 /**

@@ -10,7 +10,7 @@ import { QuestMap } from '../maps/types';
 import { AITurnState } from './turnManagement/types';
 import { Party } from '../creatures/index';
 import { WorldMap } from '../worldmap/WorldMap';
-import { Scenario } from '../scenarios/Scenario';
+import { Campaign } from '../campaigns/Campaign';
 import { createQuestMapFromPresetWithWeather } from '../maps/presets';
 import { messageManager } from '../utils/messageSystem';
 
@@ -32,16 +32,16 @@ export function GameProvider({
   children,
   initialCreatures,
   mapDefinition = null,
-  scenario = null
+  campaign = null
 }: {
   children: React.ReactNode;
   initialCreatures: ICreature[];
   mapDefinition?: QuestMap | null;
-  scenario?: Scenario | null;
+  campaign?: Campaign | null;
 }) {
   const [state, dispatch] = useReducer(
     gameReducer,
-    getInitialGameState(initialCreatures, mapDefinition, scenario)
+    getInitialGameState(initialCreatures, mapDefinition, campaign)
   );
 
   // Initialize message system with dispatch function
@@ -100,8 +100,8 @@ export function GameProvider({
     }
   }, [mapDefinition, state.mapDefinition, state.party.currentRegionId, dispatch]);
 
-  // --- SCENARIO INITIALIZATION ---
-  // Scenario initialization is now handled in getInitialGameState
+  // --- CAMPAIGN INITIALIZATION ---
+  // Campaign initialization is now handled in getInitialGameState
 
   // --- ACTIONS ---
   const setCreatures = useCallback((updater: (prev: ICreature[]) => ICreature[]) => {
@@ -188,8 +188,8 @@ export function GameProvider({
     dispatch({ type: 'SET_MAP_DEFINITION', payload: mapDefinition });
   }, [dispatch]);
 
-  const setScenario = useCallback((scenario: Scenario | null) => {
-    dispatch({ type: 'SET_SCENARIO', payload: scenario });
+  const setCampaign = useCallback((campaign: Campaign | null) => {
+    dispatch({ type: 'SET_CAMPAIGN', payload: campaign });
   }, [dispatch]);
 
   const centerWorldmapOnParty = useCallback(() => {
@@ -220,11 +220,11 @@ export function GameProvider({
     setParty,
     setWorldMap,
     setMapDefinition,
-    setScenario,
+    setCampaign,
     centerWorldmapOnParty,
     centerQuestmapOnStartingTile,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, setScenario, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, setCampaign, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {

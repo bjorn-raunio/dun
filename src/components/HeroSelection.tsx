@@ -18,8 +18,11 @@ interface HeroCardProps {
 }
 
 function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }: HeroCardProps) {
+
+  const skills = [...preset.race.skills, ...preset.profession.skills, ...preset.skills ?? []];
+
   return (
-    <div 
+    <div
       style={{
         ...COMMON_STYLES.section,
         width: 300,
@@ -31,8 +34,8 @@ function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }
       onClick={isDisabled ? undefined : onSelect}
     >
       <div style={{ textAlign: 'center', marginBottom: 12 }}>
-        <img 
-          src={preset.image} 
+        <img
+          src={preset.image}
           alt={preset.name}
           style={{
             width: 60,
@@ -47,11 +50,18 @@ function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }
         <h3 style={{
           ...COMMON_STYLES.sectionHeader,
           textAlign: 'center',
-          margin: '0 0 12px 0',
+          margin: '0 0 6px 0',
           color: COLORS.primary,
         }}>
           {preset.name}
         </h3>
+        <div style={{
+          textAlign: 'center',
+          margin: '0 0 12px 0',
+          fontSize: '12px'
+        }}>
+          {preset.race.name} {preset.profession.name}
+        </div>
         <div style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ color: COLORS.textMuted, fontSize: '12px' }}>Movement:</span>
@@ -78,10 +88,10 @@ function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }
             <span style={{ color: COLORS.text, fontWeight: 'bold', fontSize: '12px' }}>{preset.attributes.intelligence}</span>
           </div>
         </div>
-        <div style={{ 
-          marginBottom: 12, 
-          paddingTop: 8, 
-          borderTop: `1px solid ${COLORS.border}` 
+        <div style={{
+          marginBottom: 12,
+          paddingTop: 8,
+          borderTop: `1px solid ${COLORS.border}`
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ color: COLORS.textMuted, fontSize: '12px' }}>Vitality:</span>
@@ -128,7 +138,7 @@ function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }
             </ul>
           </div>
         )}
-        {preset.skills && preset.skills.length > 0 && (
+        {(preset.race.skills.length > 0 || preset.profession.skills.length > 0 || (preset.skills && preset.skills.length > 0)) && (
           <div>
             <h4 style={{
               color: COLORS.primary,
@@ -138,14 +148,19 @@ function HeroCard({ preset, presetId, isSelected, isDisabled = false, onSelect }
             }}>
               Skills:
             </h4>
-            <ul style={{ margin: 0, paddingLeft: 16, listStyleType: 'none' }}>
-              {preset.skills.map((skill, index) => (
-                <li key={index} style={{ color: COLORS.text, fontSize: '11px', marginBottom: 2, position: 'relative' }}>
-                  <span style={{ color: COLORS.hero, position: 'absolute', left: -12 }}>•</span>
-                  {skill.name}
-                </li>
-              ))}
-            </ul>
+
+            {skills.length > 0 && (
+              <div>
+                <ul style={{ margin: 0, paddingLeft: 16, listStyleType: 'none' }}>
+                  {skills.map((skill, index) => (
+                    <li key={`character-${index}`} style={{ color: COLORS.text, fontSize: '11px', marginBottom: 2, position: 'relative' }}>
+                      <span style={{ color: COLORS.hero, position: 'absolute', left: -12 }}>•</span>
+                      {skill.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -200,7 +215,7 @@ export function HeroSelection({ onHeroesSelected }: HeroSelectionProps) {
           Choose heroes ({selectedPresetIds.length}/4)
         </h1>
       </div>
-      
+
       <div style={{
         display: 'flex',
         gap: 20,
@@ -219,9 +234,9 @@ export function HeroSelection({ onHeroesSelected }: HeroSelectionProps) {
           />
         ))}
       </div>
-      
+
       <div style={{ textAlign: 'center' }}>
-        <button 
+        <button
           style={{
             ...BUTTON_VARIANTS.action,
             padding: '12px 32px',

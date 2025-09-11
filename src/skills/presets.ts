@@ -54,6 +54,11 @@ export const SKILL_PRESETS: { [key: string]: Skill } = {
     type: "academic",
     description: "",
   },
+  "inspiring": {
+    name: "Inspiring",
+    type: "academic",
+    description: ""
+  },
   "ironWill": {
     name: "Iron Will",
     type: "academic",

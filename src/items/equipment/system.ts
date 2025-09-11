@@ -44,7 +44,7 @@ export class EquipmentSystem {
     if (!validation.isValid) {
       return validation;
     }
-    
+
     // Type assertion to ensure the item is compatible with the slot
     if (slot === 'mainHand' && item.isWeapon()) {
       this.slots[slot] = item;
@@ -53,7 +53,7 @@ export class EquipmentSystem {
     } else if (slot === 'armor' && item instanceof Armor) {
       this.slots[slot] = item;
     }
-    
+
     return { isValid: true };
   }
 
@@ -126,13 +126,13 @@ export class EquipmentSystem {
   hasFreeHand(): boolean {
     const mainHandWeapon = this.getWeaponFromSlot(this.slots.mainHand);
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
-    
+
     // Check if main hand is free (no weapon or broken weapon)
     const mainHandFree = !mainHandWeapon || mainHandWeapon.isBroken();
-    
+
     // Check if off hand is free (no weapon or broken weapon)
     const offHandFree = !offHandWeapon || offHandWeapon.isBroken();
-    
+
     // Creature has a free hand if either hand is free
     return mainHandFree || offHandFree;
   }
@@ -148,7 +148,7 @@ export class EquipmentSystem {
 
     // Only consider functional natural weapons (same as equipped weapons)
     const functionalNaturalWeapons = this.naturalWeapons.filter(weapon => !weapon.isBroken());
-    
+
     if (functionalNaturalWeapons.length === 0) {
       return null;
     }
@@ -188,9 +188,9 @@ export class EquipmentSystem {
    * Check if creature has a melee weapon equipped
    */
   hasMeleeWeapon(): boolean {
-    return (this.slots.mainHand?.isWeapon() && this.slots.mainHand.isMeleeWeapon()) || 
-           (this.slots.offHand?.isWeapon() && this.slots.offHand.isMeleeWeapon()) ||
-           this.isUnarmed(); // Unarmed creatures count as having a melee weapon
+    return (this.slots.mainHand?.isWeapon() && this.slots.mainHand.isMeleeWeapon()) ||
+      (this.slots.offHand?.isWeapon() && this.slots.offHand.isMeleeWeapon()) ||
+      this.isUnarmed(); // Unarmed creatures count as having a melee weapon
   }
 
   /**
@@ -200,25 +200,25 @@ export class EquipmentSystem {
   isUnarmed(): boolean {
     const mainHandWeapon = this.getWeaponFromSlot(this.slots.mainHand);
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
-    
+
     const hasMainHandWeapon = mainHandWeapon !== null;
     const hasOffHandWeapon = offHandWeapon !== null;
-    
+
     // If no weapons at all, creature is unarmed (even if they have natural weapons)
     if (!hasMainHandWeapon && !hasOffHandWeapon) {
       return true;
     }
-    
+
     // If main hand weapon is broken and no off hand weapon, creature is unarmed
     if (hasMainHandWeapon && mainHandWeapon.isBroken() && !hasOffHandWeapon) {
       return true;
     }
-    
+
     // If both weapons are broken, creature is unarmed
     if (hasMainHandWeapon && hasOffHandWeapon && mainHandWeapon.isBroken() && offHandWeapon.isBroken()) {
       return true;
     }
-    
+
     // Creature has at least one functional weapon
     return false;
   }
@@ -240,23 +240,23 @@ export class EquipmentSystem {
   getMainWeapon(): BaseWeapon {
     const mainHandWeapon = this.getWeaponFromSlot(this.slots.mainHand);
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
-    
+
     // Try main hand first
     if (mainHandWeapon && !mainHandWeapon.isBroken()) {
       return mainHandWeapon;
     }
-    
+
     // Try off hand if main hand is broken or empty
     if (offHandWeapon && !offHandWeapon.isBroken()) {
       return offHandWeapon;
     }
-    
+
     // Try natural weapons if no equipped weapons
     const bestNaturalWeapon = this.getBestNaturalWeapon();
     if (bestNaturalWeapon) {
       return bestNaturalWeapon;
     }
-    
+
     // Return unarmed weapon only if no natural weapons available
     return this.unarmedWeapon;
   }
@@ -267,17 +267,17 @@ export class EquipmentSystem {
    */
   getOffHandWeapon(): BaseWeapon {
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
-    
+
     if (offHandWeapon && !offHandWeapon.isBroken()) {
       return offHandWeapon;
     }
-    
+
     // Try natural weapons if no offhand weapon
     const bestNaturalWeapon = this.getBestNaturalWeapon();
     if (bestNaturalWeapon) {
       return bestNaturalWeapon;
     }
-    
+
     // Return unarmed weapon only if no natural weapons available
     return this.unarmedWeapon;
   }
@@ -297,7 +297,7 @@ export class EquipmentSystem {
     const mainWeapon = this.getWeaponFromSlot(this.slots.mainHand);
     const offHandWeapon = this.getWeaponFromSlot(this.slots.offHand);
     const bestNaturalWeapon = this.getBestNaturalWeapon();
-    
+
     // Calculate combat bonuses for each weapon (broken weapons use unarmed bonus)
     const mainBonus = mainWeapon && !mainWeapon.isBroken() ? mainWeapon.attacks.find(attack => attack.type === "melee")?.toHitModifier ?? -Infinity : -Infinity;
     const offHandBonus = offHandWeapon && !offHandWeapon.isBroken() ? offHandWeapon.attacks.find(attack => attack.type === "melee")?.toHitModifier ?? -Infinity : -Infinity;
@@ -356,7 +356,7 @@ export class EquipmentSystem {
    */
   getSummary(): string {
     const parts: string[] = [];
-    
+
     if (this.slots.mainHand) {
       parts.push(`Main: ${this.slots.mainHand.name}`);
     }
@@ -366,7 +366,7 @@ export class EquipmentSystem {
     if (this.slots.armor) {
       parts.push(`Armor: ${this.slots.armor.name}`);
     }
-    
+
     return parts.length > 0 ? parts.join(', ') : 'No equipment';
   }
 }

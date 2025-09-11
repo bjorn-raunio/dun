@@ -12,6 +12,7 @@ import { CombatResult } from '../utils/combat/types';
 import { PathfindingResult } from '../utils/pathfinding/types';
 import { Skill } from '../skills';
 import { AIState } from '../ai/types';
+import { DiceRoll } from '../utils';
 
 // --- Core Creature Interfaces ---
 
@@ -25,7 +26,6 @@ export interface ICreature {
   quickActions: number;
   mapWidth: number;
   mapHeight: number;
-  size: number;
   inventory: Item[];
   equipment: EquipmentSlots;
   vitality: number;
@@ -33,7 +33,6 @@ export interface ICreature {
   fortune: number;
   naturalArmor: number;
   group: CreatureGroup; // CHANGED from string
-  skills: Skill[];
   running: boolean;
   
   // Position
@@ -52,6 +51,7 @@ export interface ICreature {
   remainingMana: number;
   remainingFortune: number;
   hasMovedWhileEngaged: boolean;
+  swappedWeapons: boolean;
   
   // State methods
   isAlive(): boolean;
@@ -75,6 +75,8 @@ export interface ICreature {
   get dexterity(): number;
   get effectiveActions(): number;
   get effectiveQuickActions(): number;
+
+  get leader(): boolean;
   
   // Combat
   getArmorValue(): number;
@@ -144,6 +146,7 @@ export interface ICreature {
   get turnStartX(): number | undefined;
   get turnStartY(): number | undefined;
   get turnStartFacing(): number | undefined;
+  get size(): number;
   
   // Cloning
   clone(overrides?: Partial<ICreature>): ICreature;
@@ -174,12 +177,11 @@ export interface ICreature {
   getFacingArrow(): string | undefined;
   getFacingName(): string | undefined;
   faceTowards(targetX: number, targetY: number): void;
-  getAllSkills(): Array<{ name: string; type: string; description?: string }>;
   invalidateEquipmentCache?(): void;
   getHeight(): number;
   
   // Skill methods
-  getSkills(): Skill[];
+  get skills(): Skill[]
   hasSkill(skillName: string): boolean;
   getSkillsByType(type: string): Skill[];
   getSkillEffectsSummary(): string[];
@@ -193,7 +195,7 @@ export interface ICreature {
   recordPushedCreature(targetId: string): void;
   
   // Attribute test method
-  performAttributeTest(attributeName: keyof Attributes, modifier?: number): { success: boolean, modifier: number, total: number; dice: number[], fumble: boolean, criticalHit: boolean, criticalSuccess: boolean };
+  performAttributeTest(attributeName: keyof Attributes, modifier?: number, fumbleValue?: number): DiceRoll & { success: boolean };
   
   // Effective movement getter
   get effectiveMovement(): number;

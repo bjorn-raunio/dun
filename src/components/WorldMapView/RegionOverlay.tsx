@@ -15,6 +15,8 @@ export function RegionOverlay({
   onRegionClick, 
   onRegionHover 
 }: RegionOverlayProps) {
+  // Get the current region to determine which regions are adjacent
+  const currentRegion = regions.find(r => r.id === currentRegionId);
   return (
     <svg
       style={{
@@ -36,6 +38,7 @@ export function RegionOverlay({
       {regions.map(region => {
         const isCurrentRegion = region.id === currentRegionId;
         const isExplored = region.isExplored;
+        const isAdjacent = currentRegion ? currentRegion.isConnectedTo(region.id) : false;
         
         // Vertices are now absolute world coordinates
         const points = region.vertices.map(vertex => 
@@ -43,11 +46,30 @@ export function RegionOverlay({
         ).join(' ');
         
         // Determine colors based on region state
-        const borderColor = 'transparent'; // No border for all regions
+        let borderColor = 'transparent';
+        let fillColor = 'transparent';
+        let strokeWidth = 0;
+        let cursor = 'default';
         
-        const fillColor = 'transparent'; // Transparent by default
-        
-        const strokeWidth = 0; // No border width
+        if (isCurrentRegion) {
+          // Current region - highlight in blue
+          borderColor = '#4A90E2';
+          fillColor = 'rgba(74, 144, 226, 0.1)';
+          strokeWidth = 2;
+          cursor = 'default';
+        } else if (isAdjacent && region.isAccessible) {
+          // Adjacent accessible region - highlight in green
+          borderColor = '#7ED321';
+          fillColor = 'rgba(126, 211, 33, 0.1)';
+          strokeWidth = 2;
+          cursor = 'pointer';
+        } else if (isAdjacent && !region.isAccessible) {
+          // Adjacent but inaccessible region - highlight in red
+          borderColor = '#D0021B';
+          fillColor = 'rgba(208, 2, 27, 0.1)';
+          strokeWidth = 2;
+          cursor = 'not-allowed';
+        }
         
         return (
           <g key={region.id}>
@@ -60,10 +82,15 @@ export function RegionOverlay({
               className="region-polygon"
               filter="url(#regionBlur)"
               style={{
-                cursor: 'pointer',
+                cursor: cursor,
                 pointerEvents: 'all',
               }}
-              onClick={() => onRegionClick?.(region)}
+              onClick={() => {
+                // Only allow clicking on adjacent regions
+                if (isAdjacent && region.isAccessible) {
+                  onRegionClick?.(region);
+                }
+              }}
               onMouseEnter={() => onRegionHover?.(region)}
               onMouseLeave={() => onRegionHover?.(null)}
             />

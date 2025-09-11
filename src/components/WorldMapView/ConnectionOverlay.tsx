@@ -12,7 +12,7 @@ export function ConnectionOverlay({ regions, currentRegionId }: ConnectionOverla
   
   if (!currentRegion) return null;
 
-  const connections = currentRegion.connections.filter(conn => !conn.isBlocked);
+  const connections = currentRegion.connections;
   
   return (
     <svg
@@ -33,25 +33,12 @@ export function ConnectionOverlay({ regions, currentRegionId }: ConnectionOverla
         const start = currentRegion.getCenterPosition();
         const end = targetRegion.getCenterPosition();
         
-        // Calculate connection line properties based on type
-        const getConnectionStyle = (connType: RegionConnection['connectionType']) => {
-          switch (connType) {
-            case 'road':
-              return { stroke: '#8B4513', strokeWidth: 4, strokeDasharray: 'none' };
-            case 'path':
-              return { stroke: '#654321', strokeWidth: 2, strokeDasharray: 'none' };
-            case 'river':
-              return { stroke: '#4169E1', strokeWidth: 3, strokeDasharray: 'none' };
-            case 'mountain_pass':
-              return { stroke: '#696969', strokeWidth: 2, strokeDasharray: '5,5' };
-            case 'sea':
-              return { stroke: '#1E90FF', strokeWidth: 3, strokeDasharray: '10,5' };
-            default:
-              return { stroke: '#666', strokeWidth: 2, strokeDasharray: 'none' };
-          }
+        const style = { 
+          stroke: '#7ED321', 
+          strokeWidth: 3, 
+          strokeDasharray: 'none',
+          opacity: 0.8
         };
-
-        const style = getConnectionStyle(connection.connectionType);
         
         return (
           <g key={`${currentRegion.id}-${targetRegion.id}-${index}`}>
@@ -79,7 +66,6 @@ export function ConnectionOverlay({ regions, currentRegionId }: ConnectionOverla
                 pointerEvents: 'none',
               }}
             >
-              {connection.distance}
             </text>
           </g>
         );
@@ -97,7 +83,7 @@ export function ConnectionOverlay({ regions, currentRegionId }: ConnectionOverla
         >
           <polygon
             points="0 0, 10 3.5, 0 7"
-            fill="#666"
+            fill="#7ED321"
           />
         </marker>
       </defs>

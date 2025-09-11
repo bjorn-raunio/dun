@@ -1,6 +1,8 @@
 import { HeroPreset } from '../presets/types';
 import { CreatureGroup } from '../CreatureGroup';
 import { SKILL_PRESETS } from '../../skills';
+import PROFESSIONS from './professions/presets';
+import RACES from './races/presets';
 
 // --- Hero Presets ---
 
@@ -8,6 +10,8 @@ export const heroPresets: Record<string, HeroPreset> = {
 
     herbod: {
         name: 'Herbod',
+        profession: PROFESSIONS.warriorMonk,
+        race: RACES.human,
         image: 'creatures/human.png',
         attributes: {
             movement: 5,
@@ -19,7 +23,6 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 4,
         },
         actions: 1,
-        size: 2,
         equipment: {
             mainHand: { type: "weapon", preset: "mace" },
             offHand: { type: "shield", preset: "shield" },
@@ -35,12 +38,13 @@ export const heroPresets: Record<string, HeroPreset> = {
         fortune: 6,
         group: CreatureGroup.PLAYER,
         skills: [
-            SKILL_PRESETS.lostInTheDark,
             SKILL_PRESETS.ironWill,
         ]
     },
     taeral: {
         name: 'Taeral',
+        race: RACES.elf,
+        profession: PROFESSIONS.forester,
         image: 'creatures/elf.png',
         attributes: {
             movement: 5,
@@ -52,7 +56,6 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 5,
         },
         actions: 1,
-        size: 2,
         equipment: {
             mainHand: { type: "ranged_weapon", preset: "longbow" },
             armor: { type: "armor", preset: "leatherArmor" },
@@ -64,15 +67,12 @@ export const heroPresets: Record<string, HeroPreset> = {
         mana: 5,
         fortune: 5,
         group: CreatureGroup.PLAYER,
-        skills: [            
-            SKILL_PRESETS.sharpSenses,
-            SKILL_PRESETS.battleWizard,
-            SKILL_PRESETS.tamingAnimals,
-            SKILL_PRESETS.scout,
-        ]
+        skills: []
     },
     bosco: {
         name: 'Bosco',
+        race: RACES.halfling,
+        profession: PROFESSIONS.rogue,
         image: 'creatures/halfling.png',
         attributes: {
             movement: 5,
@@ -84,7 +84,6 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 4,
         },
         actions: 1,
-        size: 1,
         equipment: {
             mainHand: { type: "weapon", preset: "dagger" },
             offHand: { type: "ranged_weapon", preset: "sling" },
@@ -100,16 +99,12 @@ export const heroPresets: Record<string, HeroPreset> = {
         mana: 0,
         fortune: 8,
         group: CreatureGroup.PLAYER,
-        skills: [            
-            SKILL_PRESETS.lostInTheDark,
-            SKILL_PRESETS.stealth,
-            SKILL_PRESETS.small,
-            SKILL_PRESETS.mislead,
-            SKILL_PRESETS.skulk,
-        ]
+        skills: []
     },
     cryxx: {
         name: 'Cryxx',
+        race: RACES.shardmin,
+        profession: PROFESSIONS.wizard,
         image: 'creatures/shardmind.png',
         attributes: {
             movement: 5,
@@ -121,7 +116,6 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 5,
         },
         actions: 1,
-        size: 2,
         equipment: {
             mainHand: { type: "weapon", preset: "staff" },
         },
@@ -139,9 +133,6 @@ export const heroPresets: Record<string, HeroPreset> = {
         mana: 8,
         fortune: 6,
         group: CreatureGroup.PLAYER,
-        skills: [            
-            SKILL_PRESETS.crystalBody,
-            SKILL_PRESETS.secretsOfMagic,
-        ]
+        skills: []
     }
 };

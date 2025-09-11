@@ -10,8 +10,8 @@ interface InventorySectionProps {
 }
 
 export function InventorySection({ creature, onUpdate }: InventorySectionProps) {
-  const { mapDefinition } = useGameState();
-  const { handleEquip, handleDropItem, canEquipToSlot, canSwitchWeaponOrShield } = useEquipment(creature, mapDefinition, onUpdate);
+  const { mapDefinition, creatures } = useGameState();
+  const { handleEquip, handleDropItem, canEquipToSlot, canSwitchWeaponOrShield } = useEquipment(creature, mapDefinition, creatures, onUpdate);
 
   return (
     <div style={{ 

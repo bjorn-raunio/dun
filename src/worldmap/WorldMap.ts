@@ -81,7 +81,7 @@ export class WorldMap implements WorldMapType {
   }
 
   /**
-   * Travel to a new region
+   * Travel to a new region - enforces adjacency requirement
    */
   travelToRegion(currentRegionId: string, targetRegionId: string, connectionUsed: RegionConnection): boolean {
     const targetRegion = this.regions.get(targetRegionId);
@@ -90,9 +90,14 @@ export class WorldMap implements WorldMapType {
     const currentRegion = this.regions.get(currentRegionId);
     if (!currentRegion) return false;
 
+    // Check if the target region is adjacent (connected)
+    if (!currentRegion.isConnectedTo(targetRegionId)) {
+      throw new Error(`Cannot travel to ${targetRegionId}: Region is not adjacent to current region ${currentRegionId}`);
+    }
+
     // Check if the connection exists and is accessible
     const connection = currentRegion.getConnectionsTo(targetRegionId).find(
-      (conn: RegionConnection) => conn === connectionUsed && !conn.isBlocked
+      (conn: RegionConnection) => conn === connectionUsed
     );
 
     if (!connection) {
