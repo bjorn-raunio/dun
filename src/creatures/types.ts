@@ -5,6 +5,8 @@ import { CreatureGroup } from './CreatureGroup';
 import { Skill } from '../skills';
 import { Profession } from './heroes/professions/profession';
 import { Race } from './heroes/races/race';
+import { SpellSchool } from '../spells/spellSchool';
+import { Spell } from '../spells';
 
 // --- Core Creature Types ---
 
@@ -53,8 +55,9 @@ export interface CreatureConstructorParams {
   naturalArmor?: number;
   group: CreatureGroup; // CHANGED from CreatureGroupType
   skills?: Skill[];
+  spellSchools?: SpellSchool[];
+  knownSpells?: Spell[];
   naturalWeapons?: NaturalWeapon[];
-  leader?: boolean;
 }
 
 export type CreatureAction = 'run' | 'disengage' | 'search';

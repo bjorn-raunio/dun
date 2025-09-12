@@ -108,6 +108,7 @@ export type WeaponAttack = {
   shieldBreaking?: boolean;
   breaksShieldsOnCritical?: boolean;
   backStab?: boolean;
+  ignoresArmor?: boolean;
 }
 
 export class BaseWeapon extends EquippableItem {

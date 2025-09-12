@@ -5,6 +5,7 @@ import { CreatureStats } from './CreatureStats';
 import { EquipmentSection } from './EquipmentSection';
 import { InventorySection } from './InventorySection';
 import { SkillsSection } from './SkillsSection';
+import { SpellsSection } from './SpellsSection';
 import { COLORS } from '../styles';
 
 interface TabbedCharacterPanelProps {
@@ -12,17 +13,20 @@ interface TabbedCharacterPanelProps {
   onUpdate?: (creature: ICreature) => void;
   onAttack?: (creature: ICreature, offhand?: boolean) => void;
   canAttack?: (creature: ICreature) => boolean;
+  onClose?: () => void;
 }
 
-type TabType = 'stats' | 'equipment' | 'skills';
+type TabType = 'stats' | 'equipment' | 'skills' | 'spells';
 
 export function TabbedCharacterPanel({ 
   creature, 
   onUpdate, 
   onAttack, 
-  canAttack
+  canAttack,
+  onClose
 }: TabbedCharacterPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('stats');
+  const hasSpells = creature.getKnownSpells().length > 0;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -60,6 +64,8 @@ export function TabbedCharacterPanel({
         );
       case 'skills':
         return <SkillsSection creature={creature} />;
+      case 'spells':
+        return hasSpells ? <SpellsSection creature={creature} onUpdate={onUpdate} onClose={onClose} /> : <CreatureStats creature={creature} />;
       default:
         return <CreatureStats creature={creature} />;
     }
@@ -97,6 +103,14 @@ export function TabbedCharacterPanel({
         >
           Skills
         </TabButton>
+        {hasSpells && (
+          <TabButton 
+            active={activeTab === 'spells'} 
+            onClick={() => setActiveTab('spells')}
+          >
+            Spells ({creature.getKnownSpells().length})
+          </TabButton>
+        )}
       </div>
 
       {/* Tab Content */}

@@ -181,6 +181,71 @@ function findBestPosition(
 }
 
 /**
+ * Get the best spell to cast for the creature
+ */
+function getBestSpell(creature: ICreature, target: ICreature, allCreatures: ICreature[]): import('../spells').Spell | null {
+  const knownSpells = creature.getKnownSpells();
+  if (knownSpells.length === 0) return null;
+
+  // Filter spells that can be cast
+  const castableSpells = knownSpells.filter(spell => creature.canCastSpell(spell, allCreatures));
+  if (castableSpells.length === 0) return null;
+
+  // Score spells based on effectiveness and range
+  let bestSpell: import('../spells').Spell | null = null;
+  let bestScore = -Infinity;
+
+  for (const spell of castableSpells) {
+    let score = 0;
+
+    // Check if target is valid and in range
+    const validTargets = creature.getValidTargets(spell, allCreatures);
+    if (spell.targetType === 'enemy' && !validTargets.includes(target)) continue;
+    if (spell.targetType === 'ally' && !validTargets.includes(target)) continue;
+    if (spell.targetType === 'self' && creature.id !== target.id) continue;
+
+    // Score based on spell effect
+    if (spell.effect.damage) {
+      score += spell.effect.damage.damageModifier * 10; // Damage is valuable
+    }
+    if (spell.effect.heal) {
+      score += spell.effect.heal * 5; // Healing is valuable but less than damage
+    }
+    if (spell.effect.areaOfEffect) {
+      score += spell.effect.areaOfEffect * 3; // AOE is valuable
+    }
+
+    // Prefer spells with longer range
+    score += spell.range * 2;
+
+    // Prefer cheaper spells (more efficient)
+    score += (10 - spell.cost) * 2;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestSpell = spell;
+    }
+  }
+
+  return bestSpell;
+}
+
+/**
+ * Check if creature should prioritize spell casting over melee
+ */
+function shouldPrioritizeSpells(creature: ICreature, behavior: AIBehaviorType): boolean {
+  // Casters always prioritize spells
+  if (behavior.name === 'caster') return true;
+  
+  // If creature has spells and is low on health, consider casting
+  if (creature.getKnownSpells().length > 0 && creature.remainingVitality < creature.vitality * 0.3) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Make an AI decision for the creature's turn
  */
 export function makeAIDecision(
@@ -202,6 +267,15 @@ export function makeAIDecision(
 
   logAI(`${creature.name} (${behavior.name}) targeting ${target.name}`);
 
+  // Check if we should prioritize spell casting
+  if (shouldPrioritizeSpells(creature, behavior) && creature.remainingActions > 0) {
+    const bestSpell = getBestSpell(creature, target, allCreatures);
+    if (bestSpell) {
+      logAI(`${creature.name} casting ${bestSpell.name} on ${target.name}`);
+      return { type: 'cast', target, spell: bestSpell };
+    }
+  }
+
   // Check if we can attack the target from current position using comprehensive validation
   if (validatePositions(creature, target) && creature.remainingActions > 0) {
     const weapon = creature.getMainWeapon();
@@ -212,6 +286,15 @@ export function makeAIDecision(
       return { type: 'attack', target };
     } else {
       logAI(`${creature.name} cannot attack ${target.name} from current position: ${validation.reason}`);
+    }
+  }
+
+  // If we can't attack but have spells, try casting
+  if (creature.remainingActions > 0) {
+    const bestSpell = getBestSpell(creature, target, allCreatures);
+    if (bestSpell) {
+      logAI(`${creature.name} casting ${bestSpell.name} on ${target.name}`);
+      return { type: 'cast', target, spell: bestSpell };
     }
   }
 
@@ -233,8 +316,9 @@ export function makeAIDecision(
 // --- AI Decision Types ---
 
 export interface AIDecision {
-  type: 'attack' | 'move' | 'wait';
+  type: 'attack' | 'move' | 'wait' | 'cast';
   target?: ICreature;
   position?: { x: number; y: number };
+  spell?: import('../spells').Spell;
   reason?: string;
 }

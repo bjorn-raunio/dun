@@ -4,6 +4,7 @@ import { QuestMap } from '../../maps/types';
 import { findCreatureById } from '../../utils/pathfinding';
 import { executeMovement } from '../../utils/movement';
 import { logMovement, logGame } from '../../utils/logging';
+import { animationManager } from '../../animations';
 
 // Simplified interfaces for better readability
 interface ReachableData {
@@ -22,7 +23,7 @@ interface MovementParams {
 }
 
 export interface MovementHandlers {
-  handleMovement: (params: MovementParams) => boolean;
+  handleMovement: (params: MovementParams) => Promise<boolean>;
 }
 
 export function createMovementHandlers(
@@ -110,7 +111,7 @@ export function createMovementHandlers(
     setTargetsInRangeKey(prev => prev + 1);
   }
 
-  function handleMovement(params: MovementParams): boolean {
+  async function handleMovement(params: MovementParams): Promise<boolean> {
     const { selectedCreatureId, targetX, targetY, creatures, reachable, mapDefinition } = params;
 
     // Find selected creature once
@@ -143,18 +144,24 @@ export function createMovementHandlers(
       remainingMovement: selected.remainingMovement
     });
 
-    setCreatures(prev => {
-      // Check for duplicate movement
-      if (isDuplicateMovement(selectedCreatureId, targetX, targetY)) {
-        logMovement(`Skipping duplicate movement to (${targetX},${targetY})`);
-        return prev;
-      }
+    // Check for duplicate movement
+    if (isDuplicateMovement(selectedCreatureId, targetX, targetY)) {
+      logMovement(`Skipping duplicate movement to (${targetX},${targetY})`);
+      return false;
+    }
 
-      const targetCreature = findCreatureById(prev, selectedCreatureId);
+    // Store the original position before movement
+    const originalPosition = { x: selected.x!, y: selected.y! };
+
+    let moveResult: any = null;
+    let targetCreature: ICreature | null = null;
+
+    setCreatures(prev => {
+      targetCreature = findCreatureById(prev, selectedCreatureId);
       if (!targetCreature) return prev;
 
       // Execute movement
-      const moveResult = executeMovement(targetCreature, path, prev, stepCost, mapDefinition);
+      moveResult = executeMovement(targetCreature, path, prev, stepCost, mapDefinition);
       
       if (moveResult.status === 'success' || moveResult.status === 'partial') {
         const statusText = moveResult.status === 'partial' ? 'partial' : 'complete';
@@ -169,10 +176,82 @@ export function createMovementHandlers(
       return prev;
     });
 
+    // If movement was successful, animate it
+    if (moveResult && (moveResult.status === 'success' || moveResult.status === 'partial') && targetCreature) {
+      // Animate the movement through each step, updating game state as we go
+      await animateMovementPathWithStateUpdate(selectedCreatureId, path);
+    }
+
     // Force recalculation
     forceRecalculation();
 
     return true;
+  }
+
+  // Helper function to animate movement through each step of the path
+  async function animateMovementPath(creatureId: string, path: Array<{ x: number; y: number }>): Promise<void> {
+    if (path.length <= 1) return;
+
+    // Animate through each step of the path
+    for (let i = 1; i < path.length; i++) {
+      const currentTile = path[i - 1];
+      const nextTile = path[i];
+
+      // Add movement animation for this step
+      const animationId = animationManager.addMovementAnimation(
+        creatureId,
+        { x: currentTile.x, y: currentTile.y },
+        { x: nextTile.x, y: nextTile.y }
+      );
+
+      // Wait for animation to complete before moving to next step
+      await waitForAnimation(animationId);
+    }
+  }
+
+  // Helper function to animate movement and update game state as each step completes
+  async function animateMovementPathWithStateUpdate(creatureId: string, path: Array<{ x: number; y: number }>): Promise<void> {
+    if (path.length <= 1) return;
+
+    // Animate through each step of the path
+    for (let i = 1; i < path.length; i++) {
+      const currentTile = path[i - 1];
+      const nextTile = path[i];
+
+      // Add movement animation for this step
+      const animationId = animationManager.addMovementAnimation(
+        creatureId,
+        { x: currentTile.x, y: currentTile.y },
+        { x: nextTile.x, y: nextTile.y }
+      );
+
+      // Wait for animation to complete
+      await waitForAnimation(animationId);
+
+      // Update creature position in game state after each step
+      setCreatures(prev => {
+        const creature = findCreatureById(prev, creatureId);
+        if (creature) {
+          creature.x = nextTile.x;
+          creature.y = nextTile.y;
+        }
+        return prev;
+      });
+    }
+  }
+
+  // Helper function to wait for animation completion
+  function waitForAnimation(animationId: string): Promise<void> {
+    return new Promise((resolve) => {
+      const checkAnimation = () => {
+        if (animationManager.isAnimationComplete(animationId)) {
+          resolve();
+        } else {
+          requestAnimationFrame(checkAnimation);
+        }
+      };
+      checkAnimation();
+    });
   }
 
   return {

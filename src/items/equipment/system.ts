@@ -338,8 +338,8 @@ export class EquipmentSystem {
   /**
    * Get effective armor value (equipped armor or natural armor)
    */
-  getEffectiveArmor(naturalArmor: number): number {
-    return CombatCalculator.getEffectiveArmor(naturalArmor, this.slots.armor);
+  getEffectiveArmor(naturalArmor: number, ignoresArmor: boolean = false): number {
+    return CombatCalculator.getEffectiveArmor(naturalArmor, this.slots.armor, ignoresArmor);
   }
 
   /**

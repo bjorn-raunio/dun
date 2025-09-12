@@ -6,6 +6,7 @@ import { WeatherIndicator } from './WeatherIndicator';
 import { TurnState } from '../game/turnManagement';
 import { ICreature } from '../creatures/index';
 import { QuestMap } from '../maps/types';
+import { TargetingMode } from '../game/types';
 
 // --- Game UI Component ---
 
@@ -17,8 +18,10 @@ interface GameUIProps {
   turnState: TurnState;
   creatures: ICreature[];
   onCreatureClick?: (creature: ICreature) => void;
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  targetingMode?: TargetingMode;
   mapDefinition: QuestMap;
+  animationsEnabled: boolean;
+  onToggleAnimations: () => void;
 }
 
 export function GameUI({
@@ -30,7 +33,9 @@ export function GameUI({
   creatures,
   onCreatureClick,
   targetingMode,
-  mapDefinition
+  mapDefinition,
+  animationsEnabled,
+  onToggleAnimations
 }: GameUIProps) {
   return (
     <div
@@ -88,8 +93,22 @@ export function GameUI({
         <DayNightIndicator isNight={mapDefinition.night} />
 
         <WeatherIndicator />
-      </div>
 
+        {/*<button
+          onClick={onToggleAnimations}
+          style={{
+            ...COMMON_STYLES.button,
+            fontSize: '12px',
+            padding: '4px 8px',
+            background: animationsEnabled ? COLORS.primary : COLORS.background,
+            color: animationsEnabled ? COLORS.background : COLORS.text,
+            border: `1px solid ${COLORS.border}`,
+            cursor: 'pointer',
+          }}
+        >
+          {animationsEnabled ? 'Animations ON' : 'Animations OFF'}
+        </button>*/}
+      </div>
       <button
         onClick={onLeaveMap}
         style={{

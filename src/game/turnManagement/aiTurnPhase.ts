@@ -27,20 +27,20 @@ export function getAIControlledGroups(creatures: CreatureGroup[]): CreatureGroup
 /**
  * Execute AI turns for all creatures in a group
  */
-export function executeAITurnsForGroup(
+export async function executeAITurnsForGroup(
   group: CreatureGroup,
   context: TurnExecutionContext
-): void {
+): Promise<void> {
   const allCreatures = context.creatures.filter(c => c.x !== undefined && c.y !== undefined);
   // Sort by behavior (ranged before melee) then by agility for turn order within group
   const sortedGroup = [...group.getLivingCreatures(context.creatures)].filter(c => c.x !== undefined && c.y !== undefined).sort((a, b) => compareAICreaturesByBehavior(a, b));
   
   // Execute turns for each creature in the group
-  sortedGroup.forEach(creature => {
+  for (const creature of sortedGroup) {
     if (shouldAITakeTurn(creature, allCreatures)) {
-      executeAITurnForCreature(creature, context);
+      await executeAITurnForCreature(creature, context);
     }
-  });
+  }
 }
 
 /**
@@ -74,16 +74,16 @@ export function startAITurnPhase(
 /**
  * Continue AI turn phase
  */
-export function continueAITurnPhase(
+export async function continueAITurnPhase(
   aiTurnState: AITurnState,
   context: TurnExecutionContext
-): AITurnState {
+): Promise<AITurnState> {
   if (!aiTurnState.isAITurnActive || !aiTurnState.currentGroup) {
     return aiTurnState;
   }
   
   // Execute turns for current group
-  executeAITurnsForGroup(aiTurnState.currentGroup, context);
+  await executeAITurnsForGroup(aiTurnState.currentGroup, context);
   
   // Move to next group
   const nextGroupIndex = aiTurnState.groupTurnIndex + 1;

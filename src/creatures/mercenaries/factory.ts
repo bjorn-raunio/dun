@@ -4,6 +4,7 @@ import { mercenaryPresets } from './presets';
 import { MercenaryPreset } from '../presets/types';
 import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
 import { Item } from '../../items';
+import { SpellSchool } from '../../spells/spellSchool';
 
 // --- Factory Functions ---
 
@@ -130,6 +131,8 @@ export function createMercenary(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
     group: overrides?.group ?? CreatureGroup.PLAYER,
     skills: overrides?.skills ?? p.skills,
+    spellSchools: overrides?.spellSchools ?? p.spellSchools,
+    knownSpells: overrides?.knownSpells ?? (overrides?.spellSchools ?? p.spellSchools)?.flatMap((school: SpellSchool) => Object.values(school.spells)) ?? [],
     naturalWeapons: (overrides as any)?.naturalWeapons ?? naturalWeapons,
     // Mercenary-specific properties
     hireCost: overrides?.hireCost ?? p.hireCost,

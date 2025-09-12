@@ -17,7 +17,7 @@ import { addTurnMessage } from '../utils/messageSystem';
 /**
  * End turn and start AI turn phase
  */
-export function endTurn(
+export async function endTurn(
   groups: CreatureGroup[],
   creatures: ICreature[],
   mapDefinition: QuestMap | undefined,
@@ -49,7 +49,7 @@ export function endTurn(
 
   // If there are AI creatures, execute their first group's turns
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
-    executeNextAIGroup(newAITurnState, context, dispatch);
+    await executeNextAIGroup(newAITurnState, context, dispatch);
   }
 
   // Advance to next turn (this will reset all turns internally)
@@ -68,7 +68,7 @@ export function endTurn(
 /**
  * Execute the next AI group's turns
  */
-export function executeNextAIGroup(
+export async function executeNextAIGroup(
   aiTurnState: AITurnState,
   context: TurnExecutionContext,
   dispatch: React.Dispatch<any>
@@ -79,12 +79,12 @@ export function executeNextAIGroup(
   }
 
   // Continue AI turn phase
-  const newAITurnState = continueAITurnPhase(aiTurnState, context);
+  const newAITurnState = await continueAITurnPhase(aiTurnState, context);
   dispatch({ type: 'SET_AI_TURN_STATE', payload: newAITurnState });
 
 
   if (newAITurnState.isAITurnActive && newAITurnState.currentGroup) {
-    executeNextAIGroup(newAITurnState, context, dispatch);
+    await executeNextAIGroup(newAITurnState, context, dispatch);
   }
 
   if (group) {

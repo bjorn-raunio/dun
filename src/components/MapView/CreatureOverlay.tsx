@@ -40,17 +40,28 @@ export function CreatureOverlay({
         // Determine if this creature is a valid target in targeting mode
         let isValidTarget = false;
         let isEnemy = false;
+        let isAlly = false;
         if (targetingMode?.isActive && targetingMode.attackerId) {
           const attacker = creatures.find(c => c.id === targetingMode.attackerId);
           if (attacker) {
             isEnemy = attacker.isHostileTo(cr);
-            // Use validateCombat to check if the target is valid
-            if (isEnemy) {
-              const equipment = attacker.getEquipmentSystem();
-              const offhand = targetingMode.offhand || false;
-              const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
-              const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition) : { isValid: false };
-              isValidTarget = validation.isValid;
+            isAlly = !isEnemy && cr.id !== attacker.id; // Ally but not self
+            
+            if (targetingMode.spellId) {
+              // Spell targeting mode - check if target is valid for the spell
+              const spell = attacker.getKnownSpells().find(s => s.name === targetingMode.spellId);
+              if (spell) {
+                isValidTarget = attacker.getValidTargets(spell, creatures).some(target => target.id === cr.id);
+              }
+            } else {
+              // Combat targeting mode - use validateCombat to check if the target is valid
+              if (isEnemy) {
+                const equipment = attacker.getEquipmentSystem();
+                const offhand = targetingMode.offhand || false;
+                const weapon = offhand ? equipment.getOffHandWeapon() : equipment.getMainWeapon();
+                const validation = weapon ? validateCombat(attacker, cr, weapon, creatures, mapDefinition) : { isValid: false };
+                isValidTarget = validation.isValid;
+              }
             }
           }
         }
@@ -63,9 +74,18 @@ export function CreatureOverlay({
 
         // Determine opacity based on targeting mode
         let opacity = cr.isDead() ? 0.3 : 1;
-        if (targetingMode?.isActive && isEnemy && !isValidTarget) {
-          // Dim enemies that cannot be attacked (out of range, etc.)
-          opacity = 0.4;
+        if (targetingMode?.isActive) {
+          if (targetingMode.spellId) {
+            // Spell targeting mode - dim invalid targets
+            if (!isValidTarget) {
+              opacity = 0.4;
+            }
+          } else {
+            // Combat targeting mode - dim enemies that cannot be attacked
+            if (isEnemy && !isValidTarget) {
+              opacity = 0.4;
+            }
+          }
         }
 
         return (

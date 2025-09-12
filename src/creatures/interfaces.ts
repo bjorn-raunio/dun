@@ -13,6 +13,7 @@ import { PathfindingResult } from '../utils/pathfinding/types';
 import { Skill } from '../skills';
 import { AIState } from '../ai/types';
 import { DiceRoll } from '../utils';
+import { Spell, SpellSchool } from '../spells';
 
 // --- Core Creature Interfaces ---
 
@@ -199,6 +200,16 @@ export interface ICreature {
   
   // Effective movement getter
   get effectiveMovement(): number;
+  
+  // Spell casting methods
+  canCastSpell(spell: Spell, allCreatures?: ICreature[]): boolean;
+  castSpell(spell: Spell, target?: ICreature, allCreatures?: ICreature[]): boolean;
+  getKnownSpells(): Spell[];
+  getSpellSchools(): SpellSchool[];
+  hasSpell(spellName: string): boolean;
+  getSpell(spellName: string): Spell | undefined;
+  getValidTargets(spell: Spell, allCreatures: ICreature[]): ICreature[];
+  castsWithCourage(): boolean;
 }
 
 // --- Manager Interfaces ---
@@ -281,6 +292,16 @@ export interface ICreatureRelationshipsManager {
   isFriendlyTo(otherGroup: CreatureGroup): boolean; // CHANGED from string
   getHostileCreatures(allCreatures: ICreature[]): ICreature[];
   getFriendlyCreatures(allCreatures: ICreature[]): ICreature[];
+}
+
+export interface ICreatureSpellCastingManager {
+  canCastSpell(spell: Spell, allCreatures?: ICreature[]): boolean;
+  castSpell(spell: Spell, target?: ICreature, allCreatures?: ICreature[]): boolean;
+  getKnownSpells(): Spell[];
+  getSpellSchools(): SpellSchool[];
+  hasSpell(spellName: string): boolean;
+  getSpell(spellName: string): Spell | undefined;
+  getValidTargets(spell: Spell, allCreatures: ICreature[]): ICreature[];
 }
 
 // --- Movement Interface ---

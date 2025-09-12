@@ -5,6 +5,16 @@ import { AIBehaviorType } from '../ai/types';
 export const GAME_SETTINGS = {
   TILE_SIZE: 100,
   DRAG_THRESHOLD: 3,
+  ANIMATIONS: {
+    ENABLED: false,
+    MOVEMENT_DURATION: 200,
+    ATTACK_DURATION: 400,
+    SPELL_CAST_DURATION: 600,
+    DAMAGE_DURATION: 800,
+    HEAL_DURATION: 600,
+    STATUS_EFFECT_DURATION: 500,
+    DEATH_DURATION: 1000,
+  },
 } as const;
 
 export const CREATURE_SIZES = {

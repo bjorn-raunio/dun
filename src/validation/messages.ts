@@ -55,5 +55,6 @@ export const VALIDATION_MESSAGES = {
   NOW_ENGAGED: (name: string) => `${name} is now engaged in combat.`,
   CANNOT_MOVE_THERE: (name: string) => `${name} cannot move there.`,
   MOVES_OVER_REMAINS: (name: string) => `${name} moves over the remains.`,
-  RANGED_ATTACK_WHILE_ENGAGED: (name: string) => `${name} cannot perform ranged attacks while engaged in melee combat.`
+  RANGED_ATTACK_WHILE_ENGAGED: (name: string) => `${name} cannot perform ranged attacks while engaged in melee combat.`,
+  SPELL_CAST_WHILE_ENGAGED: (name: string) => `${name} cannot cast spells while engaged in melee combat.`
 } as const;

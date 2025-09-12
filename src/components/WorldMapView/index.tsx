@@ -77,6 +77,8 @@ export function WorldMapView({
     };
   }, [onWheel, viewportRef]);
 
+  const [points, setPoints] = React.useState<{ x: number, y: number }[]>([]);
+
   return (
     <div
       ref={viewportRef}
@@ -87,7 +89,23 @@ export function WorldMapView({
         position: "relative",
         background: COLORS.background,
       }}
-      onMouseDown={onMouseDown}
+      onMouseDown={(e) => {
+        let arr = panRef.current?.style.transform.split(') ')[0].replace('translate(', '').split(', ');
+        if (arr) {
+          let x = parseInt((arr[0].replace('px', '')));
+          let y = parseInt(arr[1].replace('px', ''));
+          let p = {
+            y: e.clientY - y,
+            x: e.clientX - x
+          };
+          setPoints(prev => {
+            let newPoints = [...points, p];
+            console.log(JSON.stringify(newPoints));
+            return newPoints
+          });
+        }
+        onMouseDown(e)
+      }}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseLeave}
@@ -99,7 +117,7 @@ export function WorldMapView({
           position: "absolute",
           top: 0,
           left: 0,
-          cursor: "grab",
+          cursor: "default",
           transformOrigin: "0 0",
         }}
       >
@@ -113,7 +131,7 @@ export function WorldMapView({
             pointerEvents: "none",
           }}
         />
-        
+
         {/* Region and Connection Overlays */}
         {regions && regions.length > 0 && currentRegionId && (
           <>
@@ -134,10 +152,10 @@ export function WorldMapView({
           </>
         )}
       </div>
-      
+
       {/* Character Bar */}
-      <WorldMapCharacterBar 
-        heroes={heroes} 
+      <WorldMapCharacterBar
+        heroes={heroes}
         onSelect={onHeroSelect}
         currentRegion={regions.find(r => r.id === currentRegionId)}
         onQuestMapSelect={onQuestMapSelect}

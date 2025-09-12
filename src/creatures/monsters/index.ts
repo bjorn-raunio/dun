@@ -3,7 +3,7 @@ import { CREATURE_GROUPS } from '../CreatureGroup';
 // AIState not used directly in Monster class
 import { createAIStateForCreature } from '../../ai/decisionMaking';
 import { CreatureConstructorParams } from '../types';
-import { MonsterPreset, MercenaryPreset } from '../presets/types';
+import { MonsterPreset } from '../presets/types';
 
 // Re-export presets and factory
 export * from './presets';
@@ -19,7 +19,7 @@ export class Monster extends Creature {
     return "monster";
   }
 
-  constructor(params: CreatureConstructorParams & { preset?: MonsterPreset<any> | MercenaryPreset }) {
+  constructor(params: CreatureConstructorParams & { preset?: MonsterPreset<any> }) {
       
     // Ensure monster group is set (default to bandits if not specified)
     super({
@@ -31,7 +31,7 @@ export class Monster extends Creature {
     // Only pass MonsterPreset to createAIStateForCreature, not MercenaryPreset
     const monsterPreset = params.preset && 'type' in params.preset ? params.preset : undefined;
     this.setAIState(createAIStateForCreature(this, monsterPreset));
-    this._leader = params.leader ?? false;
+    this._leader = params.preset?.leader ?? false;
   }
 
   get leader(): boolean {
@@ -39,7 +39,7 @@ export class Monster extends Creature {
   }
 
   // --- Abstract Method Implementation ---
-  protected createInstance(params: CreatureConstructorParams & { preset?: MonsterPreset<any> | MercenaryPreset }): Creature {
+  protected createInstance(params: CreatureConstructorParams & { preset?: MonsterPreset<any> }): Creature {
     return new Monster(params);
   }
 

@@ -4,6 +4,7 @@ import { calculateTargetsInRange } from '../../utils/combat';
 import { findCreatureById, isCreatureVisible } from '../../utils/pathfinding';
 import { logGame } from '../../utils/logging';
 import { QuestMap } from '../../maps/types';
+import { TargetingMode } from '../types';
 
 // --- Targets in Range Hook ---
 
@@ -12,7 +13,7 @@ export function useTargetsInRange(
   selectedCreatureId: string | null,
   targetsInRangeKey: number,
   mapDefinition: QuestMap | null,
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string; offhand?: boolean }
+  targetingMode?: TargetingMode
 ) {
   const [targetsInRangeIds, setTargetsInRangeIds] = React.useState<Set<string>>(new Set());
 
@@ -33,14 +34,28 @@ export function useTargetsInRange(
 
     logGame(`Calculating targets in range for ${sel.name} at (${sel.x}, ${sel.y})`);
     
-    // Determine which weapon to use for range calculation
-    let offhand = false;
-    if (targetingMode?.isActive && targetingMode.attackerId === sel.id) {
-      offhand = targetingMode.offhand || false;
-    }
+    // Handle different targeting modes
+    let basicTargetsInRange: Set<string>;
     
-    // Get basic targets in range
-    const basicTargetsInRange = calculateTargetsInRange(sel, creatures, offhand);
+    if (targetingMode?.isActive && targetingMode.attackerId === sel.id && targetingMode.spellId) {
+      // Spell targeting mode - get valid targets for the spell
+      const spell = sel.getKnownSpells().find(s => s.name === targetingMode.spellId);
+      if (spell) {
+        const validTargets = sel.getValidTargets(spell, creatures);
+        basicTargetsInRange = new Set(validTargets.map(target => target.id));
+      } else {
+        basicTargetsInRange = new Set();
+      }
+    } else {
+      // Combat targeting mode - determine which weapon to use for range calculation
+      let offhand = false;
+      if (targetingMode?.isActive && targetingMode.attackerId === sel.id) {
+        offhand = targetingMode.offhand || false;
+      }
+      
+      // Get basic targets in range
+      basicTargetsInRange = calculateTargetsInRange(sel, creatures, offhand);
+    }
     
     // Filter by line of sight if map data is available
     let finalTargetsInRange = basicTargetsInRange;

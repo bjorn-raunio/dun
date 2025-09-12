@@ -33,7 +33,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
   const tileInteractionHandlers = createTileInteractionHandlers(gameActions, gameRefs);
 
   // Enhanced mouse up handler that coordinates between handlers
-  function onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
+  async function onMouseUp(e: React.MouseEvent<HTMLDivElement>) {
     panningHandlers.onMouseUp(e);
     
     const tileAction = tileInteractionHandlers.handleTileClick(
@@ -52,7 +52,7 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
               const pos = tileFromPointer(e.clientX, e.clientY, gameRefs.viewportRef, gameRefs.livePan.current, mapDefinition.tiles[0].length, mapDefinition.tiles.length, GAME_SETTINGS.TILE_SIZE);
 
       if (pos) {
-        movementHandlers.handleMovement({
+        await movementHandlers.handleMovement({
           selectedCreatureId,
           targetX: pos.tileX,
           targetY: pos.tileY,
@@ -74,6 +74,51 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
     const offhand = targetingMode && 'offhand' in targetingMode ? (targetingMode.offhand as boolean) : false;
     combatHandlers.handleTargetingModeAttack(attacker, target, creatures, mapDefinition, offhand);
     return true;
+  }
+
+  // Handle targeting mode spell casting
+  function handleTargetingModeSpell(attacker: ICreature, target: ICreature) {
+    if (!targetingMode?.spellId || !targetingMode?.targetType) {
+      addMessage(`Invalid spell targeting mode`);
+      return false;
+    }
+
+    // Get the spell from the attacker's known spells
+    const spell = attacker.getKnownSpells().find(s => s.name === targetingMode.spellId);
+    if (!spell) {
+      addMessage(`Spell not found: ${targetingMode.spellId}`);
+      return false;
+    }
+
+    // Validate target type
+    if (targetingMode.targetType === 'ally' && attacker.isHostileTo(target)) {
+      addMessage(`Invalid target: ${target.name} is not an ally`);
+      return false;
+    }
+    if (targetingMode.targetType === 'enemy' && !attacker.isHostileTo(target)) {
+      addMessage(`Invalid target: ${target.name} is not an enemy`);
+      return false;
+    }
+
+    // Cast the spell
+    const success = attacker.castSpell(spell, target, creatures);
+    
+    // Trigger particle effects if spell was successful
+    if (success && target.x !== undefined && target.y !== undefined) {
+      // Use the animations from the game context
+      const animations = deps.animations;
+      if (animations && animations.animateSpellCast) {
+        animations.animateSpellCast(attacker.id, target.id, spell.name, target.x, target.y);
+      }
+    }
+    
+    // Update creatures state (action was consumed regardless of success/failure)
+    gameActions.setCreatures(prev => prev.map(c => c.id === attacker.id ? attacker : c));
+    
+    // Exit targeting mode (action was consumed, so player can't try again)
+    gameActions.setTargetingMode({ isActive: false, attackerId: null, message: '' });
+    
+    return success;
   }
 
   // Handle regular attack
@@ -124,7 +169,18 @@ export function createMouseHandlers(deps: MouseHandlerDependencies): MouseHandle
         return;
       }
 
-      if (attacker.isHostileTo(creature) && creature.isAlive()) {
+      // Handle spell targeting
+      if (targetingMode.spellId) {
+        if (creature.isAlive()) {
+          handleTargetingModeSpell(attacker, creature);
+          return; // Always return after spell targeting attempt
+        } else {
+          addMessage(`Cannot target dead creature: ${creature.name}`);
+          return;
+        }
+      }
+      // Handle attack targeting
+      else if (attacker.isHostileTo(creature) && creature.isAlive()) {
         if (handleTargetingModeAttack(attacker, creature)) {
           return;
         }

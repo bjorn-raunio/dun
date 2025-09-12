@@ -17,7 +17,7 @@ export function createCombatHandlers(gameActions: GameActions): CombatHandlers {
     if (!attacker.isAlive() || !target.isAlive() || !mapDefinition) {
       return;
     }
-
+    
     // Perform the attack using the creature's attack method
     const combatResult = attacker.attack(target, creatures, mapDefinition, offhand);
 

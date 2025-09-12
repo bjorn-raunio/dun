@@ -13,6 +13,7 @@ import { WorldMap } from '../worldmap/WorldMap';
 import { Campaign } from '../campaigns/Campaign';
 import { createQuestMapFromPresetWithWeather } from '../maps/presets';
 import { messageManager } from '../utils/messageSystem';
+import { useAnimations } from './hooks/useAnimations';
 
 
 // --- Game Context Types ---
@@ -22,6 +23,7 @@ interface GameContextValue {
   dispatch: React.Dispatch<GameAction>;
   actions: GameActions;
   refs: GameRefs;
+  animations: ReturnType<typeof useAnimations>;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -43,6 +45,14 @@ export function GameProvider({
     gameReducer,
     getInitialGameState(initialCreatures, mapDefinition, campaign)
   );
+
+  // Initialize animations
+  const animations = useAnimations();
+
+  // Sync animation manager with game state
+  useEffect(() => {
+    animations.setAnimationsEnabled(state.animationsEnabled);
+  }, [state.animationsEnabled, animations]);
 
   // Initialize message system with dispatch function
   useEffect(() => {
@@ -200,7 +210,9 @@ export function GameProvider({
     dispatch({ type: 'CENTER_QUESTMAP_ON_STARTING_TILE' });
   }, [dispatch]);
 
-
+  const setAnimationsEnabled = useCallback((enabled: boolean) => {
+    dispatch({ type: 'SET_ANIMATIONS_ENABLED', payload: enabled });
+  }, [dispatch]);
 
   const actions = useMemo((): GameActions => ({
     setCreatures,
@@ -221,10 +233,11 @@ export function GameProvider({
     setWorldMap,
     setMapDefinition,
     setCampaign,
+    setAnimationsEnabled,
     centerWorldmapOnParty,
     centerQuestmapOnStartingTile,
     dispatch,
-  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, setCampaign, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
+  }), [setCreatures, setSelectedCreatureId, setMessages, setViewport, setPan, setDragging, setReachableKey, setTargetsInRangeKey, setAITurnState, setTurnState, setZoom, setTargetingMode, setWeather, setViewMode, setParty, setWorldMap, setMapDefinition, setCampaign, setAnimationsEnabled, centerWorldmapOnParty, centerQuestmapOnStartingTile, dispatch]);
 
   // --- REFS ---
   const updateTransform = useCallback((x: number, y: number) => {
@@ -249,7 +262,8 @@ export function GameProvider({
     state,
     dispatch,
     actions,
-    refs
+    refs,
+    animations
   };
 
   return (
@@ -289,4 +303,9 @@ export function useGameRefs() {
 export function useGameDispatch() {
   const { dispatch } = useGameContext();
   return dispatch;
+}
+
+export function useGameAnimations() {
+  const { animations } = useGameContext();
+  return animations;
 }

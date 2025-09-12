@@ -1,5 +1,6 @@
 import React from 'react';
 import { TILE_SIZE, COLORS } from '../styles';
+import { TargetingMode } from '../../game/types';
 
 interface ReachableOverlayProps {
   reachable: {
@@ -10,7 +11,7 @@ interface ReachableOverlayProps {
   selectedCreatureId: string | null;
   cols: number;
   rows: number;
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  targetingMode?: TargetingMode;
 }
 
 export function ReachableOverlay({ 

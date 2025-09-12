@@ -93,6 +93,8 @@ export function CreaturePanel({
           creature={popupCreature}
           onClose={handleClosePopup}
           onCreatureUpdate={onCreatureUpdate}
+          onAttack={onAttack}
+          canAttack={canAttack}
         />
       )}
     </>

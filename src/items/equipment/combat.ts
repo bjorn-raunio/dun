@@ -6,8 +6,8 @@ export class CombatCalculator {
   /**
    * Get effective armor value (equipped armor or natural armor)
    */
-  static getEffectiveArmor(naturalArmor: number, armor?: Armor): number {
-    return naturalArmor + (armor?.armor ?? 0);
+  static getEffectiveArmor(naturalArmor: number, armor?: Armor, ignoresArmor: boolean = false): number {
+    return naturalArmor + (ignoresArmor ? 0 : (armor?.armor ?? 0));
   }
   
   /**

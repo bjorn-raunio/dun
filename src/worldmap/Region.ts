@@ -111,23 +111,58 @@ export class Region implements IRegion {
 
   /**
    * Get the center position of the region based on vertices
+   * Uses the centroid formula for polygons to get the true geometric center
    */
   getCenterPosition(): { x: number; y: number } {
     if (this.vertices.length === 0) {
       return { x: 0, y: 0 }; // Default to origin if no vertices
     }
     
-    let sumX = 0;
-    let sumY = 0;
+    if (this.vertices.length === 1) {
+      return { x: this.vertices[0].x, y: this.vertices[0].y };
+    }
     
-    this.vertices.forEach(vertex => {
-      sumX += vertex.x;
-      sumY += vertex.y;
-    });
+    if (this.vertices.length === 2) {
+      // For a line segment, return the midpoint
+      return {
+        x: (this.vertices[0].x + this.vertices[1].x) / 2,
+        y: (this.vertices[0].y + this.vertices[1].y) / 2
+      };
+    }
+    
+    // Calculate centroid using the shoelace formula
+    // This gives the true geometric center of the polygon area
+    let cx = 0;
+    let cy = 0;
+    let area = 0;
+    
+    for (let i = 0; i < this.vertices.length; i++) {
+      const j = (i + 1) % this.vertices.length;
+      const cross = this.vertices[i].x * this.vertices[j].y - this.vertices[j].x * this.vertices[i].y;
+      area += cross;
+      cx += (this.vertices[i].x + this.vertices[j].x) * cross;
+      cy += (this.vertices[i].y + this.vertices[j].y) * cross;
+    }
+    
+    area = area / 2;
+    
+    if (Math.abs(area) < 1e-10) {
+      // Fallback to arithmetic mean if area is too small (degenerate polygon)
+      let sumX = 0;
+      let sumY = 0;
+      this.vertices.forEach(vertex => {
+        sumX += vertex.x;
+        sumY += vertex.y;
+      });
+      return {
+        x: sumX / this.vertices.length,
+        y: sumY / this.vertices.length
+      };
+    }
     
     return {
-      x: sumX / this.vertices.length,
-      y: sumY / this.vertices.length
+      x: cx / (6 * area),
+      y: cy / (6 * area)
     };
   }
 

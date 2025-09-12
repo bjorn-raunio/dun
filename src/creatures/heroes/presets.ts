@@ -3,6 +3,9 @@ import { CreatureGroup } from '../CreatureGroup';
 import { SKILL_PRESETS } from '../../skills';
 import PROFESSIONS from './professions/presets';
 import RACES from './races/presets';
+import { SPELLS_BLESSINGS } from '../../spells/schools/blessings';
+import { SPELLS_CHANNELING } from '../../spells/schools/channeling';
+import { SPELLS_WATER } from '../../spells/schools/water';
 
 // --- Hero Presets ---
 
@@ -23,6 +26,10 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 4,
         },
         actions: 1,
+        vitality: 4,
+        mana: 4,
+        fortune: 6,
+        gold: 2,
         equipment: {
             mainHand: { type: "weapon", preset: "mace" },
             offHand: { type: "shield", preset: "shield" },
@@ -33,13 +40,11 @@ export const heroPresets: Record<string, HeroPreset> = {
             { type: 'consumable', preset: 'strengthPotion' },
             { type: 'consumable', preset: 'heroicPotion' },
         ],
-        vitality: 4,
-        mana: 4,
-        fortune: 6,
         group: CreatureGroup.PLAYER,
         skills: [
             SKILL_PRESETS.ironWill,
-        ]
+        ],
+        spellSchool: SPELLS_BLESSINGS
     },
     taeral: {
         name: 'Taeral',
@@ -56,6 +61,10 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 5,
         },
         actions: 1,
+        vitality: 4,
+        mana: 5,
+        fortune: 5,
+        gold: 4,
         equipment: {
             mainHand: { type: "ranged_weapon", preset: "longbow" },
             armor: { type: "armor", preset: "leatherArmor" },
@@ -63,11 +72,9 @@ export const heroPresets: Record<string, HeroPreset> = {
         inventory: [
             { type: 'weapon', preset: 'scimitar' },
         ],
-        vitality: 4,
-        mana: 5,
-        fortune: 5,
         group: CreatureGroup.PLAYER,
-        skills: []
+        skills: [],
+        spellSchool: SPELLS_CHANNELING
     },
     bosco: {
         name: 'Bosco',
@@ -84,6 +91,10 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 4,
         },
         actions: 1,
+        vitality: 3,
+        mana: 0,
+        fortune: 8,
+        gold: 4,
         equipment: {
             mainHand: { type: "weapon", preset: "dagger" },
             offHand: { type: "ranged_weapon", preset: "sling" },
@@ -95,9 +106,6 @@ export const heroPresets: Record<string, HeroPreset> = {
             { type: 'miscellaneous', preset: 'ratPoison' },
             { type: 'miscellaneous', preset: 'squeakyBird' },
         ],
-        vitality: 3,
-        mana: 0,
-        fortune: 8,
         group: CreatureGroup.PLAYER,
         skills: []
     },
@@ -116,6 +124,10 @@ export const heroPresets: Record<string, HeroPreset> = {
             intelligence: 5,
         },
         actions: 1,
+        vitality: 3,
+        mana: 8,
+        fortune: 6,
+        gold: 2,
         equipment: {
             mainHand: { type: "weapon", preset: "staff" },
         },
@@ -129,10 +141,8 @@ export const heroPresets: Record<string, HeroPreset> = {
             { type: 'consumable', preset: 'dexterityPotion' },
             { type: 'consumable', preset: 'heroicPotion' },
         ],
-        vitality: 3,
-        mana: 8,
-        fortune: 6,
         group: CreatureGroup.PLAYER,
-        skills: []
+        skills: [],
+        spellSchool: SPELLS_WATER
     }
 };

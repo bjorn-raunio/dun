@@ -1,6 +1,7 @@
 import React from 'react';
 import { ICreature } from '../../creatures/index';
 import { QuestMap } from '../../maps/types';
+import { TargetingMode } from '../../game/types';
 
 export interface MapViewProps {
   mapDefinition: QuestMap;
@@ -21,6 +22,7 @@ export interface MapViewProps {
   onTileClick: (pos: { tileX: number; tileY: number }) => void;
   viewportRef: React.MutableRefObject<HTMLDivElement | null>;
   panRef: React.MutableRefObject<HTMLDivElement | null>;
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string };
+  targetingMode?: TargetingMode;
   onCenterOnStartingTile?: () => void;
+  animationsEnabled?: boolean;
 }

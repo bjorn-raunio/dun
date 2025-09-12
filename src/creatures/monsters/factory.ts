@@ -6,6 +6,7 @@ import { getWeaponLoadoutById, getArmorLoadoutById, getRandomWeaponLoadout, getR
 import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
 import { Item } from '../../items';
 import { getMonsterPresetByType } from './factions';
+import { SpellSchool } from '../../spells/spellSchool';
 
 // --- Factory Functions ---
 
@@ -216,8 +217,9 @@ export function createMonster(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
     group: overrides?.group ?? CreatureGroup.ENEMY,
     skills: overrides?.skills ?? p.skills,
+    spellSchools: overrides?.spellSchools ?? p.spellSchools,
+    knownSpells: overrides?.knownSpells ?? (overrides?.spellSchools ?? p.spellSchools)?.flatMap((school: SpellSchool) => Object.values(school.spells)) ?? [],
     naturalWeapons: (overrides as any)?.naturalWeapons ?? naturalWeapons,
-    leader: overrides?.leader ?? p.leader ?? false,
     preset: effectivePreset,
   });
 }

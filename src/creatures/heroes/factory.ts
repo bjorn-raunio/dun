@@ -5,6 +5,9 @@ import { heroPresets } from './presets';
 import { HeroPreset } from '../presets/types';
 import { Item } from '../../items';
 import { EquipmentSystem, EquipmentSlots } from '../../items/equipment';
+import { SpellSchool } from '../../spells/spellSchool';
+import { shuffle } from '../../utils';
+import { Spell } from '../../spells';
 
 // --- Factory Functions ---
 
@@ -140,7 +143,20 @@ export function createHero(
     intelligence: overrides?.intelligence ?? p.attributes.intelligence,
   };
 
-  console.log(overrides?.race ?? p.race);
+  let knownSpells: Spell[] = [];
+  if (p.spellSchool && p.profession.startingSpells) {
+    let spells = shuffle(Object.values(p.spellSchool.spells));
+    if(p.profession.startingSpells < 4) {
+      spells = spells.filter(spell => spell.cost < 2 && !spell.archMage);
+    }
+    for (let i = 0; i < p.profession.startingSpells; i++) {
+      let spell = spells.pop();
+      if (spell) {
+        knownSpells.push(spell);
+      }
+    }
+  }
+
   const hero = new Hero({
     name: overrides?.name ?? p.name,
     position: overrides?.position ?? undefined,
@@ -157,6 +173,8 @@ export function createHero(
     naturalArmor: overrides?.naturalArmor ?? p.naturalArmor,
     group: overrides?.group ?? CreatureGroup.PLAYER,
     skills: overrides?.skills ?? p.skills,
+    spellSchools: overrides?.spellSchools ?? p.profession.spellSchools,
+    knownSpells: knownSpells,
     profession: overrides?.profession ?? p.profession,
     race: overrides?.race ?? p.race,
   });

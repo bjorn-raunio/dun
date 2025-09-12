@@ -4,6 +4,7 @@ import { Item, Weapon, RangedWeapon } from '../../../items';
 import { EquipmentSlot as EquipmentSlotType } from '../../../items/equipment';
 import { EquipmentSystem } from '../../../items/equipment';
 import { COLORS, LAYOUT_PATTERNS, createConditionalButtonStyle } from '../../styles';
+import { IconButton } from '../../shared/IconButton';
 
 interface EquipmentSlotProps {
   slot: EquipmentSlotType;
@@ -24,24 +25,16 @@ interface AttackButtonProps {
 }
 
 function AttackButton({ onAttack, canAttack, creature, offhand }: AttackButtonProps) {
-  const buttonStyle = createConditionalButtonStyle('medium', canAttack, 'disabled');
-  
   return (
-    <button
+    <IconButton
       onClick={() => onAttack(creature, offhand)}
       disabled={!canAttack}
-      style={buttonStyle}
+      iconSrc="/icons/attack.png"
+      iconAlt="Attack"
       title={`Attack with ${offhand ? 'offhand' : 'main hand'} weapon`}
-    >
-      <img 
-        src={"/icons/attack.png"} 
-        style={{ 
-          width: '20px', 
-          height: '20px',
-          filter: canAttack ? 'none' : 'grayscale(100%)'
-        }} 
-      />
-    </button>
+      variant="medium"
+      iconSize={20}
+    />
   );
 }
 

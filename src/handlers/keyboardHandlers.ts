@@ -1,5 +1,5 @@
 import { ICreature } from '../creatures/index';
-import { GameActions } from '../game/types';
+import { GameActions, TargetingMode } from '../game/types';
 import { DIRECTIONS } from '../utils/constants';
 import { findCreatureById } from '../utils/pathfinding';
 
@@ -14,7 +14,7 @@ export function createKeyboardHandlers(
   gameActions: GameActions,
   creatures: ICreature[],
   selectedCreatureId: string | null,
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
+  targetingMode?: TargetingMode
 ): KeyboardHandlers {
   const { setCreatures, setMessages, setTargetingMode } = gameActions;
 

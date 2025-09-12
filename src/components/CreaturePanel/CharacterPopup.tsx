@@ -8,9 +8,11 @@ interface CharacterPopupProps {
   creature: ICreature;
   onClose: () => void;
   onCreatureUpdate?: (creature: ICreature) => void;
+  onAttack?: (creature: ICreature, offhand?: boolean) => void;
+  canAttack?: (creature: ICreature) => boolean;
 }
 
-export function CharacterPopup({ creature, onClose, onCreatureUpdate }: CharacterPopupProps) {
+export function CharacterPopup({ creature, onClose, onCreatureUpdate, onAttack, canAttack }: CharacterPopupProps) {
   return (
     <div style={OVERLAY_STYLES} onClick={onClose}>
       <div style={POPUP_STYLES} onClick={(e) => e.stopPropagation()}>
@@ -38,6 +40,9 @@ export function CharacterPopup({ creature, onClose, onCreatureUpdate }: Characte
           <TabbedCharacterPanel
             creature={creature}
             onUpdate={onCreatureUpdate}
+            onAttack={onAttack}
+            canAttack={canAttack}
+            onClose={onClose}
           />
         </div>
       </div>

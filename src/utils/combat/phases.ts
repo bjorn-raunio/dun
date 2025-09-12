@@ -19,7 +19,7 @@ import {
   calculateDamage
 } from './calculations';
 import { COMBAT_CONSTANTS } from '../constants';
-import { COMBAT_EVENTS, CombatEventData } from './execution';
+import { COMBAT_EVENTS, CombatEventData, DamageEventData } from './execution';
 import { CombatTriggers } from './combatTriggers';
 import { addCombatMessage } from '../messageSystem';
 import { dropItem } from '../itemDropping';
@@ -292,14 +292,14 @@ export function executeBlockRoll(
  * Execute damage roll for both melee and ranged combat
  */
 export function executeDamageRoll(
-  combatEventData: CombatEventData,
+  damageEventData: DamageEventData,
   toHitResult: ToHitResult,
   bonusDamage: number = 0
 ): DamageResult {
-  const targetEquipment = combatEventData.target.getEquipmentSystem();
+  const targetEquipment = damageEventData.target.getEquipmentSystem();
 
   // Calculate weapon damage with critical bonuses
-  let weaponDamage = combatEventData.attack.damageModifier;
+  let weaponDamage = damageEventData.attack.damageModifier;
   if (toHitResult.attackerRoll.criticalSuccess) {
     weaponDamage += 2;
   } else if (toHitResult.attackerRoll.criticalHit) {
@@ -307,16 +307,16 @@ export function executeDamageRoll(
   }
 
   let totalDamage = weaponDamage + bonusDamage;
-  if (combatEventData.attack.addStrength) {
-    totalDamage += combatEventData.attacker.strength;
+  if (damageEventData.attack.addStrength) {
+    totalDamage += damageEventData.attacker.strength;
   }
 
-  let armorModifier = 0;
+  let armorModifier = damageEventData.attack.armorModifier ?? 0;
   if (totalDamage <= 0) {
     totalDamage = 1;
     armorModifier++;
   }
-  if(combatEventData.attack.backStab && (toHitResult.isBackAttack || combatEventData.target.hasStatusEffect('knockedDown'))) {
+  if(damageEventData.attack.backStab && (toHitResult.isBackAttack || damageEventData.target.hasStatusEffect('knockedDown'))) {
     armorModifier--;
   }
 
@@ -324,13 +324,17 @@ export function executeDamageRoll(
   const diceRolls = rollXd6(totalDamage);
 
   // Calculate effective armor value
-  const armorValue = calculateEffectiveArmor(combatEventData.target, targetEquipment, combatEventData.attack, armorModifier);
+  const armorValue = calculateEffectiveArmor(damageEventData.target, targetEquipment, damageEventData.attack, armorModifier, damageEventData.attack.ignoresArmor);
 
   // Calculate final damage
   const damage = calculateDamage(diceRolls, armorValue);
 
   // Generate damage message
-  const damageMessage = `${combatEventData.attacker.name} deals ${damage} damage: ${displayDiceRoll(diceRolls)} vs ${armorValue} Armor`;
+  const damageMessage = `${damageEventData.attacker.name} deals ${damage} damage: ${displayDiceRoll(diceRolls)} vs ${armorValue} Armor`;
+
+  addCombatMessage(damageMessage);
+  
+  damageEventData.target.takeDamage(damage);
 
   return { damage, damageMessage, diceRolls, armorValue };
 }

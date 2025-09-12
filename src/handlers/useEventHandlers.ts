@@ -1,12 +1,13 @@
 import React from 'react';
 import { ICreature } from '../creatures/index';
-import { GameActions, GameRefs } from '../game/types';
+import { GameActions, GameRefs, TargetingMode } from '../game/types';
 import { createKeyboardHandlers, KeyboardHandlers } from './keyboardHandlers';
 import { findCreatureById, getVisibleCreatures } from '../utils/pathfinding';
 import { logGame } from '../utils/logging';
 import { QuestMap } from '../maps/types';
 import { createMouseHandlers } from './mouseHandlers/mainMouseHandlers';
 import { MouseHandlers } from './mouseHandlers/types';
+import { useGameAnimations } from '../game/GameContext';
 
 // --- Event Handlers Custom Hook ---
 
@@ -28,8 +29,10 @@ export function useEventHandlers(
   targetsInRangeIds: Set<string>,
   mapDefinition: QuestMap | null,
   setSelectedCreatureId: (id: string | null) => void,
-  targetingMode?: { isActive: boolean; attackerId: string | null; message: string }
+  targetingMode?: TargetingMode
 ): EventHandlers {
+  // Get animations from game context
+  const animations = useGameAnimations();
   // Create mouse handlers with organized structure
   const mouseHandlers = React.useMemo(() => {
     const handlers = createMouseHandlers({
@@ -41,7 +44,8 @@ export function useEventHandlers(
       targetsInRangeIds,
       mapDefinition,
       setSelectedCreatureId,
-      targetingMode
+      targetingMode,
+      animations
     });
 
     // Override the creature click handler to handle both targeting mode and creature selection
@@ -58,7 +62,8 @@ export function useEventHandlers(
           targetsInRangeIds,
           mapDefinition,
           setSelectedCreatureId,
-          targetingMode
+          targetingMode,
+          animations
         });
         originalHandler.onCreatureClick(creature, e);
         return;
@@ -103,8 +108,8 @@ export function useEventHandlers(
     targetsInRangeIds,
     mapDefinition,
     setSelectedCreatureId,
-    mapDefinition,
-    targetingMode
+    targetingMode,
+    animations
   ]);
 
   // Create keyboard handlers

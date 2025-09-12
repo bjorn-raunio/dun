@@ -154,6 +154,7 @@ function TileMapView() {
           panRef={panRef}
           targetingMode={targetingMode}
           onCenterOnStartingTile={gameActions.centerQuestmapOnStartingTile}
+          animationsEnabled={gameState.animationsEnabled}
         />
       ) : (
         <>
@@ -235,8 +236,8 @@ function TileMapView() {
         <>
           <GameUI
             messages={messages}
-            onEndTurn={() => {
-              endTurn(groups, creatures, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState, gameActions.setReachableKey);
+            onEndTurn={async () => {
+              await endTurn(groups, creatures, party.currentQuestMap!, gameActions.dispatch, lastMovement, turnState, gameActions.setReachableKey);
             }}
             onLeaveMap={handleLeaveMap}
             isAITurnActive={aiTurnState.isAITurnActive}
@@ -245,6 +246,8 @@ function TileMapView() {
             onCreatureClick={(creature) => setSelectedCreatureId(creature.id)}
             targetingMode={targetingMode}
             mapDefinition={party.currentQuestMap}
+            animationsEnabled={gameState.animationsEnabled}
+            onToggleAnimations={() => gameActions.setAnimationsEnabled(!gameState.animationsEnabled)}
           />
           <CreaturePanel
             selectedCreature={selectedCreature}

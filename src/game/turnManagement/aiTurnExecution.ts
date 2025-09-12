@@ -4,15 +4,16 @@ import { logTurn, logAI } from '../../utils/logging';
 import { TurnExecutionContext } from './types';
 import { AIState } from '../../ai/types';
 import { makeAIDecision, AIDecision } from '../../ai/decisionMaking';
+import { animationManager } from '../../animations';
 // calculateDistanceBetween not used in this file
 
 /**
  * Execute AI turn for a single creature
  */
-export function executeAITurnForCreature(
+export async function executeAITurnForCreature(
   creature: ICreature,
   context: TurnExecutionContext
-): boolean {
+): Promise<boolean> {
   const { groups, mapDefinition } = context;
   
   logAI(`Starting AI turn for ${creature.name} - Actions: ${creature.remainingActions}, Movement: ${creature.remainingMovement}`);
@@ -47,17 +48,17 @@ export function executeAITurnForCreature(
     logAI(`${creature.name} can see ${visibleHostileCreatures.length} hostile creatures: ${visibleHostileCreatures.map((c: ICreature) => c.name).join(', ')}`);
   }
 
-  return executeAITurnLoop(creature, aiState, context);
+  return await executeAITurnLoop(creature, aiState, context);
 }
 
 /**
  * Execute the main AI turn loop
  */
-function executeAITurnLoop(
+async function executeAITurnLoop(
   creature: ICreature,
   aiState: AIState,
   context: TurnExecutionContext
-): boolean {
+): Promise<boolean> {
   const { groups, mapDefinition } = context;
   let success = false;
   let previousActions = creature.remainingActions;
@@ -79,7 +80,7 @@ function executeAITurnLoop(
     const decision = makeAIDecision(creature, aiState, allCreatures, mapDefinition);
     
     // Execute the decision
-    const actionSuccess = executeAIDecision(creature, decision, allCreatures, mapDefinition);
+    const actionSuccess = await executeAIDecision(creature, decision, allCreatures, mapDefinition);
     if (actionSuccess) {
       success = true;
     }
@@ -106,18 +107,26 @@ function executeAITurnLoop(
 /**
  * Execute an AI decision
  */
-function executeAIDecision(
+async function executeAIDecision(
   creature: ICreature,
   decision: AIDecision,
   allCreatures: ICreature[],
   mapDefinition: any
-): boolean {
+): Promise<boolean> {
   switch (decision.type) {
     case 'attack':
       if (decision.target && creature.remainingActions > 0) {
         logAI(`${creature.name} attacking ${decision.target.name}`);
         const result = creature.attack(decision.target, allCreatures, mapDefinition);
         return result.success;
+      }
+      break;
+      
+    case 'cast':
+      if (decision.target && decision.spell && creature.remainingActions > 0) {
+        logAI(`${creature.name} casting ${decision.spell.name} on ${decision.target.name}`);
+        const success = creature.castSpell(decision.spell, decision.target, allCreatures);
+        return success;
       }
       break;
       
@@ -129,7 +138,14 @@ function executeAIDecision(
         const reachableResult = creature.getReachableTiles(allCreatures, mapDefinition, mapDefinition.tiles[0].length, mapDefinition.tiles.length);
         const path = reachableResult.pathMap.get(`${decision.position.x},${decision.position.y}`);
         if (path && path.length > 0) {
+          // Execute movement (game logic)
           const result = creature.moveTo(path, allCreatures, mapDefinition);
+          
+          if (result.status === 'success' || result.status === 'partial') {
+            // Animate the movement through each step, updating position as we go
+            await animateAIMovementPathWithStateUpdate(creature.id, path, allCreatures);
+          }
+          
           return result.status === 'success' || result.status === 'partial';
         }
       }
@@ -141,6 +157,75 @@ function executeAIDecision(
   }
   
   return false;
+}
+
+/**
+ * Animate AI movement through each step of the path
+ */
+async function animateAIMovementPath(creatureId: string, path: Array<{ x: number; y: number }>): Promise<void> {
+  if (path.length <= 1) return;
+
+  // Animate through each step of the path
+  for (let i = 1; i < path.length; i++) {
+    const currentTile = path[i - 1];
+    const nextTile = path[i];
+
+    // Add movement animation for this step
+    const animationId = animationManager.addMovementAnimation(
+      creatureId,
+      { x: currentTile.x, y: currentTile.y },
+      { x: nextTile.x, y: nextTile.y }
+    );
+
+    // Wait for animation to complete before moving to next step
+    await waitForAnimation(animationId);
+  }
+}
+
+/**
+ * Animate AI movement and update creature position as each step completes
+ */
+async function animateAIMovementPathWithStateUpdate(creatureId: string, path: Array<{ x: number; y: number }>, allCreatures: ICreature[]): Promise<void> {
+  if (path.length <= 1) return;
+
+  // Animate through each step of the path
+  for (let i = 1; i < path.length; i++) {
+    const currentTile = path[i - 1];
+    const nextTile = path[i];
+
+    // Add movement animation for this step
+    const animationId = animationManager.addMovementAnimation(
+      creatureId,
+      { x: currentTile.x, y: currentTile.y },
+      { x: nextTile.x, y: nextTile.y }
+    );
+
+    // Wait for animation to complete
+    await waitForAnimation(animationId);
+
+    // Update creature position in the creatures array after each step
+    const creature = allCreatures.find(c => c.id === creatureId);
+    if (creature) {
+      creature.x = nextTile.x;
+      creature.y = nextTile.y;
+    }
+  }
+}
+
+/**
+ * Wait for an animation to complete
+ */
+function waitForAnimation(animationId: string): Promise<void> {
+  return new Promise((resolve) => {
+    const checkAnimation = () => {
+      if (animationManager.isAnimationComplete(animationId)) {
+        resolve();
+      } else {
+        requestAnimationFrame(checkAnimation);
+      }
+    };
+    checkAnimation();
+  });
 }
 
 /**

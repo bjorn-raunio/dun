@@ -7,6 +7,7 @@ import { WorldMap } from '../worldmap/WorldMap';
 import { createSampleWorldMap } from '../worldmap/presets';
 import { Campaign } from '../campaigns/Campaign';
 import { TILE_SIZE } from '../components/styles';
+import { GAME_SETTINGS } from '../utils/constants';
 
 
 // --- Game Action Types ---
@@ -31,6 +32,7 @@ export type GameAction =
   | { type: 'SET_WORLDMAP'; payload: WorldMap }
   | { type: 'SET_MAP_DEFINITION'; payload: QuestMap | null }
   | { type: 'SET_CAMPAIGN'; payload: Campaign | null }
+  | { type: 'SET_ANIMATIONS_ENABLED'; payload: boolean }
   | { type: 'BATCH_UPDATE'; payload: GameAction[] }
   | { type: 'RESET_VIEWPORT_CENTER'; payload: { width: number; height: number } }
   | { type: 'CENTER_WORLDMAP_ON_PARTY' }
@@ -106,6 +108,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     
     case 'SET_CAMPAIGN':
       return { ...state, campaign: action.payload };
+    
+    case 'SET_ANIMATIONS_ENABLED':
+      return { ...state, animationsEnabled: action.payload };
     
     case 'RESET_VIEWPORT_CENTER':
       return {
@@ -235,6 +240,7 @@ export function getInitialGameState(
     worldMap: cachedWorldMap,
     mapDefinition: mapDefinition,
     campaign: campaign,
+    animationsEnabled: GAME_SETTINGS.ANIMATIONS.ENABLED, // Use configuration setting
     party: (() => {
       const startingRegionId = 't26'; // Default starting region
       return new Party(startingRegionId);

@@ -27,6 +27,7 @@ export type GameState = {
   targetingMode: TargetingMode;
   weather: WeatherState;
   viewMode: 'quest' | 'world';
+  animationsEnabled: boolean;
 };
 
 export type TargetingMode = {
@@ -34,6 +35,8 @@ export type TargetingMode = {
   attackerId: string | null;
   message: string;
   offhand?: boolean;
+  spellId?: string; // For spell targeting
+  targetType?: 'ally' | 'enemy' | 'self'; // For spell targeting
 };
 
 export type ViewportState = {
@@ -78,6 +81,7 @@ export type GameActions = {
   setWorldMap: (updater: (prev: WorldMap) => WorldMap) => void;
   setMapDefinition: (mapDefinition: QuestMap | null) => void;
   setCampaign: (campaign: Campaign | null) => void;
+  setAnimationsEnabled: (enabled: boolean) => void;
   centerWorldmapOnParty: () => void;
   centerQuestmapOnStartingTile: () => void;
   dispatch: React.Dispatch<any>;

@@ -8,9 +8,14 @@ import { LightingOverlay } from './LightingOverlay';
 import { StartingTilesOverlay } from './StartingTilesOverlay';
 import { ReachableOverlay } from './ReachableOverlay';
 import { PathOverlay } from './PathOverlay';
-import { CreatureOverlay } from './CreatureOverlay';
+import { AnimatedCreatureOverlay } from './AnimatedCreatureOverlay';
+import { AnimatedDamageIndicator } from './AnimatedDamageIndicator';
+import { AttackEffectOverlay } from './AttackEffectOverlay';
 import { ItemOverlay } from './ItemOverlay';
 import { WeatherOverlay } from './WeatherOverlay';
+import { ParticleEffectOverlay } from './ParticleEffectOverlay';
+import { FireEffectOverlay } from './FireEffectOverlay';
+import { CreatureOverlay } from './CreatureOverlay';
 
 export function MapView({
   mapDefinition,
@@ -29,6 +34,7 @@ export function MapView({
   panRef,
   targetingMode,
   onCenterOnStartingTile,
+  animationsEnabled = true,
 }: MapViewProps) {
   const rows = mapDefinition?.tiles.length ?? 0;
   const cols = mapDefinition?.tiles[0].length ?? 0;
@@ -138,14 +144,39 @@ export function MapView({
             targetingMode={targetingMode}
           />
 
-          {/* Creatures overlay */}
-          <CreatureOverlay
-            creatures={creatures}
-            selectedCreatureId={selectedCreatureId}
-            onCreatureClick={onCreatureClick}
-            targetingMode={targetingMode}
-            mapDefinition={mapDefinition}
-          />
+          {/* Animated overlays - only show if animations are enabled */}
+          {animationsEnabled && (
+            <>
+              {/* Attack effects overlay */}
+              <AttackEffectOverlay creatures={creatures} />
+
+              {/* Particle effects overlay */}
+              <ParticleEffectOverlay />
+
+              {/* Fire effects overlay */}
+              <FireEffectOverlay creatures={creatures} />
+
+              {/* Creatures overlay */}
+              <AnimatedCreatureOverlay
+                creatures={creatures}
+                selectedCreatureId={selectedCreatureId}
+                onCreatureClick={onCreatureClick}
+                targetingMode={targetingMode}
+                mapDefinition={mapDefinition}
+              />
+            </>
+          )}
+
+          {/* Non-animated overlays - show when animations are disabled */}
+          {!animationsEnabled && (
+            <CreatureOverlay
+              creatures={creatures}
+              selectedCreatureId={selectedCreatureId}
+              onCreatureClick={onCreatureClick}
+              targetingMode={targetingMode}
+              mapDefinition={mapDefinition}
+            />
+          )}
 
 
         </div>

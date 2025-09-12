@@ -4,6 +4,7 @@ import { CreatureGroup } from '../CreatureGroup';
 import { Skill } from '../../skills';
 import { Profession } from '../heroes/professions/profession';
 import { Race } from '../heroes/races/race';
+import { SpellSchool } from '../../spells/spellSchool';
 
 // --- Shared Preset Types ---
 
@@ -42,10 +43,12 @@ export type MonsterPreset<T extends string> = BasePreset & {
   weaponLoadouts?: string[]; // Array of weapon loadout IDs
   armorLoadouts?: string[];  // Array of armor loadout IDs
   leader?: boolean;
+  spellSchools?: SpellSchool[];
 };
 
 export type MercenaryPreset = BasePreset & {
   hireCost: number;
+  spellSchools?: SpellSchool[];
 };
 
 export type HeroPreset = BasePreset & {
@@ -53,4 +56,6 @@ export type HeroPreset = BasePreset & {
   // For example: starting level, experience, special abilities, etc.
   race: Race;
   profession: Profession;
+  gold: number;
+  spellSchool?: SpellSchool;
 };

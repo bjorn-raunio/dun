@@ -7,6 +7,7 @@ import { calculateDistanceBetween } from '../pathfinding';
 import { isInBackArc } from '../geometry';
 import { logCombat } from '../logging';
 import { QuestMap } from '../../maps/types';
+import { DamageAttack } from './execution';
 
 // --- Combat Calculation Utilities ---
 // Streamlined calculations with optimized object creation
@@ -109,9 +110,9 @@ export function checkShieldBlock(shieldBlockValue: number): { blocked: boolean; 
 /**
  * Calculate effective armor value for target
  */
-export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attack: WeaponAttack, modifier: number = 0): number {
-  const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor);
-  let armor = baseArmorValue + attack.armorModifier + modifier;
+export function calculateEffectiveArmor(target: ICreature, targetEquipment: EquipmentSystem, attack: DamageAttack, modifier: number = 0, ignoresArmor: boolean = false): number {
+  const baseArmorValue = targetEquipment.getEffectiveArmor(target.naturalArmor, ignoresArmor);
+  let armor = baseArmorValue + (attack.armorModifier ?? 0) + modifier;
   if(armor < 2) armor = 2;
   if(armor > 6) armor = 6;
   return armor;

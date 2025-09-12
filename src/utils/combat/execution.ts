@@ -112,6 +112,20 @@ export interface CombatEventData {
   mapDefinition?: QuestMap;
 }
 
+export interface DamageAttack {
+  damageModifier: number;
+  armorModifier?: number;
+  addStrength?: boolean;
+  backStab?: boolean;  
+  ignoresArmor?: boolean;
+}
+
+export interface DamageEventData {
+  attacker: ICreature;
+  target: ICreature;
+  attack: DamageAttack;
+}
+
 /**
  * Unified combat execution for both melee and ranged combat
  */
@@ -187,10 +201,7 @@ function executeCombatPhase(combatEventData: CombatEventData, allCreatures: Crea
       toHitResult,
       bonusDamage
     );
-    addCombatMessage(damageResult.damageMessage);
 
-    // Apply damage using the proper method
-    combatEventData.target.takeDamage(damageResult.damage);
     damage = damageResult.damage;
   } else if (blockResult?.shield) {
     handleShieldBreak(combatEventData, toHitResult, blockResult.shield);
@@ -304,7 +315,7 @@ function handleShieldBreak(combatEventData: CombatEventData, toHitResult: ToHitR
   } else if (combatEventData.attack.shieldBreaking) {
     breakShield = true;
   }
-  if(!breakShield) {
+  if (!breakShield) {
     return false;
   }
   let broken = shield.break(combatEventData.target, autoBreak);

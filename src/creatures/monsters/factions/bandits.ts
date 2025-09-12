@@ -1,8 +1,9 @@
 import { AI_BEHAVIORS } from "../../../ai";
 import { SKILL_PRESETS } from "../../../skills";
+import { SPELLS_FIRE } from "../../../spells";
 import { Faction } from "../Faction";
 
-export type BanditType = "bandit_leader" | "human_bandit" | "shooter" | "warhound";
+export type BanditType = "bandit_leader" | "bandit_wizard" | "human_bandit" | "shooter" | "warhound";
 
 export const faction_bandits = new Faction<BanditType>([], [
     {
@@ -28,6 +29,31 @@ export const faction_bandits = new Faction<BanditType>([], [
             SKILL_PRESETS.lostInTheDark,
             SKILL_PRESETS.inspiring,
         ]
+    },
+    {
+        type: "bandit_wizard",
+        name: "Bandit Wizard",
+        image: "creatures/bandit.png",
+        attributes: {
+            movement: 5,
+            combat: 3,
+            ranged: 2,
+            strength: 3,
+            agility: 4,
+            courage: 4,
+            intelligence: 6,
+        },
+        vitality: 4,
+        mana: 8,
+        cost: 2,
+        rank: "elite",
+        weaponLoadouts: ["staff", "dagger"],
+        armorLoadouts: ["leather"],
+        aiBehavior: AI_BEHAVIORS.CASTER,
+        skills: [
+            SKILL_PRESETS.lostInTheDark,
+        ],
+        spellSchools: [SPELLS_FIRE]
     },
     {
         type: "human_bandit",

@@ -98,3 +98,17 @@ export function isDoubles(diceResults: number[]): boolean {
   // Check if any value appears two or more times
   return Object.values(counts).some(count => count >= 2);
 }
+
+/**
+ * Shuffle an array using the Fisher-Yates algorithm
+ * @param array The array to shuffle
+ * @returns A new array with the same elements in random order
+ */
+export function shuffle<T>(array: T[]): T[] {
+  const shuffled = [...array]; // Create a copy to avoid mutating the original
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}

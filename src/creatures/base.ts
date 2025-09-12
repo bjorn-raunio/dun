@@ -18,8 +18,9 @@ import { CreatureStateManager } from './state';
 import { CreaturePositionManager } from './position';
 import { CreatureCombatManager } from './combat';
 import { CreatureRelationshipsManager } from './relationships';
+import { CreatureSpellCastingManager } from './spellCasting';
 import { SkillProcessor } from '../skills';
-import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager } from './interfaces';
+import { ICreature, ICreatureStateManager, ICreaturePositionManager, ICreatureCombatManager, ICreatureRelationshipsManager, ICreatureSpellCastingManager } from './interfaces';
 import { Item, Weapon, RangedWeapon, Armor, Shield, EquipmentSlots, BaseWeapon, EquipmentSystem, NaturalWeapon } from '../items';
 import { calculateDistanceBetween } from '../utils/pathfinding';
 import { generateCreatureId } from '../utils/idGeneration';
@@ -32,6 +33,8 @@ import { calculateAttributeRoll, DiceRoll, displayDiceRoll } from '../utils';
 import { validateAction } from '../validation';
 import { addGameMessage, addTurnMessage } from '../utils/messageSystem';
 import { AIState } from '../ai/types';
+import { SpellSchool } from '../spells/spellSchool';
+import { Spell } from '../spells';
 // createAIStateForCreature not used in base class
 
 // --- Refactored Base Creature Class ---
@@ -53,6 +56,8 @@ export abstract class Creature implements ICreature {
   naturalArmor: number;
   group: CreatureGroup;
   _skills: Skill[];
+  spellSchools: SpellSchool[];
+  knownSpells: Spell[];
   running: boolean;
   swappedWeapons: boolean = false;
 
@@ -64,6 +69,7 @@ export abstract class Creature implements ICreature {
   private positionManager: ICreaturePositionManager;
   private combatManager: ICreatureCombatManager;
   private relationshipsManager: ICreatureRelationshipsManager;
+  private spellCastingManager: ICreatureSpellCastingManager;
   private statusEffectManager: CreatureStatusEffectManager;
 
   constructor(params: CreatureConstructorParams) {
@@ -84,6 +90,8 @@ export abstract class Creature implements ICreature {
     this.group = params.group;
     this.running = false;
     this._skills = params.skills ?? [];
+    this.spellSchools = params.spellSchools ?? [];
+    this.knownSpells = params.knownSpells ?? [];
 
     // Initialize AI state (null by default, can be set by subclasses)
     this.aiState = null;
@@ -112,6 +120,20 @@ export abstract class Creature implements ICreature {
       params.naturalWeapons
     );
     this.relationshipsManager = new CreatureRelationshipsManager(this.group);
+
+    // Initialize spell casting manager
+    this.spellCastingManager = new CreatureSpellCastingManager(
+      this,
+      () => this.knownSpells,
+      () => this.spellSchools,
+      (amount: number) => this.hasMana(amount),
+      () => this.hasActionsRemaining(),
+      (amount: number) => this.stateManager.setRemainingMana(amount),
+      (amount: number) => this.stateManager.setRemainingActions(amount),
+      (amount: number) => this.takeDamage(amount),
+      (amount: number, removeStatusEffects: boolean) => this.heal(amount, removeStatusEffects),
+      (effect: StatusEffect) => this.addStatusEffect(effect)
+    );
 
     // Initialize status effect manager
     this.statusEffectManager = new CreatureStatusEffectManager(this);
@@ -737,6 +759,7 @@ export abstract class Creature implements ICreature {
       group: this.group,
       skills: [...this._skills],
       running: this.running,
+      spellSchools: [...this.spellSchools],
       ...overrides
     };
 
@@ -810,5 +833,60 @@ export abstract class Creature implements ICreature {
       this.equipment,
       this.getActiveStatusEffects()
     );
+  }
+
+  // --- Spell Casting Methods ---
+
+  /**
+   * Check if the creature can cast a specific spell
+   */
+  canCastSpell(spell: Spell, allCreatures?: ICreature[]): boolean {
+    return this.spellCastingManager.canCastSpell(spell, allCreatures);
+  }
+
+  /**
+   * Cast a spell on a target
+   */
+  castSpell(spell: Spell, target?: ICreature, allCreatures: ICreature[] = []): boolean {
+    return this.spellCastingManager.castSpell(spell, target, allCreatures);
+  }
+
+  /**
+   * Get all known spells
+   */
+  getKnownSpells(): Spell[] {
+    return this.spellCastingManager.getKnownSpells();
+  }
+
+  /**
+   * Get all spell schools
+   */
+  getSpellSchools(): SpellSchool[] {
+    return this.spellCastingManager.getSpellSchools();
+  }
+
+  /**
+   * Check if creature knows a specific spell
+   */
+  hasSpell(spellName: string): boolean {
+    return this.spellCastingManager.hasSpell(spellName);
+  }
+
+  /**
+   * Get a specific spell by name
+   */
+  getSpell(spellName: string): Spell | undefined {
+    return this.spellCastingManager.getSpell(spellName);
+  }
+
+  /**
+   * Get valid targets for a spell
+   */
+  getValidTargets(spell: Spell, allCreatures: ICreature[]): ICreature[] {
+    return this.spellCastingManager.getValidTargets(spell, allCreatures);
+  }
+
+  castsWithCourage(): boolean {
+    return false;
   }
 }

@@ -23,7 +23,9 @@ export class Hero extends Creature {
     // Ensure hero group is set
     super({
       ...params,
-      group: params.group || CREATURE_GROUPS.PLAYER
+      group: params.group || CREATURE_GROUPS.PLAYER,
+      spellSchools: params.profession.spellSchools ?? [],
+      knownSpells: params.knownSpells
     });
     this.profession = params.profession;
     this.race = params.race;
@@ -46,5 +48,9 @@ export class Hero extends Creature {
       profession: overrides?.profession ?? this.profession,
       race: overrides?.race ?? this.race
     };
+  }
+
+  castsWithCourage(): boolean {
+    return this.profession.castsWithCourage;
   }
 }

@@ -119,6 +119,14 @@ export function validateCombat(
     }
   }
 
+  // Zone of engagement check for ranged attacks
+  if (weapon.isRangedWeapon() && isEngaged(attacker, allCreatures) && distance > 1) {
+    return {
+      isValid: false,
+      reason: VALIDATION_MESSAGES.RANGED_ATTACK_WHILE_ENGAGED(attacker.name)
+    };
+  }
+
   return { isValid: true };
 }
 
